@@ -16,39 +16,44 @@
         <!-- form - start -->
         <form class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
-                <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">氏名*</label>
-                <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <label for="name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ID*</label>
+                <input name="name" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->id }}"/>
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">氏名*</label>
+                <input name="name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->name }}" />
             </div>
             <div class="sm:col-span-2">
                 <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">Email*</label>
-                <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->email }}" placeholder="{{ $user->email ?? '設定されていません。'}}" />
             </div>
-            
+
             <div class="sm:col-span-2">
-                <label for="password" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">パスワード*</label>
-                <input name="password" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">パスワード*</label>
+                <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->password }}" />
             </div>
 
             <hr class="my-8">
 
 
             <div class="sm:col-span-2">
-                <label for="group_id" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">所属部署*</label>
-                <select name="group_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
-                    <option selected value="">未選択</option>
-                    @foreach($groups as $group)
-                        <option value="{{ $group->id }}">{{ $group->name }}</option>
-                    @endforeach
+                <label for="company" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">所属部署*</label>
+                <select name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                    <option value="部署1">部署1</option>
+                    <option value="部署2">部署2</option>
+                    <option value="部署3">部署3</option>
+                    <option value="部署4">部署4</option>
                 </select>
             </div>
 
             <div class="sm:col-span-2">
                 <label for="company" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">役職*</label>
                 <select name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
-                    <option selected value="">未選択</option>
-                    @foreach($positions as $position)
-                        <option value="{{ $position->id }}">{{ $position->name }}</option>
-                    @endforeach
+                    <option value="部署1">部署1</option>
+                    <option value="部署2">部署2</option>
+                    <option value="部署3">部署3</option>
+                    <option value="部署4">部署4</option>
                 </select>
             </div>
 
@@ -58,11 +63,10 @@
                 <p class="text-sm mb-4 text-gray-500">製造部に所属しない場合は、選択する必要はありません。</p>
                 <div class="sm:col-span-2">
                     <select name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
-                        <option value="0" selected>未選択</option>
-
-                        @foreach($processes as $process)
-                            <option value="{{ $process->id }}">{{ $process->name }}</option>
-                        @endforeach
+                        <option value="部署1">部署1</option>
+                        <option value="部署2">部署2</option>
+                        <option value="部署3">部署3</option>
+                        <option value="部署4">部署4</option>
                     </select>
                 </div>
             </div>

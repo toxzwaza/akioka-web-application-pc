@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Classification;
+use App\Models\Group;
+use App\Models\Position;
+use App\Models\Process;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -14,10 +18,7 @@ class MasterController extends Controller
         return view('master.index');
     }
 
-    public function create_user()
-    {
-        return view('master.create_user');
-    }
+
     public function users()
     {
         // 課長・係長
@@ -121,11 +122,31 @@ class MasterController extends Controller
             '製造部(設備保全・TPM課)' => $k
         ];
 
-   
+
 
 
 
         return view('master.users', compact('high_users', 'product_users', 'product_count', 'office_users', 'office_count', 'tec_users', 'tec_count'));
+    }
+
+
+    public function create_user()
+    {
+        $groups = Group::all();
+        $positions = Position::all();
+        $processes = Process::all();
+        return view('master.create_user', compact('groups', 'positions', 'processes'));
+    }
+
+    public function edit_user($user_id)
+    {
+        $user = User::where('id', '=', $user_id)->first();
+
+        $groups = Group::all();
+        $positions = Position::all();
+        $processes = Process::all();
+
+        return view('master.edit_user', compact('user', 'groups', 'positions', 'processes'));
     }
 
     public function store()

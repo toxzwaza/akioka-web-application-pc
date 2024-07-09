@@ -19,7 +19,9 @@
                 <img class="w-16" src="{{ asset('img/base/logo.jpg') }}" alt="">
                 <span class="ml-3 text-xl">Akioka管理画面</span>
             </a>
+
             <nav class="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
+
                 <a href="{{ route('master') }}" class="mr-5 hover:text-gray-900 flex justify-center"><span class="mr-1 material-symbols-outlined">
                         database
                     </span>基幹マスタ管理</a>
@@ -39,7 +41,7 @@
     </header>
 
     <!-- サブナビゲーション -->
-    <nav class="flex justify-flex-start items-center bg-gray-200 p-4">
+    <nav class="flex justify-flex-start items-center bg-gray-200 p-4 overflow-x-auto">
         @if(Route::is('master*'))
         <a href="{{ route('master.create.user') }}" class="flex mx-2 px-8 hover:text-gray-900">
             <span class="text-gray-500 mr-1 material-symbols-outlined">
@@ -58,8 +60,22 @@
             アキオカ従業員参照
         </a>
         @elseif(Route::is('stock*'))
-        <a href="#" class="flex mx-2 px-8 hover:text-gray-900">新規在庫追加</a>
-        <a href="#" class="flex mx-2 px-8 hover:text-gray-900">新規取引先追加</a>
+        <a href="{{ route('master.create.user') }}" class="flex mx-2 px-8 hover:text-gray-900">
+            <span class="text-gray-500 mr-1 material-symbols-outlined">
+                edit_square
+            </span>新規在庫追加</a>
+            <a href="{{ route('master.create.user') }}" class="flex mx-2 px-8 hover:text-gray-900">
+            <span class="text-gray-500 mr-1 material-symbols-outlined">
+                edit_square
+            </span>新規取引先追加</a>
+
+        <a href="{{ route('master.users') }}" class="flex mx-2 px-8 hover:text-gray-900">
+            <span class="text-gray-500 mr-1 material-symbols-outlined">
+                list_alt
+            </span>
+            在庫照会
+        </a>
+
         @elseif(Route::is('order*'))
         <a href="#" class="flex mx-2 px-8 hover:text-gray-900">物品承認完了リスト</a>
         <a href="#" class="flex mx-2 px-8 hover:text-gray-900">発注待ちリスト</a>

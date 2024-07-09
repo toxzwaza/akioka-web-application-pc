@@ -22,7 +22,12 @@ Route::get('/', [MainController::class, 'index'])->name('home');
 Route::get('/master', [MasterController::class, 'index'])->name('master');
 Route::get('/master/users', [MasterController::class, 'users'])->name('master.users');
 Route::get('/master/create/users', [MasterController::class, 'create_user'])->name('master.create.user');
-Route::get('/master/stock', [MasterController::class, 'stock'])->name('master.stock');
+Route::get('/master/store', [MasterController::class, 'store'])->name('master.store');
+Route::get('/master/edit/users/{user_id}', [MasterController::class, 'edit_user'])->name('master.edit.user');
+
 Route::get('/stock', [StockController::class, 'index'])->name('stock');
+Route::get('/stock/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
+Route::get('/stock/stock_storages', [StockController::class, 'stock_storages'])->name('stock.stock_storages');
+
 Route::get('/order', [OrderController::class, 'index'])->name('order');
 Route::get('/lunch', [LunchController::class, 'index'])->name('lunch');

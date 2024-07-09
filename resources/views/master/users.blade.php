@@ -28,7 +28,7 @@
                 <tbody>
                     @foreach($high_users as $index => $high_user)
                     <tr class="">
-                        <td class="px-4 py-3"><a href="">{{ $high_user->user_id }}</a></td>
+                        <td class="px-4 py-3"><a href="{{ route('master.edit.user', ['user_id' => $high_user->user_id]) }}">{{ $high_user->user_id }}</a></td>
                         <td class="px-4 py-3">{{ $high_user->user_name }}</td>
                         <td class="px-4 py-3">{{ $high_user->group_name }}</td>
                         <td class="px-4 py-3">{{ $high_user->process_name ?? 'なし' }}</td>
@@ -44,7 +44,7 @@
                     @foreach($product_users as $index => $p_user)
                     @if($index >= 0 && $index < $product_count['電気炉'])
                     <tr class="even bg-slate-200">
-                        <td class="px-4 py-3" {{  $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a href="">{{ $p_user->user_id }}</a></td>
+                        <td class="px-4 py-3"><a class="{{  $p_user->dispatch_flg == 1 ? 'text-red-500 font-semibold' : ''}}" href="{{ route('master.edit.user', ['user_id' => $p_user->user_id]) }}">{{ $p_user->user_id }}</a></td>
                         <td class="px-4 py-3">{{ $p_user->user_name }}</td>
                         <td class="px-4 py-3">{{ $p_user->group_name }}</td>
                         <td class="px-4 py-3">{{ $p_user->process_name }}</td>
@@ -54,7 +54,7 @@
                         @endif
                         </tr>
                         @elseif($index >= $product_count['電気炉'] && $index < $product_count['電気炉'] + $product_count['生型造型']) <tr>
-                            <td class="px-4 py-3" {{  $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a href="">{{ $p_user->user_id }}</a></td>
+                            <td class="px-4 py-3"><a class="{{  $p_user->dispatch_flg == 1 ? 'text-red-500 font-semibold' : ''}}" href="{{ route('master.edit.user', ['user_id' => $p_user->user_id]) }}">{{ $p_user->user_id }}</a></td>
                             <td class="px-4 py-3">{{ $p_user->user_name }}</td>
                             <td class="px-4 py-3">{{ $p_user->group_name }}</td>
                             <td class="px-4 py-3">{{ $p_user->process_name }}</td>
@@ -64,7 +64,7 @@
                             @endif
                             </tr>
                             @elseif($index >= $product_count['電気炉'] + $product_count['生型造型'] && $index < $product_count['電気炉'] + $product_count['生型造型'] + $product_count['フラン']) <tr class="even bg-slate-200">
-                                <td class="px-4 py-3" {{  $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a href="">{{ $p_user->user_id }}</a></td>
+                                <td class="px-4 py-3"><a class="{{  $p_user->dispatch_flg == 1 ? 'text-red-500 font-semibold' : ''}}" href="{{ route('master.edit.user', ['user_id' => $p_user->user_id]) }}">{{ $p_user->user_id }}</a></td>
                                 <td class="px-4 py-3">{{ $p_user->user_name }}</td>
                                 <td class="px-4 py-3">{{ $p_user->group_name }}</td>
                                 <td class="px-4 py-3">{{ $p_user->process_name }}</td>
@@ -74,7 +74,7 @@
                                 @endif
                                 </tr>
                                 @elseif($index >= $product_count['電気炉'] + $product_count['生型造型'] + $product_count['中子'] && $index < $product_count['電気炉'] + $product_count['生型造型'] + $product_count['フラン'] + $product_count['中子']) <tr>
-                                    <td class="px-4 py-3 {{  $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a href="">{{ $p_user->user_id }}</a></td>
+                                    <td class="px-4 py-3 "><a class="{{  $p_user->dispatch_flg == 1 ? 'text-red-500 font-semibold' : ''}}" href="{{ route('master.edit.user', ['user_id' => $p_user->user_id]) }}">{{ $p_user->user_id }}</a></td>
                                     <td class="px-4 py-3">{{ $p_user->user_name }}</td>
                                     <td class="px-4 py-3">{{ $p_user->group_name }}</td>
                                     <td class="px-4 py-3">{{ $p_user->process_name }}</td>
@@ -84,7 +84,7 @@
                                     @endif
                                     </tr>
                                     @elseif($index >= $product_count['電気炉'] + $product_count['生型造型'] + $product_count['中子'] + $product_count['フラン'] && $index < $product_count['電気炉'] + $product_count['生型造型'] + $product_count['フラン'] + $product_count['中子'] + $product_count['仕上げ']) <tr class="even bg-slate-200">
-                                        <td class="px-4 py-3 {{ $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a href="">{{ $p_user->user_id }}</a></td>
+                                        <td class="px-4 py-3 {{ $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a class="{{  $p_user->dispatch_flg == 1 ? 'text-red-500 font-semibold' : ''}}" href="{{ route('master.edit.user', ['user_id' => $p_user->user_id]) }}">{{ $p_user->user_id }}</a></td>
                                         <td class="px-4 py-3">{{ $p_user->user_name }}</td>
                                         <td class="px-4 py-3">{{ $p_user->group_name }}</td>
                                         <td class="px-4 py-3">{{ $p_user->process_name }}</td>
@@ -95,7 +95,7 @@
                                         </tr>
 
                                         @elseif($index >= $product_count['電気炉'] + $product_count['生型造型'] + $product_count['中子'] + $product_count['フラン'] + $product_count['仕上げ'] && $index < $product_count['電気炉'] + $product_count['生型造型'] + $product_count['フラン'] + $product_count['中子'] + $product_count['仕上げ'] + $product_count['出荷検査']) <tr>
-                                            <td class="px-3 py-4 {{  $p_user->dispatch_flg == 1 ? 'h' : ''}}"><a href="">{{ $p_user->user_id }}</a></td>
+                                            <td class="px-3 py-4 "><a class="{{  $p_user->dispatch_flg == 1 ? 'text-red-500 font-semibold' : ''}}" href="{{ route('master.edit.user', ['user_id' => $p_user->user_id]) }}">{{ $p_user->user_id }}</a></td>
                                             <td class="px-4 py-3">{{ $p_user->user_name }}</td>
                                             <td class="px-4 py-3">{{ $p_user->group_name }}</td>
                                             <td class="px-4 py-3">{{ $p_user->process_name }}</td>
@@ -110,7 +110,7 @@
 
                                             @foreach($office_users as $index => $o_user)
                                             @if($index >= 0 && $index < $office_count['業務部']) <tr class="even bg-slate-200">
-                                                <td class="px-4 py-3"><a href="">{{ $o_user->user_id }}</a></td>
+                                                <td class="px-4 py-3"><a  href="{{ route('master.edit.user', ['user_id' => $o_user->user_id]) }}">{{ $o_user->user_id }}</a></td>
                                                 <td class="px-4 py-3">{{ $o_user->user_name }}</td>
                                                 <td class="px-4 py-3">{{ $o_user->group_name }}</td>
                                                 <td class="px-4 py-3">{{ $o_user->process_name ?? 'なし'}}</td>
@@ -121,7 +121,7 @@
                                                 @endif
                                                 </tr>
                                                 @elseif($index >= $office_count['業務部'] && $index < $office_count['業務部'] + $office_count['総務部']) <tr>
-                                                    <td class="px-4 py-3"><a href="">{{ $o_user->user_id }}</a></td>
+                                                    <td class="px-4 py-3"><a href="{{ route('master.edit.user', ['user_id' => $o_user->user_id]) }}">{{ $o_user->user_id }}</a></td>
                                                     <td class="px-4 py-3">{{ $o_user->user_name }}</td>
                                                     <td class="px-4 py-3">{{ $o_user->group_name }}</td>
                                                     <td class="px-4 py-3">{{ $o_user->process_name ?? 'なし'}}</td>
@@ -137,7 +137,7 @@
                                                     @foreach($tec_users as $index => $t_user)
 
                                                     @if($index >= 0 && $index < $tec_count['品質保証部(鋳造技術課)']) <tr class="even bg-slate-200">
-                                                        <td class="px-4 py-3"><a href="">{{ $t_user->user_id }}</a></td>
+                                                        <td class="px-4 py-3"><a href="{{ route('master.edit.user', ['user_id' => $t_user->user_id]) }}">{{ $t_user->user_id }}</a></td>
                                                         <td class="px-4 py-3">{{ $t_user->user_name }}</td>
                                                         <td class="px-4 py-3">{{ $t_user->group_name }}</td>
                                                         <td class="px-4 py-3">{{ $t_user->process_name ?? 'なし'}}</td>
@@ -149,7 +149,7 @@
                                                         </tr>
 
                                                         @elseif($index >= $tec_count['品質保証部(鋳造技術課)'] && $index < $tec_count['品質保証部(鋳造技術課)'] + $tec_count['品質保証部(品質保証課)']) <tr>
-                                                            <td class="px-4 py-3"><a href="">{{ $t_user->user_id }}</a></td>
+                                                            <td class="px-4 py-3"><a href="{{ route('master.edit.user', ['user_id' => $t_user->user_id]) }}">{{ $t_user->user_id }}</a></td>
                                                             <td class="px-4 py-3">{{ $t_user->user_name }}</td>
                                                             <td class="px-4 py-3">{{ $t_user->group_name }}</td>
                                                             <td class="px-4 py-3">{{ $t_user->process_name ?? 'なし'}}</td>
@@ -160,7 +160,7 @@
                                                             @endif
                                                             </tr>
                                                             @elseif($index >= $tec_count['品質保証部(鋳造技術課)'] + $tec_count['品質保証部(品質保証課)'] && $index < $tec_count['品質保証部(鋳造技術課)'] + $tec_count['品質保証部(品質保証課)'] + $tec_count['製造部(設備保全・TPM課)']) <tr class="even bg-slate-200">
-                                                                <td class="px-4 py-3"><a href="">{{ $high_user->user_id }}</a></td>
+                                                                <td class="px-4 py-3"><a href="{{ route('master.edit.user', ['user_id' => $t_user->user_id]) }}">{{ $high_user->user_id }}</a></td>
                                                                 <td class="px-4 py-3">{{ $t_user->user_name }}</td>
                                                                 <td class="px-4 py-3">{{ $t_user->group_name }}</td>
                                                                 <td class="px-4 py-3">{{ $t_user->process_name ?? 'なし'}}</td>

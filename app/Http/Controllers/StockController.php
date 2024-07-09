@@ -11,4 +11,10 @@ class StockController extends Controller
 
         return view('stock.index');
     }
+    public function stocks(){
+        
+    }
+    public function stock_storages(){
+
+    }
 }
