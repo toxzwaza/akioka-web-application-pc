@@ -69,11 +69,17 @@
                 edit_square
             </span>新規取引先追加</a>
 
-        <a href="{{ route('master.users') }}" class="flex mx-2 px-8 hover:text-gray-900">
+        <a href="{{ route('stock.stocks') }}" class="flex mx-2 px-8 hover:text-gray-900">
             <span class="text-gray-500 mr-1 material-symbols-outlined">
                 list_alt
             </span>
-            在庫照会
+            在庫一覧
+        </a>
+        <a href="{{ route('stock.stock_storages') }}" class="flex mx-2 px-8 hover:text-gray-900">
+            <span class="text-gray-500 mr-1 material-symbols-outlined">
+                list_alt
+            </span>
+            格納先一覧
         </a>
 
         @elseif(Route::is('order*'))
