@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [MainController::class, 'index'])->name('home');
 Route::get('/master', [MasterController::class, 'index'])->name('master');
 Route::get('/master/users', [MasterController::class, 'users'])->name('master.users');
+Route::get('/master/akioka-users', [MasterController::class, 'akioka_users'])->name('master.akioka-users');
 Route::get('/master/create/users', [MasterController::class, 'create_user'])->name('master.create.user');
 Route::get('/master/store', [MasterController::class, 'store'])->name('master.store');
 Route::get('/master/edit/users/{user_id}', [MasterController::class, 'edit_user'])->name('master.edit.user');
