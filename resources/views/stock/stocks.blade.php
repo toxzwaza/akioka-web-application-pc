@@ -10,66 +10,73 @@
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Banh mi cornhole echo 従業員一覧を表示します。<br>
                 こちらから、編集・削除ページへ遷移することが可能です。
             </p>
+
+            <div class="mt-6 text-gray-600">
+                <form class="w-1/3 flex items-center relative" action="">
+                    <input name="last-name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="キーワード検索" />
+                    <span class="absolute right-2 ml-2 material-symbols-outlined">search</span>
+                </form>
+            </div>
+
+
         </div>
-        <div class="lg:w-4/5 w-full mx-auto overflow-auto">
+        <div class="mb-4">
+            {{ $stocks->links() }}
+        </div>
+        <div class="lg:w-full w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
                     <tr>
-                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">画像</th>
-                    
-                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">ID</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">JANコード</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">在庫No</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">品名</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">品番</th>
-                        
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">納品先</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">主な使用先</th>
-                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">価格</th>
-                        <!-- <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">url</th> -->
+                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">画像</th>
 
-                        <!-- <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">単位(単位)</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">単位(まとまり)</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">ひとまとまりの数量</th> -->
-                        <!-- <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">メモ</th> -->
-                        
-                        <!-- <th class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th> -->
+                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">ID</th>
+                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">JANコード</th>
+                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">在庫No</th>
+                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">品名</th>
+                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">品番</th>
+
+                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">納品先</th>
+                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">備品カテゴリ</th>
+                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">価格</th>
+                        <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"></th>
+
                     </tr>
                 </thead>
 
                 <tbody>
                     @foreach($stocks as $stock)
-                        <tr>
-                            <td class="w-24 px-4 py-3 text-lg text-gray-900"><a href="" class="hover:text-blue-200"><img class="w-16" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}" alt=""></a></td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->id }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->jan_code }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->stock_no }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->name }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->s_name }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->deli_location }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->process_code }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->price }}</td>
-                            <!-- <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->url }}</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">{{ $stock->memo }}</td> -->
-                            <!-- <td class="px-4 py-3 text-lg text-gray-900">Free</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">Free</td>
-                            <td class="px-4 py-3 text-lg text-gray-900">Free</td> -->
-    
-                        </tr>
+                    <tr class="border-b border-gray-200 my-4 hover:bg-slate-200 transition">
+                        <td class="w-24 px-4 py-8 text-lg text-gray-900"><a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}" class="hover:text-blue-200"><img class="w-16" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}" alt=""></a></td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->id }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->jan_code }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->stock_no }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->name }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->s_name }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->deli_location }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->classification_name }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->price > 0 && is_numeric($stock->price) ? number_format($stock->price) . '円' : ''}}</td>
+                        <td class="px-4 py-8 text-lg text-gray-400">
+                            <a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}">
+                                <span class="material-symbols-outlined">edit_square</span>
+                            </a>
+                        </td>
+                        
+
+
+
+                    </tr>
                     @endforeach
 
 
                 </tbody>
             </table>
         </div>
-        <div class="flex pl-4 mt-4 lg:w-2/3 w-full mx-auto">
-            <a class="text-indigo-500 inline-flex items-center md:mb-2 lg:mb-0">Learn More
-                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-2" viewBox="0 0 24 24">
-                    <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-            </a>
-            <button class="flex ml-auto text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">Button</button>
+
+        <div class="mt-8">
+            {{ $stocks->links() }}
         </div>
+
+
     </div>
 </section>
 

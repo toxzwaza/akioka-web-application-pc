@@ -15,10 +15,10 @@
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
                     <tr>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">格納先</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">アドレス</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">格納物品数</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">作成日</th>
+                        <th class="px-4 py-8 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">格納先</th>
+                        <th class="px-4 py-8 title-font tracking-wider font-medium text-gray-900 bg-gray-100">アドレス</th>
+                        <th class="px-4 py-8 title-font tracking-wider font-medium text-gray-900 bg-gray-100">格納物品数</th>
+                        <th class="px-4 py-8 title-font tracking-wider font-medium text-gray-900 bg-gray-100">作成日</th>
 
 
                     </tr>
@@ -27,10 +27,10 @@
                 <tbody>
                     @foreach($storage_location_addresses as $sla)
                     <tr>
-                        <td class="px-4 py-3"><a href="" class="hover:text-blue-400">{{ $sla->location_name }}</a></td>
-                        <td class="px-4 py-3">{{ $sla->address }}</td>
-                        <td class="px-4 py-3"><a href="" class="hover:text-blue-400">{{ $sla->count }}</a></td>
-                        <td class="px-4 py-3">{{ \Carbon\Carbon::parse($sla->created_at)->format('Y/m/d') }}</td>
+                        <td class="px-4 py-8"><a href="" class="hover:text-blue-400">{{ $sla->location_name }}</a></td>
+                        <td class="px-4 py-8">{{ $sla->address }}</td>
+                        <td class="px-4 py-8"><a href="" class="hover:text-blue-400">{{ $sla->count }}</a></td>
+                        <td class="px-4 py-8">{{ \Carbon\Carbon::parse($sla->created_at)->format('Y/m/d') }}</td>
 
                     </tr>
                     @endforeach
