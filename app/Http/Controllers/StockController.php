@@ -15,6 +15,9 @@ use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
+    public function test(){
+
+    }
     //
     public function index()
     {
@@ -32,10 +35,18 @@ class StockController extends Controller
         return view('stock.stocks', compact('stocks'));
     }
 
-    // 格納先一覧
-    public function stock_storages()
+    // 
+    public function storage_address(Request $request)
     {
-        $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->get();
+        $location_id = $request->location_id;
+        if($location_id){
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('location_id',$location_id)->paginate(20);
+
+        }else{
+
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->paginate(20);
+        }
+
         foreach ($storage_location_addresses as $sla) {
             $stock_storage_count = StockStorage::where('storage_address_id', $sla->storage_address_id)->count();
             $sla->count = $stock_storage_count;
@@ -73,7 +84,7 @@ class StockController extends Controller
         return view('stock.create.stocks');
     }
     // 格納先作成
-    public function create_stock_storages()
+    public function create_storage_addresses()
     {
         $locations = Location::all();
         foreach ($locations as $location) {
@@ -81,21 +92,22 @@ class StockController extends Controller
             $location->address_count = $storage_address_count;
         }
 
-        return view('stock.create.stock_storages', compact('locations'));
+        return view('stock.create.storage_address', compact('locations'));
     }
 
     // 場所作成
     public function store_location(Request $request)
     {
-        dd('実行');
+      
         
         $location_name = $request->location_name;
-
+    
         // 名前が送信されていない場合
         if (!$location_name) {
 
             return redirect()->back();
         }
+   
 
         // 既に同じ名前で存在する場合
         $location = Location::where('name', $location_name)->first();
@@ -103,8 +115,10 @@ class StockController extends Controller
             return redirect()->back();
         }
 
+
         $location = new Location();
         $location->name = $location_name;
+        $location->save();
 
         return redirect()->back();
     }
@@ -114,7 +128,21 @@ class StockController extends Controller
         $location_id = $request->location_id;
         $address = $request->address;
 
-        dd('実行');
+        if(!$location_id || !$address){
+            return redirect()->back();
+        }
+
+        // 一時的処置
+        // if(!$location_id){
+        //     $location_id = 2;
+        // }
+        // StorageAddress新規作成
+        $storage_address = new StorageAddress();
+        $storage_address->address = $address;
+        $storage_address->location_id = $location_id;
+        $storage_address->save();
+
+        return redirect()->route('stock.storage_addresses.create');
     }
 
     // 取引先作成

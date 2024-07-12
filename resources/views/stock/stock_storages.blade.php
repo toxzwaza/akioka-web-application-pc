@@ -11,7 +11,13 @@
                 こちらから、編集・削除ページへ遷移することが可能です。
             </p>
         </div>
+
         <div class="lg:w-4/5 w-full mx-auto overflow-auto">
+            <div class="mb-4">
+                {{ $storage_location_addresses->links() }}
+
+            </div>
+
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
                     <tr>

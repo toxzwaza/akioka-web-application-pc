@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/test', [StockController::class, 'test'])->name('test');
+
 // ホーム
 Route::get('/', [MainController::class, 'index'])->name('home');
 
@@ -36,16 +38,18 @@ Route::get('/stock/stocks', [StockController::class, 'stocks'])->name('stock.sto
 Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 
-Route::get('/stock/stock_storages', [StockController::class, 'stock_storages'])->name('stock.stock_storages');
-Route::get('/stock/stock_storages/create', [StockController::class, 'create_stock_storages'])->name('stock.stock_storages.create');
+Route::get('/stock/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
+Route::get('/stock/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
+Route::get('stock/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
 
 Route::get('/stock/suppliers', [StockController::class, 'suppliers'])->name('stock.suppliers');
 Route::get('/stock/suppliers/create', [StockController::class, 'create_suppliers'])->name('stock.suppliers.create');
 Route::get('/stock/edit/suppliers/{supplier_id}', [StockController::class, 'supplier_edit'])->name('stock.suppliers.edit');
+
 // Location追加
 Route::get('/stock/create/locations', [StockController::class, 'store_location'])->name('stock.locations.create');
-// StorageAddress作成
-Route::get('stock/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
+
+
 
 
 Route::get('/order', [OrderController::class, 'index'])->name('order');

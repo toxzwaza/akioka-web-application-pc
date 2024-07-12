@@ -72,7 +72,7 @@
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         edit_square
       </span>取引先追加</a>
-    <a href="{{ route('stock.stock_storages.create') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.stock_storages.create') ? 'text-red-500 font-bold' : '' }}">
+    <a href="{{ route('stock.storage_addresses.create') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.storage_addresses.create') ? 'text-red-500 font-bold' : '' }}">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         edit_square
       </span>格納先追加</a>
@@ -89,7 +89,7 @@
       </span>
       取引先一覧
     </a>
-    <a href="{{ route('stock.stock_storages') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.stock_storages') ? 'text-blue-500 font-bold' : '' }}">
+    <a href="{{ route('stock.storage_addresses') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.storage_addresses') ? 'text-blue-500 font-bold' : '' }}">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         list_alt
       </span>
