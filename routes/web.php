@@ -42,6 +42,8 @@ Route::get('/stock/storage_addresses', [StockController::class, 'storage_address
 Route::get('/stock/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
 Route::get('stock/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
 
+Route::post('/stock/stock_storage/update', [StockController::class, 'update_stock_storage'])->name('stock.stock_storage.update');
+
 Route::get('/stock/suppliers', [StockController::class, 'suppliers'])->name('stock.suppliers');
 Route::get('/stock/suppliers/create', [StockController::class, 'create_suppliers'])->name('stock.suppliers.create');
 Route::get('/stock/edit/suppliers/{supplier_id}', [StockController::class, 'supplier_edit'])->name('stock.suppliers.edit');

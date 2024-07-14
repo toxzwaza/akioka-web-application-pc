@@ -11,6 +11,7 @@ use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StorageAddress;
 use App\Models\Supplier;
+use App\Services\Method;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
@@ -73,8 +74,16 @@ class StockController extends Controller
         $stock = Stock::where('id', $stock_id)->first();
         $classifications = Classification::all();
         $processes = Process::all();
+        $locations = Location::all();
+       
 
-        return view('stock.edit.stocks', compact('stock', 'classifications', 'processes'));
+        // 在庫状況
+        $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id','quantity','locations.name as location_name','address','location_id')->join('storage_addresses','storage_addresses.id','stock_storages.storage_address_id')->join('locations','locations.id','storage_addresses.location_id')->where('stock_id', $stock_id)->get();
+        // dd($stock_storages);
+    
+        $storage_addresses = StorageAddress::where('location_id',$stock_storages[0]->location_id)->get();
+
+        return view('stock.edit.stocks', compact('stock', 'classifications', 'processes','stock_storages','locations','storage_addresses'));
     }
 
 
@@ -154,5 +163,34 @@ class StockController extends Controller
     // 取引先編集
     public function supplier_edit()
     {
+    }
+
+
+    public function update_stock_storage(Request $request){
+
+
+        $stock_storage_id = $request->stock_storage_id;
+        $storage_address_id = $request->storage_address_id;
+        $quantity = $request->quantity;
+
+        if(!$storage_address_id || !$quantity){
+            Method::msg('error','数量が未入力の可能性があります。');
+            return redirect()->back();
+        }
+        // dd($stock_storage_id);
+
+        $stock_storage = StockStorage::where('id',$stock_storage_id)->first();
+        if($stock_storage){
+            $stock_storage->storage_address_id = $storage_address_id;
+            $stock_storage->quantity = $quantity;
+            $stock_storage->save();
+        }
+        Method::msg('success','更新が完了しました。');
+  
+        
+
+
+        return redirect()->back();
+
     }
 }

@@ -9,6 +9,66 @@
                 <h2 class="text-xl text-center mb-8 font-bold">{{ $stock->name }}</h2>
 
                 <img class="my-4 w-full object-cover object-center rounded" alt="hero" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}">
+
+
+                <div>
+                    <table class="table-auto w-full text-left whitespace-no-wrap">
+                        <thead>
+                            <tr>
+
+                                <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">格納場所</th>
+                                <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">アドレス</th>
+                                <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">個数</th>
+                                <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm"></th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($stock_storages as $stock_storage)
+                            <tr class="border-b border-gray-200 my-4 ">
+                                <form action="{{ route('stock.stock_storage.update') }}" method="post">
+                                @csrf
+                                
+                                    <input type="hidden" name="stock_id" value="{{ $stock->id }}">
+                                    <input type="hidden" name="stock_storage_id" value="{{ $stock_storage->stock_storage_id }}">
+                                    
+                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                        {{ $stock_storage->location_name }}
+                                    </td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                        <select name="storage_address_id" id="" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50">
+                                            @foreach($storage_addresses as $storage_address)
+                                                <option {{ $storage_address->address == $stock_storage->address ? 'selected' : '' }} value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
+                                            @endforeach
+                                            
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                        <input name="quantity"  class="w-8 text-center shadow-md border border-spacing-1 px-2 py-2 bg-gray-50 rounded-md" type="text" value="{{ $stock_storage->quantity }}">
+                                    </td>
+
+                                    <td class="px-4 py-8 text-lg text-gray-400 w-16">
+
+                                        <button class="w-16 text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">更新</button>
+
+                                    </td>
+
+                                </form>
+
+
+
+
+
+
+                            </tr>
+                            @endforeach
+
+
+                        </tbody>
+                    </table>
+
+                </div>
             </div>
 
 
