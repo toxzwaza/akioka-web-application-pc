@@ -6,6 +6,7 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/test', [StockController::class, 'test'])->name('test');
+Route::get('/test', [TestController::class, 'test'])->name('test');
 
 // ホーム
 Route::get('/', [MainController::class, 'index'])->name('home');
@@ -36,6 +37,7 @@ Route::get('/master/edit/users/{user_id}', [MasterController::class, 'edit_user'
 Route::get('/stock', [StockController::class, 'index'])->name('stock');
 Route::get('/stock/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
 Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
+Route::post('/stock/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 
 Route::get('/stock/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');

@@ -89,57 +89,66 @@
                     <!-- text - end -->
 
                     <!-- form - start -->
-                    <form class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
+                    <form action = "{{ route('stock.store.stocks') }}" method="post" class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
+                        @csrf
                         <div>
                             <label for="first-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ID*</label>
 
-                            <input name="first-name" class="w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->id }}" />
+                            <input name="stock_id" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"  value="{{ $stock->id }}" />
                         </div>
 
                         <div>
-                            <label for="last-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">在庫no</label>
+                            <label for="stock_no" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">在庫no</label>
                             <input name="last-name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->stock_no }}" />
                         </div>
 
                         <div class="sm:col-span-2">
                             <label for="company" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">品名</label>
-                            <input name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->name }}" />
+                            <input name="name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->name }}" />
                         </div>
 
                         <div class="sm:col-span-2">
                             <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">JANコード</label>
-                            <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->jan_code }}" />
+                            <input name="jan_code" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->jan_code }}" />
                         </div>
                         <div class="sm:col-span-2">
                             <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">品番</label>
-                            <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->s_name }}" />
+                            <input name="s_name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->s_name }}" />
+                        </div>
+
+                        <div class="">
+                            <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ファイル選択</label>
+                            <input name="upload_file" type="file"  class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
+                        </div>
+                        <div class="">
+                        
+                            <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">画像パス</label>
+                            <input name="img_path" id="img_path_input"  class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
+
+                            <p id="img_config_change" class="text-sm mt-4 underline decoration-1 pb-1 text-indigo-300">インターネット上の画像を設定</p>
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">画像パス</label>
-                            <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
-                        </div>
-                        <div class="sm:col-span-2">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">購買URL</label>
-                            <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->url}}" />
+                            <input name="url" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->url}}" />
                         </div>
                         <div class="sm:col-span-2">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">EC購買用識別番号</label>
-                            <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->purchase_identification_number}}" />
+                            <input name="purchase_identification_number" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->purchase_identification_number}}" />
                         </div>
                         <div class="container w-full flex items-center justify-between sm:col-span-2">
                             <div class="w-1/4 pr-
                             4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">単位(一つ)</label>
-                                <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->solo_unit}}" />
+                                <input name="solo_unit" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->solo_unit}}" />
                             </div>
                             <div class="w-1/4 px-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">単位(まとめ)</label>
-                                <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->org_unit}}" />
+                                <input name="org_unit" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->org_unit}}" />
                             </div>
                             <div class="w-1/4 px-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ひとまとまり数量</label>
-                                <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->quantity_per_org}}" />
+                                <input name="quantity_per_org" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->quantity_per_org}}" />
                             </div>
 
                         </div>
@@ -147,7 +156,7 @@
                         <div class="container w-full flex items-center justify-between sm:col-span-2">
                             <div class="w-1/2 pr-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">備品カテゴリ</label>
-                                <select name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                                <select name="classification_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
                                     <option value="0">未選択</option>
 
                                     @foreach($classifications as $class)
@@ -158,12 +167,12 @@
 
                             <div class="w-1/2 px-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">配送先</label>
-                                <input name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->deli_location}}" />
+                                <input name="deli_location" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->deli_location}}" />
 
                             </div>
                             <div class="w-1/2 px-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">主な使用先</label>
-                                <select name="subject" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                                <select name="process_code" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
                                     <option value="0">未選択</option>
 
                                     @foreach($processes as $process)
@@ -176,7 +185,7 @@
                         </div>
                         <div class="sm:col-span-2">
                             <label for="message" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">メモ</label>
-                            <textarea name="message" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" rows="4">{{ $stock->memo }}</textarea>
+                            <textarea name="memo" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" rows="4">{{ $stock->memo }}</textarea>
                         </div>
 
 
@@ -205,6 +214,17 @@
 
 
 </div>
+
+<script>
+    const img_config_change = document.querySelector('#img_config_change');
+    const img_path_input = document.querySelector('#img_path_input');
+
+    img_config_change.addEventListener('click', (el)=>{
+        img_path_input.classList.toggle('pointer-events-none');
+        img_path_input.classList.toggle('bg-gray-200');
+    });
+</script>
+
 
 
 @endsection

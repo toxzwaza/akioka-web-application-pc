@@ -85,6 +85,27 @@ class StockController extends Controller
 
         return view('stock.edit.stocks', compact('stock', 'classifications', 'processes','stock_storages','locations','storage_addresses'));
     }
+    public function store_stocks(Request $request){
+        $stock_id = $request->stock_id;
+        $stock_no = $request->stock_no;
+        $name = $request->name;
+        $jan_code = $request->jan_code;
+        $s_name = $request->s_name;
+        $img_path = $request->img_path;
+        $url = $request->url;
+        $purchase_identification_number	 = $request->purchase_identification_number;
+        $solo_unit = $request->solo_unit;
+        $org_unit = $request->org_unit;
+        $quantity_per_org = $request->quantity_per_org;
+        $classification_id = $request->classification_id;
+        $deli_location = $request->deli_location;
+        $process_code = $request->process_code;
+        $memo = $request->memo;
+
+        dd($stock_id, $stock_no, $name, $jan_code, $s_name, $img_path, $url, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $process_code, $memo);
+
+        
+    }
 
 
     // 在庫作成
