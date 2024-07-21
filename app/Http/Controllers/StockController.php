@@ -98,6 +98,7 @@ class StockController extends Controller
         $jan_code = $request->jan_code;
         $s_name = $request->s_name;
         $img_path = $request->img_path;
+        $price = $request->price;
         $url = $request->url;
         $purchase_identification_number	 = $request->purchase_identification_number;
         $solo_unit = $request->solo_unit;
@@ -124,6 +125,8 @@ class StockController extends Controller
         $stock->s_name = $s_name;
         $stock->jan_code = $jan_code;
         $stock->url = $url;
+        $stock->img_path = $img_path;
+        $stock->price= $price;
         $stock->purchase_identification_number = $purchase_identification_number;
         $stock->solo_unit = $solo_unit;
         $stock->org_unit = $org_unit;
@@ -248,5 +251,15 @@ class StockController extends Controller
 
         return redirect()->back();
 
+    }
+
+    public function delete_stock_storage(Request $request){
+        $stock_storage_id = $request->stock_storage_id;
+
+        // dd($stock_storage_id);
+        $stock_storage = StockStorage::find($stock_storage_id);
+        $stock_storage->delete();
+
+        return redirect()->back();
     }
 }

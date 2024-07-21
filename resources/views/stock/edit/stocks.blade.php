@@ -20,12 +20,14 @@
                                 <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">アドレス</th>
                                 <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">個数</th>
                                 <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm"></th>
+                                <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm"></th>
 
                             </tr>
                         </thead>
 
                         <tbody>
                             @foreach($stock_storages as $stock_storage)
+                        
                             <tr class="border-b border-gray-200 my-4 ">
                                 <form action="{{ route('stock.stock_storage.update') }}" method="post">
                                     @csrf
@@ -51,6 +53,11 @@
                                     <td class="px-4 py-8 text-lg text-gray-400 w-16">
 
                                         <button class="w-16 text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">更新</button>
+
+                                    </td>
+                                    <td class="px-4 py-8 text-lg text-gray-400 w-16">
+
+                                        <a href="{{ route('stock.stock_storage.delete', ['stock_storage_id' => $stock_storage->stock_storage_id ]) }}" class="text-center block w-16 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded">削除</a>
 
                                     </td>
 
@@ -128,9 +135,17 @@
                             <p id="img_config_change" class="text-sm mt-4 underline decoration-1 pb-1 text-indigo-300">インターネット上の画像を設定</p>
                         </div>
 
-                        <div class="sm:col-span-2">
+                        <div class="">
+                            <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">価格</label>
+                            <input name="price" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->price}}" />
+                           
+                        </div>
+                        <div class="">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">購買URL</label>
                             <input name="url" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->url}}" />
+                            @if($stock->url != null)
+                             <p class="mt-2" ><a class="text-sm mt-2 text-indigo-300 underline decoration-1" href="{{$stock->url}}" target="blank">購買URLをチェックする</a></p>
+                            @endif
                         </div>
                         <div class="sm:col-span-2">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">EC購買用識別番号</label>

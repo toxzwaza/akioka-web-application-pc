@@ -91,7 +91,7 @@
                         <th class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">格納先名</th>
                         <th class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">アドレス数</th>
                         <th class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">更新日</th>
-                        <th class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
+                        <!-- <th class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -105,9 +105,9 @@
 
                         <td class="px-4 py-4">{{ $location->address_count }}</td>
                         <td class="px-4 py-4">{{ Carbon\Carbon::parse($location->created_at)->format('Y/m/d') }}</td>
-                        <td class="px-4 py-4 w-32">
+                        <!-- <td class="px-4 py-4 w-32">
                             <a class="px-4 py-2 bg-blue-500 text-sm text-white rounded-md" href="">更新</a>
-                        </td>
+                        </td> -->
 
                     </tr>
                     @endforeach
