@@ -29,9 +29,15 @@ class StockController extends Controller
         return view('stock.index', compact('operation_records'));
     }
     // 在庫一覧
-    public function stocks()
+    public function stocks(Request $request)
     {
-        $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+        $keyword = $request->keyword;
+        if($keyword){
+            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name','like',"%$keyword%")->orWhere('stocks.s_name','like',"%$keyword%")->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+        }else{
+            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+
+        }
 
         return view('stock.stocks', compact('stocks'));
     }
@@ -96,13 +102,42 @@ class StockController extends Controller
         $purchase_identification_number	 = $request->purchase_identification_number;
         $solo_unit = $request->solo_unit;
         $org_unit = $request->org_unit;
+        $main_unit_flg = $request->main_unit_flg;
         $quantity_per_org = $request->quantity_per_org;
         $classification_id = $request->classification_id;
         $deli_location = $request->deli_location;
         $process_code = $request->process_code;
         $memo = $request->memo;
 
-        dd($stock_id, $stock_no, $name, $jan_code, $s_name, $img_path, $url, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $process_code, $memo);
+        // if($request->hasFile('upload_file')){
+        //     dd('ファイルあり');
+        // }
+        $stock = Stock::find($stock_id);
+        if(!$stock){
+            Method::msg('error', '在庫情報を取得できませんでした。');
+            return redirect()->back();
+        }
+
+        // dd($stock_id, $stock_no, $name, $jan_code, $s_name, $img_path, $url, $purchase_identification_number, $solo_unit, $org_unit, $main_unit_flg,$quantity_per_org, $classification_id, $deli_location, $process_code, $memo);
+        $stock->name = $name;
+        $stock->stock_no = $stock_no;
+        $stock->s_name = $s_name;
+        $stock->jan_code = $jan_code;
+        $stock->url = $url;
+        $stock->purchase_identification_number = $purchase_identification_number;
+        $stock->solo_unit = $solo_unit;
+        $stock->org_unit = $org_unit;
+        $stock->quantity_per_org = $quantity_per_org;
+        $stock->main_unit_flg = $main_unit_flg;
+        $stock->classification_id = $classification_id;
+        $stock->deli_location = $deli_location;
+        $stock->process_code = $process_code;
+        $stock->memo = $memo;
+        $stock->save();
+        
+        Method::msg('success', '在庫情報を更新しました。');
+        return redirect()->back();
+
 
         
     }

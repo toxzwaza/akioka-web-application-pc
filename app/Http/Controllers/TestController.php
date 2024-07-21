@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StorageAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -18,5 +19,18 @@ class TestController extends Controller
             echo "ファイルが存在しません。";
         }
 
+    }
+
+    public function storage_address_test(){
+        $storage_addresses = StorageAddress::all();
+
+        foreach($storage_addresses as $storage_address){
+            list($alphabet, $number1, $number2) = explode('-', $storage_address->address);
+            // dd($alphabet,$number1,$number2);
+            $storage_address->shelf = $alphabet;
+            $storage_address->row = $number1;
+            $storage_address->col = $number2;
+            $storage_address->save();
+        }
     }
 }

@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/test', [TestController::class, 'test'])->name('test');
+Route::get('/storage_address/test', [TestController::class, 'storage_address_test'])->name('storage_address.test');
+
 
 // ホーム
 Route::get('/', [MainController::class, 'index'])->name('home');

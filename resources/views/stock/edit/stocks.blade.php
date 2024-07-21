@@ -28,24 +28,24 @@
                             @foreach($stock_storages as $stock_storage)
                             <tr class="border-b border-gray-200 my-4 ">
                                 <form action="{{ route('stock.stock_storage.update') }}" method="post">
-                                @csrf
-                                
+                                    @csrf
+
                                     <input type="hidden" name="stock_id" value="{{ $stock->id }}">
                                     <input type="hidden" name="stock_storage_id" value="{{ $stock_storage->stock_storage_id }}">
-                                    
+
                                     <td class="px-4 py-8 text-sm text-gray-900">
                                         {{ $stock_storage->location_name }}
                                     </td>
                                     <td class="px-4 py-8 text-sm text-gray-900">
                                         <select name="storage_address_id" id="" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50">
                                             @foreach($storage_addresses as $storage_address)
-                                                <option {{ $storage_address->address == $stock_storage->address ? 'selected' : '' }} value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
+                                            <option {{ $storage_address->address == $stock_storage->address ? 'selected' : '' }} value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
                                             @endforeach
-                                            
+
                                         </select>
                                     </td>
                                     <td class="px-4 py-8 text-sm text-gray-900">
-                                        <input name="quantity"  class="w-8 text-center shadow-md border border-spacing-1 px-2 py-2 bg-gray-50 rounded-md" type="text" value="{{ $stock_storage->quantity }}">
+                                        <input name="quantity" class="w-8 text-center shadow-md border border-spacing-1 px-2 py-2 bg-gray-50 rounded-md" type="text" value="{{ $stock_storage->quantity }}">
                                     </td>
 
                                     <td class="px-4 py-8 text-lg text-gray-400 w-16">
@@ -89,17 +89,17 @@
                     <!-- text - end -->
 
                     <!-- form - start -->
-                    <form action = "{{ route('stock.store.stocks') }}" method="post" class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
+                    <form action="{{ route('stock.store.stocks') }}" method="post" class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2" enctype="multipart/form-data">
                         @csrf
                         <div>
                             <label for="first-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ID*</label>
 
-                            <input name="stock_id" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"  value="{{ $stock->id }}" />
+                            <input name="stock_id" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->id }}" />
                         </div>
 
                         <div>
                             <label for="stock_no" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">在庫no</label>
-                            <input name="last-name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->stock_no }}" />
+                            <input name="stock_no" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->stock_no }}" />
                         </div>
 
                         <div class="sm:col-span-2">
@@ -118,12 +118,12 @@
 
                         <div class="">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ファイル選択</label>
-                            <input name="upload_file" type="file"  class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
+                            <input name="upload_file" type="file" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
                         </div>
                         <div class="">
-                        
+
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">画像パス</label>
-                            <input name="img_path" id="img_path_input"  class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
+                            <input name="img_path" id="img_path_input" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
 
                             <p id="img_config_change" class="text-sm mt-4 underline decoration-1 pb-1 text-indigo-300">インターネット上の画像を設定</p>
                         </div>
@@ -149,6 +149,15 @@
                             <div class="w-1/4 px-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ひとまとまり数量</label>
                                 <input name="quantity_per_org" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->quantity_per_org}}" />
+                            </div>
+                          
+                            <div class="w-1/4 px-4">
+                                <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">基本発注単位</label>
+
+                                <select name="main_unit_flg" id="" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                                    <option {{ $stock->main_unit_flg === 0 ? 'selected' : '' }} value="0">単品発注</option>
+                                    <option {{ $stock->main_unit_flg === 1 ? 'selected' : '' }} value="1">まとめて発注</option>
+                                </select>
                             </div>
 
                         </div>
@@ -219,7 +228,7 @@
     const img_config_change = document.querySelector('#img_config_change');
     const img_path_input = document.querySelector('#img_path_input');
 
-    img_config_change.addEventListener('click', (el)=>{
+    img_config_change.addEventListener('click', (el) => {
         img_path_input.classList.toggle('pointer-events-none');
         img_path_input.classList.toggle('bg-gray-200');
     });
