@@ -33,7 +33,7 @@ class StockController extends Controller
     {
         $keyword = $request->keyword;
         if($keyword){
-            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name','like',"%$keyword%")->orWhere('stocks.s_name','like',"%$keyword%")->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name','like',"%$keyword%")->orWhere('stocks.s_name','like',"%$keyword%")->orWhere('stocks.jan_code','like',"%$keyword%")->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
         }else{
             $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
 
