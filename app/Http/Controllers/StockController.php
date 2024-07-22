@@ -87,7 +87,7 @@ class StockController extends Controller
         $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id','quantity','locations.name as location_name','address','location_id')->join('storage_addresses','storage_addresses.id','stock_storages.storage_address_id')->join('locations','locations.id','storage_addresses.location_id')->where('stock_id', $stock_id)->get();
         // dd($stock_storages);
     
-        $storage_addresses = StorageAddress::where('location_id',$stock_storages[0]->location_id)->get();
+        $storage_addresses = StorageAddress::where('location_id',$stock_storages[0]->location_id)->orderby('address','asc')->get();
 
         return view('stock.edit.stocks', compact('stock', 'classifications', 'processes','stock_storages','locations','storage_addresses'));
     }

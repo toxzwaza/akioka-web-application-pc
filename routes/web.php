@@ -60,6 +60,9 @@ Route::get('/stock/create/locations', [StockController::class, 'store_location']
 
 
 Route::get('/order', [OrderController::class, 'index'])->name('order');
+Route::get('/order/already/orders', [OrderController::class, 'already_orders'])->name('order.already_orders');
+Route::get('/order/orders/create', [OrderController::class, 'create_orders'])->name('order.orders.create');
+
 Route::get('/lunch', [LunchController::class, 'index'])->name('lunch');
 
 

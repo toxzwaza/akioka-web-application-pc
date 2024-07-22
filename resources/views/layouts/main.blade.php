@@ -97,8 +97,22 @@
     </a>
 
     @elseif(Route::is('order*'))
-    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">物品承認完了リスト</a>
-    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">発注待ちリスト</a>
+    <a href="{{ route('order.already_orders') }}" class="flex mx-2 px-8 hover:text-gray-900">
+      <span class="material-symbols-outlined">
+        assignment
+      </span>
+      注文書作成待ちリスト
+    </a>
+    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">
+      <span class="material-symbols-outlined">
+        grade
+      </span>
+      注文待ちリスト
+    </a>
+    <a href="#" class="flex mx-2 px-8 hover:text-gray-900"><span class="material-symbols-outlined">
+        orders
+      </span>納品待ちリスト
+    </a>
     @elseif(Route::is('lunch*'))
     <a href="#" class="flex mx-2 px-8 hover:text-gray-900">弁当注文履歴</a>
     <a href="#" class="flex mx-2 px-8 hover:text-gray-900">備考作成</a>
