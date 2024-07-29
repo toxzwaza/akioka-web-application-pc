@@ -75,7 +75,13 @@ Route::get('/order/object_request/{id}', [OrderController::class, 'object_reques
 Route::get('/lunch', [LunchController::class, 'index'])->name('lunch');
 
 Route::get('/movie', [MovieController::class, 'index'])->name('movie');
+Route::get('/movie/create', [MovieController::class, 'movie_create'])->name('movie.create');
+Route::post('/movie/store', [MovieController::class, 'movie_store'])->name('movie.store');
+Route::get('movie/create/tag', [MovieController::class, 'movie_tag_create'])->name('movie.create.tag');
+// Route::get('/movie', [MovieController::class, 'index'])->name('movie');
+
 Route::get('/movie/{movie_id}', [MovieController::class, 'show'])->name('movie.show');
+Route::post('/movie.update',[MovieController::class, 'movie_update'])->name('movie.update');
 Route::get('movie/memo/delete/{memo_id}', [MovieController::class, 'movie_memo_delete'])->name('movie.memo.delete');
 
 Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])->name('movie.memo.update');
@@ -85,3 +91,4 @@ Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])-
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
 Route::get('/AddMemo', [MovieController::class, 'addMemo']);
+Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);

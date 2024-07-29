@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Movie;
 use App\Models\MovieMemo;
+use App\Models\MovieTag;
+use App\Models\MovieTagCategory;
 use App\Models\User;
 use App\Services\Method;
 use Illuminate\Http\Request;
@@ -62,10 +64,67 @@ class MovieController extends Controller
         // メモを取得
         $movie_memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')->where('movie_id', $movie->id)->join('users', 'users.id', 'movie_memos.user_id')->orderby('movie_memos.created_at', 'desc')->get();
 
-        // カテゴリー一覧を取得
-        
 
-        return view('movie.show', compact('movie', 'con_movies', 'movie_memos'));
+
+        // カテゴリー一覧を取得
+        $movie_categories = MovieTagCategory::all();
+
+        // タグ一覧を取得
+        $movie_tags = MovieTag::where('movie_tag_category_id',$movie->category_id)->get();
+
+        return view('movie.show', compact('movie', 'con_movies', 'movie_memos','movie_categories', 'movie_tags'));
+    }
+    public function movie_create(Request $request){
+        $movie_tags = MovieTag::select('movie_tags.id as tag_id','movie_tags.name as tag_name','movie_tag_categories.name as category_name')->join('movie_tag_categories','movie_tag_categories.id','movie_tags.movie_tag_category_id')->orderby('movie_tags.movie_tag_category_id','asc')->get();
+
+        
+        return view('movie.create.movie',compact('movie_tags'));
+    }
+    public function movie_store(Request $request){
+        $name = $request->name;
+        $file_path = $request->file_path;
+        $movie_tag_id = $request->movie_tag_id;
+        $memo = $request->memo;
+
+        if(!($name && $file_path && $movie_tag_id && $memo)){
+            Method::msg('error', 'ファイル名・YoutubeID・動画タグは必須項目です。');
+            return redirect()->back();
+        }
+        dd('実行');
+
+    }
+    public function movie_update(Request $request){
+
+
+        $movie_id = $request->movie_id;
+        $name = $request->name;
+        $memo = $request->memo;
+        $movie_tag_id = $request->movie_tag_id;
+        $created_at = $request->created_at;
+        $file_path = $request->file_path;
+        if(!$movie_id){
+            Method::msg('error','動画IDが設定されていません。');
+          return redirect()->back();  
+        }
+
+        $movie = Movie::find($movie_id);
+        $movie->name = $name;
+        $movie->memo = $memo;
+        $movie->movie_tag_id = $movie_tag_id;
+        $movie->created_at = $created_at;
+        $movie->file_path = $file_path;
+        $movie->save();
+
+        Method::msg('success','更新が完了しました。');
+        return redirect()->back();
+
+
+    }
+
+    public function movie_tag_create(){
+        $movie_categories = MovieTagCategory::all();
+
+        return view('movie.create.tags',compact('movie_categories'));
     }
 
     public function addMemo(Request $request)

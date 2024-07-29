@@ -38,21 +38,63 @@
     </div>
 
     <div class="">
+
+
         <!-- Youtube動画画面 -->
 
         <div id="YTContent" class="{{ $movie->file_path }} {{ $movie->id }} video_content"></div>
 
 
-        <form action="" class="flex justify-center mt-16">
-            <input class="block w-4/5 sm:w-2/3 bg-gray-200 py-2 px-3 text-gray-700 border border-gray-200 rounded focus:outline-none focus:bg-white mr-4" id="memo" type="text" name="">
-            <button class="border border-gray-400 rounded-md px-2 py-1 text-sm font-semibold hover:text-white hover:bg-gray-800" id="form-button" type="submit">メモ追加</button>
+
+        <form action="" class="relative mt-16">
+            <div class="flex justify-center ">
+                <input class="block w-4/5 sm:w-2/3 bg-gray-200 py-2 px-3 text-gray-700 border border-gray-200 rounded focus:outline-none focus:bg-white mr-4" id="memo" type="text" name="" placeholder="@ {{ session('user.name') }}">
+                <button class="border border-gray-400 rounded-md px-2 py-1 text-sm font-semibold hover:text-white hover:bg-gray-800" id="form-button" type="submit">メモ追加</button>
+            </div>
         </form>
 
-        <div class="mt-8">
-            <h2>{{ $movie->name }}</h2>
-            <h3>{{ $movie->memo }}</h3>
-            {{ dd($movie) }}
-        </div>
+        <hr class="my-16">
+
+        <form class="mt-4 mb-8 px-8" method="post" action="{{ route('movie.update') }}">
+            @csrf
+            <input type="hidden" name="movie_id" value="{{ $movie->id }}">
+            <h2 class="text-lg font-semibold mb-2 text-gray-800">
+                <input class="w-full" type="text" name="name" id="" value="{{ $movie->name }}">
+            </h2>
+
+            <p class="my-4 flex items-start">
+                <span class="w-12 mr-1 text-sm text-gray-400">メモ：</span>
+                <textarea class="w-full rounded-md border px-4 py-2 text-gray-600 text-xs" name="memo" id="" cols="30">{{ $movie->memo }}</textarea>
+            </p>
+            <p class="my-4">
+                <span class="w-24 mr-1 text-sm text-gray-400">カテゴリ:</span>
+                <span class="bg-{{ $movie->category_color }}-100 text-{{ $movie->category_color }}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-white dark:text-{{ $movie->category_color }}-400 border border-{{ $movie->category_color }}-400">{{ $movie->movie_tag_category_name }}</span>
+            </p>
+            <p class="my-4">
+                <span class="w-24 mr-1 text-sm text-gray-400"> タグ：</span>
+                <select name="movie_tag_id" id="" class="bg-{{ $movie->tag_color }}-400 text-white text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-{{ $movie->tag_color }}-400 dark:text-white">
+
+                    @foreach($movie_tags as $tag)
+                    <option {{ $movie->tag_id == $tag->id ? 'selected' : ''}} value="{{ $tag->id }}">{{ $tag->name }}</option>
+                    @endforeach
+                </select>
+
+            </p>
+            <p class="my-4">
+                <span class="w-24 mr-1 text-sm text-gray-400">録画日:</span>
+                <input type="date" name="created_at" id="" value="{{ Carbon\Carbon::parse($movie->created_at)->format('Y-m-d') }}">
+            </p>
+            <p class="my-4">
+                <span class="w-24 mr-1 text-sm text-gray-400 ">YoutubeID：</span>
+                <input class="w-3/4 border rounded py-2 px-4 text-gray-500" type="text" name="file_path" id="" value="{{ $movie->file_path }}">
+            </p>
+
+            <button class="mt-2 border bg-white hover:bg-blue-400 hover:text-white text-blue-700 font-bold py-2 px-4 rounded text-sm">更新</button>
+
+
+        </form>
+
+
 
 
     </div>

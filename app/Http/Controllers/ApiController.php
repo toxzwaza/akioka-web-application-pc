@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MovieTag;
 use App\Models\StorageAddress;
 use Illuminate\Http\Request;
 
@@ -18,5 +19,13 @@ class ApiController extends Controller
         }
 
         
+    }
+
+    public function getMovieTags(Request $request){
+        $movie_category_id = $request->movie_category_id;
+
+        $movie_tags = MovieTag::where('movie_tag_category_id',$movie_category_id)->get();
+
+        return response()->json($movie_tags);
     }
 }
