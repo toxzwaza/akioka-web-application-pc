@@ -377,8 +377,9 @@
         const selected_list = document.querySelector('.selected');
         if(!storage_address_id.value){
             storage_address_id.value = selected_list.value;
-            update_form.submit();
+
         }
+        update_form.submit();
        
     });
 </script>
