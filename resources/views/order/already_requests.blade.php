@@ -24,14 +24,14 @@
 
         </div>
         <div class="lg:w-full w-full mx-auto overflow-auto">
-            <h2 class="my-4">既存品</h2>
+            <h2 class="my-4">物品依頼</h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
                     <tr>
 
 
                         <th class="w-24 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">依頼日</th>
-                        <th class="w-24 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">承認日</th>
+                        <th class="w-32 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">承認状況</th>
 
                         <th class="w-24 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">依頼者</th>
                         <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">注文品名</th>
@@ -56,15 +56,35 @@
 
                         <td class="w-24 px-4 py-8 text-lg text-gray-900">{{ Carbon\Carbon::parse($object_request->created_at)->format('Y/m/d') }}</td>
 
-                        <td class="w-24 px-4 py-8 text-lg text-gray-900">{{ Carbon\Carbon::parse($object_request->updated_at)->format('Y/m/d') }}</td>
+
+                        @if($object_request->status == 0)
+                        <td class="w-24 px-4 py-8 text-lg text-gray-400">
+                            <span class="material-symbols-outlined">
+                                do_not_disturb_on
+                            </span>
+                        </td>
+                        @elseif($object_request->status == 1)
+                        <td class="w-24 px-4 py-8 text-lg text-green-400">
+                            <span class="material-symbols-outlined">
+                                task_alt
+                            </span>
+                        </td>
+                        @elseif($object_request->status == 2)
+                        <td class="w-24 px-4 py-8 text-lg text-red-400">
+                            <span class="material-symbols-outlined">
+                                cancel
+                            </span>
+                        </td>
+                        @endif
+
                         <td class="w-1/5 px-4 py-8 text-lg text-gray-900">{{ $object_request->user_name }}</td>
                         <td class="w-1/5 px-4 py-8 text-lg text-gray-900">{{ $object_request->stock_name }}</td>
-                        <td class="px-4 py-8 text-lg text-gray-900">{{ $object_request->price }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ number_format($object_request->price * $object_request->quantity) }}円</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $object_request->limit }}</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $object_request->disappear }}</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $object_request->memo }}</td>
                         <td class="px-4 py-8 text-lg text-gray-400">
-                            <a href="">
+                            <a href="{{ route('order.object_request.judge', ['id' => $object_request->id ]) }}">
                                 <span class="text-indigo-400 material-symbols-outlined">
                                     grading
                                 </span>
@@ -79,14 +99,14 @@
 
 
         <div class="mt-8 lg:w-full w-full mx-auto overflow-auto">
-            <h2 class="my-4">新規品</h2>
+            <h2 class="my-4">稟議依頼</h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
                     <tr>
 
 
                         <th class="w-24 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">申請日</th>
-                        <th class="w-24 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">承認日</th>
+                        <th class="w-32 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">承認状況</th>
 
                         <th class="w-24 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">依頼者</th>
                         <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl">注文品名</th>
@@ -108,14 +128,33 @@
 
 
                         <td class="w-24 px-4 py-8 text-lg text-gray-900">{{ Carbon\Carbon::parse($approval->created_at)->format('Y/m/d') }}</td>
-                        <td class="w-24 px-4 py-8 text-lg text-gray-900">{{ Carbon\Carbon::parse($approval->updated_at)->format('Y/m/d') }}</td>
+
+                        @if($approval->status == 0)
+                        <td class="w-24 px-4 py-8 text-lg text-gray-400">
+                            <span class="material-symbols-outlined">
+                                do_not_disturb_on
+                            </span>
+                        </td>
+                        @elseif($approval->status == 1)
+                        <td class="w-24 px-4 py-8 text-lg text-green-400">
+                            <span class="material-symbols-outlined">
+                                task_alt
+                            </span>
+                        </td>
+                        @elseif($approval->status == 2)
+                        <td class="w-24 px-4 py-8 text-lg text-red-400">
+                            <span class="material-symbols-outlined">
+                                cancel
+                            </span>
+                        </td>
+                        @endif
 
                         <td class="w-1/5 px-4 py-8 text-lg text-gray-900">{{ $approval->user_name }}</td>
                         <td class="w-1/5 px-4 py-8 text-lg text-gray-900">{{ $approval->name }}</td>
-                        <td class="px-4 py-8 text-lg text-gray-900">{{ $approval->price }}</td>
+                        <td class="px-4 py-8 text-lg text-gray-900">{{ number_format(intval($approval->price)) }}円</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $approval->reason }}</td>
                         <td class="px-4 py-8 text-lg text-gray-400">
-                            <a href="">
+                            <a href="{{ route('order.approval.judge', ['id' => $approval->id ]) }}">
                                 <span class="text-indigo-400 material-symbols-outlined">
                                     grading
                                 </span>

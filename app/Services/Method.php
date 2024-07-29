@@ -7,4 +7,13 @@ class Method{
 
         session()->flash($info, $msg);
     }
+    public static function isLogin(){
+        $is_success = false;
+
+        if (session('user')) {
+
+            $is_success = true;
+        }
+        return $is_success;
+    }
 }

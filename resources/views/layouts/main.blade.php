@@ -12,6 +12,12 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -36,10 +42,39 @@
         <a href="{{ route('lunch') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('lunch*') ? 'font-bold text-gray-900' : ''}}"><span class="mr-1 material-symbols-outlined">
             restaurant
           </span>弁当注文</a>
+
+        <a href="{{ route('movie') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('movie*') ? 'font-bold text-gray-900' : ''}}">
+          <span class="material-symbols-outlined">
+            live_tv
+          </span>
+          動画視聴</a>
       </nav>
 
 
+
+      @if(session('user') == null)
+      <a class="flex items-center" href="{{ route('login') }}">
+        <span class="material-symbols-outlined">
+          account_circle
+        </span>
+        Login
+      </a>
+      @else
+      <a class="flex items-center" href="{{ route('logout') }}">
+        <span class="material-symbols-outlined">
+          logout
+        </span>
+        {{ session('user.name') }}
+      </a>
+
+
+      @endif
+
+
     </div>
+
+
+
   </header>
 
   <!-- サブナビゲーション -->
@@ -96,7 +131,14 @@
       格納先一覧
     </a>
 
+
+
     @elseif(Route::is('order*'))
+    <a href="{{ route('order.already_requests') }}" class="flex mx-2 px-8 hover:text-gray-900"><span class="material-symbols-outlined">
+        approval_delegation
+      </span>承認依頼
+    </a>
+
     <a href="{{ route('order.already_orders') }}" class="flex mx-2 px-8 hover:text-gray-900">
       <span class="material-symbols-outlined">
         assignment
@@ -113,9 +155,16 @@
         orders
       </span>納品待ちリスト
     </a>
+
+
     @elseif(Route::is('lunch*'))
     <a href="#" class="flex mx-2 px-8 hover:text-gray-900">弁当注文履歴</a>
     <a href="#" class="flex mx-2 px-8 hover:text-gray-900">備考作成</a>
+    @elseif(Route::is('movie*'))
+    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">動画視聴</a>
+    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">動画追加</a>
+    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">動画タグ追加</a>
+
     @endif
   </nav>
 

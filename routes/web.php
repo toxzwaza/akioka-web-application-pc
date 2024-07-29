@@ -4,6 +4,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Controllers\LunchController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
+use App\Http\Controllers\MovieController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\TestController;
@@ -19,10 +20,14 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
 Route::get('/test', [TestController::class, 'test'])->name('test');
 Route::get('/storage_address/test', [TestController::class, 'storage_address_test'])->name('storage_address.test');
+Route::get('/suppliers/test', [TestController::class, 'supplier_test'])->name('supplier.test');
 
+
+Route::get('login', [MainController::class, 'login'])->name('login');
+Route::get('login_store', [MainController::class, 'login_store'])->name('login.store');
+Route::get('logout', [MainController::class, 'logout'])->name('logout');
 
 // ホーム
 Route::get('/', [MainController::class, 'index'])->name('home');
@@ -41,6 +46,7 @@ Route::get('/stock/stocks', [StockController::class, 'stocks'])->name('stock.sto
 Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
 Route::post('/stock/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
+
 
 Route::get('/stock/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
 Route::get('/stock/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
@@ -62,10 +68,20 @@ Route::get('/stock/create/locations', [StockController::class, 'store_location']
 Route::get('/order', [OrderController::class, 'index'])->name('order');
 Route::get('/order/already/orders', [OrderController::class, 'already_orders'])->name('order.already_orders');
 Route::get('/order/orders/create', [OrderController::class, 'create_orders'])->name('order.orders.create');
+Route::get('/order/already_requests', [OrderController::class, 'already_requests'])->name('order.already_requests');
+Route::get('/order/approval/{id}', [OrderController::class, 'approval_judge'])->name('order.approval.judge');
+Route::get('/order/object_request/{id}', [OrderController::class, 'object_request_judge'])->name('order.object_request.judge');
 
 Route::get('/lunch', [LunchController::class, 'index'])->name('lunch');
+
+Route::get('/movie', [MovieController::class, 'index'])->name('movie');
+Route::get('/movie/{movie_id}', [MovieController::class, 'show'])->name('movie.show');
+Route::get('movie/memo/delete/{memo_id}', [MovieController::class, 'movie_memo_delete'])->name('movie.memo.delete');
+
+Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])->name('movie.memo.update');
 
 
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
+Route::get('/AddMemo', [MovieController::class, 'addMemo']);

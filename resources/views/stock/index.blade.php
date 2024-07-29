@@ -4,8 +4,10 @@
 <h1 class="text-center text-xl font-bold text-gray-800">在庫管理システム操作履歴</h1>
 
 <section class="text-gray-600 body-font">
-    <div class="container px-5 pt-8 pb-24 mx-auto flex flex-wrap justify-center">
-        <div class="flex flex-wrap justify-center w-full">
+    <div class="container px-5 pt-8 pb-24 mx-auto flex flex-wrap justify-center ">
+
+
+        <div class="flex flex-wrap justify-center w-1/2">
             <div class="lg:w-3/5 md:w-1/2 md:pr-10 md:py-6">
                 @foreach($operation_records as $record)
                 <div class="flex relative pb-12">
@@ -62,9 +64,53 @@
             </div>
             <!-- <img class="lg:w-3/5 md:w-1/2 object-cover object-center rounded-lg md:mt-0 mt-12" src="https://dummyimage.com/1200x500" alt="step"> -->
         </div>
+
+
+        <div class="w-1/2">
+            <!-- <h3>直近の取引実績</h3> -->
+            <canvas id="myChart" width="300" height="300"></canvas>
+        </div>
     </div>
 </section>
 
 
-
+<script>
+    var ctx = document.getElementById("myChart").getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ["{{ Carbon\Carbon::now()->subDays(5)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(4)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(3)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(2)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(1)->format('m/d') }}", "{{Carbon\Carbon::now()->format('m/d')}}"],
+            datasets: [{
+                label: '# of 取引数',
+                data: {!! json_encode($operation_record_recent) !!},
+                backgroundColor: [
+                    'rgba(225, 225, 225, 0.2)',
+                    'rgba(225, 225, 225, 0.8)',
+                    'rgba(225, 225, 225, 0.2)',
+                    'rgba(225, 225, 225, 0.8)',
+                    'rgba(225, 225, 225, 0.2)',
+                    'rgba(225, 225, 225, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(169,169,169,1)',
+                    'rgba(169,169,169,1)',
+                    'rgba(169,169,169,1)',
+                    'rgba(169,169,169,1)',
+                    'rgba(169,169,169,1)',
+                    'rgba(169,169,169,1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+</script>
 @endsection

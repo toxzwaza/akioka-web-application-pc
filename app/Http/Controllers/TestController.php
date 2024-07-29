@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StockSupplier;
 use App\Models\StorageAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -32,5 +33,11 @@ class TestController extends Controller
             $storage_address->col = $number2;
             $storage_address->save();
         }
+    }
+
+    public function supplier_test(){
+        $stock_id = 5361;
+        $stock_suppliers = StockSupplier::select('suppliers.*','stock_suppliers.lead_time','stock_suppliers.act_flg')->where('stock_id',$stock_id)->join('suppliers','suppliers.id','stock_suppliers.supplier_id')->get();
+        dd($stock_suppliers);
     }
 }

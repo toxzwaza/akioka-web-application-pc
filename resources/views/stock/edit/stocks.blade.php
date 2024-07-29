@@ -5,7 +5,7 @@
 
 
         <div class="container mx-auto flex px-5 py-24 md:flex-row flex-col items-start justify-center">
-            <div class="lg:max-w-lg lg:w-2/5 md:w-3/5 mb-10 md:mb-0 px-8 py-24">
+            <div class="lg:max-w-lg lg:w-4/5 md:w-3/5 mb-10 md:mb-0 px-8 py-24">
                 <h2 class="text-xl text-center mb-8 font-bold">{{ $stock->name }}</h2>
 
                 <img class="my-4 w-full object-cover object-center rounded" alt="hero" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}">
@@ -15,8 +15,8 @@
                     <table class="table-auto w-full text-left whitespace-no-wrap">
                         <thead>
                             <tr>
-
-                                <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">格納場所</th>
+                                <th class="bg-gray-100"></th>
+                                <th class="w-32 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">場所</th>
                                 <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">アドレス</th>
                                 <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">個数</th>
                                 <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm"></th>
@@ -27,24 +27,34 @@
 
                         <tbody>
                             @foreach($stock_storages as $stock_storage)
-                        
+
                             <tr class="border-b border-gray-200 my-4 ">
                                 <form action="{{ route('stock.stock_storage.update') }}" method="post">
                                     @csrf
 
                                     <input type="hidden" name="stock_id" value="{{ $stock->id }}">
                                     <input type="hidden" name="stock_storage_id" value="{{ $stock_storage->stock_storage_id }}">
+                                    <td>
+                                        <input class="edit_check" type="radio" name="" id="" value="{{ $stock_storage->stock_storage_id }}">
+                                    </td>
 
-                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                    <td class="w-32 px-4 py-8 text-sm text-gray-900">
                                         {{ $stock_storage->location_name }}
                                     </td>
                                     <td class="px-4 py-8 text-sm text-gray-900">
-                                        <select name="storage_address_id" id="" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50">
+                                        <!-- <select name="storage_address_id" id="" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50">
                                             @foreach($storage_addresses as $storage_address)
                                             <option {{ $storage_address->address == $stock_storage->address ? 'selected' : '' }} value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
                                             @endforeach
 
-                                        </select>
+                                        </select> -->
+
+                                        <input list="storage_address_list" name="storage_address_id" type="number" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50" value="" placeholder="{{ $stock_storage->address }}">
+                                        <datalist id="storage_address_list">
+                                            @foreach($storage_addresses as $storage_address)
+                                            <option {{ $storage_address->address == $stock_storage->address ? 'selected' : '' }} value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
+                                            @endforeach
+                                        </datalist>
                                     </td>
                                     <td class="px-4 py-8 text-sm text-gray-900">
                                         <input name="quantity" class="w-8 text-center shadow-md border border-spacing-1 px-2 py-2 bg-gray-50 rounded-md" type="text" value="{{ $stock_storage->quantity }}">
@@ -52,28 +62,80 @@
 
                                     <td class="px-4 py-8 text-lg text-gray-400 w-16">
 
-                                        <button class="w-16 text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded">更新</button>
+                                        <button class="w-16 text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-1 rounded">更新</button>
 
                                     </td>
                                     <td class="px-4 py-8 text-lg text-gray-400 w-16">
 
-                                        <a href="{{ route('stock.stock_storage.delete', ['stock_storage_id' => $stock_storage->stock_storage_id ]) }}" class="text-center block w-16 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded">削除</a>
+                                        <a href="{{ route('stock.stock_storage.delete', ['stock_storage_id' => $stock_storage->stock_storage_id ]) }}" class="text-center block w-16 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-1 rounded">削除</a>
 
                                     </td>
 
                                 </form>
 
 
-
-
-
-
                             </tr>
                             @endforeach
 
 
+
+
                         </tbody>
                     </table>
+
+                    <details class="mt-4">
+                        <summary>格納先から変更したい場合はこちらをクリックしてください。</summary>
+                        <form action="{{ route('stock.stock_storage.update') }}" method="post">
+                            @csrf
+                            <p class="my-2 font-semibold">変更後格納場所</p>
+                            <p class="my-2 text-sm text-red-400">変更場所を指定する前に、上記の格納先一覧から変更したいデータにチェックを入れてください。</p>
+                            <input type="hidden" name="method" value="change">
+                            <input type="hidden" id="stock_storage_id" name="stock_storage_id" value="">
+
+                            <select name="" id="location_select" class="mr-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                                @foreach($locations as $location)
+
+                                <option {{ $stock_storages[0]->location_name == $location->name ? 'selected' : '' }} value="{{ $location->id }}">{{ $location->name }}</option>
+                                @endforeach
+                            </select>
+                            <select name="storage_address_id" id="address_select" class="mr-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+
+                            </select>
+
+                            <input class="border bg-white hover:bg-blue-400 hover:text-white text-blue-700 font-bold py-2 px-4 rounded" type="submit" value="変更">
+                        </form>
+                    </details>
+                    <script>
+                        const location_select = document.querySelector('#location_select');
+                        const address_select = document.querySelector('#address_select');
+
+                        location_select.addEventListener('change', (el) => {
+                            const location_id = el.target.value;
+                            console.log(location_id);
+
+                            axios.get('/api/getAddress', {
+                                    params: {
+                                        location_id: location_id
+                                    }
+                                })
+                                .then(response => {
+                                    console.log(response.data);
+
+                                    if (response.data) {
+                                        address_select.innerHTML = ''; // 前回の選択肢をクリア
+                                        response.data.forEach((address) => {
+                                            const newOption = document.createElement('option');
+                                            newOption.textContent = address.address;
+                                            newOption.value = address.id;
+                                            address_select.appendChild(newOption);
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error(error);
+                                });
+                        });
+                    </script>
 
                 </div>
             </div>
@@ -138,13 +200,13 @@
                         <div class="">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">価格</label>
                             <input name="price" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->price}}" />
-                           
+
                         </div>
                         <div class="">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">購買URL</label>
                             <input name="url" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->url}}" />
                             @if($stock->url != null)
-                             <p class="mt-2" ><a class="text-sm mt-2 text-indigo-300 underline decoration-1" href="{{$stock->url}}" target="blank">購買URLをチェックする</a></p>
+                            <p class="mt-2"><a class="text-sm mt-2 text-indigo-300 underline decoration-1" href="{{$stock->url}}" target="blank">購買URLをチェックする</a></p>
                             @endif
                         </div>
                         <div class="sm:col-span-2">
@@ -165,7 +227,7 @@
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ひとまとまり数量</label>
                                 <input name="quantity_per_org" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->quantity_per_org}}" />
                             </div>
-                          
+
                             <div class="w-1/4 px-4">
                                 <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">基本発注単位</label>
 
@@ -231,6 +293,55 @@
                 </div>
             </div>
 
+        </div>
+        <div>
+            <hr>
+
+            <section class="text-gray-600 body-font">
+                <div class="container px-5 py-24 mx-auto">
+                    <div class="flex flex-col text-center w-full mb-20">
+                        <h1 class="sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900">取引先一覧</h1>
+                        <p class="lg:w-2/3 mx-auto leading-relaxed text-base">2024/07/22 取引先の編集は未実装です。</p>
+                    </div>
+                    <div class="lg:w-2/3 w-full mx-auto overflow-auto">
+                        <table class="table-auto w-full text-left whitespace-no-wrap">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">取引先名</th>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">電話</th>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">FAX</th>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">リードタイム</th>
+                                    <th class="w-5/1 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">メモ</th>
+                                    <th class="w-24 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
+                                    <th class="w-24 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($stock_suppliers as $stock_supplier)
+                                <tr>
+                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->name }}</td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->tel }}</td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->fax }}</td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->lead_time }}</td>
+                                    <td class="w-1/5 px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->memo }}</td>
+
+                                    <td class="w-16 px-4 py-8 text-sm text-gray-900"><span class="text-green-400 material-symbols-outlined">
+                                            update
+                                        </span></td>
+                                    <td class="w-16 px-4 py-8 text-sm text-gray-900"><span class="text-red-500 material-symbols-outlined">
+                                            delete
+                                        </span>
+                                    </td>
+
+                                </tr>
+                                @endforeach
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </section>
 
 
         </div>
@@ -246,6 +357,15 @@
     img_config_change.addEventListener('click', (el) => {
         img_path_input.classList.toggle('pointer-events-none');
         img_path_input.classList.toggle('bg-gray-200');
+    });
+
+    const edit_check = document.querySelectorAll('.edit_check');
+    const stock_storage_id = document.querySelector('#stock_storage_id');
+    edit_check.forEach((el) => {
+        el.addEventListener('click', (e) => {
+            console.log(e.target.value);
+            stock_storage_id.value = e.target.value;
+        });
     });
 </script>
 

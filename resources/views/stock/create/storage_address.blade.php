@@ -16,6 +16,7 @@
                 <div class="px-8 w-1/2 border-r border-gray-200 text-left">
                     <!-- 格納先作成フォーム -->
                     <h2 class="font-bold mb-8 text-left text-gray-500">格納先追加</h2>
+                    <p>現在の格納先一覧は下に表示しています。</p>
                     <form class="w-full" action="{{ route('stock.locations.create') }}">
                         <input type="text" name="location_name" id="" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
 
@@ -40,10 +41,32 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="sm:col-span-2 mb-4">
+                        <!-- <div class="sm:col-span-2 mb-4">
                             <label for="address" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">アドレス*</label><br>
                             <input type="text" name="address" id="address" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                        </div> -->
+
+                        <p class="mt-8 mb-2 text-sm text-red-400">※「棚番 - 段数 - 列数」がアドレスとなります。<br>段数０は床面を表します。</p>
+                        <div class="flex items-center justify-start">
+
+                            <div class="sm:col-span-2 mb-4 w-1/5 mr-4">
+                                <label for="address" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">棚*</label><br>
+                                <input type="text" name="shelf" id="address" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="A">
+                            </div>
+                            <div class="sm:col-span-2 mb-4 w-1/5 mr-4">
+                                <label for="address" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">段*</label><br>
+                                <input type="text" name="row" id="address" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="1">
+                            </div>
+                            <div class="sm:col-span-2 mb-4 w-1/5 mr-4">
+                                <label for="address" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">列</label><br>
+                                <input type="text" name="col" id="address" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="1">
+                            </div>
+                            <div class="sm:col-span-2 mb-4 w-1/5 mr-4">
+                                <label for="address" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">列の中の段</label><br>
+                                <input type="text" name="sub_row" id="address" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="1">
+                            </div>
                         </div>
+                        
 
                         <button class="mt-4 border bg-white hover:bg-blue-400 hover:text-white text-blue-700 font-bold py-2 px-4 rounded">
                             追加
@@ -140,6 +163,7 @@
                 })
                 .then(response => {
                     // console.log(response.data);
+                    badge_container.innerHTML = '';
                     if (response.data) {
                         response.data.forEach((address) => {
                             // console.log(address.address);

@@ -12,7 +12,7 @@ class ApiController extends Controller
         $location_id = $request->location_id;
 
         if($location_id){
-            $storage_addresses = StorageAddress::where('location_id', $location_id)->get();
+            $storage_addresses = StorageAddress::where('location_id', $location_id)->orderby('address','asc')->get();
             
             return response()->json($storage_addresses);
         }

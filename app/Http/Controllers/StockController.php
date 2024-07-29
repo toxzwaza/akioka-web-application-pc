@@ -9,6 +9,7 @@ use App\Models\Location;
 use App\Models\Process;
 use App\Models\Stock;
 use App\Models\StockStorage;
+use App\Models\StockSupplier;
 use App\Models\StorageAddress;
 use App\Models\Supplier;
 use App\Services\Method;
@@ -16,8 +17,8 @@ use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
-    public function test(){
-
+    public function test()
+    {
     }
     //
     public function index()
@@ -26,17 +27,26 @@ class StockController extends Controller
         // dd($operation_records);
 
 
-        return view('stock.index', compact('operation_records'));
+        $operation_record_recent = [];
+        for ($i = 0; $i < 6; $i++) {
+            $recent_count = InventoryOperationRecord::whereDate('created_at', now()->subDays($i)->toDateString())
+                ->count();
+            $operation_record_recent[] = $recent_count;
+        }
+
+        // dd($operation_record_recent);
+
+
+        return view('stock.index', compact('operation_records', 'operation_record_recent'));
     }
     // 在庫一覧
     public function stocks(Request $request)
     {
         $keyword = $request->keyword;
-        if($keyword){
-            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name','like',"%$keyword%")->orWhere('stocks.s_name','like',"%$keyword%")->orWhere('stocks.jan_code','like',"%$keyword%")->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
-        }else{
+        if ($keyword) {
+            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name', 'like', "%$keyword%")->orWhere('stocks.s_name', 'like', "%$keyword%")->orWhere('stocks.jan_code', 'like', "%$keyword%")->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+        } else {
             $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
-
         }
 
         return view('stock.stocks', compact('stocks'));
@@ -46,10 +56,9 @@ class StockController extends Controller
     public function storage_address(Request $request)
     {
         $location_id = $request->location_id;
-        if($location_id){
-            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('location_id',$location_id)->paginate(20);
-
-        }else{
+        if ($location_id) {
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('location_id', $location_id)->paginate(20);
+        } else {
 
             $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->paginate(20);
         }
@@ -81,17 +90,21 @@ class StockController extends Controller
         $classifications = Classification::all();
         $processes = Process::all();
         $locations = Location::all();
-       
+
+        $stock_suppliers = StockSupplier::select('suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
+
+
 
         // 在庫状況
-        $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id','quantity','locations.name as location_name','address','location_id')->join('storage_addresses','storage_addresses.id','stock_storages.storage_address_id')->join('locations','locations.id','storage_addresses.location_id')->where('stock_id', $stock_id)->get();
+        $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)->get();
         // dd($stock_storages);
-    
-        $storage_addresses = StorageAddress::where('location_id',$stock_storages[0]->location_id)->orderby('address','asc')->get();
 
-        return view('stock.edit.stocks', compact('stock', 'classifications', 'processes','stock_storages','locations','storage_addresses'));
+        $storage_addresses = StorageAddress::where('location_id', $stock_storages[0]->location_id)->orderby('address', 'asc')->get();
+
+        return view('stock.edit.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
     }
-    public function store_stocks(Request $request){
+    public function store_stocks(Request $request)
+    {
         $stock_id = $request->stock_id;
         $stock_no = $request->stock_no;
         $name = $request->name;
@@ -100,7 +113,7 @@ class StockController extends Controller
         $img_path = $request->img_path;
         $price = $request->price;
         $url = $request->url;
-        $purchase_identification_number	 = $request->purchase_identification_number;
+        $purchase_identification_number     = $request->purchase_identification_number;
         $solo_unit = $request->solo_unit;
         $org_unit = $request->org_unit;
         $main_unit_flg = $request->main_unit_flg;
@@ -114,7 +127,7 @@ class StockController extends Controller
         //     dd('ファイルあり');
         // }
         $stock = Stock::find($stock_id);
-        if(!$stock){
+        if (!$stock) {
             Method::msg('error', '在庫情報を取得できませんでした。');
             return redirect()->back();
         }
@@ -126,7 +139,7 @@ class StockController extends Controller
         $stock->jan_code = $jan_code;
         $stock->url = $url;
         $stock->img_path = $img_path;
-        $stock->price= $price;
+        $stock->price = $price;
         $stock->purchase_identification_number = $purchase_identification_number;
         $stock->solo_unit = $solo_unit;
         $stock->org_unit = $org_unit;
@@ -137,19 +150,17 @@ class StockController extends Controller
         $stock->process_code = $process_code;
         $stock->memo = $memo;
         $stock->save();
-        
+
         Method::msg('success', '在庫情報を更新しました。');
         return redirect()->back();
-
-
-        
     }
 
 
     // 在庫作成
     public function create_stocks()
     {
-        return view('stock.create.stocks');
+        $classifications = Classification::all();
+        return view('stock.create.stocks',compact('classifications'));
     }
     // 格納先作成
     public function create_storage_addresses()
@@ -166,20 +177,20 @@ class StockController extends Controller
     // 場所作成
     public function store_location(Request $request)
     {
-      
-        
+
+
         $location_name = $request->location_name;
-    
+
         // 名前が送信されていない場合
         if (!$location_name) {
 
             return redirect()->back();
         }
-   
+
 
         // 既に同じ名前で存在する場合
         $location = Location::where('name', $location_name)->first();
-        if($location){
+        if ($location) {
             return redirect()->back();
         }
 
@@ -191,12 +202,26 @@ class StockController extends Controller
         return redirect()->back();
     }
     // アドレス作成
-    public function store_storage_address(Request $request){
+    public function store_storage_address(Request $request)
+    {
 
         $location_id = $request->location_id;
-        $address = $request->address;
+        $shelf = $request->shelf;
+        $row = $request->row;
+        $col = $request->col;
+        $sub_row = $request->sub_row;
+        // アドレス作成
+        $address = $shelf . '-' . $row;
+        if ($col) {
+            $address = $address . '-' . $col;
+        }
+        if ($sub_row) {
+            $address = $address . '-' . $sub_row;
+        }
 
-        if(!$location_id || !$address){
+        // $address = $request->address;
+
+        if (!$location_id) {
             return redirect()->back();
         }
 
@@ -208,6 +233,10 @@ class StockController extends Controller
         $storage_address = new StorageAddress();
         $storage_address->address = $address;
         $storage_address->location_id = $location_id;
+        $storage_address->shelf = $shelf;
+        $storage_address->row = $row;
+        $storage_address->col = $col;
+        $storage_address->sub_row = $sub_row;
         $storage_address->save();
 
         return redirect()->route('stock.storage_addresses.create');
@@ -225,35 +254,54 @@ class StockController extends Controller
     }
 
 
-    public function update_stock_storage(Request $request){
-
-
+    public function update_stock_storage(Request $request)
+    {
+        $method = $request->method;
         $stock_storage_id = $request->stock_storage_id;
         $storage_address_id = $request->storage_address_id;
-        $quantity = $request->quantity;
 
-        if(!$storage_address_id || !$quantity){
-            Method::msg('error','数量が未入力の可能性があります。');
-            return redirect()->back();
-        }
-        // dd($stock_storage_id);
+        if (!($method == 'change')) {
+            // 同一格納先
+            // アドレスもしくは、個数の変更
 
-        $stock_storage = StockStorage::where('id',$stock_storage_id)->first();
-        if($stock_storage){
-            $stock_storage->storage_address_id = $storage_address_id;
-            $stock_storage->quantity = $quantity;
-            $stock_storage->save();
+
+            $quantity = $request->quantity;
+
+            if (!$storage_address_id || !$quantity) {
+                Method::msg('error', '数量が未入力の可能性があります。');
+                return redirect()->back();
+            }
+            // dd($stock_storage_id);
+
+            $stock_storage = StockStorage::where('id', $stock_storage_id)->first();
+            if ($stock_storage) {
+                $stock_storage->storage_address_id = $storage_address_id;
+                $stock_storage->quantity = $quantity;
+                $stock_storage->save();
+            }
+        } else {
+            // 格納先の変更
+
+            $stock_storage = StockStorage::where('id', $stock_storage_id)->first();
+            if ($stock_storage) {
+                $stock_storage->storage_address_id = $storage_address_id;
+                $stock_storage->save();
+            }
         }
-        Method::msg('success','更新が完了しました。');
-  
-        
+
+
+
+
+        Method::msg('success', '更新が完了しました。');
+
+
 
 
         return redirect()->back();
-
     }
 
-    public function delete_stock_storage(Request $request){
+    public function delete_stock_storage(Request $request)
+    {
         $stock_storage_id = $request->stock_storage_id;
 
         // dd($stock_storage_id);
