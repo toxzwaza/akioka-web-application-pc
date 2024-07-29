@@ -161,7 +161,7 @@
     <a href="#" class="flex mx-2 px-8 hover:text-gray-900">弁当注文履歴</a>
     <a href="#" class="flex mx-2 px-8 hover:text-gray-900">備考作成</a>
     @elseif(Route::is('movie*'))
-    <a href="{{ route('movie') }}" class="flex mx-2 px-8 hover:text-gray-900">動画視聴</a>
+    <a href="{{ route('movie') }}" class="flex mx-2 px-8 hover:text-gray-900">動画一覧</a>
     <a href="{{ route('movie.create') }}" class="flex mx-2 px-8 hover:text-gray-900">動画追加</a>
     <a href="{{ route('movie.create.tag') }}" class="flex mx-2 px-8 hover:text-gray-900">動画タグ追加</a>
 

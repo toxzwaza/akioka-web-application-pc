@@ -266,8 +266,11 @@ class StockController extends Controller
 
 
             $quantity = $request->quantity;
+            // dd($quantity, $stock_storage_id);
 
             if (!$storage_address_id || !$quantity) {
+                dd($storage_address_id);
+                
                 Method::msg('error', '数量が未入力の可能性があります。');
                 return redirect()->back();
             }
