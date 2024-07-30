@@ -101,17 +101,29 @@ class StockController extends Controller
     {
         $location_id = $request->location_id;
         if ($location_id) {
-            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('location_id', $location_id)->orderby('address','asc')->paginate(20);
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')
+            ->where('location_id', $location_id)
+            ->orderby('address','asc')->paginate(20);
         } else {
 
             $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->orderby('address','asc')->paginate(20);
+
         }
 
         foreach ($storage_location_addresses as $sla) {
-            $stock_storage_count = StockStorage::where('storage_address_id', $sla->storage_address_id)->count();
+            $stock_storage_count = StockStorage::join('stocks','stocks.id','stock_storages.stock_id')
+            ->join('classifications', 'stocks.classification_id', 'classifications.id')
+            ->where('storage_address_id', $sla->storage_address_id)
+            ->where('stocks.del_flg',0)
+            ->where('stocks.not_stock_flg',0)
+            ->count();
+
+
             $sla->count = $stock_storage_count;
+
+            
         }
-        // dd($storage_location_addresses);
+
 
 
 
@@ -199,6 +211,21 @@ class StockController extends Controller
 
         Method::msg('success', '在庫情報を更新しました。');
         return redirect()->back();
+    }
+
+    // 棚卸し
+    public function stock_taking(Request $request){
+        $storage_address_id = $request->keyword ?? null;
+        $storage_address_name = StorageAddress::find($storage_address_id)->address ?? '';
+        $storage_addresses = StorageAddress::orderby('address','asc')->get();
+   
+
+        $stocks = StockStorage::select('stocks.*','stock_storages.quantity')
+        ->join('stocks','stocks.id','stock_storages.stock_id')
+        ->where('storage_address_id',$storage_address_id)->take(10)->get();
+
+
+        return view('stock.taking.stocks',compact('stocks','storage_addresses','storage_address_name'));
     }
 
 

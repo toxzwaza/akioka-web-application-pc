@@ -46,6 +46,7 @@ Route::get('/stock/stocks', [StockController::class, 'stocks'])->name('stock.sto
 Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
 Route::post('/stock/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
+Route::get('/stock/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
 
 
 Route::get('/stock/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
