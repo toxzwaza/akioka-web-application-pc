@@ -1,5 +1,6 @@
 @extends('layouts.main')
 @section('content')
+
 <div>
     <section class="text-gray-600 body-font">
 
@@ -160,6 +161,8 @@
                     <!-- form - start -->
                     <form action="{{ route('stock.store.stocks') }}" method="post" class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2" enctype="multipart/form-data">
                         @csrf
+
+
                         <div>
                             <label for="first-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ID*</label>
 
@@ -178,7 +181,9 @@
 
                         <div class="sm:col-span-2">
                             <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">JANコード</label>
-                            <input name="jan_code" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->jan_code }}" />
+                            <input id="jan_code" name="jan_code" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->jan_code }}" />
+
+                            <button id="not_jan_code" class="mt-2 bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500  text-xs hover:border-transparent rounded">JANなし</button>
                         </div>
                         <div class="sm:col-span-2">
                             <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">品番</label>
@@ -274,7 +279,14 @@
                             <textarea name="memo" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" rows="4">{{ $stock->memo }}</textarea>
                         </div>
 
+                        <div>
+                            <label for="first-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ステータス*</label>
 
+                            <select name="del_flg" id="" class="w-full font-semibold rounded border bg-gray-50 px-3 py-2 text-gray-400 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                                <option class="px-2 py-1 font-semibold text-green-400" {{ $stock->del_flg == 0 ? 'selected' : ''}} value="0">表示</option>
+                                <option class="px-2 py-1 font-semibold text-red-400" {{ $stock->del_flg == 1 ? 'selected' : ''}} value="1">非表示</option>
+                            </select>
+                        </div>
 
 
 
@@ -375,12 +387,23 @@
         e.preventDefault();
         const storage_address_id = document.querySelector('#storage_address_id');
         const selected_list = document.querySelector('.selected');
-        if(!storage_address_id.value){
+        if (!storage_address_id.value) {
             storage_address_id.value = selected_list.value;
 
         }
         update_form.submit();
-       
+
+    });
+
+    const not_jan_code = document.querySelector('#not_jan_code');
+    const jan_code = document.querySelector('#jan_code');
+    not_jan_code.addEventListener('click', (el) => {
+        el.preventDefault();
+
+        jan_code.value = "None";
+        jan_code.classList.toggle('bg-gray-50');
+        jan_code.classList.toggle('bg-gray-200');
+        jan_code.classList.toggle('pointer-events-none');
     });
 </script>
 

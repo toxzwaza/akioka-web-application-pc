@@ -157,7 +157,8 @@ class StockController extends Controller
         $img_path = $request->img_path;
         $price = $request->price;
         $url = $request->url;
-        $purchase_identification_number     = $request->purchase_identification_number;
+        $del_flg = $request->del_flg;
+        $purchase_identification_number = $request->purchase_identification_number;
         $solo_unit = $request->solo_unit;
         $org_unit = $request->org_unit;
         $main_unit_flg = $request->main_unit_flg;
@@ -193,6 +194,7 @@ class StockController extends Controller
         $stock->deli_location = $deli_location;
         $stock->process_code = $process_code;
         $stock->memo = $memo;
+        $stock->del_flg = $del_flg;
         $stock->save();
 
         Method::msg('success', '在庫情報を更新しました。');
