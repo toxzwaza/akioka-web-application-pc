@@ -43,10 +43,54 @@ class StockController extends Controller
     public function stocks(Request $request)
     {
         $keyword = $request->keyword;
+        $storage_address_id = $request->storage_address_id;
+
+        if($storage_address_id){
+            // $stocks = StockStorage::select('stocks.*', 'classifications.name as classification_name')->join('stocks','stocks.id','stock_storages.stock_id')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('storage_address_id', $storage_address_id)->orderby('updated_at','desc')->paginate(20);
+
+            if ($keyword) {
+                // 格納アドレスと検索キーワード
+                $stocks = StockStorage::select('stocks.*', 'classifications.name as classification_name')
+                    ->join('stocks','stocks.id','stock_storages.stock_id')
+                    ->join('classifications', 'stocks.classification_id', 'classifications.id')
+                    ->where('storage_address_id', $storage_address_id)
+                    ->where('stocks.del_flg',0)
+                    ->where(function($query) use ($keyword) {
+                        $query->where('stocks.name', 'like', "%$keyword%")
+                            ->orWhere('stocks.s_name', 'like', "%$keyword%")
+                            ->orWhere('stocks.jan_code', 'like', "%$keyword%");
+                    })
+                    ->orderby('updated_at','desc')
+                    ->paginate(20);
+
+                // $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name', 'like', "%$keyword%")->orWhere('stocks.s_name', 'like', "%$keyword%")->orWhere('stocks.jan_code', 'like', "%$keyword%")->orderby('stocks.updated_at', 'desc')->paginate(20);
+            } else {
+                // 格納アドレスのみ
+
+                $stocks = StockStorage::select('stocks.*', 'classifications.name as classification_name')->join('stocks','stocks.id','stock_storages.stock_id')->join('classifications', 'stocks.classification_id', 'classifications.id')
+                ->where('storage_address_id', $storage_address_id)
+                ->where('stocks.del_flg',0)
+                ->orderby('updated_at','desc')->paginate(20);
+            }
+
+
+            return view('stock.stocks', compact('stocks'));
+        }
+
+
         if ($keyword) {
-            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name', 'like', "%$keyword%")->orWhere('stocks.s_name', 'like', "%$keyword%")->orWhere('stocks.jan_code', 'like', "%$keyword%")->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+            // キーワード検索のみ
+            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')
+            ->where('stocks.del_flg',0)
+            ->where('stocks.name', 'like', "%$keyword%")
+            ->orWhere('stocks.s_name', 'like', "%$keyword%")
+            ->orWhere('stocks.jan_code', 'like', "%$keyword%")
+            ->orderby('stocks.updated_at', 'desc')->paginate(20);
         } else {
-            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->take(20)->paginate();
+            // 検索条件なし
+            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')
+            ->where('stocks.del_flg',0)
+            ->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->paginate(20);
         }
 
         return view('stock.stocks', compact('stocks'));
@@ -57,10 +101,10 @@ class StockController extends Controller
     {
         $location_id = $request->location_id;
         if ($location_id) {
-            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('location_id', $location_id)->paginate(20);
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('location_id', $location_id)->orderby('address','asc')->paginate(20);
         } else {
 
-            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->paginate(20);
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->orderby('address','asc')->paginate(20);
         }
 
         foreach ($storage_location_addresses as $sla) {

@@ -33,7 +33,7 @@
                 <tbody>
                     @foreach($storage_location_addresses as $sla)
                     <tr>
-                        <td class="px-4 py-8"><a href="" class="hover:text-blue-400">{{ $sla->location_name }}</a></td>
+                        <td class="px-4 py-8"><a href="{{ route('stock.stocks' ,['storage_address_id' => $sla->storage_address_id ]) }}" class="hover:text-blue-400">{{ $sla->location_name }}</a></td>
                         <td class="px-4 py-8">{{ $sla->address }}</td>
                         <td class="px-4 py-8"><a href="" class="hover:text-blue-400">{{ $sla->count }}</a></td>
                         <td class="px-4 py-8">{{ \Carbon\Carbon::parse($sla->created_at)->format('Y/m/d') }}</td>

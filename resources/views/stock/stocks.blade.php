@@ -16,7 +16,7 @@
 
                 <form class="w-1/3 flex items-center relative" action="{{ route('stock.stocks') }}" method="get">
 
-
+                    <input type="hidden" name="storage_address_id" value="{{ request('storage_address_id') ?? '' }}">
                     <input name="keyword" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="キーワード検索" />
 
                     <button class="absolute right-2 ml-2 flex items-center">
@@ -28,7 +28,7 @@
 
         </div>
         <div class="mb-4">
-            {{ $stocks->links() }}
+        {{ $stocks->appends(request()->query())->links() }}
         </div>
         <div class="lg:w-full w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
@@ -80,7 +80,7 @@
         </div>
 
         <div class="mt-8">
-            {{ $stocks->links() }}
+        {{ $stocks->appends(request()->query())->links() }}
         </div>
 
 
