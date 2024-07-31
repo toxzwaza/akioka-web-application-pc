@@ -11,6 +11,8 @@
 
                 <img class="my-4 w-full object-cover object-center rounded" alt="hero" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}">
 
+                @if(count($stock_storages) != 0)
+                <!-- 格納アドレスが一つ以上存在する場合 -->
 
                 <div>
                     <table class="table-auto w-full text-left whitespace-no-wrap">
@@ -27,6 +29,7 @@
                         </thead>
 
                         <tbody>
+
                             @foreach($stock_storages as $stock_storage)
 
                             <tr class="border-b border-gray-200 my-4 ">
@@ -43,12 +46,6 @@
                                         {{ $stock_storage->location_name }}
                                     </td>
                                     <td class="px-4 py-8 text-sm text-gray-900">
-                                        <!-- <select name="storage_address_id" id="" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50">
-                                            @foreach($storage_addresses as $storage_address)
-                                            <option {{ $storage_address->address == $stock_storage->address ? 'selected' : '' }} value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
-                                            @endforeach
-
-                                        </select> -->
 
                                         <input id="storage_address_id" list="storage_address_list" name="storage_address_id" type="number" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50" value="" placeholder="{{ $stock_storage->address }}">
                                         <datalist id="storage_address_list">
@@ -139,6 +136,116 @@
                     </script>
 
                 </div>
+
+                @else
+                <!-- 格納先が存在しない場合 -->
+                <p>格納先がありません。<br>以下から設定することができます。</p>
+                <div>
+                    <table class="table-auto w-full text-left whitespace-no-wrap">
+                        <thead>
+                            <tr>
+
+                                <th class="w-32 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">場所</th>
+                                <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">アドレス</th>
+                                <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm">個数</th>
+                                <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm"></th>
+                                <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 text-sm"></th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+
+                            <tr class="border-b border-gray-200 my-4 ">
+                                <form id="update_form" action="{{ route('stock.stock_storage.create') }}" method="post">
+                                    @csrf
+
+                                    <input type="hidden" name="stock_id" value="{{ $stock->id }}">
+
+
+                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                        <!-- location -->
+                                        <select name="location_id" id="location_select" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50">
+                                            @foreach($locations as $location)
+                                            <option class="text-left" value="{{ $location->id }}">{{ $location->name }}</option>
+                                            @endforeach
+                                        </select>
+
+                                    </td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                        <!-- storage_address -->
+                                        <input id="storage_address_id" list="address_select" name="storage_address_id" type="number" class="w-24 text-center shadow-md border border-spacing-1 px-2 py-2 rounded-md bg-gray-50" value="" placeholder="">
+                                        <datalist id="address_select">
+                                            <!-- 初期オプション  宿直室 -->
+
+                                            @foreach($storage_addresses as $storage_address)
+                                            <option value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
+                                            @endforeach
+
+
+                                        </datalist>
+                                    </td>
+                                    <td class="px-4 py-8 text-sm text-gray-900">
+                                        <!-- 数量 -->
+                                        <input name="quantity" class="w-8 text-center shadow-md border border-spacing-1 px-2 py-2 bg-gray-50 rounded-md" type="text" value="" placeholder="0">
+                                    </td>
+
+                                    <td class="px-4 py-8 text-lg text-gray-400 w-16">
+
+                                        <button id="create_button" class="w-16 text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-1 rounded">登録</button>
+
+                                    </td>
+                                    <td class="px-4 py-8 text-lg text-gray-400 w-16">
+                                    </td>
+
+                                </form>
+
+
+                            </tr>
+
+
+
+
+                        </tbody>
+                    </table>
+
+
+
+                </div>
+                <script>
+                    const location_select = document.querySelector('#location_select');
+                    const address_select = document.querySelector('#address_select');
+
+                    location_select.addEventListener('change', (el) => {
+                        const location_id = el.target.value;
+                        console.log(location_id);
+
+                        axios.get('/api/getAddress', {
+                                params: {
+                                    location_id: location_id
+                                }
+                            })
+                            .then(response => {
+                                console.log(response.data);
+
+                                if (response.data) {
+                                    address_select.innerHTML = ''; // 前回の選択肢をクリア
+                                    response.data.forEach((address) => {
+                                        const newOption = document.createElement('option');
+                                        newOption.textContent = address.address;
+                                        newOption.value = address.id;
+                                        address_select.appendChild(newOption);
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+                    });
+                </script>
+
+                @endif
             </div>
 
 
@@ -190,10 +297,13 @@
                             <input name="s_name" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $stock->s_name }}" />
                         </div>
 
-                        <div class="">
+                        <!-- <div class="">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ファイル選択</label>
                             <input name="upload_file" type="file" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->img_path}}" />
-                        </div>
+                        </div> -->
+
+
+
                         <div class="">
 
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">画像パス</label>
@@ -203,17 +313,18 @@
                         </div>
 
                         <div class="">
-                            <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">価格</label>
-                            <input name="price" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->price}}" />
-
-                        </div>
-                        <div class="">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">購買URL</label>
                             <input name="url" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->url}}" />
                             @if($stock->url != null)
                             <p class="mt-2"><a class="text-sm mt-2 text-indigo-300 underline decoration-1" href="{{$stock->url}}" target="blank">購買URLをチェックする</a></p>
                             @endif
                         </div>
+                        <div class="">
+                            <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">価格</label>
+                            <input name="price" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->price}}" />
+
+                        </div>
+                        
                         <div class="sm:col-span-2">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">EC購買用識別番号</label>
                             <input name="purchase_identification_number" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->purchase_identification_number}}" />
@@ -286,6 +397,15 @@
                                 <option class="px-2 py-1 font-semibold text-green-400" {{ $stock->del_flg == 0 ? 'selected' : ''}} value="0">表示</option>
                                 <option class="px-2 py-1 font-semibold text-red-400" {{ $stock->del_flg == 1 ? 'selected' : ''}} value="1">非表示</option>
                             </select>
+                        </div>
+                        <div>
+                            <label for="first-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">管理ステータス*</label>
+
+                            <select name="not_stock_flg" id="" class="w-full font-semibold rounded border bg-gray-50 px-3 py-2 text-gray-400 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                                <option class="px-2 py-1 font-semibold text-green-400" {{ $stock->not_stock_flg == 0 ? 'selected' : ''}} value="0">対象</option>
+                                <option class="px-2 py-1 font-semibold text-red-400" {{ $stock->not_stock_flg == 1 ? 'selected' : ''}} value="1">非対象</option>
+                            </select>
+                            <p class="text-xs mt-2">※非対象に設定すると在庫管理システムの検索項目とされません。</p>
                         </div>
 
 
@@ -365,46 +485,56 @@
 <script>
     const img_config_change = document.querySelector('#img_config_change');
     const img_path_input = document.querySelector('#img_path_input');
+    if (img_config_change) {
 
-    img_config_change.addEventListener('click', (el) => {
-        img_path_input.classList.toggle('pointer-events-none');
-        img_path_input.classList.toggle('bg-gray-200');
-    });
+        img_config_change.addEventListener('click', (el) => {
+            img_path_input.classList.toggle('pointer-events-none');
+            img_path_input.classList.toggle('bg-gray-200');
+        });
+    }
 
     const edit_check = document.querySelectorAll('.edit_check');
     const stock_storage_id = document.querySelector('#stock_storage_id');
-    edit_check.forEach((el) => {
-        el.addEventListener('click', (e) => {
-            console.log(e.target.value);
-            stock_storage_id.value = e.target.value;
+    if (edit_check) {
+
+        edit_check.forEach((el) => {
+            el.addEventListener('click', (e) => {
+                console.log(e.target.value);
+                stock_storage_id.value = e.target.value;
+            });
         });
-    });
+    }
 
     const update_button = document.querySelector('#update_button');
     const update_form = document.querySelector('#update_form');
+    if (update_button) {
 
-    update_button.addEventListener('click', (e) => {
-        e.preventDefault();
-        const storage_address_id = document.querySelector('#storage_address_id');
-        const selected_list = document.querySelector('.selected');
-        if (!storage_address_id.value) {
-            storage_address_id.value = selected_list.value;
+        update_button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const storage_address_id = document.querySelector('#storage_address_id');
+            const selected_list = document.querySelector('.selected');
+            if (!storage_address_id.value) {
+                storage_address_id.value = selected_list.value;
 
-        }
-        update_form.submit();
+            }
+            update_form.submit();
 
-    });
+        });
+    }
 
     const not_jan_code = document.querySelector('#not_jan_code');
     const jan_code = document.querySelector('#jan_code');
-    not_jan_code.addEventListener('click', (el) => {
-        el.preventDefault();
+    if (not_jan_code) {
 
-        jan_code.value = "None";
-        jan_code.classList.toggle('bg-gray-50');
-        jan_code.classList.toggle('bg-gray-200');
-        jan_code.classList.toggle('pointer-events-none');
-    });
+        not_jan_code.addEventListener('click', (el) => {
+            el.preventDefault();
+
+            jan_code.value = "None";
+            jan_code.classList.toggle('bg-gray-50');
+            jan_code.classList.toggle('bg-gray-200');
+            jan_code.classList.toggle('pointer-events-none');
+        });
+    }
 </script>
 
 

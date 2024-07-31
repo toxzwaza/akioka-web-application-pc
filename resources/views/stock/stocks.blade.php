@@ -43,7 +43,7 @@
                         <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">品番</th>
 
                         <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">納品先</th>
-                        <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">備品カテゴリ</th>
+                        <!-- <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">備品カテゴリ</th> -->
                         <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">価格</th>
                         <th class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"></th>
 
@@ -60,7 +60,7 @@
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->name }}</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->s_name }}</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->deli_location }}</td>
-                        <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->classification_name }}</td>
+ 
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->price > 0 && is_numeric($stock->price) ? number_format($stock->price) . '円' : ''}}</td>
                         <td class="px-4 py-8 text-lg text-gray-400">
                             <a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}">

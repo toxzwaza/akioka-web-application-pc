@@ -13,6 +13,7 @@ use App\Models\StockSupplier;
 use App\Models\StorageAddress;
 use App\Models\Supplier;
 use App\Services\Method;
+use Exception;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
@@ -46,13 +47,11 @@ class StockController extends Controller
         $storage_address_id = $request->storage_address_id;
 
         if($storage_address_id){
-            // $stocks = StockStorage::select('stocks.*', 'classifications.name as classification_name')->join('stocks','stocks.id','stock_storages.stock_id')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('storage_address_id', $storage_address_id)->orderby('updated_at','desc')->paginate(20);
 
             if ($keyword) {
                 // 格納アドレスと検索キーワード
-                $stocks = StockStorage::select('stocks.*', 'classifications.name as classification_name')
+                $stocks = StockStorage::select('stocks.*')
                     ->join('stocks','stocks.id','stock_storages.stock_id')
-                    ->join('classifications', 'stocks.classification_id', 'classifications.id')
                     ->where('storage_address_id', $storage_address_id)
                     ->where('stocks.del_flg',0)
                     ->where(function($query) use ($keyword) {
@@ -67,7 +66,8 @@ class StockController extends Controller
             } else {
                 // 格納アドレスのみ
 
-                $stocks = StockStorage::select('stocks.*', 'classifications.name as classification_name')->join('stocks','stocks.id','stock_storages.stock_id')->join('classifications', 'stocks.classification_id', 'classifications.id')
+                $stocks = StockStorage::select('stocks.*')
+                ->join('stocks','stocks.id','stock_storages.stock_id')
                 ->where('storage_address_id', $storage_address_id)
                 ->where('stocks.del_flg',0)
                 ->orderby('updated_at','desc')->paginate(20);
@@ -80,17 +80,17 @@ class StockController extends Controller
 
         if ($keyword) {
             // キーワード検索のみ
-            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')
-            ->where('stocks.del_flg',0)
+            $stocks = Stock::where('stocks.del_flg',0)
             ->where('stocks.name', 'like', "%$keyword%")
             ->orWhere('stocks.s_name', 'like', "%$keyword%")
             ->orWhere('stocks.jan_code', 'like', "%$keyword%")
             ->orderby('stocks.updated_at', 'desc')->paginate(20);
+
         } else {
             // 検索条件なし
-            $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')
-            ->where('stocks.del_flg',0)
-            ->join('classifications', 'stocks.classification_id', 'classifications.id')->orderby('stocks.updated_at', 'desc')->paginate(20);
+            $stocks = Stock::
+            where('stocks.del_flg',0)
+            ->orderby('stocks.updated_at', 'desc')->paginate(20);
         }
 
         return view('stock.stocks', compact('stocks'));
@@ -155,7 +155,11 @@ class StockController extends Controller
         $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)->get();
         // dd($stock_storages);
 
-        $storage_addresses = StorageAddress::where('location_id', $stock_storages[0]->location_id)->orderby('address', 'asc')->get();
+        try{
+            $storage_addresses = StorageAddress::where('location_id', $stock_storages[0]->location_id)->orderby('address', 'asc')->get();
+        }catch(Exception $e){
+            $storage_addresses = StorageAddress::where('location_id',1)->get();
+        }
 
         return view('stock.edit.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
     }
@@ -222,7 +226,11 @@ class StockController extends Controller
 
         $stocks = StockStorage::select('stocks.*','stock_storages.quantity')
         ->join('stocks','stocks.id','stock_storages.stock_id')
-        ->where('storage_address_id',$storage_address_id)->take(10)->get();
+        ->join('classifications','classifications.id','stocks.classification_id')
+        ->where('storage_address_id',$storage_address_id)
+        ->where('stocks.del_flg',0)
+        ->where('stocks.not_stock_flg',0)
+        ->paginate(20);
 
 
         return view('stock.taking.stocks',compact('stocks','storage_addresses','storage_address_name'));
@@ -342,7 +350,7 @@ class StockController extends Controller
             // dd($quantity, $stock_storage_id);
 
             if (!$storage_address_id || !$quantity) {
-                dd($storage_address_id);
+
                 
                 Method::msg('error', '数量が未入力の可能性があります。');
                 return redirect()->back();
@@ -385,5 +393,25 @@ class StockController extends Controller
         $stock_storage->delete();
 
         return redirect()->back();
+    }
+
+    public function create_stock_storage(Request $request){
+        $stock_id = $request->stock_id;
+        $storage_address_id = $request->storage_address_id;
+        $quantity = $request->quantity;
+
+       if(!($stock_id && $storage_address_id && $quantity)){
+        Method::msg('error','アドレスと個数を入力して再度お試しください。');
+        return redirect()->back();
+       }
+
+       $stock_storage = new StockStorage();
+       $stock_storage->stock_id = $stock_id;
+       $stock_storage->storage_address_id = $storage_address_id;
+       $stock_storage->quantity = $quantity;
+       $stock_storage->save();
+
+       Method::msg('success', '在庫保管情報を登録しました。');
+       return redirect()->back();
     }
 }

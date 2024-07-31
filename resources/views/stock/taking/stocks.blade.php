@@ -9,7 +9,7 @@
 <section class="text-gray-600 body-font">
     <div class="container px-5 py-24 mx-auto">
         <div class="flex flex-col text-center w-full mb-20">
-            <!-- <h1 class="sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900">Pricing</h1> -->
+
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
                 下の検索ボックスより、棚アドレスから在庫情報を検索してください。
             </p>
@@ -23,7 +23,7 @@
                     <input list="storage_addresses" name="keyword" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="キーワード検索" />
                     <datalist id="storage_addresses">
                         @foreach($storage_addresses as $storage_address)
-                            <option value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
+                        <option value="{{ $storage_address->id }}">{{ $storage_address->address }}</option>
                         @endforeach
 
                     </datalist>
@@ -37,6 +37,7 @@
 
         </div>
         <div class="mb-4">
+            {{ $stocks->links() }}
 
         </div>
 
@@ -45,7 +46,7 @@
 
 
         <div class="lg:w-full w-full mx-auto overflow-auto">
-            <p class=" mb-2 text-md">絞り込み中アドレス：<span class="text-lg text-indigo-400 font-semibold">{{ $storage_address_name }}</span></p>
+            <p class=" mb-2 text-md">絞り込み中アドレス：<span class="text-lg text-gray-400 font-semibold">{{ $storage_address_name }}</span></p>
 
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
@@ -55,7 +56,7 @@
                         <th class="px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">品名</th>
                         <th class="px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">品番</th>
 
-                        <th class=" px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">単価 (※手動変更可)</th>
+                        <th class=" px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-100">単価 (※手動変更可)</th>
                         <th class=" px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">想定在庫数</th>
                         <th class=" w-1/6  px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-100">実際在庫数量</th>
 
@@ -75,15 +76,37 @@
 
                         <td class="px-2 py-2 text-lg text-gray-900">{{ $stock->name }}</td>
                         <td class="px-2 py-2 text-lg text-gray-900">{{ $stock->s_name }}</td>
-                        <td class="px-2 py-2 text-lg text-gray-900">@<input class="{{ $stock->id }}-price w-24 text-center" type="text" value="{{ $stock->price > 0 && is_numeric($stock->price) ? $stock->price  : ''}}">円</td>
 
+                        <!-- 単価 -->
+                        <td class="w-1/6 px-2 py-2 text-lg text-gray-900">@
+
+                            @if($stock->main_unit_flg == 1)
+                            <!-- まとめて発注の場合 -->
+                            <input class="price-{{ $stock->id }} w-24 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring text-center" type="number" value="{{ $stock->price > 0 && is_numeric($stock->price) && $stock->price != 0 ? round($stock->price / $stock->quantity_per_org)  : ''}}">円
+
+                            @else
+
+                            <!-- 単品発注の場合 -->
+                            <input class="price-{{ $stock->id }} w-24 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring text-center" type="number" value="{{ $stock->price > 0 && is_numeric($stock->price) ? $stock->price  : ''}}">円
+
+                            @endif
+                        </td>
+
+                        <!-- 想定数量 -->
                         <td class="px-2 py-2 text-lg text-gray-900">{{ $stock->quantity }}</td>
-                        <td class="{{ $stock->id }}-quantity px-2 py-2 text-lg text-gray-900"><input class="{{ $stock->id }} quantity outline outline-2 outline-offset-2 px-2 py-2" type="number" name="" id=""></td>
+
+                        <!-- 実際数量 -->
+                        <td class="{{ $stock->id }}-quantity px-2 py-2 text-lg text-gray-900">
+                            <input class="{{ $stock->id }} quantity  rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring text-center" type="number" name="" id="">
+                        </td>
 
                         <!-- 合計金額 -->
-                        <td class="{{ $stock->id }}-calc px-2 py-2 text-lg text-gray-900"></td>
+                        <td class="w-1/6 whitespace-nowrap px-2 py-2 text-lg text-gray-900">
+                            <input class="calc-{{ $stock->id }} pointer-events-none rounded border bg-gray-100 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring pl-4 text-center" type="text" value="{{ $stock->price * $stock->quantity }}">
+                            円
+                        </td>
 
-                        <td class="px-2 py-2 text-lg text-gray-900"><input class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" type="button" value="確定"></td>
+                        <td class="px-2 py-2 text-lg text-gray-900"><input class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" type="button" value="登録"></td>
 
 
 
@@ -96,7 +119,7 @@
             </table>
         </div>
 
-       @endif
+        @endif
 
         <div class="mt-8">
 
@@ -107,12 +130,20 @@
 </section>
 
 <script>
-
     const calc = document.querySelectorAll('.quantity');
     calc.forEach((e) => {
-        e.addEventListener('change', (el)=>{
-        console.log(el.target.value); 
-        console.log(el.target.classList[0]); 
+        e.addEventListener('change', (el) => {
+            const quantity = el.target.value;
+            const stock_id = el.target.classList[0];
+
+            const price = document.querySelector(`.price-${stock_id}`).value;
+            const calc = document.querySelector(`.calc-${stock_id}`);
+            console.log(quantity, stock_id, price);
+            if (price) {
+                console.log('実行');
+                calc.value = quantity * price;
+                console.log(calc);
+            }
         });
     });
 </script>
