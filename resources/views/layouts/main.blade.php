@@ -165,8 +165,8 @@
 
 
     @elseif(Route::is('lunch*'))
-    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">弁当注文履歴</a>
-    <a href="#" class="flex mx-2 px-8 hover:text-gray-900">備考作成</a>
+    <a href="{{ route('lunch.order-archive') }}" class="flex mx-2 px-8 hover:text-gray-900">弁当注文履歴</a>
+    <a href="{{ route('lunch.create_description') }}" class="flex mx-2 px-8 hover:text-gray-900">備考作成</a>
     @elseif(Route::is('movie*'))
     <a href="{{ route('movie') }}" class="flex mx-2 px-8 hover:text-gray-900">動画一覧</a>
     <a href="{{ route('movie.create') }}" class="flex mx-2 px-8 hover:text-gray-900">動画追加</a>

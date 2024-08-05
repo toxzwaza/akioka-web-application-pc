@@ -75,6 +75,10 @@ Route::get('/order/approval/{id}', [OrderController::class, 'approval_judge'])->
 Route::get('/order/object_request/{id}', [OrderController::class, 'object_request_judge'])->name('order.object_request.judge');
 
 Route::get('/lunch', [LunchController::class, 'index'])->name('lunch');
+Route::get('/lunch/order-archive', [LunchController::class, 'order_archive'])->name('lunch.order-archive');
+Route::get('/lunch/order-users', [LunchController::class, 'order_users'])->name('lunch.order-users');
+Route::get('/lunch/create-description', [LunchController::class, 'create_description'])->name('lunch.create_description');
+Route::post('/lunch/store-description', [LunchController::class, 'store_description'])->name('lunch.store_description');
 
 Route::get('/movie', [MovieController::class, 'index'])->name('movie');
 Route::get('/movie/create', [MovieController::class, 'movie_create'])->name('movie.create');
