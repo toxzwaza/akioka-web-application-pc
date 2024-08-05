@@ -50,10 +50,10 @@
                     @endif
 
                     <div class="flex-grow pl-4">
-                        <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">{{ Carbon\Carbon::parse($record->created_at)->format('Y年m月d日 h時m分 ') }}</h2>
+                        <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">{{ Carbon\Carbon::parse($record->created_at)->format('Y年m月d日 H時i分 ') }}</h2>
                         <p class="leading-relaxed">
-                            <span class="font-semibold mr-2">{{ $record->user_name}}さん</span>
-                            が<span class="font-semibold mx-1">{{ $record->stock_name}}</span>を<span class="font-semibold mx-1">{{ $record->quantity }}</span>個 <span class="font-semibold mx-1">{{ $record->operation_name }}</span>しました。
+                            <span class="font-semibold mr-2 text-indigo-600">{{ $record->user_name}}さん</span>
+                            が<span class="font-semibold mx-1 text-red-400">{{ $record->stock_name}}</span>を<span class="font-semibold mx-1">{{ $record->quantity }}</span>個 <span class="font-semibold mx-1">{{ $record->operation_name }}</span>しました。
                         </p>
                     </div>
                 </div>

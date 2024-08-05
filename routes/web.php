@@ -79,6 +79,7 @@ Route::get('/lunch/order-archive', [LunchController::class, 'order_archive'])->n
 Route::get('/lunch/order-users', [LunchController::class, 'order_users'])->name('lunch.order-users');
 Route::get('/lunch/create-description', [LunchController::class, 'create_description'])->name('lunch.create_description');
 Route::post('/lunch/store-description', [LunchController::class, 'store_description'])->name('lunch.store_description');
+Route::get('/getMonthOrders', [LunchController::class, 'getMonthOrders']);
 
 Route::get('/movie', [MovieController::class, 'index'])->name('movie');
 Route::get('/movie/create', [MovieController::class, 'movie_create'])->name('movie.create');

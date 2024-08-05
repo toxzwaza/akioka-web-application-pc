@@ -6,6 +6,7 @@ use App\Models\LunchOrder;
 use App\Models\LunchOrderArchive;
 use App\Models\TodayLunchDescription;
 use App\Services\Method;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class LunchController extends Controller
@@ -14,7 +15,9 @@ class LunchController extends Controller
     public function index()
     {
 
-        return view('master.index');
+
+
+        return view('lunch.index');
     }
 
     public function order_archive(Request $request)
@@ -46,13 +49,13 @@ class LunchController extends Controller
         $method = $request->method;
         switch ($method) {
             case 'delete':
-                $today_lunch_description = TodayLunchDescription::whereDate('created_at',\Carbon\Carbon::today()->format('Y-m-d'))->first();
-             
+                $today_lunch_description = TodayLunchDescription::whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
 
-                if($today_lunch_description){
+
+                if ($today_lunch_description) {
                     $today_lunch_description->delete();
-          
-                    Method::msg('success','本日の備考を削除しました。');
+
+                    Method::msg('success', '本日の備考を削除しました。');
                 }
 
                 break;
@@ -74,5 +77,14 @@ class LunchController extends Controller
 
 
         return redirect()->back();
+    }
+
+
+    public function getMonthOrders()
+    {
+        $orders = LunchOrderArchive::selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as created_date, lunch_count, side_dish_count')->get();
+        $orders = response()->json($orders);
+        
+        return $orders;
     }
 }
