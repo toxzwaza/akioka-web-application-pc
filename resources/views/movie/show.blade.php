@@ -55,12 +55,25 @@
 
         <hr class="my-16">
 
+
+
         <form class="mt-4 mb-8 px-8" method="post" action="{{ route('movie.update') }}">
+
             @csrf
             <input type="hidden" name="movie_id" value="{{ $movie->id }}">
             <h2 class="text-lg font-semibold mb-2 text-gray-800">
                 <input class="w-full" type="text" name="name" id="" value="{{ $movie->name }}">
             </h2>
+
+            <div class="flex">
+                <a class="w-24 text-center block my-4 border bg-white hover:bg-gray-400 hover:text-white {{ $movie->del_flg == 0 ? 'text-green-400' : 'text-red-400' }} font-bold py-2 px-4 rounded text-sm" href="{{ route('movie.change_status', ['movie_id' => $movie->id ]) }}">{{ $movie->del_flg == 0 ? '表示中' : '非表示中' }}</a>
+
+                <a class="ml-4 w-24 text-center block my-4 border bg-white hover:bg-gray-400 hover:text-white  font-bold py-2 px-4 rounded text-sm text-red-400" href="{{ route('movie.delete', ['movie_id' => $movie->id ]) }}">動画削除</a>
+
+            </div>
+
+
+
 
             <p class="my-4 flex items-start">
                 <span class="w-12 mr-1 text-sm text-gray-400">メモ：</span>
@@ -89,7 +102,9 @@
                 <input class="w-3/4 border rounded py-2 px-4 text-gray-500" type="text" name="file_path" id="" value="{{ $movie->file_path }}">
             </p>
 
-            <button class="mt-2 border bg-white hover:bg-blue-400 hover:text-white text-blue-700 font-bold py-2 px-4 rounded text-sm">更新</button>
+            <button class="mr-4 mt-2 border bg-white hover:bg-blue-400 hover:text-white text-blue-700 font-bold py-2 px-4 rounded text-sm">更新</button>
+
+
 
 
         </form>

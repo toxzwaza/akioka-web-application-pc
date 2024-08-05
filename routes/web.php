@@ -84,7 +84,10 @@ Route::get('/getMonthOrders', [LunchController::class, 'getMonthOrders']);
 Route::get('/movie', [MovieController::class, 'index'])->name('movie');
 Route::get('/movie/create', [MovieController::class, 'movie_create'])->name('movie.create');
 Route::post('/movie/store', [MovieController::class, 'movie_store'])->name('movie.store');
+Route::get('/movie/delete', [MovieController::class, 'movie_delete'])->name('movie.delete');
+Route::get('/movie/change_status', [MovieController::class, 'movie_change_status'])->name('movie.change_status');
 Route::get('movie/create/tag', [MovieController::class, 'movie_tag_create'])->name('movie.create.tag');
+
 // Route::get('/movie', [MovieController::class, 'index'])->name('movie');
 
 Route::get('/movie/{movie_id}', [MovieController::class, 'show'])->name('movie.show');

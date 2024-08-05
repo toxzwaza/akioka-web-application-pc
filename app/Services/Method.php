@@ -16,4 +16,7 @@ class Method{
         }
         return $is_success;
     }
+    public static function errorMsg(){
+        self::msg('error','エラーが発生しました。管理者へ連絡してください。');
+    }
 }
