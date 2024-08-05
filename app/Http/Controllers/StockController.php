@@ -24,16 +24,17 @@ class StockController extends Controller
     //
     public function index()
     {
-        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->get();
+        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->paginate(6);
         // dd($operation_records);
 
 
         $operation_record_recent = [];
         for ($i = 0; $i < 6; $i++) {
-            $recent_count = InventoryOperationRecord::whereDate('created_at', now()->subDays($i)->toDateString())
+            $recent_count = InventoryOperationRecord::whereDate('created_at', now()->subDays(5-$i)->toDateString())
                 ->count();
             $operation_record_recent[] = $recent_count;
         }
+        // dd($operation_record_recent);
 
         // dd($operation_record_recent);
 
