@@ -27,7 +27,7 @@ class MovieController extends Controller
 
         if (!$text) {
 
-            $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->paginate(20);
+            $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.del_flg',0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->paginate(20);
         } else {
             $keywords = preg_split('/[\s　]+/u', $text);
             $movies = MovieMemo::query();
