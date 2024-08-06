@@ -130,25 +130,11 @@ class MovieController extends Controller
     {
         $movie_id = $request->movie_id;
         $movie = Movie::find($movie_id);
-        $youtube_id = $movie->file_path;
+        // $youtube_id = $movie->file_path;
         if (!$movie_id) {
             Method::errorMsg();
             return redirect()->back();
         }
-        
-
-        // dd(storage_path('python\youtube\test.py'));
-        $scriptPath = storage_path('app/public/python/youtube/main.py');
-
-
-
-
-
-        // Pythonスクリプトを実行
-        $output = shell_exec('python ' . $scriptPath . " $youtube_id");
-
-
-
 
         if ($movie) {
             $movie->del_flg = 1;

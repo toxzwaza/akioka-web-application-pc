@@ -68,7 +68,9 @@
             <div class="flex">
                 <a class="w-24 text-center block my-4 border bg-white hover:bg-gray-400 hover:text-white {{ $movie->del_flg == 0 ? 'text-green-400' : 'text-red-400' }} font-bold py-2 px-4 rounded text-sm" href="{{ route('movie.change_status', ['movie_id' => $movie->id ]) }}">{{ $movie->del_flg == 0 ? '表示中' : '非表示中' }}</a>
 
-                <a class="ml-4 w-24 text-center block my-4 border bg-white hover:bg-gray-400 hover:text-white  font-bold py-2 px-4 rounded text-sm text-red-400" href="{{ route('movie.delete', ['movie_id' => $movie->id ]) }}">動画削除</a>
+
+
+                <button id="youtube_delete" class="ml-4 w-24 text-center block my-4 border bg-white hover:bg-gray-400 hover:text-white  font-bold py-2 px-4 rounded text-sm text-red-400">動画削除</button>
 
             </div>
 
@@ -99,7 +101,7 @@
             </p>
             <p class="my-4">
                 <span class="w-24 mr-1 text-sm text-gray-400 ">YoutubeID：</span>
-                <input class="w-3/4 border rounded py-2 px-4 text-gray-500" type="text" name="file_path" id="" value="{{ $movie->file_path }}">
+                <input id="youtube_id" class="w-3/4 border rounded py-2 px-4 text-gray-500" type="text" name="file_path" id="" value="{{ $movie->file_path }}">
             </p>
 
             <button class="mr-4 mt-2 border bg-white hover:bg-blue-400 hover:text-white text-blue-700 font-bold py-2 px-4 rounded text-sm">更新</button>
@@ -370,6 +372,37 @@
             const time_seconds = (time_array[0] * 3600) + (time_array[1] * 60) + time_array[2];
             player.seekTo(time_seconds);
         });
+    });
+
+    const youtube_delete_button = document.querySelector('#youtube_delete');
+    youtube_delete_button.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(e);
+        youtube_delete_button.textContent = "削除中...";
+        youtube_delete_button.classList.toggle('text-red-400');
+        youtube_delete_button.classList.toggle('text-indigo-500');
+        youtube_delete_button.classList.add('pointer-events-none');
+        const youtube_id = document.querySelector('#youtube_id').value;
+
+
+        axios.get('http://192.168.0.142:5000/movie/youtube_delete?youtube_id=' + youtube_id)
+            .then(function(response) {
+                // console.log(response.data);
+                if(response.data.status == "ok"){
+                    youtube_delete_button.textContent = "削除済";
+                    youtube_delete_button.classList.remove('bg-white');
+                    youtube_delete_button.classList.add('bg-gray-200');
+                    
+                    // 画面更新
+                    const reload = confirm('削除が完了しました。画面を更新しますか？')
+                    if(reload){
+                        location.reload();   
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
     });
 </script>
 @endsection
