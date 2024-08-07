@@ -36,7 +36,7 @@
                                 <form id="update_form" action="{{ route('stock.stock_storage.update') }}" method="post">
                                     @csrf
 
-                                    <input type="hidden" name="stock_id" value="{{ $stock->id }}">
+                                    <input type="hidden" name="stock_id" value="{{ $stock->id }}" id="stock_id">
                                     <input type="hidden" name="stock_storage_id" value="{{ $stock_storage->stock_storage_id }}">
                                     <td>
                                         <input class="edit_check" type="radio" name="" id="" value="{{ $stock_storage->stock_storage_id }}">
@@ -324,7 +324,7 @@
                             <input name="price" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->price}}" />
 
                         </div>
-                        
+
                         <div class="sm:col-span-2">
                             <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">EC購買用識別番号</label>
                             <input name="purchase_identification_number" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{$stock->purchase_identification_number}}" />
@@ -426,16 +426,67 @@
             </div>
 
         </div>
-        <div>
-            <hr>
-
-            <section class="text-gray-600 body-font">
+        <hr>
+        <div class="flex justify-between">
+            <div class="bg-white py-6 sm:py-8 lg:py-1 w-1/2 border-r-4 border-dotted border-gray-100">
                 <div class="container px-5 py-24 mx-auto">
-                    <div class="flex flex-col text-center w-full mb-20">
-                        <h1 class="sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900">取引先一覧</h1>
+                    <!-- text - start -->
+                    <div class="mb-10 md:mb-16">
+                        <h2 class="text-center sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900">取引先追加
+                            <span class="font-bold text-gray-400 ml-4 material-symbols-outlined">
+                                arrow_forward
+                            </span>
+                        </h2>
+
+                        <p class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg">
+                            取引先情報と取引先ごとのリードタイムを設定することができます。
+                        </p>
+                    </div>
+                    <!-- text - end -->
+
+                    <!-- form - start -->
+                    <p class="text-sm mb-2 text-red-400">得意先名 / 得意先電話番号 / 得意先郵便番号から検索されます。(※最大20件)</p>
+
+                    <form class="w-2/3 flex items-center relative" action="{{ route('stock.stocks') }}" method="get">
+
+                        <input type="hidden" name="storage_address_id" value="{{ request('storage_address_id') ?? '' }}">
+                        <input id="search_supplier_keyword" name="keyword" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" placeholder="得意先検索" />
+
+                        <button id="search_supplier_button" class="absolute right-2 ml-2 flex items-center">
+                            <span class="material-symbols-outlined">search</span>
+                        </button>
+                    </form>
+
+                    <div class="lg:w-full w-full mx-auto overflow-auto mt-4">
+                        <table class="table-auto w-full text-left whitespace-no-wrap">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">取引先名</th>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">電話</th>
+                                    <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">FAX</th>
+
+                                    <th class="w-24 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="add_supplier_tbody">
+
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+
+
+            <section class="text-gray-600 body-font w-1/2">
+                <div class="container px-5 py-24 mx-auto">
+                    <div class="flex flex-col text-center w-full mb-40">
+                        <h1 class="sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900">登録済み 得意先一覧</h1>
                         <p class="lg:w-2/3 mx-auto leading-relaxed text-base">2024/07/22 取引先の編集は未実装です。</p>
                     </div>
-                    <div class="lg:w-2/3 w-full mx-auto overflow-auto">
+                    <div class="lg:w-full w-full mx-auto overflow-auto">
                         <table class="table-auto w-full text-left whitespace-no-wrap">
                             <thead>
                                 <tr>
@@ -449,21 +500,43 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($stock_suppliers as $stock_supplier)
-                                <tr>
-                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->name }}</td>
-                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->tel }}</td>
-                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->fax }}</td>
-                                    <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->lead_time }}</td>
-                                    <td class="w-1/5 px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->memo }}</td>
 
-                                    <td class="w-16 px-4 py-8 text-sm text-gray-900"><span class="text-green-400 material-symbols-outlined">
-                                            update
-                                        </span></td>
-                                    <td class="w-16 px-4 py-8 text-sm text-gray-900"><span class="text-red-500 material-symbols-outlined">
-                                            delete
-                                        </span>
+                                @foreach($stock_suppliers as $stock_supplier)
+
+                                <tr>
+                                    <form action="{{ route('stock.store.stock_suppliers') }}" method="post">
+                                        @csrf
+
+                                        <input type="hidden" name="stock_supplier_id" value="{{ $stock_supplier->stock_supplier_id }}">
+
+                                        <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->name }}</td>
+                                        <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->tel }}</td>
+                                        <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->fax }}</td>
+                                        <td class="px-4 py-8 text-sm text-gray-900"><input class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" type="text" value="{{ $stock_supplier->lead_time }}" name="lead_time" id=""></td>
+                                        <td class="w-1/5 px-4 py-8 text-sm text-gray-900">
+                                            <input class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" type="text" value="{{ $stock_supplier->stock_supplier_memo }}" name="memo" id="">
+                                        </td>
+
+                                        <td class="text-center w-16 px-4 py-8 text-sm text-gray-900">
+                                            <button>
+                                                <span class="px-8 border-r-2  text-green-400 material-symbols-outlined">
+                                                    update
+                                                </span>
+
+                                            </button>
+
+                                        </td>
+                                    </form>
+
+                                    <td class="text-center w-16 px-4 py-8 text-sm text-gray-900">
+                                        <a id="stock_supplier_delete" href="{{ route('stock.delete.stock_suppliers', ['stock_supplier_id' => $stock_supplier->stock_supplier_id ]) }}">
+                                            <span class="text-red-500 material-symbols-outlined">
+                                                delete
+                                            </span>
+                                        </a>
+
                                     </td>
+
 
                                 </tr>
                                 @endforeach
@@ -535,6 +608,93 @@
             jan_code.classList.toggle('pointer-events-none');
         });
     }
+
+
+
+    // フォームのエンターキーを無効化
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
+    const search_supplier_button = document.querySelector('#search_supplier_button');
+    const search_supplier_keyword = document.querySelector('#search_supplier_keyword');
+    const add_supplier_tbody = document.querySelector('#add_supplier_tbody');
+    const stock_id = document.querySelector('#stock_id');
+
+    search_supplier_button.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(search_supplier_keyword.value);
+
+        if (search_supplier_keyword.value == '') {
+            alert('検索キーワードを入力してください。');
+        }
+
+        axios.get('/api/getSuppliers', {
+                params: {
+                    keyword: search_supplier_keyword.value
+                }
+            })
+            .then(function(response) {
+                add_supplier_tbody.textContent = "";
+                const suppliers = response.data;
+                suppliers.forEach((supplier) => {
+                    console.log(supplier);
+
+                    const newRow = createRow(supplier.name, supplier.tel, supplier.fax, stock_id.value, supplier.id);
+                    add_supplier_tbody.appendChild(newRow);
+                });
+            })
+            .catch(function(error) {
+                console.log(error);
+            })
+
+
+    });
+
+
+    function createRow(name, tel, fax, stock_id, supplier_id) {
+        const newRow = document.createElement('tr');
+
+        const nameCell = document.createElement('td');
+        nameCell.className = 'px-4 py-8 text-sm text-gray-900';
+        nameCell.textContent = name;
+        newRow.appendChild(nameCell);
+
+        const telCell = document.createElement('td');
+        telCell.className = 'px-4 py-8 text-sm text-gray-900';
+        telCell.textContent = tel;
+        newRow.appendChild(telCell);
+
+        const faxCell = document.createElement('td');
+        faxCell.className = 'px-4 py-8 text-sm text-gray-900';
+        faxCell.textContent = fax;
+        newRow.appendChild(faxCell);
+
+        const actionCell = document.createElement('td');
+        actionCell.className = 'w-16 px-4 py-8 text-sm text-gray-900';
+        const actionAtag = document.createElement('a');
+        actionAtag.href = `/stock/stocks/add_supplier?stock_id=${stock_id}&supplier_id=${supplier_id}`;
+        const actionSpan = document.createElement('span');
+        actionSpan.className = 'material-symbols-outlined';
+        actionSpan.textContent = 'add_circle';
+
+        actionAtag.appendChild(actionSpan);
+        actionCell.appendChild(actionAtag);
+        newRow.appendChild(actionCell);
+
+        return newRow;
+    }
+
+    // 物品得意先情報削除ボタン
+    const stock_supplier_delete = document.querySelector('#stock_supplier_delete');
+    stock_supplier_delete.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        if(confirm('物品得意先情報を削除してもよろしいですか？')){
+            window.location.href = stock_supplier_delete.getAttribute('href');
+        }
+    });
 </script>
 
 

@@ -30,7 +30,7 @@ class StockController extends Controller
 
         $operation_record_recent = [];
         for ($i = 0; $i < 6; $i++) {
-            $recent_count = InventoryOperationRecord::whereDate('created_at', now()->subDays(5-$i)->toDateString())
+            $recent_count = InventoryOperationRecord::whereDate('created_at', now()->subDays(5 - $i)->toDateString())
                 ->count();
             $operation_record_recent[] = $recent_count;
         }
@@ -47,20 +47,20 @@ class StockController extends Controller
         $keyword = $request->keyword;
         $storage_address_id = $request->storage_address_id;
 
-        if($storage_address_id){
+        if ($storage_address_id) {
 
             if ($keyword) {
                 // 格納アドレスと検索キーワード
                 $stocks = StockStorage::select('stocks.*')
-                    ->join('stocks','stocks.id','stock_storages.stock_id')
+                    ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
                     ->where('storage_address_id', $storage_address_id)
-                    ->where('stocks.del_flg',0)
-                    ->where(function($query) use ($keyword) {
+                    ->where('stocks.del_flg', 0)
+                    ->where(function ($query) use ($keyword) {
                         $query->where('stocks.name', 'like', "%$keyword%")
                             ->orWhere('stocks.s_name', 'like', "%$keyword%")
                             ->orWhere('stocks.jan_code', 'like', "%$keyword%");
                     })
-                    ->orderby('updated_at','desc')
+                    ->orderby('updated_at', 'desc')
                     ->paginate(20);
 
                 // $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name', 'like', "%$keyword%")->orWhere('stocks.s_name', 'like', "%$keyword%")->orWhere('stocks.jan_code', 'like', "%$keyword%")->orderby('stocks.updated_at', 'desc')->paginate(20);
@@ -68,10 +68,10 @@ class StockController extends Controller
                 // 格納アドレスのみ
 
                 $stocks = StockStorage::select('stocks.*')
-                ->join('stocks','stocks.id','stock_storages.stock_id')
-                ->where('storage_address_id', $storage_address_id)
-                ->where('stocks.del_flg',0)
-                ->orderby('updated_at','desc')->paginate(20);
+                    ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
+                    ->where('storage_address_id', $storage_address_id)
+                    ->where('stocks.del_flg', 0)
+                    ->orderby('updated_at', 'desc')->paginate(20);
             }
 
 
@@ -81,17 +81,15 @@ class StockController extends Controller
 
         if ($keyword) {
             // キーワード検索のみ
-            $stocks = Stock::where('stocks.del_flg',0)
-            ->where('stocks.name', 'like', "%$keyword%")
-            ->orWhere('stocks.s_name', 'like', "%$keyword%")
-            ->orWhere('stocks.jan_code', 'like', "%$keyword%")
-            ->orderby('stocks.updated_at', 'desc')->paginate(20);
-
+            $stocks = Stock::where('stocks.del_flg', 0)
+                ->where('stocks.name', 'like', "%$keyword%")
+                ->orWhere('stocks.s_name', 'like', "%$keyword%")
+                ->orWhere('stocks.jan_code', 'like', "%$keyword%")
+                ->orderby('stocks.updated_at', 'desc')->paginate(20);
         } else {
             // 検索条件なし
-            $stocks = Stock::
-            where('stocks.del_flg',0)
-            ->orderby('stocks.updated_at', 'desc')->paginate(20);
+            $stocks = Stock::where('stocks.del_flg', 0)
+                ->orderby('stocks.updated_at', 'desc')->paginate(20);
         }
 
         return view('stock.stocks', compact('stocks'));
@@ -103,26 +101,23 @@ class StockController extends Controller
         $location_id = $request->location_id;
         if ($location_id) {
             $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')
-            ->where('location_id', $location_id)
-            ->orderby('address','asc')->paginate(20);
+                ->where('location_id', $location_id)
+                ->orderby('address', 'asc')->paginate(20);
         } else {
 
-            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->orderby('address','asc')->paginate(20);
-
+            $storage_location_addresses = StorageAddress::select('storage_addresses.id as storage_address_id', 'locations.name as location_name', 'storage_addresses.address', 'storage_addresses.created_at')->join('locations', 'locations.id', 'storage_addresses.location_id')->orderby('address', 'asc')->paginate(20);
         }
 
         foreach ($storage_location_addresses as $sla) {
-            $stock_storage_count = StockStorage::join('stocks','stocks.id','stock_storages.stock_id')
-            ->join('classifications', 'stocks.classification_id', 'classifications.id')
-            ->where('storage_address_id', $sla->storage_address_id)
-            ->where('stocks.del_flg',0)
-            ->where('stocks.not_stock_flg',0)
-            ->count();
+            $stock_storage_count = StockStorage::join('stocks', 'stocks.id', 'stock_storages.stock_id')
+                ->join('classifications', 'stocks.classification_id', 'classifications.id')
+                ->where('storage_address_id', $sla->storage_address_id)
+                ->where('stocks.del_flg', 0)
+                ->where('stocks.not_stock_flg', 0)
+                ->count();
 
 
             $sla->count = $stock_storage_count;
-
-            
         }
 
 
@@ -148,7 +143,7 @@ class StockController extends Controller
         $processes = Process::all();
         $locations = Location::all();
 
-        $stock_suppliers = StockSupplier::select('suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
+        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id','stock_suppliers.memo as stock_supplier_memo','suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
 
 
 
@@ -156,10 +151,10 @@ class StockController extends Controller
         $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)->get();
         // dd($stock_storages);
 
-        try{
+        try {
             $storage_addresses = StorageAddress::where('location_id', $stock_storages[0]->location_id)->orderby('address', 'asc')->get();
-        }catch(Exception $e){
-            $storage_addresses = StorageAddress::where('location_id',1)->get();
+        } catch (Exception $e) {
+            $storage_addresses = StorageAddress::where('location_id', 1)->get();
         }
 
         return view('stock.edit.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
@@ -219,22 +214,23 @@ class StockController extends Controller
     }
 
     // 棚卸し
-    public function stock_taking(Request $request){
+    public function stock_taking(Request $request)
+    {
         $storage_address_id = $request->keyword ?? null;
         $storage_address_name = StorageAddress::find($storage_address_id)->address ?? '';
-        $storage_addresses = StorageAddress::orderby('address','asc')->get();
-   
-
-        $stocks = StockStorage::select('stocks.*','stock_storages.quantity')
-        ->join('stocks','stocks.id','stock_storages.stock_id')
-        ->join('classifications','classifications.id','stocks.classification_id')
-        ->where('storage_address_id',$storage_address_id)
-        ->where('stocks.del_flg',0)
-        ->where('stocks.not_stock_flg',0)
-        ->paginate(20);
+        $storage_addresses = StorageAddress::orderby('address', 'asc')->get();
 
 
-        return view('stock.taking.stocks',compact('stocks','storage_addresses','storage_address_name'));
+        $stocks = StockStorage::select('stocks.*', 'stock_storages.quantity')
+            ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
+            ->join('classifications', 'classifications.id', 'stocks.classification_id')
+            ->where('storage_address_id', $storage_address_id)
+            ->where('stocks.del_flg', 0)
+            ->where('stocks.not_stock_flg', 0)
+            ->paginate(20);
+
+
+        return view('stock.taking.stocks', compact('stocks', 'storage_addresses', 'storage_address_name'));
     }
 
 
@@ -242,7 +238,7 @@ class StockController extends Controller
     public function create_stocks()
     {
         $classifications = Classification::all();
-        return view('stock.create.stocks',compact('classifications'));
+        return view('stock.create.stocks', compact('classifications'));
     }
     // 格納先作成
     public function create_storage_addresses()
@@ -352,7 +348,7 @@ class StockController extends Controller
 
             if (!$storage_address_id || !$quantity) {
 
-                
+
                 Method::msg('error', '数量が未入力の可能性があります。');
                 return redirect()->back();
             }
@@ -396,23 +392,71 @@ class StockController extends Controller
         return redirect()->back();
     }
 
-    public function create_stock_storage(Request $request){
+    public function create_stock_storage(Request $request)
+    {
         $stock_id = $request->stock_id;
         $storage_address_id = $request->storage_address_id;
         $quantity = $request->quantity;
 
-       if(!($stock_id && $storage_address_id && $quantity)){
-        Method::msg('error','アドレスと個数を入力して再度お試しください。');
+        if (!($stock_id && $storage_address_id && $quantity)) {
+            Method::msg('error', 'アドレスと個数を入力して再度お試しください。');
+            return redirect()->back();
+        }
+
+        $stock_storage = new StockStorage();
+        $stock_storage->stock_id = $stock_id;
+        $stock_storage->storage_address_id = $storage_address_id;
+        $stock_storage->quantity = $quantity;
+        $stock_storage->save();
+
+        Method::msg('success', '在庫保管情報を登録しました。');
         return redirect()->back();
-       }
+    }
 
-       $stock_storage = new StockStorage();
-       $stock_storage->stock_id = $stock_id;
-       $stock_storage->storage_address_id = $storage_address_id;
-       $stock_storage->quantity = $quantity;
-       $stock_storage->save();
+    public function stock_add_supplier(Request $request)
+    {
+        $stock_id = $request->stock_id;
+        $supplier_id = $request->supplier_id;
 
-       Method::msg('success', '在庫保管情報を登録しました。');
-       return redirect()->back();
+        if(!($stock_id && $supplier_id)){
+            Method::errorMsg();
+            return redirect()->back();
+        }
+        $stock_supplier = new StockSupplier();
+        $stock_supplier->stock_id = $stock_id;
+        $stock_supplier->supplier_id = $supplier_id;
+        $stock_supplier->save();
+        Method::msg('success', '得意先を紐づけました。');
+        return redirect()->back();
+        
+    }
+    public function store_stock_suppliers(Request $request){
+        $stock_supplier_id = $request->stock_supplier_id;
+        $lead_time = $request->lead_time;
+        $memo = $request->memo;
+
+        Method::checkNull($stock_supplier_id);
+
+        $stock_supplier = StockSupplier::where('id', $stock_supplier_id)->first();
+        $stock_supplier->lead_time = $lead_time;
+        $stock_supplier->memo = $memo;
+        $stock_supplier->save();
+        // dd($stock_supplier);
+
+        Method::msg('success', '物品得意先情報を更新しました。');
+        return redirect()->back();
+
+        
+    }
+    public function delete_stock_suppliers(Request $request){
+        $stock_supplier_id = $request->stock_supplier_id;
+
+        Method::checkNull($stock_supplier_id);
+        $stock_supplier = StockSupplier::find($stock_supplier_id);
+        $stock_supplier->delete();
+
+        Method::msg('success','物品得意先情報を削除しました。');
+        return redirect()->back();
+
     }
 }

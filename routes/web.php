@@ -48,6 +48,10 @@ Route::post('/stock/store/stocks', [StockController::class, 'store_stocks'])->na
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 Route::get('/stock/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
 
+Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
+Route::post('/stock/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
+Route::get('/stock/stock_suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
+
 
 Route::get('/stock/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
 Route::get('/stock/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
@@ -116,3 +120,4 @@ Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])-
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
 Route::get('/AddMemo', [MovieController::class, 'addMemo']);
 Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);
+Route::get('/api/getSuppliers',[ApiController::class, 'getSuppliers']);

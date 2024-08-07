@@ -19,4 +19,11 @@ class Method{
     public static function errorMsg(){
         self::msg('error','エラーが発生しました。管理者へ連絡してください。');
     }
+
+    public static function checkNull($target){
+        if(!$target){
+            self::errorMsg();
+            return redirect()->back();
+        }
+    }
 }

@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function index()
     {
         // 消耗品発注依頼取得
-        $consumOrders = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->orderby('created_at', 'asc')->get();
+        $consumOrders = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->orderby('created_at', 'desc')->get();
 
         return view('order.index', compact('consumOrders'));
     }
