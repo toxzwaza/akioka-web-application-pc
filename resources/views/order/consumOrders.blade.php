@@ -12,6 +12,9 @@
 
             </p>
         </div>
+        <div class="my-4">
+            {{ $consumOrders->links() }}
+        </div>
         <div class="lg:w-full w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
@@ -85,6 +88,9 @@
 
                 </tbody>
             </table>
+        </div>
+        <div class="my-4">
+            {{ $consumOrders->links() }}
         </div>
 
     </div>
