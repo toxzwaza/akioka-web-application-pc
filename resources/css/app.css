@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities;/*# sourceMappingURL=app.css.map */
+@tailwind utilities;
+#print_table th {
+  border-top: 1px solid rgba(0, 0, 0, 0.436);
+  border-right: 1px solid rgba(0, 0, 0, 0.436);
+  border-left: 1px solid rgba(0, 0, 0, 0.436);
+  border-bottom: 3px double rgba(0, 0, 0, 0.436);
+}
+#print_table th.imp {
+  border-top: 2px solid black;
+  border-right: 2px solid black;
+  border-left: 2px solid black;
+  border-bottom: 3px double black;
+}
+#print_table td {
+  border-top: 1px solid rgba(0, 0, 0, 0.436);
+  border-right: 1px solid rgba(0, 0, 0, 0.436);
+  border-left: 1px solid rgba(0, 0, 0, 0.436);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.436);
+}
+#print_table td.imp {
+  border-top: 2px solid black;
+  border-right: 2px solid black;
+  border-left: 2px solid black;
+  border-bottom: 2px solid black;
+}/*# sourceMappingURL=app.css.map */

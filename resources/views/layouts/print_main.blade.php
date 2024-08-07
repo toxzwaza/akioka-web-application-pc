@@ -29,7 +29,7 @@
 </head>
 
 <body>
-  <header class="text-gray-600 body-font">
+  <header class="text-gray-600 body-font print_hidden">
     <div class="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center">
       <a href="{{ route('home') }}" class="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0">
         <img class="w-16" src="{{ asset('img/base/logo.jpg') }}" alt="">
@@ -86,7 +86,7 @@
   </header>
 
   <!-- サブナビゲーション -->
-  <nav class="flex justify-flex-start items-center bg-gray-200 p-4 overflow-x-auto">
+  <nav class="flex justify-flex-start items-center bg-gray-200 p-4 overflow-x-auto print_hidden">
     @if(Route::is('master*'))
     <a href="{{ route('master.create.user') }}" class="flex mx-2 px-8 hover:text-gray-900">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
@@ -191,7 +191,7 @@
 
 
   <!-- Breadcrumb -->
-  <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700" aria-label="Breadcrumb">
+  <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 print_hidden" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
       <li class="inline-flex items-center">
         <a href="#" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
@@ -437,7 +437,7 @@
   </main>
 
 
-  <footer class="text-gray-600 body-font">
+  <footer class="text-gray-600 body-font print_hidden">
     <div class="container px-5 py-24 mx-auto flex md:items-center lg:items-start md:flex-row md:flex-nowrap flex-wrap flex-col">
       <div class="w-64 flex-shrink-0 md:mx-0 mx-auto text-center md:text-left">
         <a class="flex title-font font-medium items-center md:justify-start justify-center text-gray-900">

@@ -68,6 +68,20 @@ Route::get('/stock/create/locations', [StockController::class, 'store_location']
 
 
 Route::get('/order', [OrderController::class, 'index'])->name('order');
+// 消耗品発注依頼リスト
+Route::get('/order/consumOrders', [OrderController::class, 'consumOrders'])->name('order.consumOrders');
+// 消耗品発注編集
+Route::post('/order/consumOrders/store',[OrderController::class, 'store_consumOrders'])->name('order.store.consumOrders');
+
+// 消耗品発注完了
+Route::get('/order/consumOrders/complete', [OrderController::class, 'complete_consumOrders'])->name('order.complete.consumOrders');
+// 消耗品発注依頼削除
+Route::get('/order/consumOrders/delete', [OrderController::class, 'delete_consumOrders'])->name('order.delete.consumOrders');
+
+Route::get('/order/consumOrders/{consumOrder_id}', [OrderController::class, 'print_consumOrders'])->name('order.print.consumOrders');
+
+
+
 Route::get('/order/already/orders', [OrderController::class, 'already_orders'])->name('order.already_orders');
 Route::get('/order/orders/create', [OrderController::class, 'create_orders'])->name('order.orders.create');
 Route::get('/order/already_requests', [OrderController::class, 'already_requests'])->name('order.already_requests');
