@@ -51,18 +51,18 @@
             <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
                     <tr>
-                        <th class="px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200 rounded-tl rounded-bl">画像</th>
+                        <th class="text-sm whitespace-nowrap px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200 rounded-tl rounded-bl">画像</th>
 
-                        <th class="px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">品名</th>
-                        <th class="px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">品番</th>
+                        <th class="text-sm whitespace-nowrap w-48 px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">品名</th>
+                        <th class="text-sm px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">品番</th>
 
-                        <th class=" px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-100">単価 (※手動変更可)</th>
-                        <th class=" px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">想定在庫数</th>
-                        <th class=" w-1/6  px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-100">実際在庫数量</th>
+                        <th class="text-sm  whitespace-nowrap px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-100">単価 (※手動変更可)</th>
+                        <th class="text-sm whitespace-nowrap px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">想定<br>在庫数</th>
+                        <th class="text-sm whitespace-nowrap w-1/6  px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-100">実際在庫数量</th>
 
-                        <th class=" w-1/6  px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">合計金額</th>
+                        <th class="text-sm whitespace-nowrap w-1/6  px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200">合計金額</th>
 
-                        <th class="w-1/6 px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200"></th>
+                        <th class="text-sm whitespace-nowrap w-1/6 px-2 py-2 title-font tracking-wider font-medium text-gray-900 bg-gray-200"></th>
 
 
                     </tr>
@@ -72,13 +72,17 @@
                     @foreach($stocks as $stock)
                     <tr class="border-b border-gray-200 my-2 hover:bg-slate-200 transition">
 
-                        <td class="w-24 px-4 py-8 text-lg text-gray-900"><a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}" class="hover:text-blue-200"><img class="w-16" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}" alt=""></a></td>
+                        <td class="w-1/6 py-2 px-2 text-gray-900">
+                            <a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}" class="hover:text-blue-200">
+                                <img class="w-full" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}" alt="">
+                            </a>
+                        </td>
 
-                        <td class="px-2 py-2 text-lg text-gray-900">{{ $stock->name }}</td>
-                        <td class="px-2 py-2 text-lg text-gray-900">{{ $stock->s_name }}</td>
+                        <td class="whitespace-nowrap w-1/6 px-2 py-4 text-lg text-gray-900">{{ $stock->name }}</td>
+                        <td class="px-2 py-4 text-lg text-gray-900">{{ $stock->s_name }}</td>
 
                         <!-- 単価 -->
-                        <td class="w-1/6 px-2 py-2 text-lg text-gray-900">@
+                        <td class="w-1/6 px-2 py-4 text-lg text-gray-900">@
 
                             @if($stock->main_unit_flg == 1)
                             <!-- まとめて発注の場合 -->
@@ -93,20 +97,20 @@
                         </td>
 
                         <!-- 想定数量 -->
-                        <td class="px-2 py-2 text-lg text-gray-900">{{ $stock->quantity }}</td>
+                        <td class="w-32 px-2 py-4 text-lg text-gray-900">{{ $stock->quantity }}</td>
 
                         <!-- 実際数量 -->
-                        <td class="{{ $stock->id }}-quantity px-2 py-2 text-lg text-gray-900">
+                        <td class="{{ $stock->id }}-quantity px-2 py-4 text-lg text-gray-900">
                             <input class="{{ $stock->id }} quantity  rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring text-center" type="number" name="" id="">
                         </td>
 
                         <!-- 合計金額 -->
-                        <td class="w-1/6 whitespace-nowrap px-2 py-2 text-lg text-gray-900">
+                        <td class="w-1/6 whitespace-nowrap px-2 py-4 text-lg text-gray-900">
                             <input class="calc-{{ $stock->id }} pointer-events-none rounded border bg-gray-100 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring pl-4 text-center" type="text" value="{{ $stock->price * $stock->quantity }}">
                             円
                         </td>
 
-                        <td class="px-2 py-2 text-lg text-gray-900"><input class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" type="button" value="登録"></td>
+                        <td class="text-center px-2 py-4 text-lg text-gray-900"><input class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" type="button" value="登録"></td>
 
 
 
