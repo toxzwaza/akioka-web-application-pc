@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function index()
     {
         // 消耗品発注依頼取得
-        $consumOrders = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->orderby('created_at', 'desc')->get();
+        $consumOrders = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name','stocks.img_path')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->orderby('created_at', 'desc')->get();
 
         return view('order.index', compact('consumOrders'));
     }
@@ -25,7 +25,7 @@ class OrderController extends Controller
         // 消耗品発注依頼リスト
 
         // 消耗品発注依頼取得
-        $consumOrders = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name','stocks.price','stocks.main_unit_flg','stocks.solo_unit','stocks.org_unit','stocks.quantity_per_org','stocks.id as stock_id','stocks.url')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->orderby('del_flg','asc')->orderby('order_flg','asc')->orderby('created_at', 'asc')->paginate(20);
+        $consumOrders = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name','stocks.img_path','stocks.price','stocks.main_unit_flg','stocks.solo_unit','stocks.org_unit','stocks.quantity_per_org','stocks.id as stock_id','stocks.url')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->orderby('del_flg','asc')->orderby('order_flg','asc')->orderby('created_at', 'asc')->paginate(20);
 
         return view('order.consumOrders',compact('consumOrders'));
     }

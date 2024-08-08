@@ -20,6 +20,7 @@
                 <thead>
                     <tr>
                         <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">発注No.</th>
+                        <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">発注画像</th>
                         <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">表示</th>
                         <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">注文依頼品</th>
                         <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">注文者</th>
@@ -35,7 +36,11 @@
                     @foreach($consumOrders as $consumOrder)
 
                     <tr class="{{ $consumOrder->del_flg == 1 ? 'bg-red-100' : ''}} {{ $consumOrder->order_flg == 1 ? 'bg-gray-100' : ''}}">
-                        <td class="w-16 border-t-2 border-b-2 border-gray-200 px-4 py-8">{{ $consumOrder->id }}</td>
+                        <td class="w-16 border-t-2 border-b-2 border-gray-200 px-4 py-8 text-center font-bold">{{ $consumOrder->id }}</td>
+
+                        <td class="w-32 border-t-2 border-b-2 border-gray-200 py-2">
+                            <img class="w-full" src="{{ $consumOrder->img_path && strpos($consumOrder->img_path, 'https://') !== false ? $consumOrder->img_path : 'http://monokanri-app.local/' . $consumOrder->img_path }}" alt="">
+                        </td>
                         <td class="w-16 border-t-2 border-b-2 border-gray-200 px-4 py-8">
                             @if($consumOrder->del_flg == 0)
                             <span class="text-green-400 material-symbols-outlined">
@@ -49,8 +54,8 @@
                             @endif
                         </td>
                         <td class=" border-t-2 border-b-2 border-gray-200 px-4 py-8"><a class="hover:text-indigo-600 hover:font-semibold" href="{{ route('stock.edit.stocks', ['stock_id' => $consumOrder->stock_id]) }}">{{ $consumOrder->stock_name }}</a></td>
-                        <td class=" border-t-2 border-b-2 border-gray-200 px-4 py-8">{{ $consumOrder->user_name }}</td>
-                        <td class="border-t-2 border-b-2 border-gray-200 px-4 py-8 text-lg text-gray-900">{{ number_format($consumOrder->price) }}円</td>
+                        <td class="whitespace-nowrap border-t-2 border-b-2 border-gray-200 px-4 py-8">{{ $consumOrder->user_name }}</td>
+                        <td class="whitespace-nowrap border-t-2 border-b-2 border-gray-200 px-4 py-8 text-lg text-gray-900">{{ number_format($consumOrder->price) }}円</td>
                         <td class="w-1/5 border-t-2 border-b-2 border-gray-200  text-center">
                             {{ $consumOrder->quantity_per_org }}{{ $consumOrder->solo_unit }} / {{ $consumOrder->org_unit }}
                         </td>
