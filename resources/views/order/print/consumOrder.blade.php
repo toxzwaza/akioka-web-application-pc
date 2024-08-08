@@ -45,7 +45,6 @@
 
         </div>
     </div>
-
     <form id="print_form" class="mt-12" action="{{ route('order.store.consumOrders') }}" method="post">
         @csrf
         <input type="hidden" name="consumOrder_id" value="{{ $consumOrder->id }}">
@@ -72,8 +71,13 @@
 
                 <td class="whitespace-nowrap text-center imp px-4 py-4">{{ '@' . ($consumOrder->price / $consumOrder->quantity_per_org) }} / {{ $consumOrder->solo_unit}}</td>
                 <td class="text-center imp px-4 py-4">{{ number_format($consumOrder->price) }}円</td>
-                <td class="text-center imp px-2 py-4"><input id="limit" class="text-sm text-center w-full" type="date" name="limit" value="{{ Carbon\Carbon::parse($consumOrder->limit)->format('Y-m-d') }}"></td>
-                <td class="text-center px-4 py-4">{{ $consumOrder->deli_location}}</td>
+                <td class="text-center imp px-2 py-4">
+                    <input id="limit" class="py-1 px-1 text-sm text-center w-full" type="text" name="limit" value="{{ $consumOrder->limit ?? '最短' }}">
+                </td>
+
+                <td class="text-center px-4 py-4">
+                    <input id="deli_location" class="py-1 px-1 text-sm text-center w-full" type="text" name="deli_location" value="{{ $consumOrder->deli_location ?? $consumOrder->stock_deli_location }}">
+                </td>
                 <td class="px-4 py-4">{{ $consumOrder->user_name}}</td>
 
             </tr>
@@ -124,15 +128,15 @@
 
     const order_save = document.querySelector('#order_save');
     const limit = document.querySelector('#limit');
+    const deli_location = document.querySelector('#deli_location');
     const print_form = document.querySelector('#print_form');
 
-    order_save.addEventListener('click', (e)=>{
+    order_save.addEventListener('click', (e) => {
         e.preventDefault();
-        if(limit.value){
-            console.log(limit.value);
+        if (limit.value && deli_location.value) {
             print_form.submit();
-        }else{
-            alert('納期が設定されていません。');
+        } else {
+            alert('納期又は納品場所が設定されていない可能性があります。');
         }
     });
 </script>

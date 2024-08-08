@@ -31,7 +31,7 @@ class OrderController extends Controller
     }
     public function print_consumOrders(Request $request){
         $consumOrder_id = $request->consumOrder_id;
-        $consumOrder = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name','stocks.s_name as s_name','stocks.price','stocks.main_unit_flg','stocks.solo_unit','stocks.org_unit','stocks.quantity_per_org','stocks.id as stock_id','stocks.url','stocks.deli_location','suppliers.name as supplier_name','suppliers.tel','suppliers.fax')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->join('stock_suppliers','stocks.id','stock_suppliers.stock_id')->join('suppliers','suppliers.id','stock_suppliers.supplier_id')->find($consumOrder_id);
+        $consumOrder = ConsumOrder::select('consum_orders.*', 'users.name as user_name', 'stocks.name as stock_name','stocks.s_name as s_name','stocks.price','stocks.main_unit_flg','stocks.solo_unit','stocks.org_unit','stocks.quantity_per_org','stocks.id as stock_id','stocks.url','stocks.deli_location as stock_deli_location','suppliers.name as supplier_name','suppliers.tel','suppliers.fax')->join('users', 'users.id', 'consum_orders.user_id')->join('stocks', 'stocks.id', 'consum_orders.stock_id')->join('stock_suppliers','stocks.id','stock_suppliers.stock_id')->join('suppliers','suppliers.id','stock_suppliers.supplier_id')->find($consumOrder_id);
         // dd($consumOrder);
 
 
@@ -42,9 +42,11 @@ class OrderController extends Controller
     public function store_consumOrders(Request $request){
         $consumOrder_id = $request->consumOrder_id;
         $limit = $request->limit;
+        $deli_location = $request->deli_location;
         // dd($limit);
         $consumOrder = ConsumOrder::find($consumOrder_id);
         $consumOrder->limit = $limit;
+        $consumOrder->deli_location = $deli_location;
         $consumOrder->save();
 
         return redirect()->back();
