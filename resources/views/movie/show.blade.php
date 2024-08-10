@@ -414,14 +414,15 @@
 
     copy_link.addEventListener('click', () => {
         const copy_text = window.location.href;
-        navigator.clipboard.writeText(copy_text)
-            .then(() => {
-                copy_link.classList.add('opacity-40');
-                copy_link.textContent = 'Copied.';
-            })
-            .catch(err => {
-                console.error('テキストのコピーに失敗しました: ', err);
-            });
+        const textArea = document.createElement('textarea');
+        textArea.value = copy_text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        copy_link.classList.add('opacity-40');
+        copy_link.textContent = 'Copied.';
     });
 </script>
 @endsection
