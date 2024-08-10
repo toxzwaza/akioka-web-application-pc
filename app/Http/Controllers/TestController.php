@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryOperationRecord;
+use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
 use Illuminate\Http\Request;
@@ -12,13 +14,15 @@ class TestController extends Controller
 {
     //
     public function test(){
-        $path = env('AKIOKA_APP_STOCK_PATH');
-        // dd($path);
-        if(File::exists($path . '\stock\new_file_5149.jpg')){
-            echo "ファイルが存在します。";
-        }else{
-            echo "ファイルが存在しません。";
-        }
+
+
+        // $path = env('AKIOKA_APP_STOCK_PATH');
+        // // dd($path);
+        // if(File::exists($path . '\stock\new_file_5149.jpg')){
+        //     echo "ファイルが存在します。";
+        // }else{
+        //     echo "ファイルが存在しません。";
+        // }
 
     }
 

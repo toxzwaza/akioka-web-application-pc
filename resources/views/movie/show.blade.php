@@ -38,6 +38,11 @@
     </div>
 
     <div class="">
+        <div id="copy_link" class="w-42 flex justify-start mb-2 text-red-500">
+            <span class="material-symbols-outlined mr-2">
+                link
+            </span>
+        </div>
 
 
         <!-- Youtube動画画面 -->
@@ -388,20 +393,34 @@
         axios.get('http://192.168.0.142:5000/movie/youtube_delete?youtube_id=' + youtube_id)
             .then(function(response) {
                 // console.log(response.data);
-                if(response.data.status == "ok"){
+                if (response.data.status == "ok") {
                     youtube_delete_button.textContent = "削除済";
                     youtube_delete_button.classList.remove('bg-white');
                     youtube_delete_button.classList.add('bg-gray-200');
-                    
+
                     // 画面更新
                     const reload = confirm('削除が完了しました。画面を更新しますか？')
-                    if(reload){
-                        location.reload();   
+                    if (reload) {
+                        location.reload();
                     }
                 }
             })
             .catch(function(error) {
                 console.log(error);
+            });
+    });
+
+    const copy_link = document.querySelector('#copy_link');
+
+    copy_link.addEventListener('click', () => {
+        const copy_text = window.location.href;
+        navigator.clipboard.writeText(copy_text)
+            .then(() => {
+                copy_link.classList.add('opacity-40');
+                copy_link.textContent = 'Copied.';
+            })
+            .catch(err => {
+                console.error('テキストのコピーに失敗しました: ', err);
             });
     });
 </script>

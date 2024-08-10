@@ -509,7 +509,7 @@
 
                                         <input type="hidden" name="stock_supplier_id" value="{{ $stock_supplier->stock_supplier_id }}">
 
-                                        <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->name }}</td>
+                                        <td class="w-1/5 px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->name }}</td>
                                         <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->tel }}</td>
                                         <td class="px-4 py-8 text-sm text-gray-900">{{ $stock_supplier->fax }}</td>
                                         <td class="px-4 py-8 text-sm text-gray-900"><input class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" type="text" value="{{ $stock_supplier->lead_time }}" name="lead_time" id=""></td>

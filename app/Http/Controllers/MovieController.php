@@ -19,6 +19,7 @@ class MovieController extends Controller
 
         if (!Method::isLogin()) {
             Method::msg('info', 'ログインをしてください。');
+            session()->put('bef_url', 'movie');
             return redirect()->route('login');
         }
 
@@ -48,17 +49,21 @@ class MovieController extends Controller
 
     public function show(Request $request)
     {
+        $movie_id = $request->movie_id;
+
         if (!Method::isLogin()) {
             Method::msg('info', 'ログインをしてください。');
+
+            session()->put(['bef_url'=>'movie', 'movie_id' => $movie_id]);
             return redirect()->route('login');
         }
 
-        $movie_id = $request->movie_id;
+       
 
         $movie = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->where('movies.id', $movie_id)->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->first();
 
         $movie_tag_id = $movie->movie_tag_id;
-        $con_movies = Movie::where('movie_tag_id', $movie_tag_id)->where('id', '<>', $movie->id)->take(10)->get();
+        $con_movies = Movie::where('movie_tag_id', $movie_tag_id)->where('id', '<>', $movie->id)->where('del_flg',0)->take(10)->get();
 
         // メモを取得
         $movie_memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')->where('movie_id', $movie->id)->join('users', 'users.id', 'movie_memos.user_id')->orderby('movie_memos.created_at', 'desc')->get();
