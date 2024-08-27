@@ -55,6 +55,11 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
         ],
+        'stock' => [  // 新しいディスク
+            'driver' => 'local',
+            'root' => 'C:\Users\Administrator.SV-AP01\Desktop\WebApplication\stock-control-app\storage\app\public',
+            'throw' => false,
+        ],
 
     ],
 

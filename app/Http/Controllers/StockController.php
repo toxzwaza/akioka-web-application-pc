@@ -18,9 +18,7 @@ use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
-    public function test()
-    {
-    }
+    public function test() {}
     //
     public function index()
     {
@@ -143,7 +141,7 @@ class StockController extends Controller
         $processes = Process::all();
         $locations = Location::all();
 
-        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id','stock_suppliers.memo as stock_supplier_memo','suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
+        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
 
 
 
@@ -180,16 +178,18 @@ class StockController extends Controller
         $process_code = $request->process_code;
         $memo = $request->memo;
 
-        // if($request->hasFile('upload_file')){
-        //     dd('ファイルあり');
-        // }
+
+
         $stock = Stock::find($stock_id);
         if (!$stock) {
-            Method::msg('error', '在庫情報を取得できませんでした。');
-            return redirect()->back();
+            $stock = new Stock();
         }
+        if ($request->hasFile('upload_file')) {
 
-        // dd($stock_id, $stock_no, $name, $jan_code, $s_name, $img_path, $url, $purchase_identification_number, $solo_unit, $org_unit, $main_unit_flg,$quantity_per_org, $classification_id, $deli_location, $process_code, $memo);
+            $image = $request->file('upload_file');
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $img_path = 'storage/' . $image->storeAs('stock', $imageName, 'stock');
+        }
         $stock->name = $name;
         $stock->stock_no = $stock_no;
         $stock->s_name = $s_name;
@@ -206,10 +206,12 @@ class StockController extends Controller
         $stock->deli_location = $deli_location;
         $stock->process_code = $process_code;
         $stock->memo = $memo;
-        $stock->del_flg = $del_flg;
+        $stock->del_flg = $del_flg ?? 0;
         $stock->save();
 
-        Method::msg('success', '在庫情報を更新しました。');
+        Method::msg('success', '完了しました。');
+        // dd($stock_id, $stock_no, $name, $jan_code, $s_name, $img_path, $url, $purchase_identification_number, $solo_unit, $org_unit, $main_unit_flg,$quantity_per_org, $classification_id, $deli_location, $process_code, $memo);
+
         return redirect()->back();
     }
 
@@ -327,9 +329,7 @@ class StockController extends Controller
         return view('stock.create.suppliers');
     }
     // 取引先編集
-    public function supplier_edit()
-    {
-    }
+    public function supplier_edit() {}
 
 
     public function update_stock_storage(Request $request)
@@ -418,7 +418,7 @@ class StockController extends Controller
         $stock_id = $request->stock_id;
         $supplier_id = $request->supplier_id;
 
-        if(!($stock_id && $supplier_id)){
+        if (!($stock_id && $supplier_id)) {
             Method::errorMsg();
             return redirect()->back();
         }
@@ -428,9 +428,9 @@ class StockController extends Controller
         $stock_supplier->save();
         Method::msg('success', '得意先を紐づけました。');
         return redirect()->back();
-        
     }
-    public function store_stock_suppliers(Request $request){
+    public function store_stock_suppliers(Request $request)
+    {
         $stock_supplier_id = $request->stock_supplier_id;
         $lead_time = $request->lead_time;
         $memo = $request->memo;
@@ -445,18 +445,16 @@ class StockController extends Controller
 
         Method::msg('success', '物品得意先情報を更新しました。');
         return redirect()->back();
-
-        
     }
-    public function delete_stock_suppliers(Request $request){
+    public function delete_stock_suppliers(Request $request)
+    {
         $stock_supplier_id = $request->stock_supplier_id;
 
         Method::checkNull($stock_supplier_id);
         $stock_supplier = StockSupplier::find($stock_supplier_id);
         $stock_supplier->delete();
 
-        Method::msg('success','物品得意先情報を削除しました。');
+        Method::msg('success', '物品得意先情報を削除しました。');
         return redirect()->back();
-
     }
 }
