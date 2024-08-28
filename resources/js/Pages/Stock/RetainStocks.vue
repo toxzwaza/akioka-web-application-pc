@@ -304,4 +304,4 @@ onMounted(() => {});
   width: 80%;
 object-fit: contain;
 }
-</sty le>
+</style>
