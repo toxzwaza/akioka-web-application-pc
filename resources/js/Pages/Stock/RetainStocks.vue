@@ -302,6 +302,6 @@ onMounted(() => {});
   transform: translate(-50%, -50%);
   height: 80%;
   width: 80%;
-  background-color: white;
+object-fit: contain;
 }
-</style>
+</sty le>
