@@ -7,14 +7,18 @@ use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\Location;
 use App\Models\Process;
+use App\Models\RetainedStock;
 use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
 use App\Models\Supplier;
+use App\Models\User;
 use App\Services\Method;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class StockController extends Controller
 {
@@ -459,7 +463,53 @@ class StockController extends Controller
     }
 
     //  滞留品
-    public function retained_stocks(){
-        dd('実行');
+    public function retained_stocks(Request $request)
+    {
+        $user_id = $request->user_id;
+        $user_name = User::find($user_id)->name;
+
+        $stocks = StockStorage::select('stocks.*', 'stock_storages.quantity')
+            ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
+            ->where('stocks.del_flg', 0)
+            ->where('storage_address_id', 6)
+            ->where('stocks.del_flg', 0)
+            ->orderby('updated_at', 'desc')->get();
+        // 処遇が決定したもののリスト
+        $retained_stocks = RetainedStock::select('stocks.*','retained_stocks.user_id','retained_stocks.treat_id','users.name as user_name')->join('stocks','stocks.id','retained_stocks.stock_id')->join('users','users.id','retained_stocks.user_id')->get();
+
+        return Inertia::render('Stock/RetainStocks', ['user_name' => $user_name, 'user_id' => $user_id, 'stocks' => $stocks, 'retained_stocks' => $retained_stocks ]);
+    }
+
+    public function store_retained_stocks(Request $request)
+    {
+        $stock_id = $request->stock_id;
+        $user_id = $request->user_id;
+        $treat_id = $request->treat_id;
+
+
+        if (!($stock_id && $user_id && $treat_id)) {
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+
+            RetainedStock::create([
+                'stock_id' => $stock_id,
+                'user_id' => $user_id,
+                'treat_id' => $treat_id
+            ]);
+
+            $stock = Stock::find($stock_id);
+            $stock->del_flg = 1;
+            $stock->save();
+
+            DB::commit();
+
+        } catch (Exception $e) {
+            DB::rollBack();
+        }
+
+        return to_route('stock.retained.stocks',['user_id' => $user_id]);
     }
 }
