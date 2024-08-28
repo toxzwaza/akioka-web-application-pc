@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const checkImg = (imgPath) => {
-  modalImg.imgPath = imgPath;
+  modalImg.imgPath = imgPath.include('https') ? imgPath : '/' + imgPath;
   modalImg.status = true;
   console.log(modalImg);
 };
