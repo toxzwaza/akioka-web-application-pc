@@ -108,8 +108,7 @@ onMounted(() => {});
                     <img
                       @click="checkImg(stock.img_path)"
                       class="w-16"
-                      v-if="stock.img_path.includes('https')"
-                      :src="stock.img_path"
+                      :src="stock.img_path.includes('https') ? stock.img_path : '/' + stock.img_path"
                       alt=""
                     />
                   </td>
