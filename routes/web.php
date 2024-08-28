@@ -47,6 +47,9 @@ Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit
 Route::post('/stock/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 Route::get('/stock/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
+// 滞留品
+Route::get('/stock/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
+
 
 Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 Route::post('/stock/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');

@@ -457,4 +457,9 @@ class StockController extends Controller
         Method::msg('success', '物品得意先情報を削除しました。');
         return redirect()->back();
     }
+
+    //  滞留品
+    public function retained_stocks(){
+        dd('実行');
+    }
 }
