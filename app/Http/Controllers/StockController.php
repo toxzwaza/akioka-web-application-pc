@@ -466,6 +466,10 @@ class StockController extends Controller
     public function retained_stocks(Request $request)
     {
         $user_id = $request->user_id;
+        if(!$user_id){
+            Method::errorMsg('ユーザーIDが設定されていません。');
+            return to_route('home');
+        }
         $user_name = User::find($user_id)->name;
 
         $stocks = StockStorage::select('stocks.*', 'stock_storages.quantity')
