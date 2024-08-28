@@ -55,8 +55,8 @@ onMounted(() => {});
             </p>
           </div>
           <div class="w-full mx-auto overflow-auto">
-            <h2 class="mb-4 font-bold text-gray-400 text-xl font-serif">
-              {{ props.user_name }} さんがログイン中。
+            <h2 class="mb-4 font-bold text-gray-400 font-serif">
+              <span class="text-xl text-red-500 pr-2">{{ props.user_name }} </span> さんがログイン中。
             </h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -191,7 +191,6 @@ onMounted(() => {});
                     <img
                       @click="checkImg(retained_stock.img_path)"
                       class="w-16"
-                      v-if="retained_stock.img_path.includes('https')"
                       :src="retained_stock.img_path"
                       alt=""
                     />
