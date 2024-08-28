@@ -133,6 +133,7 @@ onMounted(() => {});
                   </td>
                   <td class="border-t-2 border-gray-200 px-4 py-8">
                     <select
+                      class="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       name=""
                       id="treatSelect"
                       @change="changeSelect(stock.id, $event.target.value)"
@@ -211,11 +212,17 @@ onMounted(() => {});
                     {{ retained_stock.name }}
                   </td>
 
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td
+                    :class="{
+                      'border-t-2 border-gray-200 px-4 py-8 font-bold': true,
+                      'bg-red-500': retained_stock.treat_id == 1,
+                      'bg-green-500': retained_stock.treat_id == 2
+                    }"
+                  >
                     {{
                       retained_stock.treat_id == 1
                         ? "廃棄"
-                        : retained_stock == 2
+                        : retained_stock.treat_id == 2
                         ? "現場引き取り"
                         : ""
                     }}
