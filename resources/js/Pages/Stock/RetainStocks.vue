@@ -215,8 +215,8 @@ onMounted(() => {});
                   <td
                     :class="{
                       'border-t-2 border-gray-200 px-4 py-8 font-bold': true,
-                      'bg-red-500': retained_stock.treat_id == 1,
-                      'bg-green-500': retained_stock.treat_id == 2
+                      'text-red-500': retained_stock.treat_id == 1,
+                      'text-green-500': retained_stock.treat_id == 2
                     }"
                   >
                     {{
