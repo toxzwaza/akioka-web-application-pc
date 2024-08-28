@@ -9,9 +9,11 @@ const props = defineProps({
   stocks: Array,
   retained_stocks: Array,
 });
-// const stocks = reactive({});
+
 const checkImg = (imgPath) => {
-  console.log(imgPath);
+  modalImg.imgPath = imgPath;
+  modalImg.status = true;
+  console.log(modalImg);
 };
 
 const changeSelect = (stock_id, value) => {
@@ -21,6 +23,15 @@ const changeSelect = (stock_id, value) => {
     user_id: props.user_id,
   });
 };
+const changeModal = () => {
+  modalImg.status = null,
+  modalImg.imgPath = null
+}
+
+const modalImg = reactive({
+  status: null,
+  imgPath: null,
+});
 onMounted(() => {});
 </script>
 
@@ -103,11 +114,11 @@ onMounted(() => {});
               </thead>
               <tbody>
                 <tr v-for="stock in props.stocks" :key="stock.id">
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ stock.id }}
                   </td>
 
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200  py-2">
                     <img
                       @click="checkImg(stock.img_path)"
                       class="w-16"
@@ -118,20 +129,29 @@ onMounted(() => {});
                       "
                       alt=""
                     />
+                    <!-- 開発用 -->
+                    <!-- <img
+                      @click="checkImg(stock.img_path)"
+                      class="w-16"
+                      :src="
+                        stock.img_path.includes('https') ? stock.img_path : '/'
+                      "
+                      alt=""
+                    /> -->
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ stock.name }}
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     @ {{ stock.price }}
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ stock.quantity }}
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     = {{ (stock.price * stock.quantity).toLocaleString() }}円
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     <select
                       class="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       name=""
@@ -192,11 +212,11 @@ onMounted(() => {});
                   v-for="retained_stock in props.retained_stocks"
                   :key="retained_stock.id"
                 >
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ retained_stock.id }}
                   </td>
 
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     <img
                       @click="checkImg(retained_stock.img_path)"
                       class="w-16"
@@ -208,15 +228,15 @@ onMounted(() => {});
                       alt=""
                     />
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ retained_stock.name }}
                   </td>
 
                   <td
                     :class="{
-                      'border-t-2 border-gray-200 px-4 py-8 font-bold': true,
+                      'border-t-2 border-gray-200 px-4 py-4 font-bold': true,
                       'text-red-500': retained_stock.treat_id == 1,
-                      'text-green-500': retained_stock.treat_id == 2
+                      'text-green-500': retained_stock.treat_id == 2,
                     }"
                   >
                     {{
@@ -227,7 +247,7 @@ onMounted(() => {});
                         : ""
                     }}
                   </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-8">
+                  <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ retained_stock.user_name }}
                   </td>
                 </tr>
@@ -239,21 +259,49 @@ onMounted(() => {});
     </template>
   </MainLayout>
 
-  <!-- <div id="img_modal">
-    <div id="img_container" class="w-4/5 bg-white">
-        <img src="" alt="">
+  <div v-if="modalImg.status" id="img_modal">
+    <div id="img_container" class="">
+      <button @click="changeModal"
+        class="bg-white hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+      >
+        閉じる
+      </button>
+      <img
+        :src="modalImg.imgPath"
+        alt=""
+      />
     </div>
-  </div> -->
+  </div>
 </template>
 
 
 
 <style>
-/* #img_modal {
+#img_modal {
   position: fixed;
-  top:0;
+  top: 0;
   height: 100vh;
   width: 100vw;
-  background-color: rgba(0, 0, 0, 0.527);
-} */
+}
+#img_modal #img_container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.734);
+}
+#img_modal #img_container button {
+  position: absolute;
+  top: 4%;
+  left: 84%;
+}
+
+#img_modal #img_container img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 80%;
+  width: 80%;
+  background-color: white;
+}
 </style>
