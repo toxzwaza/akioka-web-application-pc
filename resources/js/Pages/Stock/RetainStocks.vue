@@ -56,7 +56,10 @@ onMounted(() => {});
           </div>
           <div class="w-full mx-auto overflow-auto">
             <h2 class="mb-4 font-bold text-gray-400 font-serif">
-              <span class="text-xl text-red-500 pr-2">{{ props.user_name }} </span> さんがログイン中。
+              <span class="text-xl text-red-500 pr-2"
+                >{{ props.user_name }}
+              </span>
+              さんがログイン中。
             </h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -108,7 +111,11 @@ onMounted(() => {});
                     <img
                       @click="checkImg(stock.img_path)"
                       class="w-16"
-                      :src="stock.img_path.includes('https') ? stock.img_path : '/' + stock.img_path"
+                      :src="
+                        stock.img_path.includes('https')
+                          ? stock.img_path
+                          : '/' + stock.img_path
+                      "
                       alt=""
                     />
                   </td>
@@ -142,13 +149,12 @@ onMounted(() => {});
                     </select>
                   </td>
                 </tr>
-
-                
-
               </tbody>
             </table>
 
-            <h2 class="mt-16 mb-4 font-semibold text-xl">滞留品 所在決定済み</h2>
+            <h2 class="mt-16 mb-4 font-semibold text-xl">
+              滞留品 所在決定済み
+            </h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
                 <tr>
@@ -167,7 +173,7 @@ onMounted(() => {});
                   >
                     品名
                   </th>
-                 
+
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
@@ -181,7 +187,10 @@ onMounted(() => {});
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="retained_stock in props.retained_stocks" :key="retained_stock.id">
+                <tr
+                  v-for="retained_stock in props.retained_stocks"
+                  :key="retained_stock.id"
+                >
                   <td class="border-t-2 border-gray-200 px-4 py-8">
                     {{ retained_stock.id }}
                   </td>
@@ -190,24 +199,31 @@ onMounted(() => {});
                     <img
                       @click="checkImg(retained_stock.img_path)"
                       class="w-16"
-                      :src="retained_stock.img_path"
+                      :src="
+                        retained_stock.img_path.includes('https')
+                          ? retained_stock.img_path
+                          : '/' + retained_stock.img_path
+                      "
                       alt=""
                     />
                   </td>
                   <td class="border-t-2 border-gray-200 px-4 py-8">
                     {{ retained_stock.name }}
                   </td>
-                 
+
                   <td class="border-t-2 border-gray-200 px-4 py-8">
-                    {{ retained_stock.treat_id == 1 ? '廃棄' : retained_stock == 2 ? '現場引き取り' : ''}}
+                    {{
+                      retained_stock.treat_id == 1
+                        ? "廃棄"
+                        : retained_stock == 2
+                        ? "現場引き取り"
+                        : ""
+                    }}
                   </td>
                   <td class="border-t-2 border-gray-200 px-4 py-8">
                     {{ retained_stock.user_name }}
                   </td>
                 </tr>
-
-                
-
               </tbody>
             </table>
           </div>
