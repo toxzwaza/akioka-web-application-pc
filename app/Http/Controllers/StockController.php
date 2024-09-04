@@ -472,14 +472,26 @@ class StockController extends Controller
         }
         $user_name = User::find($user_id)->name;
 
+        // 処遇が決定したもののリスト
+        // ユーザーごと
+        $retained_stocks = RetainedStock::select('stocks.*','retained_stocks.user_id','retained_stocks.treat_id','users.name as user_name')->join('stocks','stocks.id','retained_stocks.stock_id')->join('users','users.id','retained_stocks.user_id')->where('retained_stocks.user_id',$user_id)->get();
+        
+
+
+        // 配列に変更
+        $retained_ids = $retained_stocks->pluck('id')->toArray();
+
+
+
+        // 品証二階に移動させたもののみ取得
         $stocks = StockStorage::select('stocks.*', 'stock_storages.quantity')
             ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
             ->where('stocks.del_flg', 0)
             ->where('storage_address_id', 6)
             ->where('stocks.del_flg', 0)
+            ->whereNotIn('stocks.id',$retained_ids)
             ->orderby('updated_at', 'desc')->get();
-        // 処遇が決定したもののリスト
-        $retained_stocks = RetainedStock::select('stocks.*','retained_stocks.user_id','retained_stocks.treat_id','users.name as user_name')->join('stocks','stocks.id','retained_stocks.stock_id')->join('users','users.id','retained_stocks.user_id')->get();
+
 
         return Inertia::render('Stock/RetainStocks', ['user_name' => $user_name, 'user_id' => $user_id, 'stocks' => $stocks, 'retained_stocks' => $retained_stocks ]);
     }
@@ -504,9 +516,10 @@ class StockController extends Controller
                 'treat_id' => $treat_id
             ]);
 
-            $stock = Stock::find($stock_id);
-            $stock->del_flg = 1;
-            $stock->save();
+            // 実際に廃棄するタイミングでdel_flgを変更する
+            // $stock = Stock::find($stock_id);
+            // $stock->del_flg = 1;
+            // $stock->save();
 
             DB::commit();
 

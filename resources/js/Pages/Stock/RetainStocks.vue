@@ -260,7 +260,7 @@ onMounted(() => {});
   </MainLayout>
 
   <div v-if="modalImg.status" id="img_modal">
-    <div id="img_container" class="">
+    <div @click="changeModal" id="img_container" class="">
       <button @click="changeModal"
         class="bg-white hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
       >
