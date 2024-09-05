@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const checkImg = (imgPath) => {
-  modalImg.imgPath = imgPath.includes('https') ? imgPath : '/' + imgPath;
+  modalImg.imgPath = imgPath.includes("https") ? imgPath : "/" + imgPath;
   modalImg.status = true;
   console.log(modalImg);
 };
@@ -24,9 +24,8 @@ const changeSelect = (stock_id, value) => {
   });
 };
 const changeModal = () => {
-  modalImg.status = null,
-  modalImg.imgPath = null
-}
+  (modalImg.status = null), (modalImg.imgPath = null);
+};
 
 const modalImg = reactive({
   status: null,
@@ -118,7 +117,7 @@ onMounted(() => {});
                     {{ stock.id }}
                   </td>
 
-                  <td class="border-t-2 border-gray-200  py-2">
+                  <td class="border-t-2 border-gray-200 py-2">
                     <img
                       @click="checkImg(stock.img_path)"
                       class="w-16"
@@ -166,6 +165,17 @@ onMounted(() => {});
                       </option>
                       <option value="2" class="font-bold text-green-400">
                         現場引き取り
+                      </option>
+                      <!-- --- -->
+                      <hr class="my-2">
+                      <option value="3" class="font-bold text-orange-400">
+                        一課受け取り依頼
+                      </option>
+                      <option value="4" class="font-bold text-blue-400">
+                        二課受け取り依頼
+                      </option>
+                      <option value="5" class="font-bold text-purple-400">
+                        品証受け取り依頼
                       </option>
                     </select>
                   </td>
@@ -237,6 +247,9 @@ onMounted(() => {});
                       'border-t-2 border-gray-200 px-4 py-4 font-bold': true,
                       'text-red-500': retained_stock.treat_id == 1,
                       'text-green-500': retained_stock.treat_id == 2,
+                      'text-orange-500': retained_stock.treat_id == 3,
+                      'text-blue-500': retained_stock.treat_id == 4,
+                      'text-purple-500': retained_stock.treat_id == 5,
                     }"
                   >
                     {{
@@ -244,6 +257,12 @@ onMounted(() => {});
                         ? "廃棄"
                         : retained_stock.treat_id == 2
                         ? "現場引き取り"
+                        : retained_stock.treat_id == 3
+                        ? "一課受け取り依頼"
+                        : retained_stock.treat_id == 4
+                        ? "二課受け取り依頼"
+                        : retained_stock.treat_id == 5
+                        ? "品証受け取り依頼"
                         : ""
                     }}
                   </td>
@@ -261,15 +280,13 @@ onMounted(() => {});
 
   <div v-if="modalImg.status" id="img_modal">
     <div @click="changeModal" id="img_container" class="">
-      <button @click="changeModal"
+      <button
+        @click="changeModal"
         class="bg-white hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
       >
         閉じる
       </button>
-      <img
-        :src="modalImg.imgPath"
-        alt=""
-      />
+      <img :src="modalImg.imgPath" alt="" />
     </div>
   </div>
 </template>
@@ -302,6 +319,6 @@ onMounted(() => {});
   transform: translate(-50%, -50%);
   height: 80%;
   width: 80%;
-object-fit: contain;
+  object-fit: contain;
 }
 </style>
