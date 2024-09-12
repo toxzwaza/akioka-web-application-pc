@@ -5,19 +5,20 @@
     <div class="mx-auto max-w-screen-2xl px-4 md:px-8">
         <!-- text - start -->
         <div class="mb-10 md:mb-16">
-            <h2 class="mb-4 text-center text-2xl font-bold text-gray-800 md:mb-6 lg:text-3xl">従業員新規登録</h2>
+            <h2 class="mb-4 text-center text-2xl font-bold text-gray-800 md:mb-6 lg:text-3xl">従業員編集</h2>
 
             <p class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg">
                 従業員の新規作成を行います。
             </p>
         </div>
-        <!-- text - end -->
 
-        <!-- form - start -->
-        <form class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
+        <!-- 編集フォーム -->
+        <form action="{{ route('master.store.users') }}" method="post" class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
+            @csrf
+
             <div class="sm:col-span-2">
                 <label for="name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">ID*</label>
-                <input name="name" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->id }}"/>
+                <input name="id" class="pointer-events-none w-full rounded border bg-gray-200 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->id }}"/>
             </div>
 
             <div class="sm:col-span-2">
@@ -31,42 +32,41 @@
 
             <div class="sm:col-span-2">
                 <label for="email" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">パスワード*</label>
-                <input name="email" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->password }}" />
+                <input name="pwd" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" value="{{ $user->password }}" />
             </div>
 
             <hr class="my-8">
 
 
             <div class="sm:col-span-2">
-                <label for="company" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">所属部署*</label>
-                <select name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
-                    <option value="部署1">部署1</option>
-                    <option value="部署2">部署2</option>
-                    <option value="部署3">部署3</option>
-                    <option value="部署4">部署4</option>
+                <label for="group_id" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">所属部署*</label>
+                <select name="group_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                    @foreach($groups as $group)
+                        <option {{ $user->group_id == $group->id ? 'selected' : '' }} value="">{{ $group->name }}</option>
+
+                    @endforeach
                 </select>
             </div>
 
             <div class="sm:col-span-2">
-                <label for="company" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">役職*</label>
-                <select name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
-                    <option value="部署1">部署1</option>
-                    <option value="部署2">部署2</option>
-                    <option value="部署3">部署3</option>
-                    <option value="部署4">部署4</option>
+                <label for="position_id" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">役職*</label>
+                <select name="position_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                    @foreach($positions as $position)
+                        <option value="" {{ $user->position_id == $position->id ? "selected" : ''}}>{{ $position->name }}</option>
+
+                    @endforeach
                 </select>
             </div>
 
 
             <div class="sm:col-span-2">
-                <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">製造工程*</label>
+                <label for="process_id" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">製造工程*</label>
                 <p class="text-sm mb-4 text-gray-500">製造部に所属しない場合は、選択する必要はありません。</p>
                 <div class="sm:col-span-2">
-                    <select name="company" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
-                        <option value="部署1">部署1</option>
-                        <option value="部署2">部署2</option>
-                        <option value="部署3">部署3</option>
-                        <option value="部署4">部署4</option>
+                    <select name="process_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                        @foreach($processes as $process)
+                            <option value="" {{ $user->process_id == $process->id ? "selected" : ''}}>{{ $process->name }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -74,22 +74,23 @@
             <hr class="my-8">
 
             <div class="sm:col-span-2">
-                <label for="message" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">管理者フラグ*</label> <br>
-                <input type="checkbox" name="message" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <label for="is_admin" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">管理者フラグ*</label> <br>
+                <input {{$user->is_admin === 1 ? 'checked' : '' }} type="checkbox" name="is_admin" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
             </div>
             <div class="sm:col-span-2">
-                <label for="message" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">非常勤・派遣フラグ*</label> <br>
-                <input type="checkbox" name="message" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <label for="dispatch_flg" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">非常勤・派遣フラグ*</label> <br>
+                <input {{$user->dispatch_flg === 1 ? 'checked' : '' }} type="checkbox" name="dispatch_flg" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
             </div>
             <div class="sm:col-span-2">
-                <label for="message" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">パート社員フラグ*</label> <br>
-                <input type="checkbox" name="message" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <label for="part_flg" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">パート社員フラグ*</label> <br>
+
+                <input {{$user->part_flg === 1 ? 'checked' : '' }} type="checkbox" name="part_flg" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
             </div>
 
             <div class="sm:col-span-2">
-                <label for="message" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">弁当注文グループ参加フラグ*</label> <br>
+                <label for="always_order_flg" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">弁当注文グループ参加フラグ*</label> <br>
                 <p class="text-sm mb-4 text-gray-500">頻繁に弁当を注文する場合は、チェックを入れてください。</p>
-                <input type="checkbox" name="message" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
+                <input {{$user->always_order_flg === 1 ? 'checked' : '' }} type="checkbox" name="always_order_flg" class="h-4 w-4 rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring" />
             </div>
 
             <div class="flex items-center justify-between sm:col-span-2">

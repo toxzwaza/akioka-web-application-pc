@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
@@ -15,15 +16,15 @@ class TestController extends Controller
     //
     public function test(){
 
+        // すべての出庫情報を重複なしで取得
+        // $records = InventoryOperationRecord::where('inventory_operation_id', 2)->distinct('stock_id')->pluck('stock_id');
 
-        // $path = env('AKIOKA_APP_STOCK_PATH');
-        // // dd($path);
-        // if(File::exists($path . '\stock\new_file_5149.jpg')){
-        //     echo "ファイルが存在します。";
-        // }else{
-        //     echo "ファイルが存在しません。";
-        // }
-
+        // 備品倉庫のすべての物品
+        // 備品倉庫内のアドレスを取得
+        $addresses = StorageAddress::where('location_id', 2)->pluck('id');
+        $stocks = StockStorage::whereIn('storage_address_id', $addresses)->get();
+        dd($stocks[0]);
+      
     }
 
     public function storage_address_test(){

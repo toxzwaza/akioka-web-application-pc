@@ -27,7 +27,7 @@
 
                 <tbody>
                     @foreach($high_users as $index => $high_user)
-                    <tr class="">
+                    <tr class="" >
                         <td class="px-4 py-3"><a href="{{ route('master.edit.user', ['user_id' => $high_user->user_id]) }}">{{ $high_user->user_id }}</a></td>
                         <td class="px-4 py-3">{{ $high_user->user_name }}</td>
                         <td class="px-4 py-3">{{ $high_user->group_name }}</td>

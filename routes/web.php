@@ -36,7 +36,9 @@ Route::get('/', [MainController::class, 'index'])->name('home');
 Route::get('/master', [MasterController::class, 'index'])->name('master');
 Route::get('/master/users', [MasterController::class, 'users'])->name('master.users');
 Route::get('/master/akioka-users', [MasterController::class, 'akioka_users'])->name('master.akioka-users');
+
 Route::get('/master/create/users', [MasterController::class, 'create_user'])->name('master.create.user');
+Route::post('/master/store/users', [MasterController::class, 'store_user'])->name('master.store.users');
 Route::get('/master/store', [MasterController::class, 'store'])->name('master.store');
 Route::get('/master/edit/users/{user_id}', [MasterController::class, 'edit_user'])->name('master.edit.user');
 
@@ -50,6 +52,7 @@ Route::get('/stock/stocks/taking', [StockController::class, 'stock_taking'])->na
 // 滞留品
 Route::get('/stock/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
 Route::post('/stock/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
+Route::post('/stock/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
 
 
 Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');

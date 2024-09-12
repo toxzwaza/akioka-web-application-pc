@@ -7,6 +7,8 @@ use App\Models\Group;
 use App\Models\Position;
 use App\Models\Process;
 use App\Models\User;
+use App\Services\Method;
+use Exception;
 use Illuminate\Http\Request;
 
 class MasterController extends Controller
@@ -245,6 +247,51 @@ class MasterController extends Controller
         $positions = Position::all();
         $processes = Process::all();
         return view('master.create_user', compact('groups', 'positions', 'processes'));
+    }
+    public function store_user(Request $request)
+    {
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'email|max:255',
+            'pwd' => 'max:255',
+            'group_id' => 'required|integer|exists:groups,id',
+            'position_id' => 'required|integer|exists:positions,id',
+            'process_id' => 'nullable|integer|exists:processes,id'
+        ]);
+
+        $name = $request->name;
+        $email = $request->email;
+        $pwd = $request->pwd ?? 'pwd';
+        $group_id = $request->group_id;
+        $position_id = $request->position_id;
+        $process_id = $request->process_id;
+        $is_admin = $request->is_admin ? 1 : 0;
+        $dispatch_flg = $request->dispatch_flg ? 1 : 0;
+        $part_flg = $request->part_flg ? 1 : 0;
+        $always_order_flg = $request->always_order_flg ? 1 : 0;
+
+        try {
+            $user = new User();
+            $user->name = $name;
+            $user->email = $email;
+            $user->pwd = $pwd;
+            $user->group_id = $group_id;
+            $user->position_id = $position_id;
+            $user->process_id = $process_id;
+            $user->is_admin = $is_admin;
+            $user->dispatch_flg = $dispatch_flg;
+            $user->part_flg = $part_flg;
+            $user->always_order_flg = $always_order_flg;
+            $user->save();
+        } catch (Exception $e) {
+            Method::errorMsg();
+            return redirect()->back();
+        }
+
+
+        Method::msg('success', 'ユーザー登録が完了しました。');
+        return redirect()->back();
     }
 
     public function edit_user($user_id)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Classification;
 use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
+use App\Models\LastTreatRecord;
 use App\Models\Location;
 use App\Models\Process;
 use App\Models\RetainedStock;
@@ -22,7 +23,10 @@ use Inertia\Inertia;
 
 class StockController extends Controller
 {
-    public function test() {}
+    public function test()
+    {
+        dd('a');
+    }
     //
     public function index()
     {
@@ -466,16 +470,31 @@ class StockController extends Controller
     public function retained_stocks(Request $request)
     {
         $user_id = $request->user_id;
-        if(!$user_id){
+        if (!$user_id) {
+
+
+            // ユーザーが設定されていない場合、全員の処遇決定情報を表示する
+            $retained_stocks = RetainedStock::select('stocks.id', 'stocks.name', 'stocks.img_path')->join('stocks', 'stocks.id', 'retained_stocks.stock_id')->join('users', 'users.id', 'retained_stocks.user_id')->where('user_id', '!=', 91)->distinct('stocks.id')->get();
+
+            foreach ($retained_stocks as $stock) {
+                $retain_lists = RetainedStock::select('users.id as user_id', 'users.name as user_name', 'treats.name as treat_name', 'treats.color as treat_color')->join('users', 'users.id', 'retained_stocks.user_id')->join('treats', 'treats.id', 'retained_stocks.treat_id')->where('stock_id', $stock->id)->get();
+
+                $stock->retain_lists = $retain_lists;
+            }
+
+
             Method::errorMsg('ユーザーIDが設定されていません。');
-            return to_route('home');
+
+
+
+            return Inertia::render('Stock/AllRetainStocks', ['retained_stocks' => $retained_stocks]);
         }
         $user_name = User::find($user_id)->name;
 
         // 処遇が決定したもののリスト
         // ユーザーごと
-        $retained_stocks = RetainedStock::select('stocks.*','retained_stocks.user_id','retained_stocks.treat_id','users.name as user_name')->join('stocks','stocks.id','retained_stocks.stock_id')->join('users','users.id','retained_stocks.user_id')->where('retained_stocks.user_id',$user_id)->get();
-        
+        $retained_stocks = RetainedStock::select('stocks.*', 'retained_stocks.user_id', 'retained_stocks.treat_id', 'users.name as user_name')->join('stocks', 'stocks.id', 'retained_stocks.stock_id')->join('users', 'users.id', 'retained_stocks.user_id')->where('retained_stocks.user_id', $user_id)->get();
+
 
 
         // 配列に変更
@@ -489,11 +508,11 @@ class StockController extends Controller
             ->where('stocks.del_flg', 0)
             ->where('storage_address_id', 6)
             ->where('stocks.del_flg', 0)
-            ->whereNotIn('stocks.id',$retained_ids)
+            ->whereNotIn('stocks.id', $retained_ids)
             ->orderby('updated_at', 'desc')->get();
 
 
-        return Inertia::render('Stock/RetainStocks', ['user_name' => $user_name, 'user_id' => $user_id, 'stocks' => $stocks, 'retained_stocks' => $retained_stocks ]);
+        return Inertia::render('Stock/RetainStocks', ['user_name' => $user_name, 'user_id' => $user_id, 'stocks' => $stocks, 'retained_stocks' => $retained_stocks]);
     }
 
     public function store_retained_stocks(Request $request)
@@ -522,11 +541,42 @@ class StockController extends Controller
             // $stock->save();
 
             DB::commit();
-
         } catch (Exception $e) {
             DB::rollBack();
         }
 
-        return to_route('stock.retained.stocks',['user_id' => $user_id]);
+        return to_route('stock.retained.stocks', ['user_id' => $user_id]);
+    }
+
+    public function store_last_treat_record(Request $request)
+    {
+
+        $treat_lists = $request->treat_lists;
+        // dd($treat_lists);
+        foreach ($treat_lists as $key => $treat) {
+
+            $last_treat_record = new LastTreatRecord();
+            $last_treat_record->stock_id = $key;
+
+            switch ($treat) {
+                case '1':
+                    $treat = '廃棄';
+                    break;
+                case '2':
+                    $treat = '一課引き取り';
+                    break;
+                case '3':
+                    $treat = '二課引き取り';
+                    break;
+                case '4':
+                    $treat = '品証引き取り';
+                    break;
+            }
+            $last_treat_record->treat = $treat;
+            $last_treat_record->save();
+            dd('test');
+        };
+
+        return redirect()->back();
     }
 }
