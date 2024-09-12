@@ -168,7 +168,7 @@ const addParam = (stock_id, el) => {
                   </td>
 
                   <td class="border-t-2 border-gray-200 py-2">
-                    <!-- <img
+                    <img
                       @click="checkImg(stock.img_path)"
                       class="w-16"
                       :src="
@@ -177,16 +177,16 @@ const addParam = (stock_id, el) => {
                           : '/' + stock.img_path
                       "
                       alt=""
-                    /> -->
+                    />
                     <!-- 開発用 -->
-                    <img
+                    <!-- <img
                       @click="checkImg(stock.img_path)"
                       class="w-16"
                       :src="
                         stock.img_path.includes('https') ? stock.img_path : '/'
                       "
                       alt=""
-                    />
+                    /> -->
                   </td>
                   <td class="border-t-2 border-gray-200 px-4 py-4">
                     {{ stock.name }}
