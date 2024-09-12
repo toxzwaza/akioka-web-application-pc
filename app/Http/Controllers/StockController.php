@@ -571,6 +571,8 @@ class StockController extends Controller
                 case '4':
                     $treat = '品証引き取り';
                     break;
+                default:
+                    $treat = '廃棄';
             }
             $last_treat_record->treat = $treat;
             $last_treat_record->save();
