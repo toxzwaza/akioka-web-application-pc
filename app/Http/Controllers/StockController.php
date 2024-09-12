@@ -574,7 +574,6 @@ class StockController extends Controller
             }
             $last_treat_record->treat = $treat;
             $last_treat_record->save();
-            dd('test');
         };
 
         return redirect()->back();
