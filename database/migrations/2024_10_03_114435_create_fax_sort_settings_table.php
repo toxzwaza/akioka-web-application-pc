@@ -13,11 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('last_treat_records', function (Blueprint $table) {
+        Schema::create('fax_sort_settings', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('stock_id');
-            $table->unsignedTinyInteger('treat_id')->nullable(false);
-            $table->foreign('stock_id')->references('id')->on('stocks');
+            $table->string('name')->nullable();
+            $table->string('fax')->nullable();
+            $table->unsignedBigInteger('fax_group_id');
+            $table->foreign('fax_group_id')->references('id')->on('fax_groups')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('last_treat_records');
+        Schema::dropIfExists('fax_sort_settings');
     }
 };

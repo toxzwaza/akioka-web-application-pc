@@ -8,6 +8,10 @@
 
 
         <div class="flex flex-wrap justify-center w-1/2">
+            <div class="w-full flex justify-center my-4">
+                <!-- ページネーション -->
+                {{ $operation_records->links() }}
+            </div>
             <div class="lg:w-3/5 md:w-1/2 md:pr-10 md:py-6">
                 @foreach($operation_records as $record)
                 <div class="flex relative pb-12">
@@ -82,7 +86,9 @@
             labels: ["{{ Carbon\Carbon::now()->subDays(5)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(4)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(3)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(2)->format('m/d') }}", "{{ Carbon\Carbon::now()->subDays(1)->format('m/d') }}", "{{Carbon\Carbon::now()->format('m/d')}}"],
             datasets: [{
                 label: '# of 取引数',
-                data: {!! json_encode($operation_record_recent) !!},
+                data: {
+                    !!json_encode($operation_record_recent) !!
+                },
                 backgroundColor: [
                     'rgba(225, 225, 225, 0.2)',
                     'rgba(225, 225, 225, 0.8)',

@@ -25,12 +25,37 @@ class StockController extends Controller
 {
     public function test()
     {
-        dd('a');
+        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'stocks.classification_id', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.id as user_id', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')
+            ->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')
+            ->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')
+            ->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
+            ->join('users', 'users.id', 'inventory_operation_records.user_id')
+            ->whereBetween('inventory_operation_records.created_at', ['2024-08-10', '2024-09-10'])
+            ->whereIn('inventory_operation_id', [2, 6])
+            ->orderby('inventory_operation_records.updated_at', 'desc')
+            ->get();
+
+        $count = 0;
+        $not_count = 0;
+
+        foreach ($operation_records as $record) {
+
+            if ($record->user_id != "81") {
+                if ($record->classification_id != "11") {
+
+                    $not_count++;
+                }
+            } else {
+                $count++;
+            }
+        }
+
+        dd($not_count);
     }
     //
     public function index()
     {
-        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->paginate(6);
+        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->paginate(25);
         // dd($operation_records);
 
 

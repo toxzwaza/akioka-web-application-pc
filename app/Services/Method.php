@@ -3,10 +3,12 @@ namespace App\Services;
 
 class Method{
 
-    public static function msg($info, $msg){
+    public static function msg($status="info", $msg){
 
-        session()->flash($info, $msg);
+        session()->flash('message', $msg);
+        session()->flash('status', $status);
     }
+    
     public static function isLogin(){
         $is_success = false;
 

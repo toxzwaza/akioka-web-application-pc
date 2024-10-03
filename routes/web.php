@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\CalcProductController;
+use App\Http\Controllers\CalcProductTabletController;
+use App\Http\Controllers\FaxController;
 use App\Http\Controllers\LunchController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
@@ -43,6 +46,7 @@ Route::get('/master/store', [MasterController::class, 'store'])->name('master.st
 Route::get('/master/edit/users/{user_id}', [MasterController::class, 'edit_user'])->name('master.edit.user');
 
 // 在庫管理システム
+Route::get('/stock/test', [StockController::class, 'test'])->name('stock.test');
 Route::get('/stock', [StockController::class, 'index'])->name('stock');
 Route::get('/stock/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
 Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
@@ -54,6 +58,14 @@ Route::get('/stock/retained/stocks', [StockController::class, 'retained_stocks']
 Route::post('/stock/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
 Route::post('/stock/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
 
+// 製品棚卸し
+Route::get('/calc/product/test', [CalcProductController::class, 'test'])->name('calc.product.test');
+
+Route::get('/calc/product', [CalcProductController::class, 'index'])->name('calc.product');
+Route::post('/calc/product/store', [CalcProductController::class, 'store'])->name('calc.product.store');
+Route::get('/calc/product/start', [CalcProductController::class, 'start'])->name('calc.product.start');
+// タブレット画面
+Route::get('/calc/product/tablet', [CalcProductTabletController::class, 'index'])->name('/calc/product/tablet');
 
 Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 Route::post('/stock/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
@@ -121,6 +133,20 @@ Route::get('movie/memo/delete/{memo_id}', [MovieController::class, 'movie_memo_d
 
 Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])->name('movie.memo.update');
 
+// FAX振り分け設定
+Route::get('/fax', [FaxController::class, 'index'])->name('fax');
+Route::post('/fax/sort/create', [FaxController::class, 'fax_sort_create'])->name('fax.sort.create');
+Route::get('/fax/sort/delete', [FaxController::class, 'fax_sort_delete'])->name('fax.sort.delete');
+Route::get('/fax/group', [FaxController::class, 'group'])->name('fax.group');
+Route::post('/fax/group/create', [FaxController::class, 'group_create'])->name('fax.group.create');
+Route::post('/fax/group/user/create', [FaxController::class, 'group_user_create'])->name('fax.group.user.create');
+Route::get('/fax/getUserGroups', [FaxController::class, 'getUserGroups'])->name('fax.getUserGroups');
+Route::get('fax/group/delete/{id}', [FaxController::class, 'group_delete'])->name('fax.group.delete');
+
+Route::get('/fax/folder', [FaxController::class, 'folder'])->name('fax.folder');
+Route::get('/fax/folder/update', [FaxController::class, "folder_update"])->name('fax.folder.update');
+
+Route::get('/fax/getFaxSortUsers', [FaxController::class, 'getFaxSortUsers'])->name('fax.getFaxSortUsers');
 
 
 // API
