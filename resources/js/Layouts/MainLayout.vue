@@ -30,7 +30,17 @@ const props = defineProps({
               'text-indigo-600 font-bold': route().current() == 'fax.manual',
             }"
             :href="route('fax.manual')"
-            >マニュアル</Link>
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"
+              /></svg
+            >マニュアル</Link
+          >
 
           <Link
             :class="{
@@ -38,6 +48,15 @@ const props = defineProps({
               'text-indigo-600 font-bold': route().current() == 'fax',
             }"
             :href="route('fax')"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"
+              /></svg
             >振り分け</Link
           >
           <Link
@@ -46,6 +65,15 @@ const props = defineProps({
               'text-indigo-600 font-bold': route().current() == 'fax.group',
             }"
             :href="route('fax.group')"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+              /></svg
             >グループ</Link
           >
           <Link
@@ -54,7 +82,18 @@ const props = defineProps({
               'text-indigo-600 font-bold': route().current() == 'fax.folder',
             }"
             :href="route('fax.folder')"
-            >フォルダ割り当て</Link
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M2 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"
+              />
+            </svg>
+            フォルダ割り当て</Link
           >
         </div>
       </nav>
