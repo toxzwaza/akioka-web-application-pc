@@ -76,7 +76,7 @@ class FaxController extends Controller
             ->whereNotNull('users.email')
             ->get();
         foreach($groups as $group){
-            $group->users = FaxUserGroup::select('users.id', 'users.name as user_name')->join('users', 'users.id', 'fax_user_groups.user_id')->where('fax_group_id', $group->id)->get();
+            $group->users = FaxUserGroup::select('users.id', 'users.name as user_name','fax_user_groups.notify_flg')->join('users', 'users.id', 'fax_user_groups.user_id')->where('fax_group_id', $group->id)->get();
         }
 
 

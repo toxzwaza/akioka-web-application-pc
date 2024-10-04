@@ -423,7 +423,11 @@ onMounted(() => {
                       <span
                         v-for="user in group.users"
                         :key="user.id"
-                        class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-700 dark:text-red-300"
+                        :class="{
+                          'text-xs font-medium me-2 px-2.5 py-0.5 rounded': true,
+                          'bg-green-100 text-green-800': user.notify_flg,
+                          'bg-red-100 text-red-800': !user.notify_flg
+                        }"
                         >{{ user.user_name }}</span
                       >
                     </td>
