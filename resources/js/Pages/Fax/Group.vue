@@ -50,17 +50,19 @@ const createGroupUser = (user_id, user_name, group_name) => {
     user_id: user_id,
     user_name: user_name,
     group_name: group_name,
-    notify_flg: 0
+    notify_flg: 0,
   };
   editGroupData.mount_users.push(userObject);
   console.log(editGroupData.mount_users);
 };
 const changeNotify = (user_id, notify_flg) => {
-  const user = editGroupData.mount_users.find((user) => user.user_id === user_id);
+  const user = editGroupData.mount_users.find(
+    (user) => user.user_id === user_id
+  );
   if (user) {
     user.notify_flg = user.notify_flg ? null : 1;
   }
-}
+};
 const deleteGroupUser = (user_id) => {
   console.log(user_id);
 
@@ -88,14 +90,12 @@ const editGroup = (group_id) => {
     })
     .then((response) => {
       editGroupData.mount_users = response.data;
-      document.querySelector('#edit_form').scrollIntoView()
+      document.querySelector("#edit_form").scrollIntoView();
       console.log(editGroupData.mount_users);
     })
     .catch((error) => {
       console.error("There was an error fetching the user groups:", error);
     });
-
-
 };
 
 onMounted(() => {
@@ -105,6 +105,22 @@ onMounted(() => {
 <template>
   <MainLayout :title="'FAX振り分け'">
     <template #content>
+      <ul class="flex border-b w-2/3 mx-auto">
+        <li class="-mb-px mr-1">
+          <a
+            :href="route('fax.group')"
+            :class="{'bg-white inline-block  rounded-t py-2 px-4 text-blue-700 font-semibold': true,'border-l border-t border-r': !editGroupData.id, 'border-b': editGroupData.id }"
+            >新規作成</a
+          >
+          <a
+            href="#"
+            :class="{'bg-white inline-block  rounded-t py-2 px-4 text-blue-700 font-semibold': true,'border-l border-t border-r': editGroupData.id, 'border-b': !editGroupData.id}"
+            >編集</a
+          >
+        </li>
+
+      </ul>
+
       <section class="text-gray-600 body-font">
         <div class="container px-5 py-24 mx-auto">
           <div
@@ -159,7 +175,7 @@ onMounted(() => {
                   class="bg-white rounded px-8 pt-6 pb-8 mb-4"
                 >
                   <div class="w-2/3 mx-auto">
-                    <div class="mb-8 ">
+                    <div class="mb-8">
                       <label
                         class="block text-gray-700 text-sm font-bold mb-2"
                         for="group_name"
@@ -175,7 +191,7 @@ onMounted(() => {
                       />
                     </div>
 
-                    <div class="mb-8 ">
+                    <div class="mb-8">
                       <label
                         class="block text-gray-700 text-sm font-bold mb-2"
                         for="group_name"
@@ -305,9 +321,23 @@ onMounted(() => {
                                   {{ user.user_name }}
                                 </td>
                                 <td class="px-4 py-3">
-                                  <button 
-                                  @click="changeNotify(user.user_id, user.notify_flg)"
-                                  :class="{'text-white font-bold py-2 px-4 rounded': true, 'bg-red-500 hover:bg-red-700': !user.notify_flg, 'bg-green-500 hover:bg-green-700': user.notify_flg, }">{{ user.notify_flg ? 'あり' : 'なし' }}</button>
+                                  <button
+                                    @click="
+                                      changeNotify(
+                                        user.user_id,
+                                        user.notify_flg
+                                      )
+                                    "
+                                    :class="{
+                                      'text-white font-bold py-2 px-4 rounded': true,
+                                      'bg-red-500 hover:bg-red-700':
+                                        !user.notify_flg,
+                                      'bg-green-500 hover:bg-green-700':
+                                        user.notify_flg,
+                                    }"
+                                  >
+                                    {{ user.notify_flg ? "あり" : "なし" }}
+                                  </button>
                                 </td>
 
                                 <td class="w-10 text-center">
@@ -390,7 +420,12 @@ onMounted(() => {
                     <td class="px-4 py-3">{{ group.id }}</td>
                     <td class="px-4 py-3 font-bold">{{ group.name }}</td>
                     <td class="px-4 py-3 w-1/5">
-                      <span v-for="user in group.users" :key="user.id" class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-700 dark:text-red-300">{{ user.user_name }}</span>
+                      <span
+                        v-for="user in group.users"
+                        :key="user.id"
+                        class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-700 dark:text-red-300"
+                        >{{ user.user_name }}</span
+                      >
                     </td>
                     <td class="px-4 py-3 w-1/5">
                       {{
