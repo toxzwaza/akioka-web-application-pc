@@ -50,6 +50,7 @@ const editFaxSortSetting = (setting_id) => {
   form.fax = editSetting.fax;
   form.group_id = editSetting.fax_group_id;
 
+  handleChangeGroup();
   document.querySelector('#edit_form').scrollIntoView();
 };
 
