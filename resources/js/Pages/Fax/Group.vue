@@ -88,11 +88,14 @@ const editGroup = (group_id) => {
     })
     .then((response) => {
       editGroupData.mount_users = response.data;
+      document.querySelector('#edit_form').scrollIntoView()
       console.log(editGroupData.mount_users);
     })
     .catch((error) => {
       console.error("There was an error fetching the user groups:", error);
     });
+
+
 };
 
 onMounted(() => {
@@ -107,7 +110,7 @@ onMounted(() => {
           <div
             class="w-3/4 mx-auto overflow-auto flex flex-col items-start justify-around"
           >
-            <div class="w-full mt-8">
+            <div id="" class="w-full mt-8">
               <!-- 作成フォーム -->
               <div v-if="!editGroupData.id" class="max-w-xl">
                 <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
@@ -147,7 +150,7 @@ onMounted(() => {
               </div>
 
               <!-- 編集フォーム -->
-              <div v-else>
+              <div id="edit_form" class="pt-16" v-else>
                 <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
                   グループ詳細編集
                 </h1>
@@ -260,7 +263,7 @@ onMounted(() => {
                           <h1
                             class="text-xl font-medium title-font mb-2 text-gray-500"
                           >
-                            割り当て一覧
+                            割り当て済み覧
                           </h1>
                         </div>
                         <div class="w-full mx-auto overflow-auto">
@@ -367,6 +370,11 @@ onMounted(() => {
                       グループ名
                     </th>
                     <th
+                      class="w-1/3 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    >
+                      割り当てユーザ
+                    </th>
+                    <th
                       class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                     >
                       作成日
@@ -381,6 +389,9 @@ onMounted(() => {
                   <tr v-for="group in groups" :key="group.id">
                     <td class="px-4 py-3">{{ group.id }}</td>
                     <td class="px-4 py-3 font-bold">{{ group.name }}</td>
+                    <td class="px-4 py-3 w-1/5">
+                      <span v-for="user in group.users" :key="user.id" class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-700 dark:text-red-300">{{ user.user_name }}</span>
+                    </td>
                     <td class="px-4 py-3 w-1/5">
                       {{
                         new Date(group.created_at).toLocaleDateString("ja-JP")

@@ -45,11 +45,12 @@ const deleteFaxSort = ()=> {
 };
 const editFaxSortSetting = (setting_id) => {
   const editSetting = props.fax_sort_settings.find( setting => setting.id === setting_id);
-  console.log(editSetting);
   form.id = setting_id;
   form.name = editSetting.name;
   form.fax = editSetting.fax;
   form.group_id = editSetting.fax_group_id;
+
+  document.querySelector('#edit_form').scrollIntoView();
 };
 
 const changeCreate = () => {
@@ -65,7 +66,7 @@ onMounted(() => {
 <template>
   <MainLayout :title="'FAX振り分け'">
     <template #content>
-      <div class="px-8 my-8">
+      <div id="edit_form" class="px-8 my-8 pt-16">
         <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
           振り分け設定
         </h1>

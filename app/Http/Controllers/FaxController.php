@@ -71,6 +71,9 @@ class FaxController extends Controller
     {
         $groups = FaxGroup::all();
         $users = User::select('users.id', 'users.name as user_name', 'groups.name as group_name')->join('groups', 'groups.id', 'users.group_id')->where('del_flg', 0)->get();
+        foreach($groups as $group){
+            $group->users = FaxUserGroup::select('users.id', 'users.name as user_name')->join('users', 'users.id', 'fax_user_groups.user_id')->where('fax_group_id', $group->id)->get();
+        }
 
 
         return Inertia::render('Fax/Group', ['groups' => $groups, 'users' => $users]);
