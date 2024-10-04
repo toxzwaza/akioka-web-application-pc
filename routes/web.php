@@ -135,6 +135,7 @@ Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])-
 
 // FAX振り分け設定
 Route::get('/fax', [FaxController::class, 'index'])->name('fax');
+Route::get('/fax/manual', [FaxController::class, 'manual'])->name('fax.manual');
 Route::post('/fax/sort/create', [FaxController::class, 'fax_sort_create'])->name('fax.sort.create');
 Route::get('/fax/sort/delete', [FaxController::class, 'fax_sort_delete'])->name('fax.sort.delete');
 Route::get('/fax/group', [FaxController::class, 'group'])->name('fax.group');

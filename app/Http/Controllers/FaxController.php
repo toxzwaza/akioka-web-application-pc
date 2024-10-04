@@ -27,6 +27,10 @@ class FaxController extends Controller
 
         return Inertia::render('Fax/Index', ['fax_groups' => $fax_groups, 'fax_sort_settings' => $fax_sort_settings]);
     }
+    public function manual(Request $request){
+        return Inertia::render('Fax/Manual');
+    }
+
     public function fax_sort_create(Request $request)
     {
         $id = $request->id;
@@ -89,6 +93,7 @@ class FaxController extends Controller
         $group_name = $request->name;
         $mount_users = $request->mount_users;
 
+
         $fax_group = FaxGroup::find($group_id);
         if ($fax_group->name != $group_name) {
             $fax_group->name = $group_name;
@@ -107,6 +112,7 @@ class FaxController extends Controller
                 $fax_group_user = new FaxUserGroup();
                 $fax_group_user->fax_group_id = $group_id;
                 $fax_group_user->user_id = $user['user_id'];
+                $fax_group_user->notify_flg = $user['notify_flg'];
                 $fax_group_user->save();
             }
         }
@@ -118,7 +124,7 @@ class FaxController extends Controller
     {
         $group_id = $request->group_id;
 
-        $fax_group_users = FaxUserGroup::select('users.id as user_id', 'users.name as user_name', 'groups.name as group_name')->join('users', 'users.id', 'fax_user_groups.user_id')->join('groups', 'groups.id', 'users.group_id')->where('fax_group_id', $group_id)->get();
+        $fax_group_users = FaxUserGroup::select('fax_user_groups.notify_flg', 'users.id as user_id', 'users.name as user_name', 'groups.name as group_name')->join('users', 'users.id', 'fax_user_groups.user_id')->join('groups', 'groups.id', 'users.group_id')->where('fax_group_id', $group_id)->get();
         return response()->json($fax_group_users);
     }
     public function folder(Request $request)
@@ -177,7 +183,7 @@ class FaxController extends Controller
         $fax_sort_setting = $query->first();
 
         if($fax_sort_setting){
-            $fax_user_groups = FaxUserGroup::select('users.fax_folder_name')->join('users', 'users.id', 'fax_user_groups.user_id')->where('fax_group_id', $fax_sort_setting->fax_group_id)->get();
+            $fax_user_groups = FaxUserGroup::select('users.fax_folder_name','fax_user_groups.notify_flg','users.email')->join('users', 'users.id', 'fax_user_groups.user_id')->where('fax_group_id', $fax_sort_setting->fax_group_id)->get();
         }else{
             $fax_user_groups = [];
         }

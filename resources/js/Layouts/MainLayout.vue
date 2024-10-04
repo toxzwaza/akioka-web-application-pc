@@ -1,5 +1,5 @@
 <script setup>
-import { Head,Link } from "@inertiajs/vue3";
+import { Head, Link } from "@inertiajs/vue3";
 import Message from "@/Components/Message.vue";
 
 const props = defineProps({
@@ -24,15 +24,38 @@ const props = defineProps({
         class="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400 flex flex-wrap items-center text-base justify-center"
       >
         <div class="flex">
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'fax.manual',
+            }"
+            :href="route('fax.manual')"
+            >マニュアル</Link>
 
-          <Link :class="{'mr-5 hover:text-gray-900 flex justify-center': true,
-          'text-indigo-600 font-bold': route().current() == 'fax'}" :href="route('fax')">振り分け</Link>
-          <Link :class="{'mr-5 hover:text-gray-900 flex justify-center': true,
-          'text-indigo-600 font-bold': route().current() == 'fax.group'}" :href="route('fax.group')">グループ</Link>
-          <Link :class="{'mr-5 hover:text-gray-900 flex justify-center': true,
-          'text-indigo-600 font-bold': route().current() == 'fax.folder'}" :href="route('fax.folder')">フォルダ割り当て</Link>
-
-
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'fax',
+            }"
+            :href="route('fax')"
+            >振り分け</Link
+          >
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'fax.group',
+            }"
+            :href="route('fax.group')"
+            >グループ</Link
+          >
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'fax.folder',
+            }"
+            :href="route('fax.folder')"
+            >フォルダ割り当て</Link
+          >
         </div>
       </nav>
     </div>

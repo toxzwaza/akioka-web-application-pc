@@ -39,7 +39,7 @@ const editGroupData = reactive({
 });
 const deleteGroup = () => {
   if (confirm("このグループを削除してもよろしいですか？")) {
-    router.get(route('fax.group.delete', {id: editGroupData.id}));
+    router.get(route("fax.group.delete", { id: editGroupData.id }));
   }
 };
 const createGroupUser = (user_id, user_name, group_name) => {
@@ -50,10 +50,17 @@ const createGroupUser = (user_id, user_name, group_name) => {
     user_id: user_id,
     user_name: user_name,
     group_name: group_name,
+    notify_flg: 0
   };
   editGroupData.mount_users.push(userObject);
   console.log(editGroupData.mount_users);
 };
+const changeNotify = (user_id, notify_flg) => {
+  const user = editGroupData.mount_users.find((user) => user.user_id === user_id);
+  if (user) {
+    user.notify_flg = user.notify_flg ? null : 1;
+  }
+}
 const deleteGroupUser = (user_id) => {
   console.log(user_id);
 
@@ -98,11 +105,255 @@ onMounted(() => {
       <section class="text-gray-600 body-font">
         <div class="container px-5 py-24 mx-auto">
           <div
-            class="w-2/3 mx-auto overflow-auto flex flex-col items-start justify-around"
+            class="w-3/4 mx-auto overflow-auto flex flex-col items-start justify-around"
           >
-            <div class="w-full">
-              <h1 class="text-2xl font-bold mb-4">グループ一覧</h1>
-              <table class="table-auto text-left whitespace-no-wrap">
+            <div class="w-full mt-8">
+              <!-- 作成フォーム -->
+              <div v-if="!editGroupData.id" class="max-w-xl">
+                <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
+                  グループ作成
+                </h1>
+
+                <form @submit.prevent class="w-full max-w-lg">
+                  <div class="flex flex-wrap -mx-3 mb-6">
+                    <div class="w-full px-3">
+                      <label
+                        class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                        for="grid-password"
+                      >
+                        グループ名
+                      </label>
+                      <input
+                        v-model="group_name"
+                        class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                        id="grid-password"
+                        type="text"
+                        placeholder=""
+                      />
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <button
+                      @click="sendGroupName"
+                      :class="{
+                        'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline': true,
+                      }"
+                      type="button"
+                    >
+                      追加
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- 編集フォーム -->
+              <div v-else>
+                <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
+                  グループ詳細編集
+                </h1>
+                <form
+                  @submit.prevent
+                  class="bg-white rounded px-8 pt-6 pb-8 mb-4"
+                >
+                  <div class="w-2/3 mx-auto">
+                    <div class="mb-8 ">
+                      <label
+                        class="block text-gray-700 text-sm font-bold mb-2"
+                        for="group_name"
+                      >
+                        グループ名
+                      </label>
+                      <input
+                        v-model="editGroupData.name"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id="group_name"
+                        type="text"
+                        placeholder="Group1"
+                      />
+                    </div>
+
+                    <div class="mb-8 ">
+                      <label
+                        class="block text-gray-700 text-sm font-bold mb-2"
+                        for="group_name"
+                      >
+                        ユーザー割り当て
+                      </label>
+                      <input
+                        @change="filterUser($event.target.value)"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        type="text"
+                        name=""
+                        id=""
+                        placeholder="カーソルを抜けると検索されます"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="flex justify-start items-start">
+                    <div class="pr-8 w-1/2">
+                      <section class="text-gray-600 body-font mt-8">
+                        <div class="container mx-auto">
+                          <div class="flex flex-col text-center w-full mb-4">
+                            <h1
+                              class="text-xl font-medium title-font mb-2 text-gray-500"
+                            >
+                              検索結果
+                            </h1>
+                          </div>
+                          <div class="w-full mx-auto overflow-auto">
+                            <table
+                              class="table-auto w-full text-left whitespace-no-wrap"
+                            >
+                              <thead>
+                                <tr>
+                                  <th
+                                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                                  >
+                                    所属
+                                  </th>
+                                  <th
+                                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                                  >
+                                    名前
+                                  </th>
+
+                                  <th
+                                    class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
+                                  ></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="user in filterUsers" :key="user.id">
+                                  <td class="px-4 py-3">
+                                    {{ user.group_name }}
+                                  </td>
+                                  <td class="px-4 py-3">
+                                    {{ user.user_name }}
+                                  </td>
+
+                                  <td class="w-10 text-center">
+                                    <button
+                                      @click="
+                                        createGroupUser(
+                                          user.id,
+                                          user.user_name,
+                                          user.group_name
+                                        )
+                                      "
+                                      class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded text-sm whitespace-nowrap"
+                                    >
+                                      追加
+                                    </button>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+
+                    <section class="pr-8 w-1/2 text-gray-600 body-font mt-8">
+                      <div class="container mx-auto">
+                        <div class="flex flex-col text-center w-full mb-4">
+                          <h1
+                            class="text-xl font-medium title-font mb-2 text-gray-500"
+                          >
+                            割り当て一覧
+                          </h1>
+                        </div>
+                        <div class="w-full mx-auto overflow-auto">
+                          <table
+                            class="table-auto w-full text-left whitespace-no-wrap"
+                          >
+                            <thead>
+                              <tr>
+                                <th
+                                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                                >
+                                  所属
+                                </th>
+                                <th
+                                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                                >
+                                  名前
+                                </th>
+                                <th
+                                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                                >
+                                  通知
+                                </th>
+
+                                <th
+                                  class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
+                                ></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr
+                                v-for="user in editGroupData.mount_users"
+                                :key="user.user_id"
+                              >
+                                <td class="px-4 py-3">
+                                  {{ user.group_name }}
+                                </td>
+                                <td class="px-4 py-3">
+                                  {{ user.user_name }}
+                                </td>
+                                <td class="px-4 py-3">
+                                  <button 
+                                  @click="changeNotify(user.user_id, user.notify_flg)"
+                                  :class="{'text-white font-bold py-2 px-4 rounded': true, 'bg-red-500 hover:bg-red-700': !user.notify_flg, 'bg-green-500 hover:bg-green-700': user.notify_flg, }">{{ user.notify_flg ? 'あり' : 'なし' }}</button>
+                                </td>
+
+                                <td class="w-10 text-center">
+                                  <button
+                                    @click="deleteGroupUser(user.user_id)"
+                                    class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded text-sm whitespace-nowrap"
+                                  >
+                                    削除
+                                  </button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <div class="mt-8 flex items-center justify-center">
+                    <button
+                      @click="deleteGroup"
+                      :class="{
+                        'bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4': true,
+                      }"
+                      type="button"
+                    >
+                      削除
+                    </button>
+                    <button
+                      @click="sendGroupUsers"
+                      :class="{
+                        'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline': true,
+                      }"
+                      type="button"
+                    >
+                      保存
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="w-full mt-20">
+              <hr class="py-8" />
+
+              <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
+                グループ一覧
+              </h1>
+              <table class="w-full table-auto text-left whitespace-no-wrap">
                 <thead>
                   <tr>
                     <th
@@ -147,235 +398,6 @@ onMounted(() => {
                   </tr>
                 </tbody>
               </table>
-              <hr class="my-16" />
-            </div>
-
-            <div class="w-full mt-8">
-              <!-- 作成フォーム -->
-              <div v-if="!editGroupData.id" class="max-w-xl">
-                <h1 class="text-2xl font-bold mb-4">グループ作成</h1>
-                <form
-                  @submit.prevent
-                  class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-                >
-                  <div class="mb-8">
-                    <label
-                      class="block text-gray-700 text-sm font-bold mb-2"
-                      for="group_name"
-                    >
-                      グループ名
-                    </label>
-                    <input
-                      v-model="group_name"
-                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      id="group_name"
-                      type="text"
-                      placeholder="Group1"
-                    />
-                  </div>
-
-                  <div class="flex items-center justify-between">
-                    <button
-                      @click="sendGroupName"
-                      :class="{
-                        'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline': true,
-                      }"
-                      type="button"
-                    >
-                      追加
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              <!-- 編集フォーム -->
-              <div v-else>
-                <h1 class="text-2xl font-bold mb-4">グループ詳細編集</h1>
-                <form
-                  @submit.prevent
-                  class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-                >
-                  <div class="mb-8 max-w-lg">
-                    <label
-                      class="block text-gray-700 text-sm font-bold mb-2"
-                      for="group_name"
-                    >
-                      グループ名
-                    </label>
-                    <input
-                      v-model="editGroupData.name"
-                      class="shadow appearance-none border rounded w-2/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      id="group_name"
-                      type="text"
-                      placeholder="Group1"
-                    />
-                  </div>
-
-                  <div class="mb-8">
-                    <label
-                      class="block text-gray-700 text-sm font-bold mb-2"
-                      for="group_name"
-                    >
-                      ユーザー割り当て
-                    </label>
-                    <div class="flex justify-start items-end">
-                      <div class="pr-8 w-1/2">
-                        <input
-                          @change="filterUser($event.target.value)"
-                          class="shadow appearance-none border rounded w-2/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                          type="text"
-                          name=""
-                          id=""
-                          placeholder="カーソルを抜けると検索されます"
-                        />
-
-                        <section class="text-gray-600 body-font mt-8">
-                          <div class="container mx-auto">
-                            <div class="flex flex-col text-center w-full mb-4">
-                              <h1
-                                class="text-xl font-medium title-font mb-2 text-gray-500"
-                              >
-                                検索結果
-                              </h1>
-                            </div>
-                            <div class="w-full mx-auto overflow-auto">
-                              <table
-                                class="table-auto w-full text-left whitespace-no-wrap"
-                              >
-                                <thead>
-                                  <tr>
-                                    <th
-                                      class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                                    >
-                                      所属
-                                    </th>
-                                    <th
-                                      class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                                    >
-                                      名前
-                                    </th>
-
-                                    <th
-                                      class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
-                                    ></th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr
-                                    v-for="user in filterUsers"
-                                    :key="user.id"
-                                  >
-                                    <td class="px-4 py-3">
-                                      {{ user.group_name }}
-                                    </td>
-                                    <td class="px-4 py-3">
-                                      {{ user.user_name }}
-                                    </td>
-
-                                    <td class="w-10 text-center">
-                                      <button
-                                        @click="
-                                          createGroupUser(
-                                            user.id,
-                                            user.user_name,
-                                            user.group_name
-                                          )
-                                        "
-                                        class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded text-sm whitespace-nowrap"
-                                      >
-                                        追加
-                                      </button>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </section>
-                      </div>
-
-                      <section class="pr-8 w-1/2 text-gray-600 body-font">
-                        <div class="container mx-auto">
-                          <div class="flex flex-col text-center w-full mb-4">
-                            <h1
-                              class="text-xl font-medium title-font mb-2 text-gray-900"
-                            >
-                              割り当て一覧
-                            </h1>
-                          </div>
-                          <div class="w-full mx-auto overflow-auto">
-                            <table
-                              class="table-auto w-full text-left whitespace-no-wrap"
-                            >
-                              <thead>
-                                <tr>
-                                  <th
-                                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                                  >
-                                    所属
-                                  </th>
-                                  <th
-                                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                                  >
-                                    名前
-                                  </th>
-
-                                  <th
-                                    class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
-                                  ></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr
-                                  v-for="user in editGroupData.mount_users"
-                                  :key="user.id"
-                                >
-                                  <td class="px-4 py-3">
-                                    {{ user.group_name }}
-                                  </td>
-                                  <td class="px-4 py-3">
-                                    {{ user.user_name }}
-                                  </td>
-
-                                  <td class="w-10 text-center">
-                                    <button
-                                      @click="deleteGroupUser(user.user_id)"
-                                      class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded text-sm whitespace-nowrap"
-                                    >
-                                      削除
-                                    </button>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </section>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center justify-start">
-                    <button
-                      @click="deleteGroup"
-                      :class="{
-                        'bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4': true,
-                      }"
-                      type="button"
-                    >
-                      削除
-                    </button>
-                    <button
-                      @click="sendGroupUsers"
-                      :class="{
-                        'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline': true,
-                      }"
-                      type="button"
-                    >
-                      保存
-                    </button>
-                  </div>
-                </form>
-              </div>
             </div>
           </div>
         </div>
