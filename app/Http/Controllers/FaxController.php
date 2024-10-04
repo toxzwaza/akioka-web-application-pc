@@ -70,7 +70,11 @@ class FaxController extends Controller
     public function group()
     {
         $groups = FaxGroup::all();
-        $users = User::select('users.id', 'users.name as user_name', 'groups.name as group_name')->join('groups', 'groups.id', 'users.group_id')->where('del_flg', 0)->get();
+        $users = User::select('users.id', 'users.name as user_name', 'groups.name as group_name')
+            ->join('groups', 'groups.id', '=', 'users.group_id')
+            ->where('users.del_flg', 0)
+            ->whereNotNull('users.email')
+            ->get();
         foreach($groups as $group){
             $group->users = FaxUserGroup::select('users.id', 'users.name as user_name')->join('users', 'users.id', 'fax_user_groups.user_id')->where('fax_group_id', $group->id)->get();
         }
