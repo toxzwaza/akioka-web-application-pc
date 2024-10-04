@@ -128,7 +128,7 @@ onMounted(() => {
           >
             <div id="" class="w-full mt-8">
               <!-- 作成フォーム -->
-              <div v-if="!editGroupData.id" class="max-auto max-w-xl">
+              <div v-if="!editGroupData.id" class="mx-auto max-w-xl">
                 <h1 class="text-gray-600 text-2xl font-bold mb-4 text-center">
                   グループ作成
                 </h1>
