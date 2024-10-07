@@ -9,8 +9,10 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\TestController;
+use App\Models\RaspiData;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -150,8 +152,10 @@ Route::get('/fax/folder/update', [FaxController::class, "folder_update"])->name(
 Route::get('/fax/getFaxSortUsers', [FaxController::class, 'getFaxSortUsers'])->name('fax.getFaxSortUsers');
 
 
+
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
 Route::get('/AddMemo', [MovieController::class, 'addMemo']);
 Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);
 Route::get('/api/getSuppliers',[ApiController::class, 'getSuppliers']);
+Route::post('/api/respi', [RaspiController::class, 'raspi_data_store'])->name('raspi.data.store');
