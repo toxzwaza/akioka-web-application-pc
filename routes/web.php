@@ -158,4 +158,4 @@ Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
 Route::get('/AddMemo', [MovieController::class, 'addMemo']);
 Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);
 Route::get('/api/getSuppliers',[ApiController::class, 'getSuppliers']);
-Route::post('/api/respi', [RaspiController::class, 'raspi_data_store'])->name('raspi.data.store');
+Route::get('/api/respi', [RaspiController::class, 'raspi_data_store'])->name('raspi.data.store');
