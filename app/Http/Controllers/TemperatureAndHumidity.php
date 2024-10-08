@@ -16,8 +16,8 @@ class TemperatureAndHumidity extends Controller
         $data_lists = [];
 
         for ($process_id = 1; $process_id <= 7; $process_id++) {
-            $startOfDay = \Carbon\Carbon::today();
-            $endOfDay = \Carbon\Carbon::today();
+            $startOfDay = \Carbon\Carbon::today()->startOfDay();
+            $endOfDay = \Carbon\Carbon::today()->endOfDay();
 
             $data = RaspiData::where('process_id', $process_id)
                 ->whereBetween('created_at', [$startOfDay, $endOfDay])
@@ -58,11 +58,11 @@ class TemperatureAndHumidity extends Controller
         $start_date = $request->start_date;
         $finish_date = $request->finish_date;
         if ($start_date && $finish_date) {
-            $start_date = \Carbon\Carbon::parse($start_date);
-            $finish_date = \Carbon\Carbon::parse($finish_date);
+            $start_date = \Carbon\Carbon::parse($start_date)->startOfDay(); // 時間制限を解除
+            $finish_date = \Carbon\Carbon::parse($finish_date)->endOfDay(); // 時間制限を解除
         } else {
-            $start_date = \Carbon\Carbon::today();
-            $finish_date = \Carbon\Carbon::today();
+            $start_date = \Carbon\Carbon::today()->startOfDay(); // 時間制限を解除
+            $finish_date = \Carbon\Carbon::today()->endOfDay(); // 時間制限を解除
         }
 
 
