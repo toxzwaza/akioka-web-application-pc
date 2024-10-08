@@ -48,6 +48,7 @@ const reverseData = (d_lists) => {
   d_lists.forEach((data) => {
     data.temperatures.reverse();
     data.humidities.reverse();
+    data.wbgt.reverse();
     data.labels.reverse();
   });
 
