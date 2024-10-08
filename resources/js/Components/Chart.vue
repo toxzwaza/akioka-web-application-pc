@@ -23,6 +23,8 @@ const lineData = reactive({
   ],
 });
 
+
+
 watch(
   () => [props.labels, props.data],
   ([newLabels, newData]) => {
@@ -41,6 +43,5 @@ onMounted(() => {
 <template>
   <div>
     <LineChart :chartData="lineData" />
-    <!-- BarChartからLineChartに変更 -->
   </div>
 </template>

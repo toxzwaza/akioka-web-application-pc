@@ -33,7 +33,7 @@ class TemperatureAndHumidity extends Controller
             $humidities = $data->pluck('humidity');
 
             $wbgt = [];
-            for ($i = 0; $i < min(10, $data->count()); $i++) {
+            for ($i = 0; $i < $data->count(); $i++) {
                 $wbgt[] = round(0.725 * $temperatures[$i] + 0.0368 * $humidities[$i] + 0.00364 * ($temperatures[$i] * $humidities[$i]), 1);
             }
 
