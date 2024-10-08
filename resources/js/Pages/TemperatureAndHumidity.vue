@@ -89,7 +89,7 @@ onMounted(() => {
 });
 </script>
 <template>
-  <TempLayout :title="現場温湿度チェック">
+  <TempLayout :title="'現場温湿度チェック'">
     <template #content>
       <div class="bg-gray-50 py-16 px-16 flex justify-around items-center">
         <form @submit.prevent class="w-full max-w-lg">
