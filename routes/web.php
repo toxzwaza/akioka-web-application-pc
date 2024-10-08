@@ -14,6 +14,8 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\TestController;
 use App\Models\RaspiData;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TemperatureAndHumidity;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -159,3 +161,7 @@ Route::get('/AddMemo', [MovieController::class, 'addMemo']);
 Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);
 Route::get('/api/getSuppliers',[ApiController::class, 'getSuppliers']);
 Route::get('/api/respi', [RaspiController::class, 'raspi_data_store'])->name('raspi.data.store');
+
+// 現場温度
+Route::get('/temperatureAndHumidity', [TemperatureAndHumidity::class, "temperatureAndHumidity"])->name('api.temperatureAndHumidity');
+Route::get('/getData', [TemperatureAndHumidity::class, "getData"])->name('api.getData');
