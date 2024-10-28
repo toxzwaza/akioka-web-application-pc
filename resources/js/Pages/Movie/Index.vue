@@ -3,13 +3,25 @@ import MainLayout from "@/Layouts/MainLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
+import axios from "axios";
 
 const props = defineProps({
-  movies: Object,
+  movies: Array,
+  search_text: String
 });
 
+const movies = ref({});
+const search_text = ref("");
+const searchMovie = () => {
+  console.log(search_text.value);
+
+  router.get(route("movie2"), {
+    search_text: search_text.value,
+  });
+};
 onMounted(() => {
-  console.log(props.movies);
+  movies.value = props.movies;
+  search_text.value = props.search_text;
 });
 </script>
 <template>
@@ -28,6 +40,8 @@ onMounted(() => {
             <div class="mt-10 text-gray-600">
               <form @submit.prevent class="w-1/3 flex items-center relative">
                 <input
+                  v-model="search_text"
+                  @change="searchMovie"
                   name="text"
                   class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
                   placeholder="キーワード検索"
@@ -48,10 +62,9 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="mb-8 flex justify-end">
+          <div v-if="movies.links" class="mb-8 flex justify-end">
             <Pagination :links="movies.links"></Pagination>
           </div>
-
           <div class="lg:w-full w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -151,7 +164,7 @@ onMounted(() => {
             </table>
           </div>
 
-          <div class="mt-4 flex justify-end">
+          <div v-if="movies.links" class="mt-8 flex justify-end">
             <Pagination :links="movies.links"></Pagination>
           </div>
         </div>

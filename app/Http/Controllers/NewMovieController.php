@@ -8,6 +8,7 @@ use App\Models\MovieTag;
 use App\Models\MovieTagCategory;
 use App\Models\User;
 use App\Services\Method;
+use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use GuzzleHttp\Client;
@@ -25,29 +26,64 @@ class NewMovieController extends Controller
             return redirect()->route('login');
         }
 
+        $text = $request->search_text;
 
-        $text = $request->text;
-        // $keywords = '';
+        try {
+            if ($text) {
+                $keywords = preg_split('/[ 　]+/u', $text);
+                $movies = MovieMemo::query();
+                foreach ($keywords as $keyword) {
+                    $movies = $movies->where('movie_memos.memo', 'like', '%' . $keyword . '%')->where('movie_memos.del_flg', 0);
+                }
 
-        if (!$text) {
-
-            $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.file_path', '!=', null)->where('movies.del_flg', 0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->paginate(20);
-        } else {
-            $keywords = preg_split('/[\s　]+/u', $text);
-            $movies = MovieMemo::query();
-            foreach ($keywords as $keyword) {
-                $movies = $movies->where('movie_memos.memo', 'like', '%' . $keyword . '%')->where('movie_memos.del_flg', 0);
+                $movies = $movies->select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movies', 'movies.id', '=', 'movie_memos.movie_id')->join('movie_tags', 'movie_tags.id', '=', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tags.movie_tag_category_id', '=', 'movie_tag_categories.id')->where('movies.file_path', '!=', null)->distinct()->orderby('created_at', 'desc')->paginate(20);
+            } else {
+                $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.file_path', '!=', null)->where('movies.del_flg', 0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->paginate(20);
             }
 
-            $movies = $movies->select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movies', 'movies.id', '=', 'movie_memos.movie_id')->join('movie_tags', 'movie_tags.id', '=', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tags.movie_tag_category_id', '=', 'movie_tag_categories.id')->where('movies', '!=', null)->distinct()->orderby('created_at', 'desc')->paginate(20);
+
+            foreach ($movies as $movie) {
+                $movie_memos_count = MovieMemo::where('movie_id', $movie->id)->count();
+                $movie->memos_count = $movie_memos_count;
+            }
+        } catch (Exception $e) {
+            return response()->json(['error' => $e]);
         }
 
-        foreach ($movies as $movie) {
-            $movie_memos_count = MovieMemo::where('movie_id', $movie->id)->count();
-            $movie->memos_count = $movie_memos_count;
+
+
+
+
+        return Inertia::render('Movie/Index', ['movies' => $movies, 'search_text' => $text]);
+    }
+
+    public function searchMovie(Request $request)
+    {
+        $text = $request->search_text;
+        try {
+            if ($text) {
+                $keywords = preg_split('/[ 　]+/u', $text);
+                $movies = MovieMemo::query();
+                foreach ($keywords as $keyword) {
+                    $movies = $movies->where('movie_memos.memo', 'like', '%' . $keyword . '%')->where('movie_memos.del_flg', 0);
+                }
+
+                $movies = $movies->select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movies', 'movies.id', '=', 'movie_memos.movie_id')->join('movie_tags', 'movie_tags.id', '=', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tags.movie_tag_category_id', '=', 'movie_tag_categories.id')->where('movies.file_path', '!=', null)->distinct()->orderby('created_at', 'desc')->paginate(20);
+            } else {
+                $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.file_path', '!=', null)->where('movies.del_flg', 0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->paginate(20);
+            }
+
+
+            foreach ($movies as $movie) {
+                $movie_memos_count = MovieMemo::where('movie_id', $movie->id)->count();
+                $movie->memos_count = $movie_memos_count;
+            }
+        } catch (Exception $e) {
+            return response()->json(['error' => $e]);
         }
 
-        return Inertia::render('Movie/Index', ['movies' => $movies]);
+
+        return response()->json($movies);
     }
 
     public function show($movie_id)
@@ -56,7 +92,7 @@ class NewMovieController extends Controller
         if (!Method::isLogin()) {
             Method::msg('info', 'ログインをしてください。');
 
-            session()->put(['bef_url'=>'movie', 'movie_id' => $movie_id]);
+            session()->put(['bef_url' => 'movie', 'movie_id' => $movie_id]);
             return redirect()->route('login');
         }
 

@@ -172,6 +172,7 @@ Route::post('movie2/create/tag', [MovieCategoryAndTagController::class, 'create_
 
 // 動画
 Route::get('/movie2', [NewMovieController::class, 'index'])->name('movie2');
+Route::get('/searchMovie', [NewMovieController::class, 'searchMovie'])->name('searchMovie');
 Route::get('/movie2/create', [NewMovieController::class, 'create'])->name('movie2.create');
 Route::get('/movie2/{movie_id}', [NewMovieController::class, 'show'])->name('movie2.show');
 Route::post('/movie2/store', [NewMovieController::class, 'store'])->name('movie2.store');
