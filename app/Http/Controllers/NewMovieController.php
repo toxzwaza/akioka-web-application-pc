@@ -100,14 +100,20 @@ class NewMovieController extends Controller
         $tag_id = $request->tag_id;
         $description = $request->description;
 
-        if (!$file_path && !$file) {
-            return response()->json(['status' => 'ng', 'msg' => 'ファイルが送信できませんでした。']);
-        } else if (!$file_path && $file) {
-            // ネットワークパスを構築
-            $timestamp = now()->timestamp;
-            $file_path = str_replace('/', '\\', ('//192.168.0.72/' . $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension())));
-        }
 
+
+
+        if (!$file_path && !$request->has('file')) {
+            return response()->json(['status' => 'ng', 'msg' => 'ファイルが送信できませんでした。']);
+        }
+        if (!$file_path) {
+            if ($file) {
+
+                $timestamp = now()->timestamp;
+                $temp_file_path = $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension());
+                $file_path = str_replace('/', '\\', '//192.168.0.72/' . $temp_file_path);
+            }
+        }
 
 
         $movie = new Movie();
@@ -118,6 +124,7 @@ class NewMovieController extends Controller
 
         // RPAサーバーへリクエスト
         $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description);
+
 
         // YoutubeAPIサーバへリクエスト
         $client = new Client();
@@ -132,7 +139,7 @@ class NewMovieController extends Controller
         }
 
 
-        return response()->json($responseArray);
+        return to_route('movie2.show', ['movie_id' => $movie->id]);
     }
 
     public function getMemos($movie_id)

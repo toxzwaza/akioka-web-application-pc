@@ -36,7 +36,7 @@ const sendMovie = () => {
   formData.append("tag_id", form.tag_id);
   formData.append("description", form.description);
 
-  axios
+  router
     .post(route("movie2.store"), formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -45,24 +45,6 @@ const sendMovie = () => {
     .then((res) => {
       console.log(res.data);
     });
-
-  // データを送信
-//   const formData = new FormData();
-//   formData.append("title", form.title);
-//   formData.append("file_path", form.file_path);
-//   formData.append("file", form.file);
-//   formData.append("tag_id", form.tag_id);
-//   formData.append("description", form.description);
-
-//   axios
-//     .post(route("movie2.store"), formData, {
-//       headers: {
-//         "Content-Type": "multipart/form-data",
-//       },
-//     })
-//     .then((res) => {
-//       console.log(res.data);
-//     });
 };
 const handleFileChange = (event) => {
   const file = event.target.files[0];
