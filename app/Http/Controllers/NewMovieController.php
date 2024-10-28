@@ -95,7 +95,7 @@ class NewMovieController extends Controller
     {
 
         $title = $request->title;
-        $file_path = $request->file_path;
+        $file_path = $request->file_path ?? '';
         $file = $request->file('file');
         $tag_id = $request->tag_id;
         $description = $request->description;
@@ -106,14 +106,14 @@ class NewMovieController extends Controller
         if (!$file_path && !$request->has('file')) {
             return response()->json(['status' => 'ng', 'msg' => 'ファイルが送信できませんでした。']);
         }
-        if (!$file_path) {
-            if ($file) {
 
-                $timestamp = now()->timestamp;
-                $temp_file_path = $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension());
-                $file_path = str_replace('/', '\\', '//192.168.0.72/' . $temp_file_path);
-            }
+        if ($file) {
+
+            $timestamp = now()->timestamp;
+            $temp_file_path = $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension());
+            $file_path = str_replace('/', '\\', '//192.168.0.72/' . $temp_file_path);
         }
+
 
 
         $movie = new Movie();
