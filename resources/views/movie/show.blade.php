@@ -331,9 +331,6 @@
             const time = getCurrentTime();
             console.log(time);
 
-
-
-
             if (movie_id && memo.value) {
 
 

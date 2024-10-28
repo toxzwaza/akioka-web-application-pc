@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RaspiData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TemperatureAndHumidity extends Controller
@@ -34,10 +35,9 @@ class TemperatureAndHumidity extends Controller
 
             $wbgt = [];
             for ($i = 0; $i < $data->count(); $i++) {
-                
+
 
                 $wbgt[] = round(0.725 * $temperatures[$i] + 0.0368 * $humidities[$i] + 0.00364 * ($temperatures[$i] * $humidities[$i]), 1);
-
             }
 
             $data_lists[] = [
@@ -87,7 +87,7 @@ class TemperatureAndHumidity extends Controller
 
             $wbgt = [];
             for ($i = 0; $i < $data->count(); $i++) {
-                
+
                 $wbgt[] = round(0.725 * $temperatures[$i] + 0.0368 * $humidities[$i] + 0.00364 * ($temperatures[$i] * $humidities[$i]), 1);
             }
 
@@ -101,5 +101,38 @@ class TemperatureAndHumidity extends Controller
         }
 
         return response()->json($data_lists);
+    }
+
+    public function export_data(Request $request)
+    {
+        // フラン
+        // $data1 = RaspiData::select('temperature', 'humidity', 'created_at')->where('process_id', 3)
+        //     ->whereBetween('created_at', ['2024-10-09', '2024-10-11'])
+        //     ->get();
+
+        // $data2 = RaspiData::select('temperature', 'humidity', 'created_at')->where('process_id', 3)
+        //     ->whereBetween('created_at', ['2024-10-14', '2024-10-18'])
+        //     ->get();
+        // $data = collect($data1)->concat($data2)->values(); // コレクションを一つに結合
+
+
+
+
+        $data1 = RaspiData::select('temperature', 'humidity', DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as created_at"))->where('process_id', 7)
+            ->whereBetween('created_at', ['2024-10-09', '2024-10-11'])
+            ->get();
+
+        $data2 = RaspiData::select('temperature', 'humidity', DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as created_at"))->where('process_id', 7)
+            ->whereBetween('created_at', ['2024-10-14', '2024-10-19'])
+            ->get();
+
+        $data = collect($data1)->concat($data2)->values(); // コレクションを一つに結合
+
+        $filename = "base.json";
+        $handle = fopen($filename, 'w+');
+        fputs($handle, $data->toJson(JSON_PRETTY_PRINT));
+        fclose($handle);
+
+        return response()->download($filename)->deleteFileAfterSend(true);
     }
 }

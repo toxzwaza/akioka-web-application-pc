@@ -7,7 +7,9 @@ use App\Http\Controllers\FaxController;
 use App\Http\Controllers\LunchController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
+use App\Http\Controllers\MovieCategoryAndTagController;
 use App\Http\Controllers\MovieController;
+use App\Http\Controllers\NewMovieController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\StockController;
@@ -154,14 +156,50 @@ Route::get('/fax/folder/update', [FaxController::class, "folder_update"])->name(
 Route::get('/fax/getFaxSortUsers', [FaxController::class, 'getFaxSortUsers'])->name('fax.getFaxSortUsers');
 
 
+// Route::get('/movie/create', [MovieController::class, 'movie_create'])->name('movie.create');
+// Route::post('/movie/store', [MovieController::class, 'movie_store'])->name('movie.store');
+// Route::get('/movie/delete', [MovieController::class, 'movie_delete'])->name('movie.delete');
+// Route::get('/movie/change_status', [MovieController::class, 'movie_change_status'])->name('movie.change_status');
+// Route::get('movie/create/tag', [MovieController::class, 'movie_tag_create'])->name('movie.create.tag');
+
+// 動画視聴Inertia
+// 動画カテゴリ・タグ
+Route::get('movie2/create/categoryAndTag',[MovieCategoryAndTagController::class, 'index'])->name('movie2.categoryAndTag');
+Route::get('movie2/getCategories', [MovieCategoryAndTagController::class, 'getCategories'])->name('movie2.getCategories');
+Route::get('movie2/getCategoryTags/{category_id}', [MovieCategoryAndTagController::class, 'getTags'])->name('movie2.getTags');
+Route::post('movie2/create/category', [MovieCategoryAndTagController::class, 'create_category'])->name('movie2.create.category');
+Route::post('movie2/create/tag', [MovieCategoryAndTagController::class, 'create_tag'])->name('movie2.create.tag');
+
+// 動画
+Route::get('/movie2', [NewMovieController::class, 'index'])->name('movie2');
+Route::get('/movie2/create', [NewMovieController::class, 'create'])->name('movie2.create');
+Route::get('/movie2/{movie_id}', [NewMovieController::class, 'show'])->name('movie2.show');
+Route::post('/movie2/store', [NewMovieController::class, 'store'])->name('movie2.store');
+
+Route::get('/getMemos/{movie_id}', [NewMovieController::class, 'getMemos'])->name('movie2.getMemos');
+Route::post('/addMemo', [NewMovieController::class, 'addMemo'])->name('movie2.addMemo');
+Route::get('movie2/deleteMemo/{memo_id}', [NewMovieController::class, 'deleteMemo'])->name('movie2.deleteMemo');
+Route::post('movie2/saveMemo', [NewMovieController::class, 'saveMemo'])->name('movie2.saveMemo');
+
+
+
+// Route::post('/movie.update',[MovieController::class, 'movie_update'])->name('movie.update');
+// Route::get('movie/memo/delete/{memo_id}', [MovieController::class, 'movie_memo_delete'])->name('movie.memo.delete');
+
+// Route::post('movie/memo/update', [MovieController::class, 'movie_memo_update'])->name('movie.memo.update');
+
+
+
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
-Route::get('/AddMemo', [MovieController::class, 'addMemo']);
-Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);
+// Route::get('/api/getMovieTags', [ApiController::class, 'getMovieTags']);
 Route::get('/api/getSuppliers',[ApiController::class, 'getSuppliers']);
 Route::get('/api/respi', [RaspiController::class, 'raspi_data_store'])->name('raspi.data.store');
 
 // 現場温度
 Route::get('/temperatureAndHumidity', [TemperatureAndHumidity::class, "temperatureAndHumidity"])->name('api.temperatureAndHumidity');
 Route::get('/getData', [TemperatureAndHumidity::class, "getData"])->name('api.getData');
+
+// 温度書き出し用
+Route::get('/export/RaspiData', [TemperatureAndHumidity::class, 'export_data'])->name('raspi.export.data');

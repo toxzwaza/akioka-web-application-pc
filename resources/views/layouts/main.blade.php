@@ -51,7 +51,7 @@
             restaurant
           </span>弁当注文</a>
 
-        <a href="{{ route('movie') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('movie*') ? 'font-bold text-gray-900' : ''}}">
+        <a href="{{ route('movie2') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('movie*') ? 'font-bold text-gray-900' : ''}}">
           <span class="material-symbols-outlined">
             live_tv
           </span>

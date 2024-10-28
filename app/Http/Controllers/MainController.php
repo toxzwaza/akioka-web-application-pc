@@ -36,7 +36,7 @@ class MainController extends Controller
         }
 
         session()->put('user', $user);
-        Method::msg('success', 'ログインが完了しました。');
+        // Method::msg('success', 'ログインが完了しました。');
 
         if (session('bef_url')) {
             $bef_url = session('bef_url');
@@ -44,7 +44,7 @@ class MainController extends Controller
             // 動画IDが指定されている場合
             if(session('movie_id')){
 
-                return redirect()->route('movie.show',['movie_id' => session('movie_id')]);
+                return redirect()->route('movie2.show',['movie_id' => session('movie_id')]);
             }
             return redirect()->route($bef_url);
             

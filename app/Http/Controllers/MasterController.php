@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Method;
 use Exception;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MasterController extends Controller
 {
@@ -18,6 +19,16 @@ class MasterController extends Controller
     {
 
         return view('master.index');
+    }
+
+
+    // ユーザー作成
+    public function create_user()
+    {
+        $groups = Group::all();
+        $positions = Position::all();
+        $processes = Process::all();
+        return view('master.create_user', compact('groups', 'positions', 'processes'));
     }
 
 
@@ -241,13 +252,7 @@ class MasterController extends Controller
     }
 
 
-    public function create_user()
-    {
-        $groups = Group::all();
-        $positions = Position::all();
-        $processes = Process::all();
-        return view('master.create_user', compact('groups', 'positions', 'processes'));
-    }
+
     public function store_user(Request $request)
     {
 
