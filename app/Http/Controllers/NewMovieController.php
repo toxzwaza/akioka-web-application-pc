@@ -52,9 +52,11 @@ class NewMovieController extends Controller
 
     public function show($movie_id)
     {
+
         if (!Method::isLogin()) {
             Method::msg('info', 'ログインをしてください。');
-            session()->put('bef_url', 'movie2');
+
+            session()->put(['bef_url'=>'movie', 'movie_id' => $movie_id]);
             return redirect()->route('login');
         }
 

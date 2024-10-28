@@ -64,16 +64,30 @@ const seekToTime = (time) => {
 
 const copy_link = () => {
   const copy_text = window.location.href;
-  navigator.clipboard
-    .writeText(copy_text)
-    .then(() => {
-      console.log("URLがクリップボードにコピーされました");
-      alert("URLをクリップボードにコピーしました。");
-    })
-    .catch((err) => {
-      console.error("クリップボードへのコピーに失敗しました: ", err);
-    });
+  const textArea = document.createElement('textarea');
+  
+  // テキストエリアにURLを設定
+  textArea.value = copy_text;
+  
+  // テキストエリアをドキュメントに追加
+  document.body.appendChild(textArea);
+  
+  // テキストエリアの内容を選択
+  textArea.select();
+  
+  try {
+    // コピーコマンドを実行
+    document.execCommand('copy');
+    console.log("URLがクリップボードにコピーされました");
+    alert("URLをクリップボードにコピーしました。");
+  } catch (err) {
+    console.error("クリップボードへのコピーに失敗しました: ", err);
+  }
+  
+  // テキストエリアをドキュメントから削除
+  document.body.removeChild(textArea);
 };
+
 const getMemos = async () => {
   await axios
     .get(route("movie2.getMemos", { movie_id: movie_id.value }))
