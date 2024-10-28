@@ -105,7 +105,7 @@ class NewMovieController extends Controller
         } else if (!$file_path && $file) {
             // ネットワークパスを構築
             $timestamp = now()->timestamp;
-            $file_path = str_replace('/', '\\', ('//192.168.0.16/' . $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension())));
+            $file_path = str_replace('/', '\\', ('//192.168.0.72/' . $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension())));
         }
 
 
