@@ -163,6 +163,68 @@ const props = defineProps({
             動画タグ追加</Link
           >
         </div>
+        <!-- ファイル管理システム -->
+        <div
+          class="flex"
+          v-if="route().current().startsWith('file')"
+          id="fax-nav"
+        >
+
+
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'movie2',
+            }"
+            :href="route('movie2')"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"
+              /></svg
+            >ファイル一覧</Link
+          >
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'movie2.create',
+            }"
+            :href="route('movie2.create')"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+              /></svg
+            >ファイル追加</Link
+          >
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'movie2.categoryAndTag',
+            }"
+            :href="route('movie2.categoryAndTag')"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M2 4a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"
+              />
+            </svg>
+            承認確認</Link
+          >
+        </div>
       </nav>
     </div>
   </header>

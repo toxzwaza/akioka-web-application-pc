@@ -151,6 +151,12 @@ const sendMemo = () => {
       console.log(error);
     });
 };
+const deleteMovie = () => {
+  axios.get('http://192.168.0.142:5000/movie/youtube_delete?youtube_id=' + video_id.value)
+  .then(res => {
+    console.log(res.data);
+  })
+}
 
 onMounted(() => {
   //   メモを取得
@@ -205,7 +211,7 @@ onMounted(() => {
           </section>
         </div>
 
-        <div >
+        <div>
           <div class="flex justify-between items-center">
             <div
               id="copy_link"
@@ -274,11 +280,12 @@ onMounted(() => {
           </div>
 
           <div :class="{ main_content: true, active: page == 'detail' }">
-            <section class="w-2/3 mx-auto text-gray-600 body-font overflow-hidden">
+            <section
+              class="w-2/3 mx-auto text-gray-600 body-font overflow-hidden"
+            >
               <div class="container py-8 mx-auto">
-                <div class="mx-auto ">
-
-                  <div class="w-full ">
+                <div class="mx-auto">
+                  <div class="w-full">
                     <h2
                       class="text-sm title-font text-gray-500 tracking-widest"
                     >
@@ -289,7 +296,6 @@ onMounted(() => {
                     >
                       {{ movie.name }}
                     </h1>
-                    
 
                     <p class="leading-relaxed">
                       {{ movie.memo }}
@@ -297,6 +303,13 @@ onMounted(() => {
                     <div
                       class="flex mt-6 items-center pb-5 border-b-2 border-gray-100 mb-5"
                     >
+
+                      <button
+                      @click="deleteMovie"
+                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                      >
+                        動画削除
+                      </button>
                       <!-- <div class="flex">
                         <span class="mr-3">Color</span>
                         <button
@@ -338,11 +351,10 @@ onMounted(() => {
                         </div>
                       </div> -->
                     </div>
-
                   </div>
                 </div>
               </div>
-            </section> 
+            </section>
           </div>
 
           <hr class="my-16" />

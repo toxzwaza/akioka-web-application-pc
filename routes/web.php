@@ -4,6 +4,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Controllers\CalcProductController;
 use App\Http\Controllers\CalcProductTabletController;
 use App\Http\Controllers\FaxController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\LunchController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
@@ -155,6 +156,8 @@ Route::get('/fax/folder/update', [FaxController::class, "folder_update"])->name(
 
 Route::get('/fax/getFaxSortUsers', [FaxController::class, 'getFaxSortUsers'])->name('fax.getFaxSortUsers');
 
+// ファイル管理システム
+Route::get('file', [FileController::class, 'index'])->name('file');
 
 // Route::get('/movie/create', [MovieController::class, 'movie_create'])->name('movie.create');
 // Route::post('/movie/store', [MovieController::class, 'movie_store'])->name('movie.store');

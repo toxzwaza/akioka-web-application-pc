@@ -70,6 +70,13 @@
             description
           </span>
           FAX振り分け設定</a>
+
+        <!-- ファイル管理システム -->
+        <a href="{{ route('file') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('file*') ? 'font-bold text-gray-900' : ''}}">
+          <span class="mr-1 material-symbols-outlined">
+            description
+          </span>
+          ファイル管理</a>
       </nav>
 
 
