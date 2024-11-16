@@ -77,6 +77,14 @@
             description
           </span>
           ファイル管理</a>
+          
+        <!-- サイネージシステム -->
+        <a href="{{ route('signage.home') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('signage*') ? 'font-bold text-gray-900' : ''}}">
+          <span class="mr-1 material-symbols-outlined">
+            description
+          </span>
+          サイネージ
+        </a>
       </nav>
 
 
