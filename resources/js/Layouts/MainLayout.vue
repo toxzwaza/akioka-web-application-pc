@@ -230,7 +230,7 @@ const props = defineProps({
   </header>
 
   <main :class="{'py-16 px-24': route().current().startsWith('movie')}">
-    <Message />
+    <!-- <Message /> -->
     <slot name="content" />
   </main>
 </template>

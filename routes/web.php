@@ -192,6 +192,12 @@ Route::get('/signage', [SignageController::class, 'index'])->name('signage.home'
 Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');
 Route::get('/signage/show/{id}', [SignageController::class, 'show'])->name('signage.show');
 
+// 全てのデータ取得
+Route::get('/signage/getData', [SignageController::class, 'getData'])->name('signage.getData');
+// データ削除
+Route::get('/signage/deleteData/{asset_id}', [SignageController::class, "deleteData"])->name('signage.deleteData');
+// データ更新
+Route::get('/signage/updateData', [SignageController::class, 'updateData'])->name('signage.updateData');
 
 // Route::post('/movie.update',[MovieController::class, 'movie_update'])->name('movie.update');
 // Route::get('movie/memo/delete/{memo_id}', [MovieController::class, 'movie_memo_delete'])->name('movie.memo.delete');
