@@ -12,6 +12,7 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\NewMovieController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RaspiController;
+use App\Http\Controllers\SignageController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\TestController;
 use App\Models\RaspiData;
@@ -182,6 +183,11 @@ Route::post('/addMemo', [NewMovieController::class, 'addMemo'])->name('movie2.ad
 Route::get('movie2/deleteMemo/{memo_id}', [NewMovieController::class, 'deleteMemo'])->name('movie2.deleteMemo');
 Route::post('movie2/saveMemo', [NewMovieController::class, 'saveMemo'])->name('movie2.saveMemo');
 
+// サイネージ
+// サイネージ用PDFの追加・一覧表示
+Route::get('/signage', [SignageController::class, 'index'])->name('signage.home');
+Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');
+Route::get('/signage/show/{id}', [SignageController::class, 'show'])->name('signage.show');
 
 
 // Route::post('/movie.update',[MovieController::class, 'movie_update'])->name('movie.update');
