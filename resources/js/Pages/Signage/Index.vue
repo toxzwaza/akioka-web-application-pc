@@ -24,14 +24,17 @@ const uploadFile = () => {
 
     router.post("/signage/store", formData, {
       onSuccess: () => {
-        alert("ファイルが正常にアップロードされました");
+        
+        if(confirm("ファイルが正常にアップロードされました。更新しますか？")){
+            getSignageData();
+        }
       },
       onError: () => {
         alert("ファイルのアップロードに失敗しました");
       },
     });
 
-    getSignageData();
+    
   } else {
     alert("ファイルを選択してください");
   }
