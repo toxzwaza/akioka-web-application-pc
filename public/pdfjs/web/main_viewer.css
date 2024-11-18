@@ -411,7 +411,7 @@ html {
 body {
   height: 100%;
   width: 100%;
-  background-color: #404040;
+  background-color: #67a4ff;
   background-image: url(images/texture.png);
 }
 
@@ -715,6 +715,7 @@ html[dir='rtl'] #toolbarContainer, .findbar, .secondaryToolbar {
 
 #toolbarViewer {
   height: 32px;
+  background-color: #257dff;
 }
 
 

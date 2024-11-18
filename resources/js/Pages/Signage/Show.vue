@@ -1,16 +1,18 @@
 <script setup>
 const props = defineProps({
+  main_file_name: String,
   file_name: String
 })
 
 
 import { ref, onMounted } from "vue";
-
+const mainViewerUrl = ref(null);
 const viewerUrl = ref(null);
 
 
 onMounted(() => {
   
+  mainViewerUrl.value = `/pdfjs/web/main_viewer.html?file=/storage/pdf/${props.main_file_name}`;
   viewerUrl.value = `/pdfjs/web/viewer.html?file=/storage/pdf/${props.file_name}`;
   console.log('実行', viewerUrl.value);
 
@@ -35,9 +37,16 @@ onMounted(() => {
   <div id="pdf-container">
     <!-- PDF.js Viewer を表示するための container -->
     <iframe
+    class="main"
+      ref="pdfViewer"
+      :src="mainViewerUrl"
+      style="width: 100%; height: 50%; border: none"
+    ></iframe>
+
+    <iframe
       ref="pdfViewer"
       :src="viewerUrl"
-      style="width: 100%; height: 100vh; border: none"
+      style="width: 100%; height: 50%; border: none"
     ></iframe>
   </div>
 </template>
@@ -52,4 +61,9 @@ onMounted(() => {
   width: 100%;
   height: 100vh;
 }
+#pdf-container iframe{
+  height: 50%;
+}
+
+
 </style>
