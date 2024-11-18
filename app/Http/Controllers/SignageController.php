@@ -81,15 +81,9 @@ class SignageController extends Controller
     {
         $signage = Signage::findOrFail($id);
 
-        // 常に表示するメインサイネージ
-        $signage_main = Signage::where('is_main', 1)->first();
-        if(!$signage_main){
-            $signage_main = Signage::first();
-        }
 
         return Inertia::render('Signage/Show', [
-            'file_name' => $signage->file_name,
-            'main_file_name' => $signage_main->file_name
+            'file_name' => $signage->file_name
         ]);
     }
 
