@@ -10,6 +10,7 @@ const props = defineProps({
 
 // サイネージ番号
 const signage_data = ref([]);
+const display = ref(null);
 
 const file = ref(null);
 const name = ref("");
@@ -63,7 +64,7 @@ const changeActive = (active_flg, asset_id) => {
     })
     .then((res) => {
       console.log(res.data);
-      getSignageData();
+      getSignageData(display.value);
     })
     .catch((error) => {
       console.error(error);
@@ -89,8 +90,8 @@ const getSignageData = (address) => {
 };
 
 onMounted(() => {
-  console.log(props.display);
-  getSignageData(props.display.address);
+  display.value = props.display.address;
+  getSignageData(display.value);
 });
 </script>
 <template>
