@@ -187,6 +187,9 @@ Route::get('movie2/deleteMemo/{memo_id}', [NewMovieController::class, 'deleteMem
 Route::post('movie2/saveMemo', [NewMovieController::class, 'saveMemo'])->name('movie2.saveMemo');
 
 // サイネージ
+// テスト用
+Route::get('/signage/test', [SignageController::class, 'test'])->name('signage.test');
+
 // サイネージ用PDFの追加・一覧表示
 Route::get('/signage', [SignageController::class, 'index'])->name('signage.home');
 Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');

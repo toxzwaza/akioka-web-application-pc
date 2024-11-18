@@ -3,20 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Signage;
+use App\Models\SignageDisplay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 
 class SignageController extends Controller
 {
-    //
-    public function index()
+    public function test()
     {
+    }
+    //
+    public function index(Request $request)
+    {
+        $display_id = $request->display_id;
+        
+        if(!$display_id){
+
+            $signage_display = SignageDisplay::first();
+        }else{
+            $signage_display = SignageDisplay::find($display_id);
+        }
 
         $signages = Signage::all();
 
 
-        return Inertia::render('Signage/Index', ['signages' => $signages]);
+        return Inertia::render('Signage/Index', ['display' => $signage_display,'signages' => $signages]);
     }
 
     public function store(Request $request)
@@ -73,9 +85,11 @@ class SignageController extends Controller
         ]);
     }
 
-    public function getData()
+    public function getData(Request $request)
     {
-        $url = 'http://192.168.210.90/api/v1.2/assets';
+        $address = $request->address;
+
+        $url = "http://{$address}/api/v1.2/assets";
 
         // GETリクエストを送信してすべてのアセットを取得
         $response = file_get_contents($url);
@@ -83,6 +97,16 @@ class SignageController extends Controller
         // レスポンスの確認
         if ($response !== false) {
             $assets = json_decode($response, true);
+            foreach($assets as &$asset){  // 参照渡しを使用
+                $signage = Signage::where('name', $asset['name'])->first();
+                if ($signage) {  // Signageが見つかった場合のみ
+                    $asset['id'] = $signage->id;
+                } else {
+                    $asset['id'] = null;  // または適切なデフォルト値
+                }
+            }
+            unset($asset);  // 参照を解除
+
             return response()->json($assets);
         } else {
             return response()->json(['error' => 'エラーが発生しました: ' . $http_response_header[0]], 500);
@@ -108,7 +132,7 @@ class SignageController extends Controller
         $asset_id = $request->asset_id;
         $data = $request->setData;
 
-        
+
         $url = 'http://192.168.210.90/api/v1.2/assets/' . $asset_id;
 
         // return response()->json(['url' => $url, 'data' => $data]);
@@ -137,7 +161,7 @@ class SignageController extends Controller
 
         // レスポンスの確認
         if ($response->successful()) {
-            return response()->json(['message' => 'アセットのdurationが正常に更新されました。', 'log' => $response ]);
+            return response()->json(['message' => 'アセットのdurationが正常に更新されました。', 'log' => $response]);
         } else {
             return response()->json(['error' => 'エラーが発生しました: ' . $response->body()], 500);
         }

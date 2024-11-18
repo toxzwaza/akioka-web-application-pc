@@ -4,8 +4,11 @@ import { ref, onMounted } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 const props = defineProps({
-  signages: Array,
+  display : Number,
+  signages : Array,
 });
+
+// サイネージ番号
 const signage_data = ref([]);
 
 const file = ref(null);
@@ -24,17 +27,14 @@ const uploadFile = () => {
 
     router.post("/signage/store", formData, {
       onSuccess: () => {
-        
-        if(confirm("ファイルが正常にアップロードされました。更新しますか？")){
-            getSignageData();
+        if (confirm("ファイルが正常にアップロードされました。更新しますか？")) {
+          getSignageData();
         }
       },
       onError: () => {
         alert("ファイルのアップロードに失敗しました");
       },
     });
-
-    
   } else {
     alert("ファイルを選択してください");
   }
@@ -50,30 +50,35 @@ const deleteAsset = (asset_id) => {
 };
 const changeActive = (active_flg, asset_id) => {
   console.log(active_flg, asset_id);
-  
-  axios.get(route('signage.updateData'), {
-    params: {
-      asset_id: asset_id,
-      setData: {
-        is_active: active_flg,
-        is_enabled: active_flg
-      }
-    }
-  })
-  .then(res => {
-    console.log(res.data)
-    getSignageData()
-  })
-  .catch(error => {
-    console.error(error);
-  })
+
+  axios
+    .get(route("signage.updateData"), {
+      params: {
+        asset_id: asset_id,
+        setData: {
+          is_active: active_flg,
+          is_enabled: active_flg,
+        },
+      },
+    })
+    .then((res) => {
+      console.log(res.data);
+      getSignageData();
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 };
 
 const updateAsset = (asset_id) => {};
 
-const getSignageData = () => {
+const getSignageData = (address) => {
   axios
-    .get(route("signage.getData"))
+    .get(route("signage.getData"),{
+      params: {
+        address: address
+      }
+    })
     .then((res) => {
       console.log(res.data);
       signage_data.value = res.data;
@@ -84,7 +89,8 @@ const getSignageData = () => {
 };
 
 onMounted(() => {
-  getSignageData();
+  console.log(props.display);
+  getSignageData(props.display.address);
 });
 </script>
 <template>
@@ -160,6 +166,12 @@ onMounted(() => {
                 サイネージデータ
               </h1>
             </div>
+            <a
+              :href="'http://' + props.display.address"
+              class="w-40 text-center block bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4"
+            >
+              詳細な編集はこちら
+            </a>
             <div class="w-full mx-auto overflow-auto">
               <table class="table-auto w-full text-left whitespace-no-wrap">
                 <thead>
@@ -182,6 +194,11 @@ onMounted(() => {
                     <th
                       class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                     >
+                      表示時間
+                    </th>
+                    <th
+                      class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    >
                       公開状況
                     </th>
                     <th
@@ -192,7 +209,14 @@ onMounted(() => {
                 <tbody>
                   <tr v-for="signage in signage_data" :key="signage.asset_id">
                     <td class="px-4 py-3">
-                      {{ signage.name }}
+                      <Link
+                        v-if="signage.id"
+                        :class="{ 'text-indigo-500 underline': signage.id }"
+                        :href="route('signage.show', { id: signage.id })"
+                        >{{ signage.name }}</Link
+                      >
+
+                      <span v-else>{{ signage.name }}</span>
                     </td>
 
                     <td class="px-4 py-3">
@@ -205,6 +229,7 @@ onMounted(() => {
                         new Date(signage.end_date).toLocaleDateString("ja-JP")
                       }}
                     </td>
+                    <td class="px-4 py-3">{{ signage.duration }}秒</td>
                     <td class="px-4 py-3">
                       <button
                         @click="changeActive(0, signage.asset_id)"

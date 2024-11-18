@@ -7,7 +7,7 @@ const props = defineProps({
 });
 </script>
 <template>
-  <Head  :title="props.title" />
+  <Head :title="props.title" />
   <header class="text-gray-600 body-font">
     <div
       class="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center"
@@ -107,8 +107,6 @@ const props = defineProps({
           v-if="route().current().startsWith('movie')"
           id="fax-nav"
         >
-
-
           <Link
             :class="{
               'mr-5 hover:text-gray-900 flex justify-center': true,
@@ -146,7 +144,8 @@ const props = defineProps({
           <Link
             :class="{
               'mr-5 hover:text-gray-900 flex justify-center': true,
-              'text-indigo-600 font-bold': route().current() == 'movie2.categoryAndTag',
+              'text-indigo-600 font-bold':
+                route().current() == 'movie2.categoryAndTag',
             }"
             :href="route('movie2.categoryAndTag')"
           >
@@ -169,8 +168,6 @@ const props = defineProps({
           v-if="route().current().startsWith('file')"
           id="fax-nav"
         >
-
-
           <Link
             :class="{
               'mr-5 hover:text-gray-900 flex justify-center': true,
@@ -208,7 +205,8 @@ const props = defineProps({
           <Link
             :class="{
               'mr-5 hover:text-gray-900 flex justify-center': true,
-              'text-indigo-600 font-bold': route().current() == 'movie2.categoryAndTag',
+              'text-indigo-600 font-bold':
+                route().current() == 'movie2.categoryAndTag',
             }"
             :href="route('movie2.categoryAndTag')"
           >
@@ -225,11 +223,35 @@ const props = defineProps({
             承認確認</Link
           >
         </div>
+
+        <!-- サイネージ管理システム -->
+        <div
+          class="flex"
+          v-if="route().current().startsWith('signage')"
+          id="fax-nav"
+        >
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'movie2',
+            }"
+            :href="route('signage.home', {display_id: 1})"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"
+              /></svg
+            >食堂後ろ</Link>
+        </div>
       </nav>
     </div>
   </header>
 
-  <main :class="{'py-16 px-24': route().current().startsWith('movie')}">
+  <main :class="{ 'py-16 px-24': route().current().startsWith('movie') }">
     <!-- <Message /> -->
     <slot name="content" />
   </main>
