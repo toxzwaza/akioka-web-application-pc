@@ -25,32 +25,74 @@ class StockController extends Controller
 {
     public function test()
     {
-        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'stocks.classification_id', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.id as user_id', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')
-            ->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')
-            ->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')
-            ->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
-            ->join('users', 'users.id', 'inventory_operation_records.user_id')
-            ->whereBetween('inventory_operation_records.created_at', ['2024-08-10', '2024-09-10'])
-            ->whereIn('inventory_operation_id', [2, 6])
-            ->orderby('inventory_operation_records.updated_at', 'desc')
-            ->get();
+        // 出庫もしくは超過出庫したモノの一覧
+        // $items = InventoryOperationRecord::select('stocks.id as stock_id', 'stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->distinct('stocks.id')->orderby('stocks.id', 'desc')->get();
+        $items = [];
+        for ($i = 7; $i <= now()->month; $i++) {
+            $monthly_items = InventoryOperationRecord::select('stocks.id', 'stocks.name as stock_name', DB::raw('SUM(inventory_operation_records.quantity) as total_quantity'))
+                ->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
+                ->whereYear('inventory_operation_records.created_at', 2024) // 2024年
+                ->whereMonth('inventory_operation_records.created_at', $i)   // 各月
+                ->groupBy('stocks.id', 'stocks.name') // 'stocks.name'を追加
+                ->get();
 
-        $count = 0;
-        $not_count = 0;
-
-        foreach ($operation_records as $record) {
-
-            if ($record->user_id != "81") {
-                if ($record->classification_id != "11") {
-
-                    $not_count++;
-                }
-            } else {
-                $count++;
+            foreach ($monthly_items as $item) {
+                $items[$item->id]['stock_name'] = $item->stock_name; // stock_nameを格納
+                $items[$item->id]['monthly'][$i] = $item->total_quantity;
             }
         }
 
-        dd($not_count);
+        // 平均と合計を計算して追加
+        foreach ($items as $id => $data) {
+            $total = array_sum($data['monthly']);
+            $count = count($data['monthly']);
+            $average = $total / 5;
+            $items[$id]['average'] = $average;
+            $items[$id]['total'] = $total; // 合計を追加
+        }
+        // dd($items);
+
+
+
+        // foreach ($items as $item) {
+        //     echo '<p>' . $item['stock_name'] . ' : 平均=' . $item['average'] . '/月 :合計=' . $item['total'] . '</p>';
+        // }
+
+
+
+
+        // CSV出力用のヘッダー
+        $csvHeader = ['Stock ID', 'Stock Name', 'Average', 'Total', 'Monthly Quantities'];
+
+
+
+        // CSVデータの準備
+        $csvData = [];
+        foreach ($items as $id => $data) {
+            $monthlyQuantities = implode(', ', $data['monthly']);
+            $csvData[] = [
+                $id,
+                $data['stock_name'],
+                $data['average'],
+                $data['total'],
+                $monthlyQuantities
+            ];
+        }
+
+
+        // CSVファイルの作成
+        $fileName = 'stock_data_' . date('Ymd_His') . '.csv';
+        $file = fopen($fileName, 'w');
+        fputcsv($file, $csvHeader);
+
+        foreach ($csvData as $row) {
+            fputcsv($file, $row);
+        }
+
+        fclose($file);
+
+        // CSVファイルをダウンロード
+        return response()->download($fileName)->deleteFileAfterSend(true);
     }
     //
     public function index()

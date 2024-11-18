@@ -21,8 +21,7 @@ const sendMovie = () => {
     !(
       form.title &&
       (form.file_path || form.file) &&
-      form.tag_id &&
-      form.description
+      form.tag_id
     )
   ) {
     alert("すべての必須フィールドを入力してください。");
