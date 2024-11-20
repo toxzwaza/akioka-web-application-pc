@@ -10,6 +10,7 @@ const props = defineProps({
   movie_categories: Array,
 });
 const form = reactive({
+  created_at: null,
   title: null,
   file_path: null,
   file: null,
@@ -17,19 +18,14 @@ const form = reactive({
   description: null,
 });
 const sendMovie = () => {
-  if (
-    !(
-      form.title &&
-      (form.file_path || form.file) &&
-      form.tag_id
-    )
-  ) {
+  if (!(form.title && (form.file_path || form.file) && form.tag_id)) {
     alert("すべての必須フィールドを入力してください。");
     return;
   }
   // データを送信
   const formData = new FormData();
   formData.append("title", form.title);
+  formData.append("created_at ", form.created_at);
   formData.append("file_path", form.file_path);
   formData.append("file", form.file);
   formData.append("tag_id", form.tag_id);
@@ -100,6 +96,21 @@ onMounted(async () => {
             class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2"
             method="post"
           >
+            <div class="sm:col-span-2">
+              <label
+                for="file"
+                class="font-semibold mb-2 inline-block text-sm text-gray-800 sm:text-base"
+                >投稿日</label
+              >
+              <input
+                id="date"
+                name="date"
+                type="date"
+                class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
+                v-model="form.created_at"
+              />
+            </div>
+
             <div class="sm:col-span-2">
               <label
                 for="title"

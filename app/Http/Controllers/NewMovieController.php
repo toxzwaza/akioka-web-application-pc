@@ -133,6 +133,7 @@ class NewMovieController extends Controller
     {
 
         $title = $request->title;
+        $created_at = $request->created_at;
         $file_path = $request->file_path ?? '';
         $file = $request->file('file');
         $tag_id = $request->tag_id;
@@ -158,6 +159,10 @@ class NewMovieController extends Controller
         $movie->name = $title;
         $movie->memo = $description;
         $movie->movie_tag_id = $tag_id;
+        // 投稿日が記載されている場合
+        if($created_at){
+            $movie->created_at = $created_at;
+        }
         $movie->save();
 
         // RPAサーバーへリクエスト
