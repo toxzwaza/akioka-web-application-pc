@@ -138,6 +138,7 @@ class NewMovieController extends Controller
         $file = $request->file('file');
         $tag_id = $request->tag_id;
         $description = $request->description;
+        dd($created_at);
 
 
 

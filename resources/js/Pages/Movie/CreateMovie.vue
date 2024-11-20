@@ -25,7 +25,7 @@ const sendMovie = () => {
   // データを送信
   const formData = new FormData();
   formData.append("title", form.title);
-  formData.append("created_at ", form.created_at);
+  formData.append("created_at", form.created_at);
   formData.append("file_path", form.file_path);
   formData.append("file", form.file);
   formData.append("tag_id", form.tag_id);
