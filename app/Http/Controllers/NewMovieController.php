@@ -160,7 +160,8 @@ class NewMovieController extends Controller
         $movie->memo = $description;
         $movie->movie_tag_id = $tag_id;
         // 投稿日が記載されている場合
-        if($created_at){
+        if($created_at != 'null'){
+            dd($created_at);
             $movie->created_at = $created_at;
         }
         $movie->save();
