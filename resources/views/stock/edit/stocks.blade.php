@@ -246,6 +246,8 @@
                 </script>
 
                 @endif
+
+                <a href="{{ route('stock.order', ['stock_id' => $stock->id ]) }}"><button  class="mt-16 bg-transparent hover:bg-red-500 text-red-700 hover:text-white py-4 px-8 border border-red-500 hover:border-transparent rounded text-md font-semibold">発注登録はこちら！</button></a>
             </div>
 
 

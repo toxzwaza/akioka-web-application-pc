@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Classification;
+use App\Models\InitialOrder;
 use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\LastTreatRecord;
@@ -232,6 +233,58 @@ class StockController extends Controller
 
         return view('stock.edit.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
     }
+
+    // 発注登録
+    public function order_stock($stock_id){
+        $stock = Stock::where('id', $stock_id)->first();
+        $classifications = Classification::all();
+        $processes = Process::all();
+        $locations = Location::all();
+
+        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
+
+
+
+        // 在庫状況
+        $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)->get();
+        // dd($stock_storages);
+
+        try {
+            $storage_addresses = StorageAddress::where('location_id', $stock_storages[0]->location_id)->orderby('address', 'asc')->get();
+        } catch (Exception $e) {
+            $storage_addresses = StorageAddress::where('location_id', 1)->get();
+        }
+
+        return view('stock.initialOrder.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
+    }
+
+
+    public function order_store(Request $request){
+        $stock_id = $request->stock_id;
+        $quantity = $request->quantity;
+
+        $stock = Stock::find($stock_id);
+        $stock_supplier = StockSupplier::select('suppliers.*')->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->where('stock_id', $stock_id)->first();
+        if(!$stock_supplier){
+            Method::errorMsg('先に得意先を選択してください');
+            return to_route('stock.edit.stocks', ['stock_id' => $stock_id]);
+        }
+        
+
+        $initial_order = new InitialOrder();
+        $initial_order->order_date = date('Y-m-d');
+        $initial_order->com_no = $stock_supplier->supplier_no;
+        $initial_order->com_name = $stock_supplier->name;
+        $initial_order->name = $stock->name;
+        $initial_order->s_name = $stock->s_name;
+        $initial_order->quantity = $quantity;
+        $initial_order->order_unit = $stock->solo_unit;
+        $initial_order->deli_location = $stock->deli_location;
+        $initial_order->save();
+
+
+    }
+
     public function store_stocks(Request $request)
     {
         $stock_id = $request->stock_id;

@@ -13,6 +13,7 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\NewMovieController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RaspiController;
+use App\Http\Controllers\SignageContentController;
 use App\Http\Controllers\SignageController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\TestController;
@@ -61,6 +62,11 @@ Route::get('/stock/edit/stocks/{stock_id}', [StockController::class, 'stock_edit
 Route::post('/stock/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 Route::get('/stock/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 Route::get('/stock/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
+
+// 発注登録
+Route::get('/stock/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');
+Route::post('/stock/initialOrder/store', [StockController::class, 'order_store'])->name('stock.order.store');
+
 // 滞留品
 Route::get('/stock/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
 Route::post('/stock/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
@@ -194,6 +200,8 @@ Route::get('/signage/test', [SignageController::class, 'test'])->name('signage.t
 Route::get('/signage', [SignageController::class, 'index'])->name('signage.home');
 Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');
 Route::get('/signage/show/{id}', [SignageController::class, 'show'])->name('signage.show');
+
+Route::get('/signage/content/safety', [SignageContentController::class, 'index'])->name('signage.content.safety');
 
 // 全てのデータ取得
 Route::get('/signage/getData', [SignageController::class, 'getData'])->name('signage.getData');
