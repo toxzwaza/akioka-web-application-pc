@@ -41,7 +41,7 @@ onMounted(() => {
     <div class="container">
       <div class="title">玉掛けワイヤーロープの点検</div>
       <div class="date">
-        {{ currentDateMonth + "年 " + currentDateYear + "月" }}
+        {{ currentDateYear + "年 " + currentDateMonth + "月" }}
       </div>
       <div class="days">
         {{ currentDateMonth }}月の点検色は、<span :style="{ color: color_code, backgroundColor: color_name !== '青色' ? '#414141' : 'transparent' }">{{ color_name }}</span>です

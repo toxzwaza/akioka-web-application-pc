@@ -16,6 +16,7 @@ use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\SignageContentController;
 use App\Http\Controllers\SignageController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockTabletController;
 use App\Http\Controllers\TestController;
 use App\Models\RaspiData;
 use Illuminate\Support\Facades\Route;
@@ -78,8 +79,11 @@ Route::get('/calc/product/test', [CalcProductController::class, 'test'])->name('
 Route::get('/calc/product', [CalcProductController::class, 'index'])->name('calc.product');
 Route::post('/calc/product/store', [CalcProductController::class, 'store'])->name('calc.product.store');
 Route::get('/calc/product/start', [CalcProductController::class, 'start'])->name('calc.product.start');
-// タブレット画面
+
+//// タブレット画面
 Route::get('/calc/product/tablet', [CalcProductTabletController::class, 'index'])->name('/calc/product/tablet');
+// 納品タブレット画面
+Route::get('/stock/tablet/receive', [StockTabletController::class, 'index'])->name('stock.tablet.receive');
 
 Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 Route::post('/stock/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
