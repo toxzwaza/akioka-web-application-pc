@@ -201,7 +201,8 @@ Route::get('/signage', [SignageController::class, 'index'])->name('signage.home'
 Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');
 Route::get('/signage/show/{id}', [SignageController::class, 'show'])->name('signage.show');
 
-Route::get('/signage/content/safety', [SignageContentController::class, 'index'])->name('signage.content.safety');
+Route::get('/signage/content/safety', [SignageContentController::class, 'safety'])->name('signage.content.safety');
+Route::get('/signage/content/inspectionCraneColor', [SignageContentController::class, 'inspectionCraneColor'])->name('signage.content.inspectionCraneColor');
 
 // 全てのデータ取得
 Route::get('/signage/getData', [SignageController::class, 'getData'])->name('signage.getData');
