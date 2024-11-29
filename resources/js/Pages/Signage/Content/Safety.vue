@@ -39,7 +39,7 @@ onMounted(() => {
   justify-content: center;
   align-items: baseline;
   height: 100vh;
-  background-color: #fff;
+  background-color: #004d00;
   overflow: hidden;
 }
 
@@ -51,7 +51,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   text-align: center;
-  color: #004d00;
+  color: white;
   box-sizing: border-box;
 }
 
@@ -60,6 +60,9 @@ onMounted(() => {
   font-weight: bold;
   letter-spacing: 16px;
   margin-bottom: 4rem;
+  color: rgb(255, 235, 56);
+  padding-bottom: 1rem;
+
 }
 
 .date {
@@ -77,8 +80,8 @@ onMounted(() => {
 .days span {
   display: inline-block;
   padding: 20px 40px;
-  background-color: #004d00;
-  color: #fff;
+  background-color: white;
+  color: #004d00;
   font-weight: bold;
   border-radius: 10px;
 }
@@ -87,7 +90,7 @@ onMounted(() => {
   /* margin: 50px 0; */
   width: 600px;
   height: 600px;
-  background-color: #004d00;
+  background-color: rgb(255, 235, 56);
   display: inline-block;
   clip-path: polygon(
     40% 0%,
