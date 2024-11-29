@@ -44,7 +44,7 @@ onMounted(() => {
         {{ currentDateMonth + "年 " + currentDateYear + "月" }}
       </div>
       <div class="days">
-        {{ currentDateMonth }}月の点検色は、<span :style="'color:' + color_code ">{{ color_name }}</span>です
+        {{ currentDateMonth }}月の点検色は、<span :style="{ color: color_code, backgroundColor: color_name !== '青色' ? '#414141' : 'transparent' }">{{ color_name }}</span>です
       </div>
 
       <div class="">
@@ -107,9 +107,9 @@ onMounted(() => {
 .days span {
   display: inline-block;
   padding: 20px 40px;
-  background-color: rgb(74 74 74);
   font-weight: bold;
   border-radius: 10px;
+  font-size: 5rem;
 }
 
 .footer {
