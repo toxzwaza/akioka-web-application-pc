@@ -82,8 +82,20 @@ Route::get('/calc/product/start', [CalcProductController::class, 'start'])->name
 
 //// タブレット画面
 Route::get('/calc/product/tablet', [CalcProductTabletController::class, 'index'])->name('/calc/product/tablet');
+
 // 納品タブレット画面
 Route::get('/stock/tablet/receive', [StockTabletController::class, 'index'])->name('stock.tablet.receive');
+Route::get('/stock/tablet/getInitialOrders', [StockTabletController::class, 'getInitialOrders'])->name('stock.tablet.getInitialOrders');
+// 納品書履歴確認画面(再登録や納品確定登録)
+Route::get('/stock/tablet/archive', [StockTabletController::class, 'archive'])->name('stock.tablet.archive');
+Route::get('/stock/tablet/getAlreadDelifileInitialOrders', [StockTabletController::class, 'getAlreadDelifileInitialOrders'])->name('stock.tablet.getAlreadDelifileInitialOrders');
+// 納品登録画面
+Route::get('/stock/tablet/delivery/{id}', [StockTabletController::class, 'delivery'])->name('stock.tablet.delivery');
+// 納品数量登録
+Route::get('/stock/tablet/updateDelivery', [StockTabletController::class, 'updateDelivery'])->name('stock.tablet.updateDelivery');    
+
+// 納品書アップロード
+Route::post('/stock/tablet/uploadFile', [StockTabletController::class, 'uploadFile'])->name('stock.tablet.uploadFile');
 
 Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 Route::post('/stock/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');

@@ -1,8 +1,10 @@
 <script setup>
 import Tablet from "@/Layouts/Tablet.vue";
 import { onMounted, ref } from "vue";
+import { Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MicroModal from "@/Components/MicroModal.vue";
+
 const modalStatus = ref(false);
 const modalImageSrc = ref("");
 const modalImage = (target) => {
@@ -13,12 +15,13 @@ const modalImage = (target) => {
 const handleCloseModal = () => {
   modalStatus.value = !modalStatus.value;
 };
+
 const base_initial_orders = ref([]);
 const initial_orders = ref([]);
 
 const getInitialOrders = () => {
   axios
-    .get(route("stock.tablet.getInitialOrders"))
+    .get(route("stock.tablet.getAlreadDelifileInitialOrders"))
     .then((res) => {
       initial_orders.value = res.data;
       base_initial_orders.value = res.data;
@@ -29,55 +32,25 @@ const getInitialOrders = () => {
     });
 };
 
-const uploadFile = async (id) => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.capture = "camera";
-  input.onchange = async (event) => {
-    const file = event.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("id", id);
-
-    try {
-      const response = await axios.post(
-        route("stock.tablet.uploadFile"),
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log(response.data);
-      if (confirm("再読み込みしますか？")) {
-        getInitialOrders();
-        alert("納品書を登録しました。");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  input.click();
+const checkDeliFile = (delifile_path) => {
+  modalStatus.value = true;
+  modalImageSrc.value = "/storage" + delifile_path;
+  console.log(delifile_path);
 };
 
 const searchOrders = (val) => {
-  console.log(val)
   if (val) {
     initial_orders.value = initial_orders.value.filter(
       (order) => order.order_no && order.order_no.includes(val)
     );
 
     if (initial_orders.value.length == 0) {
-      initial_orders.value = base_initial_orders.value;
+        initial_orders.value = base_initial_orders.value;
     }
   } else {
     initial_orders.value = base_initial_orders.value;
   }
-
 };
-
 onMounted(() => {
   getInitialOrders();
 });
@@ -89,14 +62,14 @@ onMounted(() => {
         <div class="container px-5 py-24 mx-auto">
           <div class="flex flex-col text-center w-full mb-8">
             <h1
-              class="sm:text-4xl text-3xl font-medium title-font mb-2 text-green-600"
+              class="sm:text-4xl text-3xl font-medium title-font mb-2 text-red-600"
             >
-              納品登録
+              納品履歴確認
             </h1>
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
-              以下の画面より納品完了登録を行います。
-              納品登録間違いには十分ご注意下さい。<br />
-              以下のボックスより、検索できます。検索対象は、注文No・JANコード・品名・品番等です。
+              以下の画面より納品履歴を確認できます。
+              納品書画像を再登録もしくは、納品を確定させることができます。<br />
+              また、以下のボックスより、検索できます。検索対象は、注文No・JANコード・品名・品番等です。
             </p>
           </div>
           <div class="w-1/2 mx-auto mb-8">
@@ -106,16 +79,17 @@ onMounted(() => {
                   >検索</label
                 >
                 <input
-                  @change="searchOrders($event.target.value)"
+                  @input="searchOrders($event.target.value)"
                   type="email"
                   id="email"
                   name="email"
                   class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
-                  placeholder="注文No"
+                  placeholder="注文no"
                 />
               </div>
             </div>
           </div>
+
           <div class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -162,7 +136,13 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr v-for="order in initial_orders" :key="order.id" class="">
-                  <td class="px-4 py-6">{{ order.order_no }}</td>
+                  <td class="px-4 py-6">
+                    <span
+                      class="underline text-red-600"
+                      @click="checkDeliFile(order.delifile_path)"
+                      >{{ order.order_no }}</span
+                    >
+                  </td>
                   <td class="w-24 px-4 py-6">
                     <img
                       @click="modalImage($event.target)"
@@ -185,14 +165,15 @@ onMounted(() => {
                   <td class="px-4 py-6">
                     {{ order.quantity + order.order_unit }}
                   </td>
-                  <td class="w-10 text-center">
-                    <button
-                      @click="uploadFile(order.id)"
+
+                  <td class="text-center">
+                    <Link
+                      :href="route('stock.tablet.delivery', { id: order.id })"
                       v-if="!order.found_flg"
-                      class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded text-sm whitespace-nowrap"
+                      class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded text-sm whitespace-nowrap"
                     >
-                      納品書
-                    </button>
+                      確定
+                    </Link>
                   </td>
                 </tr>
               </tbody>
@@ -200,7 +181,6 @@ onMounted(() => {
           </div>
         </div>
       </section>
-
       <MicroModal
         v-if="modalStatus"
         @closeModal="handleCloseModal"
