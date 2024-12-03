@@ -18,10 +18,22 @@ const getReceiptOrders = () => {
 };
 
 onMounted(() => {
+  getReceiptOrders();
+
+  // 五10分毎にデータ読み込み
+  setInterval(() => {
     getReceiptOrders();
-})
+  }, 600000);
+});
 </script>
 <template>
+  <section class="py-16 bg-red-500 text-center font-mono">
+    <h1 class="text-6xl font-bold text-white">これはテスト画面です！</h1>
+    <p class="mt-8 text-white text-2xl tracking-wide ">
+      本画面上から現場の方々から頂いた発注依頼の状況を確認できます。<br />
+    </p>
+    <p class="underline mt-8 text-white text-2xl tracking-wide">自分が注文した物が届いているか一々聞きに来る必要なし！</p>
+  </section>
   <section id="base-container" class="text-gray-600 body-font">
     <div class="container py-24 mx-auto">
       <div class="flex flex-col text-center w-full mb-8">
@@ -31,18 +43,15 @@ onMounted(() => {
           発注情報
         </h1>
         <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
-          以下に発注情報を記載しています。<br>
+          以下に発注情報を記載しています。<br />
           ステータスが<span>納品済</span>となっている場合、事務所に保管されておりますので、近日中に取りに来てください。
         </p>
       </div>
-      <div class="w-1/2 mx-auto mb-8">
-
-      </div>
+      <div class="w-1/2 mx-auto mb-8"></div>
       <div class="w-full mx-auto overflow-auto mt-12">
         <table class="table-auto w-full text-left whitespace-no-wrap">
           <thead>
             <tr>
-
               <th
                 class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-indigo-100 rounded-tl rounded-bl"
               >
@@ -75,11 +84,20 @@ onMounted(() => {
               </th>
               <th
                 class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-indigo-100 rounded-tr rounded-br"
-              >状態</th>
+              >
+                状態
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="order in initial_orders" :key="order.id" :class="{'bg-gray-100' : order.receive_flg === 0, 'bg-red-100': order.receive_flg === 1}">
+            <tr
+              v-for="order in initial_orders"
+              :key="order.id"
+              :class="{
+                'bg-gray-100': order.receive_flg === 0,
+                'bg-red-100': order.receive_flg === 1,
+              }"
+            >
               <td class="w-24 px-4 py-6">
                 <img
                   @click="modalImage($event.target)"
@@ -104,9 +122,15 @@ onMounted(() => {
               </td>
               <td class="w-16 text-center pr-4">
                 <button
-                :class='{"font-semibold hover:text-white py-2 px-4 border  rounded text-sm whitespace-nowrap" : true , "bg-transparent text-gray-700 border-gray-500 hover:border-transparent" : order.receive_flg === 0, "bg-red-600 text-white border-red-500 hover:border-transparent": order.receive_flg === 1}'
+                  :class="{
+                    'font-semibold hover:text-white py-2 px-4 border  rounded text-sm whitespace-nowrap': true,
+                    'bg-transparent text-gray-700 border-gray-500 hover:border-transparent':
+                      order.receive_flg === 0,
+                    'bg-red-600 text-white border-red-500 hover:border-transparent':
+                      order.receive_flg === 1,
+                  }"
                 >
-                  {{ order.receive_flg === 0 ? '注文中' : '納品済' }}
+                  {{ order.receive_flg === 0 ? "注文中" : "納品済" }}
                 </button>
               </td>
             </tr>
@@ -117,9 +141,7 @@ onMounted(() => {
   </section>
 </template>
 <style scoped>
-
-
-#base-container{
+#base-container {
   font-size: 18px;
   height: 100vh;
   width: 100vw;

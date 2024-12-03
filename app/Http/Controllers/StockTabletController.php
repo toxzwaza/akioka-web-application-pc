@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InitialOrder;
+use App\Models\SplitOrderQuantity;
 use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Services\Method;
@@ -16,8 +17,7 @@ class StockTabletController extends Controller
     {
         $orders = InitialOrder::all();
         foreach ($orders as $order) {
-            $order->receive_flg = 0;
-            $order->receipt_flg = 0;
+            $order->delifile_path = null;
             $order->save();
         }
     }
@@ -47,7 +47,18 @@ class StockTabletController extends Controller
             return redirect()->back();
         }
 
+        // 分納個数を取得
+        $quantity_sum = 0;
 
+        // 分納データが存在するかチェック
+        $split_order_quantities = SplitOrderQuantity::where('initial_order_id', $id)->get();
+        // 存在する場合、合計を取得
+        if (!$split_order_quantities->isEmpty()) {
+            $quantity_sum = $split_order_quantities->sum('quantity');
+        }
+        $order->split_quantity_sum = $quantity_sum;
+
+        // 物品データ取得
         $stock = Stock::where('name', $order->name)->first();
         if ($stock) {
 
@@ -178,17 +189,31 @@ class StockTabletController extends Controller
         $stock_storage = StockStorage::find($stock_storage_id);
         if ($stock_storage) {
             $order = InitialOrder::find($id);
+            $quantity_sum = 0;
+
+            // 分納データが存在するかチェック
+            $split_order_quantities = SplitOrderQuantity::where('initial_order_id', $id)->get();
+            // 存在する場合、合計を取得
+            if (!$split_order_quantities->isEmpty()) {
+                $quantity_sum = $split_order_quantities->sum('quantity');
+            }
             
-            if ($order->quantity == $quantity) {
+            
+            
+            if ($order->quantity == ($quantity_sum + $quantity)) {
                 // 分納でない場合受け取りフラグを立てる
                 $order->receive_flg = 1;
+                $order->save();
             } else {
-                // 分納の場合、残りの数量にする
-                $order->quantity -= $quantity;
+                // 分納の場合、split_order_quantitiesテーブルを作成
+                $split_order_quantity = new SplitOrderQuantity();
+                $split_order_quantity->initial_order_id = $order->id;
+                $split_order_quantity->quantity = $quantity;
+                $split_order_quantity->save();
+                
             }
-            $order->save();
 
-
+            // 分納した分を格納先に追加
             $stock_storage->quantity += $quantity;
             $stock_storage->save();
         }

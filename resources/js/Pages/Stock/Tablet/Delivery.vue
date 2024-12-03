@@ -14,7 +14,7 @@ const form = reactive({
   id: props.order.id,
   storage_address_id: null,
   stock_storage_id: null,
-  quantity: props.order.quantity,
+  quantity: props.order.quantity - props.order.split_quantity_sum,
 });
 
 const updateDelivery = () => {
@@ -132,7 +132,7 @@ onMounted(() => {
                       </select>
                     </div>
 
-                    <div class="relative mt-4">
+                    <div class="relative mt-8">
                       <label
                         for="name"
                         class="font-bold mb-1leading-7 text-xl text-gray-600"
@@ -153,8 +153,9 @@ onMounted(() => {
                         <i class="fas fa-arrow-right w-6 h-6 inline-block"></i>
                       </span>
                       <span
+                      class="font-bold"
                         >納入後個数:
-                        {{ props.order.quantity + storage_quantity }}</span
+                        {{ form.quantity + storage_quantity }}</span
                       >
                     </p>
                   </div>
