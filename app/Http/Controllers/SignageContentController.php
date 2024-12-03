@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\CraneInspectionColor;
 use App\Models\Safety;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class SignageContentController extends Controller
 {
@@ -28,5 +30,21 @@ class SignageContentController extends Controller
     public function stockDeliveryList(){
 
         return Inertia::render('Signage/Content/StockDeliveryList');
+    }
+    public function schedule(){
+        // 全てのファイルを取得
+        $files = Storage::files('public/schedule_file');
+        // 最新のタイムスタンプのファイルを取得
+        $latestFile = collect($files)
+            ->filter(function ($file) {
+                return Str::endsWith($file, '.png');
+            })
+            ->sort()
+            ->last();
+
+        $latestFileName = basename($latestFile);
+
+
+        return Inertia::render('Signage/Content/Schedule', ['file_path' => $latestFileName ]);
     }
 }

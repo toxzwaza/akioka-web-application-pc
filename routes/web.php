@@ -232,7 +232,8 @@ Route::get('/signage/content/inspectionCraneColor', [SignageContentController::c
 // --納品状況--
 Route::get('/signage/content/stockDeliveryList', [SignageContentController::class, 'stockDeliveryList'])->name('signage.content.stockDeliveryList');
 Route::get('/stock/tablet/getDeliveryOrders', [StockTabletController::class, 'getDeliveryOrders'])->name('stock.tablet.getDeliveryOrders');
-
+// 役職者のスケジュール表示
+Route::get('/signage/content/schedule', [SignageContentController::class, 'schedule']);
 
 // 全てのデータ取得
 Route::get('/signage/getData', [SignageController::class, 'getData'])->name('signage.getData');
