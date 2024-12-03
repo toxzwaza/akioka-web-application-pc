@@ -12,6 +12,16 @@ use Inertia\Inertia;
 
 class StockTabletController extends Controller
 {
+    public function test()
+    {
+        $orders = InitialOrder::all();
+        foreach ($orders as $order) {
+            $order->receive_flg = 0;
+            $order->receipt_flg = 0;
+            $order->save();
+        }
+    }
+
     //納品書登録
     public function index()
     {
@@ -22,6 +32,12 @@ class StockTabletController extends Controller
     {
         return Inertia::render('Stock/Tablet/Archive');
     }
+    // 受領登録
+    public function receipt()
+    {
+        return Inertia::render('Stock/Tablet/Receipt');
+    }
+
     // 納品登録画面
     public function delivery($id)
     {
@@ -31,7 +47,7 @@ class StockTabletController extends Controller
             return redirect()->back();
         }
 
-        
+
         $stock = Stock::where('name', $order->name)->first();
         if ($stock) {
 
@@ -39,7 +55,7 @@ class StockTabletController extends Controller
             $order->img_path = $stock->img_path;
 
             // 現在の格納先アドレスリストを取得
-            $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id','stock_storages.quantity as storage_quantity', 'storage_addresses.id as address_id', 'storage_addresses.address','storage_addresses.location_id', 'stock_storages.quantity','locations.name')->join('storage_addresses','storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id','location_id')->where('stock_id', $stock->id)->get();
+            $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'stock_storages.quantity as storage_quantity', 'storage_addresses.id as address_id', 'storage_addresses.address', 'storage_addresses.location_id', 'stock_storages.quantity', 'locations.name')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'location_id')->where('stock_id', $stock->id)->get();
 
             $order->stock_storages = $stock_storages;
         } else {
@@ -91,6 +107,38 @@ class StockTabletController extends Controller
 
         return response()->json($initial_orders);
     }
+    // 納品確定済みで受領されていないもののリスト
+    public function getReceiptOrders()
+    {
+        $initial_orders = InitialOrder::where('receive_flg', 1)->where('receipt_flg', 0)->orderby('updated_at', 'desc')->get();
+
+        foreach ($initial_orders as $order) {
+            $stock = Stock::where('name', $order->name)->first();
+            if ($stock) {
+                $order->img_path = $stock->img_path;
+            } else {
+                $order->found_flg = 1;
+            }
+        }
+
+        return response()->json($initial_orders);
+    }
+    // 注文済みで未引き渡しのリスト
+    public function getDeliveryOrders(){
+        $initial_orders = InitialOrder::where('receipt_flg', 0)->orderby('receive_flg', 'desc')->get();
+
+        foreach ($initial_orders as $order) {
+            $stock = Stock::where('name', $order->name)->first();
+            if ($stock) {
+                $order->img_path = $stock->img_path;
+            } else {
+                $order->found_flg = 1;
+            }
+        }
+
+        return response()->json($initial_orders);
+        
+    }
 
     public function uploadFile(Request $request)
     {
@@ -126,13 +174,21 @@ class StockTabletController extends Controller
 
 
 
-        $order = InitialOrder::find($id);
-        $order->receive_flg = 1;
-        $order->save();
-
         // 在庫数量を加算する処理を追加する
         $stock_storage = StockStorage::find($stock_storage_id);
-        if($stock_storage){
+        if ($stock_storage) {
+            $order = InitialOrder::find($id);
+            
+            if ($order->quantity == $quantity) {
+                // 分納でない場合受け取りフラグを立てる
+                $order->receive_flg = 1;
+            } else {
+                // 分納の場合、残りの数量にする
+                $order->quantity -= $quantity;
+            }
+            $order->save();
+
+
             $stock_storage->quantity += $quantity;
             $stock_storage->save();
         }
@@ -140,5 +196,16 @@ class StockTabletController extends Controller
         Method::msg('success', '納品数量登録が完了しました。');
 
         return response()->json(['status' => "ok"]);
+    }
+
+    // 引き渡し登録
+    public function updateReceipt($id){
+        $order = InitialOrder::find($id);
+
+        $order->receipt_flg = 1;
+        $order->save();
+        Method::msg('success' ,'引き渡し登録を実行しました');
+        
+        return redirect()->back();
     }
 }

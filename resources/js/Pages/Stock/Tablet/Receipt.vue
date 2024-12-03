@@ -1,9 +1,10 @@
 <script setup>
 import Tablet from "@/Layouts/Tablet.vue";
 import { onMounted, ref } from "vue";
-import { Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MicroModal from "@/Components/MicroModal.vue";
+import { Link } from "@inertiajs/vue3";
+
 
 const modalStatus = ref(false);
 const modalImageSrc = ref("");
@@ -15,13 +16,12 @@ const modalImage = (target) => {
 const handleCloseModal = () => {
   modalStatus.value = !modalStatus.value;
 };
-
 const base_initial_orders = ref([]);
 const initial_orders = ref([]);
 
-const getInitialOrders = () => {
+const getReceiptOrders = () => {
   axios
-    .get(route("stock.tablet.getAlreadDelifileInitialOrders"))
+    .get(route("stock.tablet.getReceiptOrders"))
     .then((res) => {
       initial_orders.value = res.data;
       base_initial_orders.value = res.data;
@@ -32,27 +32,23 @@ const getInitialOrders = () => {
     });
 };
 
-const checkDeliFile = (delifile_path) => {
-  modalStatus.value = true;
-  modalImageSrc.value = "/storage" + delifile_path;
-  console.log(delifile_path);
-};
-
 const searchOrders = (val) => {
+  console.log(val);
   if (val) {
     initial_orders.value = initial_orders.value.filter(
       (order) => order.order_no && order.order_no.includes(val)
     );
 
     if (initial_orders.value.length == 0) {
-        initial_orders.value = base_initial_orders.value;
+      initial_orders.value = base_initial_orders.value;
     }
   } else {
     initial_orders.value = base_initial_orders.value;
   }
 };
+
 onMounted(() => {
-  getInitialOrders();
+  getReceiptOrders();
 });
 </script>
 <template>
@@ -62,13 +58,13 @@ onMounted(() => {
         <div class="container px-5 py-24 mx-auto">
           <div class="flex flex-col text-center w-full mb-8">
             <h1
-              class="sm:text-4xl text-3xl font-medium title-font mb-2 text-red-600"
+              class="sm:text-4xl text-3xl font-medium title-font mb-2 text-blue-600"
             >
-              納品登録
+              引き渡し登録
             </h1>
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
-              以下の画面より納品を確定します。
-              納品書画像を再登録もしくは、納品を確定させることができます。<br />
+              引き渡し登録を完了すると、サイネージディスプレイの表示が解除されます。<br />
+              物品引き渡し時に登録を行ってください。
             </p>
           </div>
           <div class="w-1/2 mx-auto mb-8">
@@ -78,17 +74,16 @@ onMounted(() => {
                   >検索</label
                 >
                 <input
-                  @input="searchOrders($event.target.value)"
+                  @change="searchOrders($event.target.value)"
                   type="email"
                   id="email"
                   name="email"
                   class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
-                  placeholder="注文no"
+                  placeholder="注文No"
                 />
               </div>
             </div>
           </div>
-
           <div class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -135,13 +130,7 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr v-for="order in initial_orders" :key="order.id" class="">
-                  <td class="px-4 py-6">
-                    <span
-                      class="underline text-red-600"
-                      @click="checkDeliFile(order.delifile_path)"
-                      >{{ order.order_no }}</span
-                    >
-                  </td>
+                  <td class="px-4 py-6">{{ order.order_no }}</td>
                   <td class="w-24 px-4 py-6">
                     <img
                       @click="modalImage($event.target)"
@@ -164,14 +153,12 @@ onMounted(() => {
                   <td class="px-4 py-6">
                     {{ order.quantity + order.order_unit }}
                   </td>
-
-                  <td class="text-center">
+                  <td class="w-10 text-center">
                     <Link
-                      :href="route('stock.tablet.delivery', { id: order.id })"
-                      v-if="!order.found_flg"
-                      class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded text-sm whitespace-nowrap"
+                      :href="route('stock.tablet.updateReceipt', {'id' : order.id })"
+                      class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded text-sm whitespace-nowrap"
                     >
-                      確定
+                      引渡済
                     </Link>
                   </td>
                 </tr>
@@ -180,6 +167,7 @@ onMounted(() => {
           </div>
         </div>
       </section>
+
       <MicroModal
         v-if="modalStatus"
         @closeModal="handleCloseModal"

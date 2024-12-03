@@ -83,6 +83,7 @@ Route::get('/calc/product/start', [CalcProductController::class, 'start'])->name
 //// タブレット画面
 Route::get('/calc/product/tablet', [CalcProductTabletController::class, 'index'])->name('/calc/product/tablet');
 
+Route::get('/stock/tablet/test', [StockTabletController::class, 'test']);
 // 納品タブレット画面
 Route::get('/stock/tablet/receive', [StockTabletController::class, 'index'])->name('stock.tablet.receive');
 Route::get('/stock/tablet/getInitialOrders', [StockTabletController::class, 'getInitialOrders'])->name('stock.tablet.getInitialOrders');
@@ -96,6 +97,12 @@ Route::get('/stock/tablet/updateDelivery', [StockTabletController::class, 'updat
 
 // 納品書アップロード
 Route::post('/stock/tablet/uploadFile', [StockTabletController::class, 'uploadFile'])->name('stock.tablet.uploadFile');
+
+// 納品受領登録
+Route::get('/stock/tablet/receipt', [StockTabletController::class, 'receipt'])->name('stock.tablet.receipt');
+Route::get('/stock/tablet/getAReceiptOrders', [StockTabletController::class, 'getReceiptOrders'])->name('stock.tablet.getReceiptOrders');
+Route::get('/stock/tablet/updateReceipt/{id}', [StockTabletController::class, 'updateReceipt'])->name('stock.tablet.updateReceipt');   
+
 
 Route::get('/stock/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 Route::post('/stock/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
@@ -217,8 +224,15 @@ Route::get('/signage', [SignageController::class, 'index'])->name('signage.home'
 Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');
 Route::get('/signage/show/{id}', [SignageController::class, 'show'])->name('signage.show');
 
+// サイネージコンテンツ
+// --連続安全日数--
 Route::get('/signage/content/safety', [SignageContentController::class, 'safety'])->name('signage.content.safety');
+// --点検色--
 Route::get('/signage/content/inspectionCraneColor', [SignageContentController::class, 'inspectionCraneColor'])->name('signage.content.inspectionCraneColor');
+// --納品状況--
+Route::get('/signage/content/stockDeliveryList', [SignageContentController::class, 'stockDeliveryList'])->name('signage.content.stockDeliveryList');
+Route::get('/stock/tablet/getDeliveryOrders', [StockTabletController::class, 'getDeliveryOrders'])->name('stock.tablet.getDeliveryOrders');
+
 
 // 全てのデータ取得
 Route::get('/signage/getData', [SignageController::class, 'getData'])->name('signage.getData');

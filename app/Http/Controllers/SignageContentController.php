@@ -24,4 +24,9 @@ class SignageContentController extends Controller
 
         return Inertia::render('Signage/Content/InspectionCraneColor', ['color' => $color ]);
     }
+
+    public function stockDeliveryList(){
+
+        return Inertia::render('Signage/Content/StockDeliveryList');
+    }
 }

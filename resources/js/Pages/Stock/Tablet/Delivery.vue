@@ -12,33 +12,33 @@ const storage_quantity = ref(0);
 
 const form = reactive({
   id: props.order.id,
-  stock_storage_id: props.order.stock_storage_id,
+  storage_address_id: null,
+  stock_storage_id: null,
   quantity: props.order.quantity,
 });
 
 const updateDelivery = () => {
-  if (form.id && form.quantity) {
-    if (confirm("納品登録をおこないますか？")) {
-      axios
-        .get(route("stock.tablet.updateDelivery"), {
-          params: form,
-        })
-        .then((res) => {
-          console.log(res.data);
-          if (res.data.status == "ok") {
-            window.location.href = route("stock.tablet.archive");
-          }
-        })
-        .catch((error) => {});
-    }
+  if (confirm("納品登録をおこないますか？")) {
+    axios
+      .get(route("stock.tablet.updateDelivery"), {
+        params: form,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status == "ok") {
+          window.location.href = route("stock.tablet.archive");
+        }
+      })
+      .catch((error) => {});
   }
 };
 
 onMounted(() => {
-  console.log(props.order.stock_storages);
+  console.log(props.order);
   if (props.order.stock_storages && props.order.stock_storages.length > 0) {
-    form.storage_address_id = props.order.stock_storages[0].address_id
-    storage_quantity.value = props.order.stock_storages[0].storage_quantity
+    form.storage_address_id = props.order.stock_storages[0].address_id;
+    form.stock_storage_id = props.order.stock_storages[0].stock_storage_id;
+    storage_quantity.value = props.order.stock_storages[0].storage_quantity;
   }
 });
 </script>
@@ -89,7 +89,7 @@ onMounted(() => {
                       </div>
 
                       <img
-                        class=" w-5/6 object-cover object-center rounded"
+                        class="w-5/6 object-cover object-center rounded"
                         alt="hero"
                         :src="
                           props.order.img_path &&
@@ -105,27 +105,37 @@ onMounted(() => {
 
                 <!-- 納入用フォーム -->
                 <!-- 格納先アドレスが一つ以上の場合表示 -->
-                <div v-if="form.storage_address_id" class="flex flex-wrap -m-2 justify-center mb-4">
+                <div
+                  v-if="form.stock_storage_id"
+                  class="flex flex-wrap -m-2 justify-center mb-4"
+                >
                   <div class="p-2">
                     <div class="relative mb-2">
-                      
-                      <label for="name" class="font-bold mb-1leading-7 text-xl text-gray-600"
+                      <label
+                        for="name"
+                        class="font-bold mb-1leading-7 text-xl text-gray-600"
                         >格納先アドレス</label
                       >
                       <select
-                        v-model="form.storage_address_id"
+                        v-model="form.stock_storage_id"
                         id="storage_address_id"
                         name="storage_address_id"
                         class="text-center w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
                       >
-                        <option v-for="storage in props.order.stock_storages" :key="storage.address_id" :value="storage.address_id">
+                        <option
+                          v-for="storage in props.order.stock_storages"
+                          :key="storage.address_id"
+                          :value="storage.stock_storage_id"
+                        >
                           {{ storage.address }}
                         </option>
                       </select>
                     </div>
 
                     <div class="relative mt-4">
-                      <label for="name" class="font-bold mb-1leading-7 text-xl text-gray-600"
+                      <label
+                        for="name"
+                        class="font-bold mb-1leading-7 text-xl text-gray-600"
                         >納入数</label
                       >
                       <input
@@ -142,7 +152,10 @@ onMounted(() => {
                       <span>
                         <i class="fas fa-arrow-right w-6 h-6 inline-block"></i>
                       </span>
-                      <span>納入後個数: {{ props.order.quantity + storage_quantity }}</span>
+                      <span
+                        >納入後個数:
+                        {{ props.order.quantity + storage_quantity }}</span
+                      >
                     </p>
                   </div>
                   <div class="p-2 w-full mt-4">

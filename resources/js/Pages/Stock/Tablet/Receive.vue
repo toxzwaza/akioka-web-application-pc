@@ -63,19 +63,24 @@ const uploadFile = async (id) => {
 };
 
 const searchOrders = (val) => {
-  console.log(val)
+  console.log(val);
   if (val) {
+    if (val.length >= 5) {
+      val = val.slice(0, 4) + "-" + val.slice(4);
+    }
     initial_orders.value = initial_orders.value.filter(
       (order) => order.order_no && order.order_no.includes(val)
     );
 
     if (initial_orders.value.length == 0) {
-      initial_orders.value = base_initial_orders.value;
+      if(confirm('検索内容と一致するデータが見つかりませんでした')){
+        initial_orders.value = base_initial_orders.value;
+      }
     }
   } else {
+    // 入力値がない場合
     initial_orders.value = base_initial_orders.value;
   }
-
 };
 
 onMounted(() => {
@@ -106,7 +111,7 @@ onMounted(() => {
                   >検索</label
                 >
                 <input
-                  @change="searchOrders($event.target.value)"
+                  @input="searchOrders($event.target.value)"
                   type="email"
                   id="email"
                   name="email"
