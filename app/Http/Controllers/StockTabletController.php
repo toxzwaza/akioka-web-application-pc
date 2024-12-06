@@ -135,7 +135,8 @@ class StockTabletController extends Controller
         return response()->json($initial_orders);
     }
     // 注文済みで未引き渡しのリスト
-    public function getDeliveryOrders(){
+    public function getDeliveryOrders()
+    {
         $initial_orders = InitialOrder::where('receipt_flg', 0)->orderby('receive_flg', 'desc')->get();
 
         foreach ($initial_orders as $order) {
@@ -148,30 +149,37 @@ class StockTabletController extends Controller
         }
 
         return response()->json($initial_orders);
-        
     }
 
     public function uploadFile(Request $request)
     {
         $is_success = true;
 
-        $id = $request->id;
-        $file = $request->file('file');
-        try {
-            if ($id && $file) {
-                $timestamp = time();
-                $filename = $timestamp . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('public/deli_file', $filename);
-            }
-            $order = InitialOrder::find($id);
-            if ($order) {
-                $order->delifile_path = '/deli_file/' . $filename;
-                $order->save();
-            }
-        } catch (Exception $e) {
-            $is_success = false;
-        }
+        // $id = $request->id;
+        // idのリストを取得
+        $select_list = $request->select_list;
 
+
+        $file = $request->file('file');
+
+    
+            foreach ($select_list as $id) {
+                try {
+                    if ($id && $file) {
+                        $timestamp = time();
+                        $filename = $timestamp . '.' . $file->getClientOriginalExtension();
+                        $file->storeAs('public/deli_file', $filename);
+                    }
+                    $order = InitialOrder::find($id);
+                    if ($order) {
+                        $order->delifile_path = '/deli_file/' . $filename;
+                        $order->save();
+                    }
+                } catch (Exception $e) {
+                    $is_success = false;
+                }
+            }
+   
         if ($is_success) {
             return response()->json(['status' => $is_success]);
         }
@@ -197,9 +205,9 @@ class StockTabletController extends Controller
             if (!$split_order_quantities->isEmpty()) {
                 $quantity_sum = $split_order_quantities->sum('quantity');
             }
-            
-            
-            
+
+
+
             if ($order->quantity == ($quantity_sum + $quantity)) {
                 // 分納でない場合受け取りフラグを立てる
                 $order->receive_flg = 1;
@@ -210,7 +218,6 @@ class StockTabletController extends Controller
                 $split_order_quantity->initial_order_id = $order->id;
                 $split_order_quantity->quantity = $quantity;
                 $split_order_quantity->save();
-                
             }
 
             // 分納した分を格納先に追加
@@ -224,13 +231,14 @@ class StockTabletController extends Controller
     }
 
     // 引き渡し登録
-    public function updateReceipt($id){
+    public function updateReceipt($id)
+    {
         $order = InitialOrder::find($id);
 
         $order->receipt_flg = 1;
         $order->save();
-        Method::msg('success' ,'引き渡し登録を実行しました');
-        
+        Method::msg('success', '引き渡し登録を実行しました');
+
         return redirect()->back();
     }
 }

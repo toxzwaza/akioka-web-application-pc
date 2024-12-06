@@ -16,6 +16,17 @@ const handleCloseModal = () => {
 const base_initial_orders = ref([]);
 const initial_orders = ref([]);
 
+const select_list = ref([]);
+const updateSelectList = (orderId, isChecked) => {
+  console.log(isChecked)
+  if (isChecked) {
+    select_list.value.push(orderId);
+  } else {
+    select_list.value = select_list.value.filter(id => id !== orderId);
+  }
+  console.log(select_list.value);
+};
+
 const getInitialOrders = () => {
   axios
     .get(route("stock.tablet.getInitialOrders"))
@@ -30,6 +41,13 @@ const getInitialOrders = () => {
 };
 
 const uploadFile = async (id) => {
+  // １つも選択されていない場合、選択された注文IDを選択状態にする
+  if(select_list.value.length === 0){
+    updateSelectList(id, true)
+  }
+
+  console.log(select_list.value)
+
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
@@ -38,7 +56,9 @@ const uploadFile = async (id) => {
     const file = event.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("id", id);
+    select_list.value.forEach((item) => {
+      formData.append("select_list[]", item);
+    });
 
     try {
       const response = await axios.post(
@@ -128,6 +148,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                   >
+                    選択
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                  >
                     注文No
                   </th>
                   <th
@@ -167,6 +192,9 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr v-for="order in initial_orders" :key="order.id" class="">
+                  <td class="px-4 py-6">
+                    <input type="checkbox" name="selectList" id="" @change="updateSelectList(order.id, $event.target.checked)">
+                  </td>
                   <td class="px-4 py-6">{{ order.order_no }}</td>
                   <td class="w-24 px-4 py-6">
                     <img

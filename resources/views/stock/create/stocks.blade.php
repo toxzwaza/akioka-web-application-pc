@@ -100,7 +100,7 @@
 
                         <div class="container w-full flex items-center justify-between sm:col-span-2">
                             <div class="w-1/2 pr-4">
-                                <label for="subject" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">備品カテゴリ</label>
+                                <label for="subject" class="mb-2 inline-block text-sm text-red-400 sm:text-base">*備品カテゴリ</label>
                                 <select name="classification_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
                                     <option value="0">未選択</option>
 

@@ -256,18 +256,10 @@ class MasterController extends Controller
     public function store_user(Request $request)
     {
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'email|max:255',
-            'pwd' => 'max:255',
-            'group_id' => 'required|integer|exists:groups,id',
-            'position_id' => 'required|integer|exists:positions,id',
-            'process_id' => 'nullable|integer|exists:processes,id'
-        ]);
-
         $name = $request->name;
         $email = $request->email;
         $pwd = $request->pwd ?? 'pwd';
+        $fax_folder_name = $request->fax_folder_name;
         $group_id = $request->group_id;
         $position_id = $request->position_id;
         $process_id = $request->process_id;
@@ -280,7 +272,7 @@ class MasterController extends Controller
             $user = new User();
             $user->name = $name;
             $user->email = $email;
-            $user->pwd = $pwd;
+            $user->password = $pwd;
             $user->group_id = $group_id;
             $user->position_id = $position_id;
             $user->process_id = $process_id;
@@ -288,6 +280,7 @@ class MasterController extends Controller
             $user->dispatch_flg = $dispatch_flg;
             $user->part_flg = $part_flg;
             $user->always_order_flg = $always_order_flg;
+            $user->fax_folder_name = $fax_folder_name;
             $user->save();
         } catch (Exception $e) {
             Method::errorMsg();
