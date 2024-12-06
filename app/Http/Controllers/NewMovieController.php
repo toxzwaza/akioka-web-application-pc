@@ -140,46 +140,43 @@ class NewMovieController extends Controller
         $description = $request->description;
 
 
-
-
-        if (!$file_path && !$request->has('file')) {
-            return response()->json(['status' => 'ng', 'msg' => 'ファイルが送信できませんでした。']);
-        }
-
-        if ($file) {
-
-            $timestamp = now()->timestamp;
-            $temp_file_path = $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension());
-            $file_path = str_replace('/', '\\', '//192.168.0.72/' . $temp_file_path);
-        }
-
-
-
         $movie = new Movie();
         $movie->name = $title;
         $movie->memo = $description;
         $movie->movie_tag_id = $tag_id;
         // 投稿日が記載されている場合
-        if($created_at != 'null'){
-            dd($created_at);
+        if ($created_at != 'null') {
             $movie->created_at = $created_at;
         }
         $movie->save();
 
-        // RPAサーバーへリクエスト
-        $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description);
+
+        if ($file_path != 'null' || $file) {
+            
+
+            // ファイルが送信された場合ファイル優先
+            // $file_pathを保存したパスに上書き
+            if ($file) {
+                $timestamp = now()->timestamp;
+                $temp_file_path = $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension());
+                $file_path = str_replace('/', '\\', '//192.168.0.72/' . $temp_file_path);
+            }
+
+            // RPAサーバーへリクエスト
+            $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description);
 
 
-        // YoutubeAPIサーバへリクエスト
-        $client = new Client();
-        try {
-            $response = $client->request('GET', $url);
-            $responseArray = json_decode($response->getBody(), true);
-            $movie->file_path = $responseArray['youtube_id'];
-            $movie->save();
-        } catch (RequestException $e) {
-            // エラーハンドリング
-            return response()->json(['status' => 'ng', 'msg' => 'YouTube APIへのリクエストに失敗しました。']);
+            // YoutubeAPIサーバへリクエスト
+            $client = new Client();
+            try {
+                $response = $client->request('GET', $url);
+                $responseArray = json_decode($response->getBody(), true);
+                $movie->file_path = $responseArray['youtube_id'];
+                $movie->save();
+            } catch (RequestException $e) {
+                // エラーハンドリング
+                return response()->json(['status' => 'ng', 'msg' => 'YouTube APIへのリクエストに失敗しました。']);
+            }
         }
 
 

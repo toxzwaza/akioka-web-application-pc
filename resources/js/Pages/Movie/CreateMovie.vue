@@ -18,7 +18,7 @@ const form = reactive({
   description: null,
 });
 const sendMovie = () => {
-  if (!(form.title && (form.file_path || form.file) && form.tag_id)) {
+  if (!(form.title && form.tag_id)) {
     alert("すべての必須フィールドを入力してください。");
     return;
   }
