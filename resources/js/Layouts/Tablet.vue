@@ -15,20 +15,7 @@ const props = defineProps({
       <a
         class="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0"
       >
-        <!-- <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          class="w-10 h-10 text-white p-2 bg-indigo-500 rounded-full"
-          viewBox="0 0 24 24"
-        >
-          <path
-            d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"
-          ></path>
-        </svg> -->
+
         <span class="ml-3 text-xl">納品管理システム</span>
       </a>
       <nav
@@ -37,23 +24,12 @@ const props = defineProps({
         <Link :href="route('stock.tablet.receive')" :class="{'mr-5 hover:text-gray-900': true , 'font-bold': route().current() == 'stock.tablet.receive'}">納品書登録</Link>
         <Link :href="route('stock.tablet.archive')" :class="{'mr-5 hover:text-gray-900': true , 'font-bold': route().current() == 'stock.tablet.archive'}">納品登録</Link>
         <Link :href="route('stock.tablet.receipt')" :class="{'mr-5 hover:text-gray-900': true , 'font-bold': route().current() == 'stock.tablet.receipt'}">引き渡し登録</Link>
+
+
+        <Link :href="route('signage.content.stockDeliveryList')" :class="{'mr-5 hover:text-gray-900': true}">サイネージ画面確認</Link>
+
+        
       </nav>
-      <!-- <button
-        class="inline-flex items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mt-4 md:mt-0"
-      >
-        Button
-        <svg
-          fill="none"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          class="w-4 h-4 ml-1"
-          viewBox="0 0 24 24"
-        >
-          <path d="M5 12h14M12 5l7 7-7 7"></path>
-        </svg>
-      </button> -->
     </div>
   </header>
   <Message />

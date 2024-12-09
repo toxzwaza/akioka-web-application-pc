@@ -44,9 +44,9 @@
         <a href="{{ route('stock') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('stock*') ? 'font-bold text-gray-900' : ''}}"><span class="mr-1 material-symbols-outlined">
             list_alt
           </span>在庫管理</a>
-        <a href="{{ route('order') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('order*') ? 'font-bold text-gray-900' : ''}}"><span class="mr-1 material-symbols-outlined">
+        <!-- <a href="{{ route('order') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('order*') ? 'font-bold text-gray-900' : ''}}"><span class="mr-1 material-symbols-outlined">
             toc
-          </span>発注管理</a>
+          </span>発注管理</a> -->
         <a href="{{ route('lunch') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('lunch*') ? 'font-bold text-gray-900' : ''}}"><span class="mr-1 material-symbols-outlined">
             restaurant
           </span>弁当注文</a>

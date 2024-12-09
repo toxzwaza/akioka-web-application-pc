@@ -17,6 +17,9 @@ class MasterController extends Controller
     //
     public function index()
     {
+        // 現状は、従業員追加ページへリダイレクト
+        return to_route('master.create.user');
+
 
         return view('master.index');
     }

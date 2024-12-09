@@ -4,10 +4,15 @@
 <h1 class="text-center text-xl font-bold text-gray-800 mb-16">注文個数履歴</h1>
 
 <p class="text-red-400 mb-4 text-right">弁当注文数 / おかずのみ注文数</p>
-<div id="ec">
+<div id="ec" >
 
 </div>
-
+<style>
+    #ec{
+        max-width: 60vw;
+        margin: 2rem auto;
+    }
+</style>
 
 <script>
     let ec = new EventCalendar(document.getElementById('ec'), {

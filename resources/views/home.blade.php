@@ -67,166 +67,56 @@
     </div>
 </section>
 
-<div class="flex ">
-    <section class="text-gray-600 body-font">
-        <div class="container px-5 pt-8 pb-24 mx-auto flex flex-wrap justify-center">
-            <div class="flex flex-wrap justify-center w-full">
-                <div class="lg:w-3/5 md:w-1/2 md:pr-10 md:py-6">
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 1</h2>
-                            <p class="leading-relaxed">VHS cornhole pop-up, try-hard 8-bit iceland helvetica. Kinfolk bespoke try-hard cliche palo santo offal.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 2</h2>
-                            <p class="leading-relaxed">Vice migas literally kitsch +1 pok pok. Truffaut hot chicken slow-carb health goth, vape typewriter.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <circle cx="12" cy="5" r="3"></circle>
-                                <path d="M12 22V8M5 12H2a10 10 0 0020 0h-3"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 3</h2>
-                            <p class="leading-relaxed">Coloring book nar whal glossier master cleanse umami. Salvia +1 master cleanse blog taiyaki.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 4</h2>
-                            <p class="leading-relaxed">VHS cornhole pop-up, try-hard 8-bit iceland helvetica. Kinfolk bespoke try-hard cliche palo santo offal.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                                <path d="M22 4L12 14.01l-3-3"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">FINISH</h2>
-                            <p class="leading-relaxed">Pitchfork ugh tattooed scenester echo park gastropub whatever cold-pressed retro.</p>
-                        </div>
-                    </div>
+<!-- バージョン変更お知らせタイトル -->
+<section class="text-gray-600 body-font overflow-hidden">
+    <div class="container px-5 py-24 mx-auto">
+        <div class="-my-8 divide-y-2 divide-gray-100">
+            <div class="py-8 flex flex-wrap md:flex-nowrap">
+                <div class="md:w-64 md:mb-0 mb-6 flex-shrink-0 flex flex-col">
+                    <span class="font-semibold title-font text-gray-700">基幹マスタ管理</span>
+                    <span class="mt-1 text-gray-500 text-sm">2024/12/07</span>
                 </div>
-                <!-- <img class="lg:w-3/5 md:w-1/2 object-cover object-center rounded-lg md:mt-0 mt-12" src="https://dummyimage.com/1200x500" alt="step"> -->
+                <div class="md:flex-grow">
+                    <h2 class="text-2xl font-medium text-gray-900 title-font mb-2">従業員登録を追加しました。</h2>
+                    <p class="leading-relaxed">
+                        弊社に在籍しているすべての従業員が対象となります。「氏名・パスワード・所属部署・役職・製造工程」が必須項目となります。<br>
+                        編集したい場合、従業員一覧から、対象ユーザーのIDをクリックすることで編集画面へ遷移することが可能です。
+                    </p>
+                </div>
+            </div>
+            <div class="py-8 flex flex-wrap md:flex-nowrap">
+                <div class="md:w-64 md:mb-0 mb-6 flex-shrink-0 flex flex-col">
+                    <span class="font-semibold title-font text-gray-700">タブレット納品登録</span>
+                    <span class="mt-1 text-gray-500 text-sm">2024/12/06</span>
+                </div>
+                <div class="md:flex-grow">
+                    <h2 class="text-2xl font-medium text-gray-900 title-font mb-2">タブレット用納品書登録を追加しました。</h2>
+                    <p class="leading-relaxed"><a class="text-blue-500 underline" href="{{ route('stock.tablet.receive') }}">リンク</a>より、納品登録ページへ遷移できます。納品書登録画面より、納品書を登録することで納品登録の状態へ遷移します。納品登録では、納品数量を登録することが可能です。数量登録を完了すると、引き渡し登録状態へ遷移し、二回食堂サイネージディスプレイの表示が「納品済」へ更新されます。現場発注者に引き渡した際に登録すると、二回食堂に表示されているサイネージディスプレイの表示が解除されます。</p>
+                </div>
+            </div>
+            <div class="py-8 flex flex-wrap md:flex-nowrap">
+                <div class="md:w-64 md:mb-0 mb-6 flex-shrink-0 flex flex-col">
+                    <span class="font-semibold title-font text-gray-700">サイネージ</span>
+                    <span class="text-sm text-gray-500">2024/12/03</span>
+                </div>
+                <div class="md:flex-grow">
+                    <h2 class="text-2xl font-medium text-gray-900 title-font mb-2">サイネージ機能追加</h2>
+                    <p class="leading-relaxed"><a class="text-blue-500 underline" href="{{ route('signage.home') }}">リンク</a>より、サイネージ管理画面へ遷移します。当リンクより、PDFファイルのアップロード、公開情報の変更とアップロードファイルの削除が可能です。画像(jpef, png他)や動画の追加に関しては、<span>詳細な編集はこちら</span>から、行ってください。</p>
+
+                </div>
             </div>
         </div>
-    </section>
-    <section class="text-gray-600 body-font">
-        <div class="container px-5 pt-8 pb-24 mx-auto flex flex-wrap justify-center">
-            <div class="flex flex-wrap justify-center w-full">
-                <div class="lg:w-3/5 md:w-1/2 md:pr-10 md:py-6">
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 1</h2>
-                            <p class="leading-relaxed">VHS cornhole pop-up, try-hard 8-bit iceland helvetica. Kinfolk bespoke try-hard cliche palo santo offal.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 2</h2>
-                            <p class="leading-relaxed">Vice migas literally kitsch +1 pok pok. Truffaut hot chicken slow-carb health goth, vape typewriter.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <circle cx="12" cy="5" r="3"></circle>
-                                <path d="M12 22V8M5 12H2a10 10 0 0020 0h-3"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 3</h2>
-                            <p class="leading-relaxed">Coloring book nar whal glossier master cleanse umami. Salvia +1 master cleanse blog taiyaki.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative pb-12">
-                        <div class="h-full w-10 absolute inset-0 flex items-center justify-center">
-                            <div class="h-full w-1 bg-gray-200 pointer-events-none"></div>
-                        </div>
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">STEP 4</h2>
-                            <p class="leading-relaxed">VHS cornhole pop-up, try-hard 8-bit iceland helvetica. Kinfolk bespoke try-hard cliche palo santo offal.</p>
-                        </div>
-                    </div>
-                    <div class="flex relative">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-500 inline-flex items-center justify-center text-white relative z-10">
-                            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-5 h-5" viewBox="0 0 24 24">
-                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                                <path d="M22 4L12 14.01l-3-3"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-grow pl-4">
-                            <h2 class="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">FINISH</h2>
-                            <p class="leading-relaxed">Pitchfork ugh tattooed scenester echo park gastropub whatever cold-pressed retro.</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- <img class="lg:w-3/5 md:w-1/2 object-cover object-center rounded-lg md:mt-0 mt-12" src="https://dummyimage.com/1200x500" alt="step"> -->
-            </div>
-        </div>
-    </section>
-</div>
+
+
+        <a class="text-indigo-500 inline-flex items-center mt-12">Learn More
+            <svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+            </svg>
+        </a>
+
+    </div>
+</section>
 
 
 
