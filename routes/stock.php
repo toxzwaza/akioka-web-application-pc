@@ -1,0 +1,47 @@
+<?php
+
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\RaspiController;
+use App\Http\Controllers\StockController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TemperatureAndHumidity;
+
+// 在庫管理システム
+Route::get('/test', [StockController::class, 'test'])->name('stock.test');
+Route::get('/', [StockController::class, 'index'])->name('stock');
+Route::get('/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
+Route::get('/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
+Route::post('/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
+Route::get('/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
+Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
+
+// 発注登録
+Route::get('/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');
+Route::post('/initialOrder/store', [StockController::class, 'order_store'])->name('stock.order.store');
+
+// 滞留品
+Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
+Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
+Route::post('/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
+
+
+
+Route::get('/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
+Route::post('/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
+Route::get('/stock_suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
+
+
+Route::get('/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
+Route::get('/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
+Route::get('stock/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
+
+Route::post('/stock_storage/update', [StockController::class, 'update_stock_storage'])->name('stock.stock_storage.update');
+Route::get('/stock_storage/delete', [StockController::class, 'delete_stock_storage'])->name('stock.stock_storage.delete');
+Route::post('/stock_storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
+
+Route::get('/suppliers', [StockController::class, 'suppliers'])->name('stock.suppliers');
+Route::get('/suppliers/create', [StockController::class, 'create_suppliers'])->name('stock.suppliers.create');
+Route::get('/edit/suppliers/{supplier_id}', [StockController::class, 'supplier_edit'])->name('stock.suppliers.edit');
+
+// Location追加
+Route::get('/create/locations', [StockController::class, 'store_location'])->name('stock.locations.create');

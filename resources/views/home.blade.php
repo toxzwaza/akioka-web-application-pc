@@ -50,7 +50,7 @@
                 </div>
 
             </a>
-            <a href="{{ route('movie') }}" class="xl:w-1/4 md:w-1/2 p-4">
+            <a href="{{ route('movie2') }}" class="xl:w-1/4 md:w-1/2 p-4">
                 <div class="">
                     <div class="bg-gray-100 p-6 rounded-lg">
                         <img class="h-40 rounded w-full object-cover object-center mb-6" src="{{ asset('img/top/movie.png') }}" alt="content">

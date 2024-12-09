@@ -35,6 +35,35 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            // 基幹ルートを追加
+            Route::middleware('web')
+            ->prefix('master') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/master.php'));
+
+            // 在庫管理ルートを追加
+            Route::middleware('web')
+            ->prefix('stock') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/stock.php'));
+
+            // 在庫管理ルートを追加
+            Route::middleware('web')
+            ->prefix('movie') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/movie.php'));
+            // 在庫管理ルートを追加
+            Route::middleware('web')
+            ->prefix('fax') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/fax.php'));
+
+            // タブレット用ルートを追加
+            Route::middleware('web')
+            ->prefix('tablet') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/tablet.php'));
+
+            // リモート操作ルートを追加
+            Route::middleware('web')
+            ->prefix('remote') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/remote.php'));
         });
     }
 

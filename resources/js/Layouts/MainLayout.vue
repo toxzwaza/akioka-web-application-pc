@@ -247,6 +247,47 @@ const props = defineProps({
               /></svg
             >食堂後ろ</Link>
         </div>
+
+
+        <!-- リモート接続 -->
+        <div
+          class="flex"
+          v-if="route().current().startsWith('remote')"
+          id="fax-nav"
+        >
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'remote',
+            }"
+            :href="route('remote')"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"
+              /></svg
+            >接続</Link>
+          <Link
+            :class="{
+              'mr-5 hover:text-gray-900 flex justify-center': true,
+              'text-indigo-600 font-bold': route().current() == 'remote.create',
+            }"
+            :href="route('remote.create')"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"
+              /></svg
+            >リモート追加</Link>
+        </div>
       </nav>
     </div>
   </header>

@@ -16,8 +16,6 @@ class MainController extends Controller
     }
     public function login()
     {
-
-
         $users = User::all();
         return view('login', compact('users'));
     }
@@ -41,13 +39,17 @@ class MainController extends Controller
         if (session('bef_url')) {
             $bef_url = session('bef_url');
             session()->forget('bef_url');
-            // 動画IDが指定されている場合
-            if(session('movie_id')){
 
-                return redirect()->route('movie2.show',['movie_id' => session('movie_id')]);
+            switch ($bef_url) {
+                default:
+                    // 動画IDが指定されている場合
+                    if (session('movie_id')) {
+                        return redirect()->route('movie2.show', ['movie_id' => session('movie_id')]);
+                    }
+                    break;
             }
+
             return redirect()->route($bef_url);
-            
         }
         return redirect()->route('home');
     }

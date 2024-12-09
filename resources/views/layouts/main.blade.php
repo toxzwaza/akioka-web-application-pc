@@ -51,7 +51,7 @@
             restaurant
           </span>弁当注文</a>
 
-        <a href="{{ route('movie2') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('movie*') ? 'font-bold text-gray-900' : ''}}">
+        <a href="{{ route('movie2') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('movie2*') ? 'font-bold text-gray-900' : ''}}">
           <span class="material-symbols-outlined">
             live_tv
           </span>
@@ -69,15 +69,24 @@
           <span class="mr-1 material-symbols-outlined">
             description
           </span>
-          FAX振り分け設定</a>
+          FAX振分設定</a>
 
 
         <!-- サイネージシステム -->
         <a href="{{ route('signage.home') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('signage*') ? 'font-bold text-gray-900' : ''}}">
           <span class="mr-1 material-symbols-outlined">
-            description
+            tv
           </span>
           サイネージ
+        </a>
+
+
+        <!-- リモート接続 -->
+        <a href="{{ route('remote') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('remote*') ? 'font-bold text-gray-900' : ''}}">
+          <span class="mr-1 material-symbols-outlined">
+            computer
+          </span>
+          リモート接続
         </a>
       </nav>
 
