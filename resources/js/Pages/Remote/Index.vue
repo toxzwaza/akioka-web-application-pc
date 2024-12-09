@@ -1,6 +1,7 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import { onMounted, reactive } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
   user: Object,
@@ -45,9 +46,9 @@ const copyClipBoard = (flg) => {
 onMounted(() => {
   // 要素の高さを調整
   // 関数にまとめるとうまく高さを取得できない為、ベタ書き
-  const description = document.querySelector("#description");
-  const client_view = document.querySelector("#client_view");
-  client_view.style.height = `${description.offsetHeight}px`;
+  // const description = document.querySelector("#description");
+  // const client_view = document.querySelector("#client_view");
+  // client_view.style.height = `${description.offsetHeight}px`;
 
   remoteComputer.machine_name = props.remoteComputer.machine_name;
   remoteComputer.mac_address = props.remoteComputer.mac_address;
@@ -65,7 +66,8 @@ onMounted(() => {
             <p class="my-4 opacity-60">
               ログイン中：<span>{{ props.user.name }}</span>
             </p>
-            <div class="bg-gray-100 p-4">
+
+            <div v-if="remoteComputer.machine_name" class="bg-gray-100 p-4">
               <p class="my-2">
                 接続先コンピュータID：<span>{{
                   remoteComputer.machine_name
@@ -83,6 +85,15 @@ onMounted(() => {
                 ></i>
               </p>
             </div>
+
+
+            <div v-else class="bg-gray-100 p-4">
+              <p class="my-2">
+                接続先コンピュータが設定されていません。<br>
+                <Link class="text-blue-600 underline" :href="route('remote.create')">リモート追加</Link>より、リモートコンピュータを登録してください。
+              </p>
+
+            </div>
           </div>
 
           <hr class="my-10" />
@@ -90,6 +101,16 @@ onMounted(() => {
           <ol
             class="w-full space-y-1 text-gray-500 list-decimal list-inside dark:text-gray-400"
           >
+            <li class="pb-8 font-semibold">
+              <p class="inline">
+                <a
+                  target="blank"
+                  href="https://webapp.telework.cyber.ipa.go.jp/"
+                  ><span class="text-blue-600 underline">リンク</span></a
+                >をクリックしてください。
+              </p>
+              <hr class="mt-8" />
+            </li>
             <li class="pb-8 font-semibold">
               <p class="inline">
                 上記のIDを<span class="font-bold text-red-600 mx-2"
@@ -132,12 +153,12 @@ onMounted(() => {
           </ol>
         </div>
 
-        <iframe
+        <!-- <iframe
           class="w-1/2"
           id="client_view"
           src="https://webapp.telework.cyber.ipa.go.jp/"
           frameborder="0"
-        ></iframe>
+        ></iframe> -->
       </div>
     </template>
   </MainLayout>
