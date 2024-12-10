@@ -95,7 +95,7 @@ onMounted(() => {
               :key="order.id"
               :class="{
                 'bg-gray-100': order.receive_flg === 0,
-                'bg-red-100': order.receive_flg === 1,
+                'bg-red-100': order.receive_flg === 1 || order.none_storage_flg === 1,
               }"
             >
               <td class="w-24 px-4 py-6">

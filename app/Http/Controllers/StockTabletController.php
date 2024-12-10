@@ -99,29 +99,40 @@ class StockTabletController extends Controller
         return response()->json($initial_orders);
     }
 
-    // 既に納品書を登録しているモノのリスト(再登録用)
+    // 既に納品書を登録しているモノのリスト
     public function getAlreadDelifileInitialOrders()
     {
+        // 未引き渡し
+        // 納品書登録済み
+        // 在庫を所持している
+
         $initial_orders = InitialOrder::where(function ($query) {
             $query->whereNull('receive_flg')
                 ->orWhere('receive_flg', 0);
-        })->whereNotNull('delifile_path')->orderby('updated_at', 'desc')->get();
+        })->whereNotNull('delifile_path')
+          ->whereNull('none_storage_flg')
+          ->orderby('updated_at', 'desc')->get();
 
         foreach ($initial_orders as $order) {
             $stock = Stock::where('name', $order->name)->first();
             if ($stock) {
                 $order->img_path = $stock->img_path;
-            } else {
-                $order->found_flg = 1;
             }
         }
 
         return response()->json($initial_orders);
     }
+
+    // 未引き渡し
+    // 登録済みもしくはnone_storage_flgが1
+    
     // 納品確定済みで受領されていないもののリスト
     public function getReceiptOrders()
     {
-        $initial_orders = InitialOrder::where('receive_flg', 1)->where('receipt_flg', 0)->orderby('updated_at', 'desc')->get();
+        $initial_orders = InitialOrder::where(function ($query) {
+            $query->where('receive_flg', 1)
+                  ->orWhere('none_storage_flg', 1);
+        })->where('receipt_flg', 0)->orderby('updated_at', 'desc')->get();
 
         foreach ($initial_orders as $order) {
             $stock = Stock::where('name', $order->name)->first();
@@ -134,10 +145,12 @@ class StockTabletController extends Controller
 
         return response()->json($initial_orders);
     }
+
+    // サイネージ表示用リスト
     // 注文済みで未引き渡しのリスト
     public function getDeliveryOrders()
     {
-        $initial_orders = InitialOrder::where('receipt_flg', 0)->orderby('receive_flg', 'desc')->get();
+        $initial_orders = InitialOrder::where('receipt_flg', 0)->orderby('none_storage_flg', 'desc')->orderby('receive_flg', 'desc')->get();
 
         foreach ($initial_orders as $order) {
             $stock = Stock::where('name', $order->name)->first();
@@ -175,6 +188,16 @@ class StockTabletController extends Controller
                         $order->delifile_path = '/deli_file/' . $filename;
                         $order->save();
                     }
+
+                    // 名前が一致する在庫データを取得
+                    // 見つからない場合は、フラグを立てる
+                    $stock = Stock::where('name', $order->name)->first();
+                    if (!$stock) {
+                        $order->none_storage_flg = 1;
+                        $order->save();
+                    }
+
+
                 } catch (Exception $e) {
                     $is_success = false;
                 }
@@ -190,8 +213,6 @@ class StockTabletController extends Controller
         $id = $request->id;
         $quantity = $request->quantity;
         $stock_storage_id = $request->stock_storage_id;
-
-
 
         // 在庫数量を加算する処理を追加する
         $stock_storage = StockStorage::find($stock_storage_id);
