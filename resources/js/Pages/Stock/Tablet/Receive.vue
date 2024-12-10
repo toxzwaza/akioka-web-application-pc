@@ -221,7 +221,6 @@ onMounted(() => {
                   <td class="w-10 text-center">
                     <button
                       @click="uploadFile(order.id)"
-                      v-if="!order.found_flg"
                       class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded text-sm whitespace-nowrap"
                     >
                       納品書
