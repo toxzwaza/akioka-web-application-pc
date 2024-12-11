@@ -134,7 +134,7 @@ onMounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="order in initial_orders" :key="order.id" class="">
+                <tr v-for="order in initial_orders" :key="order.id" :class="{'bg-indigo-50': order.not_found_flg}">
                   <td class="px-4 py-6">
                     <span
                       class="underline text-red-600"

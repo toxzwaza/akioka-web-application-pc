@@ -119,9 +119,9 @@ onMounted(() => {
               納品登録
             </h1>
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
-              以下の画面より納品完了登録を行います。
-              納品登録間違いには十分ご注意下さい。<br />
-              以下のボックスより、検索できます。検索対象は、注文No・JANコード・品名・品番等です。
+              以下の画面より納品書登録を行います。<br/>
+              品名・品番が一致するデータがない場合、背景色が青色で表示されます。<br>
+              一致するデータがない場合、納品登録画面にて作成する必要があります。
             </p>
           </div>
           <div class="w-1/2 mx-auto mb-8">
@@ -191,7 +191,7 @@ onMounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="order in initial_orders" :key="order.id" class="">
+                <tr v-for="order in initial_orders" :key="order.id" :class="{'bg-indigo-50': order.not_found_flg}">
                   <td class="px-4 py-6">
                     <input type="checkbox" name="selectList" id="" @change="updateSelectList(order.id, $event.target.checked)">
                   </td>

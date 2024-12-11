@@ -12,8 +12,14 @@ Route::get('/stock/archive', [StockTabletController::class, 'archive'])->name('s
 Route::get('/stock/getAlreadDelifileInitialOrders', [StockTabletController::class, 'getAlreadDelifileInitialOrders'])->name('stock.tablet.getAlreadDelifileInitialOrders');
 // 納品登録画面
 Route::get('/stock/delivery/{id}', [StockTabletController::class, 'delivery'])->name('stock.tablet.delivery');
+
+// 在庫新規登録
+Route::post('/stock/store', [StockTabletController::class, 'store'])->name('stock.tablet.store');
+// 在庫登録せずにサイネージ表示
+Route::get('/stock/none_storage/{order_id}', [StockTabletController::class, 'none_storage'])->name('stock.tablet.none_storage');
 // 納品数量登録
 Route::get('/stock/updateDelivery', [StockTabletController::class, 'updateDelivery'])->name('stock.tablet.updateDelivery');    
+
 
 // 納品書アップロード
 Route::post('/stock/uploadFile', [StockTabletController::class, 'uploadFile'])->name('stock.tablet.uploadFile');
@@ -21,4 +27,11 @@ Route::post('/stock/uploadFile', [StockTabletController::class, 'uploadFile'])->
 // 納品受領登録
 Route::get('/stock/receipt', [StockTabletController::class, 'receipt'])->name('stock.tablet.receipt');
 Route::get('/stock/getAReceiptOrders', [StockTabletController::class, 'getReceiptOrders'])->name('stock.tablet.getReceiptOrders');
-Route::get('/stock/updateReceipt/{id}', [StockTabletController::class, 'updateReceipt'])->name('stock.tablet.updateReceipt');   
+Route::get('/stock/updateReceipt/{id}', [StockTabletController::class, 'updateReceipt'])->name('stock.tablet.updateReceipt');  
+
+
+// カテゴリーリスト取得
+Route::get('/stock/getClassifications', [StockTabletController::class, 'getClassifications'])->name('stock.tablet.getClassifications');
+
+// 仕入れ先リスト取得
+Route::get('/stock/getSuppliers', [StockTabletController::class, 'getSuppliers'])->name('stock.tablet.getSuppliers');

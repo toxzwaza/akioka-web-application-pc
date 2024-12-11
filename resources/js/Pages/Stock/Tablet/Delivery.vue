@@ -1,21 +1,78 @@
 <script setup>
 import Tablet from "@/Layouts/Tablet.vue";
 import { onMounted, ref, reactive } from "vue";
+import { Link } from "@inertiajs/vue3";
 import axios from "axios";
 
 const props = defineProps({
   order: Object,
+  supplier_id: Number,
+  locations: Array,
+  storage_addresses: Array,
 });
 
 // 対象格納先在庫数
 const storage_quantity = ref(0);
+// カテゴリーリスト
+const classifications = ref([]);
+// 仕入れ先リスト
+const suppliers = ref([]);
 
+// 格納先アドレスリスト
+const storage_addresses = ref([]);
+
+// 数量登録用フォーム
 const form = reactive({
   id: props.order.id,
   storage_address_id: null,
   stock_storage_id: null,
   quantity: props.order.quantity - props.order.split_quantity_sum,
 });
+
+// 在庫データ新規登録用フォーム
+const stock_create_form = reactive({
+  order_id: null,
+  supplier_id: null,
+  deli_location: null,
+  classification_id: null,
+  storage_address_id: null,
+});
+
+// 在庫新規登録
+const createStock = () => {
+  if (
+    stock_create_form.order_id &&
+    stock_create_form.supplier_id &&
+    stock_create_form.classification_id &&
+    stock_create_form.storage_address_id
+  ) {
+    console.log("実行");
+
+    axios
+      .post(route("stock.tablet.store"), stock_create_form)
+      .then((res) => {
+        if (res.data.status === true) {
+          if (
+            confirm(
+              "登録が完了しました。続いて、数量登録に移りますが、よろしいですか？"
+            )
+          ) {
+            location.reload();
+          }
+        } else {
+          alert(
+            "登録に失敗しました。再度やり直すか、管理者へ連絡してください。"
+          );
+          location.reload();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  } else {
+    alert("未入力の項目があります。");
+  }
+};
 
 const updateDelivery = () => {
   if (confirm("納品登録をおこないますか？")) {
@@ -33,12 +90,50 @@ const updateDelivery = () => {
   }
 };
 
+const sortStorageAddresses = (locationId) => {
+  storage_addresses.value = props.storage_addresses.filter(
+    (address) => address.location_id == locationId
+  );
+  console.log(storage_addresses.value);
+};
 onMounted(() => {
-  console.log(props.order);
+  console.log("order", props.order);
+  console.log("supplier_id", props.supplier_id);
+  console.log("storage_addresses", props.storage_addresses);
+
   if (props.order.stock_storages && props.order.stock_storages.length > 0) {
     form.storage_address_id = props.order.stock_storages[0].address_id;
     form.stock_storage_id = props.order.stock_storages[0].stock_storage_id;
     storage_quantity.value = props.order.stock_storages[0].storage_quantity;
+  }
+
+  // 新規作成の場合カテゴリーリストを取得
+  // 新規作成フォーム初期化
+  if (props.order.not_found_flg) {
+    console.log("新期作成");
+    axios
+      .get(route("stock.tablet.getClassifications"))
+      .then((res) => {
+        console.log(res.data);
+        classifications.value = res.data;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    axios
+      .get(route("stock.tablet.getSuppliers"))
+      .then((res) => {
+        console.log(res.data);
+        suppliers.value = res.data;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    stock_create_form.order_id = props.order.id;
+    stock_create_form.supplier_id = props.supplier_id;
+    stock_create_form.deli_location = props.order.deli_location;
   }
 });
 </script>
@@ -89,6 +184,7 @@ onMounted(() => {
                       </div>
 
                       <img
+                        v-if="props.order.img_path"
                         class="w-5/6 object-cover object-center rounded"
                         alt="hero"
                         :src="
@@ -152,8 +248,7 @@ onMounted(() => {
                       <span>
                         <i class="fas fa-arrow-right w-6 h-6 inline-block"></i>
                       </span>
-                      <span
-                      class="font-bold"
+                      <span class="font-bold"
                         >納入後個数:
                         {{ form.quantity + storage_quantity }}</span
                       >
@@ -166,6 +261,181 @@ onMounted(() => {
                     >
                       納入
                     </button>
+                  </div>
+                </div>
+
+                <!-- 在庫データ作成フォーム -->
+                <div v-if="props.order.not_found_flg">
+                  <div class="flex flex-wrap -m-2 justify-center mb-4">
+                    <div class="p-2">
+                      <div class="mb-8">
+                        <h2 class="mb-2 text-indigo-600 text-sm">
+                          <span class="font-bold text-lg"
+                            >在庫情報を登録してください。</span
+                          ><br />
+                          単発は注品のように倉庫で管理していない場合は、下のボタンをクリックすることで<br />在庫登録をスキップしてサイネージに表示することが可能です。
+                        </h2>
+                        <Link
+                          :href="route('stock.tablet.none_storage', { order_id: props.order.id })"
+                          class="mt-2 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                          在庫登録をスキップしてサイネージ表示
+                        </Link>
+                      </div>
+
+                      <div class="relative mb-2">
+                        <label
+                          for="name"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >品名</label
+                        >
+                        <p
+                          class="text-center w-full bg-gray-300 bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                        >
+                          {{ props.order.name }}
+                        </p>
+                      </div>
+                      <div class="relative mb-2">
+                        <label
+                          for="name"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >品番</label
+                        >
+                        <p
+                          class="text-center w-full bg-gray-300 bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                        >
+                          {{ props.order.s_name }}
+                        </p>
+                      </div>
+
+                      <hr class="my-8" />
+
+                      <div class="relative mt-8">
+                        <label
+                          for="name"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >仕入れ先</label
+                        >
+                        <select
+                          v-model="stock_create_form.supplier_id"
+                          name="supplier_id"
+                          id="supplier_id"
+                          class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                        >
+                          <option
+                            v-for="supplier in suppliers"
+                            :key="supplier.id"
+                            :value="supplier.id"
+                          >
+                            {{ supplier.name }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="relative mt-8">
+                        <label
+                          for="deli_location"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >配達先</label
+                        >
+                        <input
+                          v-model="stock_create_form.deli_location"
+                          type="text"
+                          id="deli_location"
+                          name="deli_location"
+                          class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                        />
+                      </div>
+
+                      <div class="relative mt-8">
+                        <label
+                          for="classification_id"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >カテゴリー</label
+                        >
+                        <select
+                          v-model="stock_create_form.classification_id"
+                          name="classification_id"
+                          id="classification_id"
+                          class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                          :class="{
+                            'border-red-400':
+                              !stock_create_form.classification_id,
+                          }"
+                        >
+                          <option value="">選択してください</option>
+                          <option
+                            v-for="classification in classifications"
+                            :key="classification.id"
+                            :value="classification.id"
+                          >
+                            {{ classification.name }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <hr class="my-8" />
+                      <p>格納先とアドレスを設定してください。</p>
+                      <div class="relative mt-4">
+                        <label
+                          for="name"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >格納先</label
+                        >
+                        <select
+                          @change="sortStorageAddresses($event.target.value)"
+                          name="supplier_id"
+                          id="supplier_id"
+                          class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                          :class="{
+                            'border-red-400':
+                              !stock_create_form.storage_address_id,
+                          }"
+                        >
+                          <option value="">選択してください</option>
+                          <option
+                            v-for="location in props.locations"
+                            :key="location.id"
+                            :value="location.id"
+                          >
+                            {{ location.name }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="relative mt-8">
+                        <label
+                          for="name"
+                          class="font-bold mb-1leading-7 text-xl text-gray-600"
+                          >アドレス</label
+                        >
+                        <select
+                          v-model="stock_create_form.storage_address_id"
+                          name="storage_address_id"
+                          id="storage_address_id"
+                          class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                          :class="{
+                            'border-red-400':
+                              !stock_create_form.storage_address_id,
+                          }"
+                        >
+                          <option
+                            v-for="storage_address in storage_addresses"
+                            :key="storage_address.id"
+                            :value="storage_address.id"
+                          >
+                            {{ storage_address.address }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="p-2 w-full mt-8">
+                      <button
+                        @click="createStock"
+                        class="flex mx-auto text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-red-600 rounded text-lg"
+                      >
+                        新規作成
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

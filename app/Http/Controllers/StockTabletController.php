@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Classification;
 use App\Models\InitialOrder;
+use App\Models\Location;
+use App\Models\Order;
 use App\Models\SplitOrderQuantity;
 use App\Models\Stock;
 use App\Models\StockStorage;
+use App\Models\StockSupplier;
+use App\Models\StorageAddress;
+use App\Models\Supplier;
 use App\Services\Method;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class StockTabletController extends Controller
@@ -46,40 +54,58 @@ class StockTabletController extends Controller
             Method::msg('error', 'オーダーIDが見つかりませんでした。');
             return redirect()->back();
         }
+        $supplier_id = null;
+        $locations = [];
+        $storage_addresses = [];
 
-        // 分納個数を取得
-        $quantity_sum = 0;
+        // 在庫データが見つかった場合
+        if (!$order->not_found_flg) {
+            // 分納個数を取得
+            $quantity_sum = 0;
 
-        // 分納データが存在するかチェック
-        $split_order_quantities = SplitOrderQuantity::where('initial_order_id', $id)->get();
-        // 存在する場合、合計を取得
-        if (!$split_order_quantities->isEmpty()) {
-            $quantity_sum = $split_order_quantities->sum('quantity');
-        }
-        $order->split_quantity_sum = $quantity_sum;
+            // 分納データが存在するかチェック
+            $split_order_quantities = SplitOrderQuantity::where('initial_order_id', $id)->get();
+            // 存在する場合、合計を取得
+            if (!$split_order_quantities->isEmpty()) {
+                $quantity_sum = $split_order_quantities->sum('quantity');
+            }
+            $order->split_quantity_sum = $quantity_sum;
 
-        // 物品データ取得
-        $stock = Stock::where('name', $order->name)->first();
-        if ($stock) {
+            // 物品データ取得
+            $stock = Stock::where('name', $order->name)
+                ->where(function ($query) use ($order) {
+                    $query->where('s_name', 'like', "%$order->s_name%")
+                        ->orWhere('s_name', $order->s_name);
+                })->first();
 
-            // 画像を取得
-            $order->img_path = $stock->img_path;
 
-            // 現在の格納先アドレスリストを取得
-            $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'stock_storages.quantity as storage_quantity', 'storage_addresses.id as address_id', 'storage_addresses.address', 'storage_addresses.location_id', 'stock_storages.quantity', 'locations.name')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'location_id')->where('stock_id', $stock->id)->get();
+            if ($stock) {
 
-            $order->stock_storages = $stock_storages;
+                // 画像を取得
+                $order->img_path = $stock->img_path;
+
+                // 現在の格納先アドレスリストを取得
+                $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'stock_storages.quantity as storage_quantity', 'storage_addresses.id as address_id', 'storage_addresses.address', 'storage_addresses.location_id', 'stock_storages.quantity', 'locations.name')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'location_id')->where('stock_id', $stock->id)->get();
+
+                $order->stock_storages = $stock_storages;
+            }
         } else {
-            $order->found_flg = 1;
+            $supplier = Supplier::where('name', $order->com_name)->first();
+            if ($supplier) {
+                $supplier_id = $supplier->id;
+            }
+            // 格納先と格納先アドレス
+            $locations = Location::all();
+            $storage_addresses = StorageAddress::orderBy('address', 'asc')->get();
         }
 
-
-
-        return Inertia::render('Stock/Tablet/Delivery', ['order' => $order]);
+        return Inertia::render('Stock/Tablet/Delivery', ['order' => $order, 'supplier_id' => $supplier_id, 'locations' => $locations, 'storage_addresses' => $storage_addresses]);
     }
 
+    // -----------------------------------------------------------------------------
 
     // 納品書が登録されていないリスト
+    // 品名が一致かつ、品番が一致又は含まれているモノ
     public function getInitialOrders()
     {
         $initial_orders = InitialOrder::where(function ($query) {
@@ -88,11 +114,15 @@ class StockTabletController extends Controller
         })->whereNull('delifile_path')->get();
 
         foreach ($initial_orders as $order) {
-            $stock = Stock::where('name', $order->name)->first();
+            $stock = Stock::where('name', $order->name)
+                ->where(function ($query) use ($order) {
+                    $query->where('s_name', 'like', "%$order->s_name%")
+                        ->orWhere('s_name', $order->s_name);
+                })->first();
             if ($stock) {
                 $order->img_path = $stock->img_path;
             } else {
-                $order->found_flg = 1;
+                $order->not_found_flg = 1;
             }
         }
 
@@ -110,13 +140,20 @@ class StockTabletController extends Controller
             $query->whereNull('receive_flg')
                 ->orWhere('receive_flg', 0);
         })->whereNotNull('delifile_path')
-          ->whereNull('none_storage_flg')
-          ->orderby('updated_at', 'desc')->get();
+            ->whereNull('none_storage_flg')
+            ->orderby('updated_at', 'desc')->get();
 
         foreach ($initial_orders as $order) {
-            $stock = Stock::where('name', $order->name)->first();
+            $stock = Stock::where('name', $order->name)
+                ->where(function ($query) use ($order) {
+                    $query->where('s_name', 'like', "%$order->s_name%")
+                        ->orWhere('s_name', $order->s_name);
+                })->first();
+
             if ($stock) {
                 $order->img_path = $stock->img_path;
+            } else {
+                $order->not_found_flg = 1;
             }
         }
 
@@ -125,17 +162,22 @@ class StockTabletController extends Controller
 
     // 未引き渡し
     // 登録済みもしくはnone_storage_flgが1
-    
+
     // 納品確定済みで受領されていないもののリスト
     public function getReceiptOrders()
     {
         $initial_orders = InitialOrder::where(function ($query) {
             $query->where('receive_flg', 1)
-                  ->orWhere('none_storage_flg', 1);
+                ->orWhere('none_storage_flg', 1);
         })->where('receipt_flg', 0)->orderby('updated_at', 'desc')->get();
 
         foreach ($initial_orders as $order) {
-            $stock = Stock::where('name', $order->name)->first();
+            $stock = Stock::where('name', $order->name)
+                ->where(function ($query) use ($order) {
+                    $query->where('s_name', 'like', "%$order->s_name%")
+                        ->orWhere('s_name', $order->s_name);
+                })->first();
+
             if ($stock) {
                 $order->img_path = $stock->img_path;
             } else {
@@ -153,7 +195,12 @@ class StockTabletController extends Controller
         $initial_orders = InitialOrder::where('receipt_flg', 0)->orderby('none_storage_flg', 'desc')->orderby('receive_flg', 'desc')->get();
 
         foreach ($initial_orders as $order) {
-            $stock = Stock::where('name', $order->name)->first();
+            $stock = Stock::where('name', $order->name)
+                ->where(function ($query) use ($order) {
+                    $query->where('s_name', 'like', "%$order->s_name%")
+                        ->orWhere('s_name', $order->s_name);
+                })->first();
+
             if ($stock) {
                 $order->img_path = $stock->img_path;
             } else {
@@ -164,6 +211,10 @@ class StockTabletController extends Controller
         return response()->json($initial_orders);
     }
 
+
+
+    // ---------------------------------------------------------------
+    // 納品書アプロード
     public function uploadFile(Request $request)
     {
         $is_success = true;
@@ -171,41 +222,101 @@ class StockTabletController extends Controller
         // $id = $request->id;
         // idのリストを取得
         $select_list = $request->select_list;
-
-
         $file = $request->file('file');
 
-    
-            foreach ($select_list as $id) {
-                try {
-                    if ($id && $file) {
-                        $timestamp = time();
-                        $filename = $timestamp . '.' . $file->getClientOriginalExtension();
-                        $file->storeAs('public/deli_file', $filename);
-                    }
-                    $order = InitialOrder::find($id);
-                    if ($order) {
-                        $order->delifile_path = '/deli_file/' . $filename;
-                        $order->save();
-                    }
 
-                    // 名前が一致する在庫データを取得
-                    // 見つからない場合は、フラグを立てる
-                    $stock = Stock::where('name', $order->name)->first();
-                    if (!$stock) {
-                        $order->none_storage_flg = 1;
-                        $order->save();
-                    }
-
-
-                } catch (Exception $e) {
-                    $is_success = false;
+        foreach ($select_list as $id) {
+            try {
+                if ($id && $file) {
+                    $timestamp = time();
+                    $filename = $timestamp . '.' . $file->getClientOriginalExtension();
+                    $file->storeAs('public/deli_file', $filename);
                 }
+                $order = InitialOrder::find($id);
+                if ($order) {
+                    $order->delifile_path = '/deli_file/' . $filename;
+                    $order->save();
+                }
+
+                // 品名・品番が一致する在庫データを取得
+                // 見つからない場合は、フラグを立てる
+                $stock = Stock::where('name', $order->name)
+                    ->where(function ($query) use ($order) {
+                        $query->where('s_name', 'like', "%$order->s_name%")
+                            ->orWhere('s_name', $order->s_name);
+                    })->first();
+
+                if (!$stock) {
+                    $order->not_found_flg = 1;
+                    $order->save();
+                }
+            } catch (Exception $e) {
+                $is_success = false;
             }
-   
+        }
+
         if ($is_success) {
             return response()->json(['status' => $is_success]);
         }
+    }
+    public function store(Request $request)
+    {
+        $order_id = $request->order_id;
+        $supplier_id = $request->supplier_id;
+        $classification_id = $request->classification_id;
+        $deli_location = $request->deli_location ?? '';
+        $storage_address_id = $request->storage_address_id;
+
+        $is_success = true;
+
+        $order = null;
+
+        try {
+            DB::transaction(function () use ($order_id, $supplier_id, $classification_id, $deli_location, $storage_address_id) {
+                if ($order_id && $supplier_id && $classification_id) {
+                    $order = InitialOrder::find($order_id);
+
+                    
+
+                    $stock  = new Stock();
+                    $stock->name = $order->name;
+                    $stock->s_name = $order->s_name;
+                    $stock->deli_location = $deli_location;
+                    $stock->classification_id = $classification_id;
+                    $stock->save();
+
+                    $stock_supplier = new StockSupplier();
+                    $stock_supplier->stock_id = $stock->id;
+                    $stock_supplier->supplier_id = $supplier_id;
+                    $stock_supplier->save();
+
+                    $stock_storage = new StockStorage();
+                    $stock_storage->stock_id  = $stock->id;
+                    $stock_storage->storage_address_id = $storage_address_id;
+                    $stock_storage->quantity = 0;
+                    $stock_storage->save();
+                    
+                    // アドレスが作成されたらフラグを初期化する
+                    $order->not_found_flg = null;
+                    $order->save();
+
+                }
+            });
+        } catch (Exception $e) {
+            $is_success = false;
+            return response()->json(['status' => $is_success, 'msg' => $e->getMessage(), 'order' => $order]);
+        }
+
+        return response()->json(['status' => $is_success]);
+    }
+
+    public function none_storage($order_id){
+        $order = InitialOrder::find($order_id);
+        $order->receive_flg = 1;
+        $order->none_storage_flg = 1;
+        $order->save();
+
+        return to_route('stock.tablet.archive');
     }
     // 納品数量登録
     public function updateDelivery(Request $request)
@@ -261,5 +372,17 @@ class StockTabletController extends Controller
         Method::msg('success', '引き渡し登録を実行しました');
 
         return redirect()->back();
+    }
+
+    public function getClassifications()
+    {
+        $classifications = Classification::all();
+
+        return response()->json($classifications);
+    }
+    public function getSuppliers()
+    {
+        $suppliers = Supplier::all();
+        return response()->json($suppliers);
     }
 }
