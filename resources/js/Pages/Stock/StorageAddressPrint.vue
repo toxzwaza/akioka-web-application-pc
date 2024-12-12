@@ -306,6 +306,7 @@ onMounted(() => {
                 width: print_config.width + 'mm',
               }"
             >
+              <span class="Id">{{ storage_address.id }}</span>
               <span class="address">{{ storage_address.address }}</span>
               <img class="qr" :src="storage_address.qr_code" alt="" />
             </div>
@@ -336,6 +337,12 @@ onMounted(() => {
   position: relative;
 }
 
+.Id{
+  font-size: 10px;
+  position: absolute;
+  top: 10%;
+  left: 3%;
+}
 .address {
   font-weight: bold;
   font-size: 24px;
