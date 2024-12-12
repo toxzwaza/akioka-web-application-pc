@@ -700,4 +700,12 @@ class StockController extends Controller
 
         return redirect()->back();
     }
+
+    // アドレス用紙印刷
+    public function print(){
+        $locations = Location::all();
+        $storage_addresses = StorageAddress::orderBy('address', 'asc')->get();
+
+        return Inertia::render('Stock/StorageAddressPrint', ['locations' => $locations, 'storage_addresses' => $storage_addresses]);
+    }
 }

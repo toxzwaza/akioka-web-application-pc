@@ -46,8 +46,6 @@ const createStock = () => {
     stock_create_form.classification_id &&
     stock_create_form.storage_address_id
   ) {
-    console.log("実行");
-
     axios
       .post(route("stock.tablet.store"), stock_create_form)
       .then((res) => {

@@ -96,7 +96,18 @@
 
 
     </div>
+
+    <div class="text-center">
+
+        <a href="{{ route('stock.storage_addresses.print') }}" class="text-red-600 font-bold underline text-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 8H5V5h14v3zm1-5H4a1 1 0 00-1 1v5h18V4a1 1 0 00-1-1zM6 19h12v-6H6v6zm13-8H5a1 1 0 00-1 1v7a1 1 0 001 1h14a1 1 0 001-1v-7a1 1 0 00-1-1z"/>
+            </svg> アドレス用紙を印刷する場合はこちらをクリック！
+        </a>
+    </div>
 </section>
+<hr class="my-8">
+
 
 <section class="text-gray-600 body-font">
     <div class="container px-5 py-4 mx-auto">

@@ -41,4 +41,12 @@ class ApiController extends Controller
 
         return response()->json($suppliers);
     }
+
+    public function getStorageAddresses(Request $request){
+        $location_id = $request->location_id;
+
+        $storage_addresses = StorageAddress::where('location_id', $location_id)->get();
+
+        return response()->json($storage_addresses);
+    }
 }
