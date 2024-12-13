@@ -15,6 +15,7 @@ const print_config = reactive({
   size: null,
   height: null,
   width: null,
+  qr_size: null
 });
 
 // QRコードを生成する関数
@@ -78,6 +79,7 @@ onMounted(() => {
   print_config.size = 1;
   print_config.height = 10;
   print_config.width = 80;
+  print_config.qr_size = 100;
 });
 </script>
 <template>
@@ -218,7 +220,7 @@ onMounted(() => {
           <div v-if="storage_addresses.length > 0" class="print-hidden text-center mb-8">
             <div class="flex items-venter justify-between">
               <!-- 印刷用紙サイズ -->
-              <div class="w-1/3 px-3">
+              <div class="w-1/4 px-3">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 text-left"
                   for="grid-password"
@@ -236,7 +238,7 @@ onMounted(() => {
                 </select>
               </div>
               <!-- アドレスカードのサイズ -->
-              <div class="w-1/3 px-3">
+              <div class="w-1/4 px-3">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 text-left"
                   for="grid-password"
@@ -251,7 +253,7 @@ onMounted(() => {
                   id=""
                 />
               </div>
-              <div class="w-1/3 px-3">
+              <div class="w-1/4 px-3">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 text-left"
                   for="grid-password"
@@ -260,6 +262,21 @@ onMounted(() => {
                 </label>
                 <input
                   v-model="print_config.width"
+                  type="number"
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name=""
+                  id=""
+                />
+              </div>
+                            <div class="w-1/4 px-3">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 text-left"
+                  for="grid-password"
+                >
+                  QRサイズ
+                </label>
+                <input
+                  v-model="print_config.qr_size"
                   type="number"
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   name=""
@@ -308,7 +325,11 @@ onMounted(() => {
             >
               <span class="Id">{{ storage_address.id }}</span>
               <span class="address">{{ storage_address.address }}</span>
-              <img class="qr" :src="storage_address.qr_code" alt="" />
+              <div class="qr">
+                <img class="qr_img" :src="storage_address.qr_code" alt="" :style="{height: print_config.qr_size + '%' }"/>
+              </div>
+
+              
             </div>
           </div>
         </div>
@@ -353,5 +374,12 @@ onMounted(() => {
   position: absolute;
   top: 0;
   right: 5%;
+
+  display: flex;
+  align-items: center;
+}
+
+.qr img{
+  object-fit: contain;
 }
 </style>
