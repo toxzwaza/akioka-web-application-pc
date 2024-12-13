@@ -28,7 +28,6 @@ class RaspiController extends Controller
 
             return response()->json(['status' => 'success']);
         } catch (Exception $e) {
-            Line::sendMessage('温湿度登録でエラーが発生しました。');
             Log::error('温湿度登録でエラーが発生しました: ' . $e->getMessage());
             return response()->json(['status' => 'error']);
         }
