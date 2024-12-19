@@ -64,8 +64,9 @@
                 <p class="text-sm mb-4 text-gray-500">製造部に所属しない場合は、選択する必要はありません。</p>
                 <div class="sm:col-span-2">
                     <select name="process_id" class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">
+                        <option value="">未選択</option>
                         @foreach($processes as $process)
-                            <option value="" {{ $user->process_id == $process->id ? "selected" : ''}}>{{ $process->name }}</option>
+                            <option value="{{ $process->id }}" {{ $user->process_id == $process->id ? "selected" : ''}}>{{ $process->name }}</option>
                         @endforeach
                     </select>
                 </div>
