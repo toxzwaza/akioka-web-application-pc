@@ -103,7 +103,7 @@ class StockTabletController extends Controller
     }
 
     // -----------------------------------------------------------------------------
-
+    
     // 納品書が登録されていないリスト
     // 品名が一致かつ、品番が一致又は含まれているモノ
     public function getInitialOrders()

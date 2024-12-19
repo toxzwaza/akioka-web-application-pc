@@ -18,6 +18,8 @@ Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('st
 // 発注登録
 Route::get('/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');
 Route::post('/initialOrder/store', [StockController::class, 'order_store'])->name('stock.order.store');
+// 全ての発注データを取得
+Route::get('/getAllInitialOrders', [StockController::class, 'getAllInitialOrders'])->name('stock.getAllInitialOrders');
 
 // 発注修正
 Route::get('stocks/initialOrders', [StockController::class, 'initial_orders'])->name('stock.initial_orders');

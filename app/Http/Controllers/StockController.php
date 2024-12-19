@@ -285,6 +285,28 @@ class StockController extends Controller
         $initial_order->save();
     }
 
+    // 全ての発注データを取得
+    public function getAllInitialOrders()
+    {
+        $initial_orders = InitialOrder::where(function ($query) {
+            $query->whereNull('receive_flg')
+                ->orWhere('receive_flg', 0);
+        })->orderBy('order_date', 'desc')->get();
+
+        foreach ($initial_orders as $order) {
+            $stock = Stock::where('name', $order->name)
+                ->where(function ($query) use ($order) {
+                    $query->where('s_name', 'like', "%$order->s_name%")
+                        ->orWhere('s_name', $order->s_name);
+                })->first();
+            if ($stock) {
+                $order->img_path = $stock->img_path;
+            }
+        }
+
+        return response()->json($initial_orders);
+    }
+
     // 発注一覧
     public function initial_orders()
     {
