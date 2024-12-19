@@ -19,6 +19,10 @@ Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('st
 Route::get('/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');
 Route::post('/initialOrder/store', [StockController::class, 'order_store'])->name('stock.order.store');
 
+// 発注修正
+Route::get('stocks/initialOrders', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
+Route::post('stocks/update/initial_order', [StockController::class, 'update_initial_order'])->name('stock.update_initial_order');
+
 // 滞留品
 Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
 Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
@@ -30,11 +34,14 @@ Route::get('/stocks/add_supplier', [StockController::class, 'stock_add_supplier'
 Route::post('/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
 Route::get('/stock_suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
 
-
+// 格納先
 Route::get('/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
 Route::get('/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
 Route::get('/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
 Route::get('/storage_addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
+
+
+
 
 Route::post('/stock_storage/update', [StockController::class, 'update_stock_storage'])->name('stock.stock_storage.update');
 Route::get('/stock_storage/delete', [StockController::class, 'delete_stock_storage'])->name('stock.stock_storage.delete');

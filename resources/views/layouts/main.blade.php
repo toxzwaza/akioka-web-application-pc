@@ -58,11 +58,11 @@
           動画視聴</a>
 
         <!-- 図番棚卸 -->
-        <a href="{{ route('calc.product') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('calc.product*') ? 'font-bold text-gray-900' : ''}}">
+        <!-- <a href="{{ route('calc.product') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('calc.product*') ? 'font-bold text-gray-900' : ''}}">
           <span class="mr-1 material-symbols-outlined">
             list_alt
           </span>
-          製品棚卸</a>
+          製品棚卸</a> -->
 
         <!-- FAX設定 -->
         <a href="{{ route('fax') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('fax*') ? 'font-bold text-gray-900' : ''}}">
@@ -170,8 +170,14 @@
       </span>
       格納先一覧
     </a>
+    <a href="{{ route('stock.initial_orders') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.initialOrders') ? 'text-blue-500 font-bold' : '' }}">
+      <span class="text-gray-500 mr-1 material-symbols-outlined">
+        list_alt
+      </span>
+      発注一覧
+    </a>
 
-    <a href="{{ route('stock.stocks.taking') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.storage_addresses') ? 'text-blue-500 font-bold' : '' }}">
+    <!-- <a href="{{ route('stock.stocks.taking') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.storage_addresses') ? 'text-blue-500 font-bold' : '' }}">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         list_alt
       </span>
@@ -182,7 +188,7 @@
         link
       </span>
       滞留品
-    </a>
+    </a> -->
 
 
 

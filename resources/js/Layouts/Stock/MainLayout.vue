@@ -1,10 +1,16 @@
 <script setup>
 import { Head, Link } from "@inertiajs/vue3";
 import Message from "@/Components/Message.vue";
+import { onMounted, ref } from "vue";
 
 const props = defineProps({
   title: String,
 });
+const title = ref(props.title) ?? 'Akioka管理画面'
+
+onMounted(() => {
+
+})
 </script>
 <template>
   <Head :title="props.title" />

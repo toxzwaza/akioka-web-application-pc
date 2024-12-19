@@ -235,7 +235,8 @@ class StockController extends Controller
     }
 
     // 発注登録
-    public function order_stock($stock_id){
+    public function order_stock($stock_id)
+    {
         $stock = Stock::where('id', $stock_id)->first();
         $classifications = Classification::all();
         $processes = Process::all();
@@ -259,17 +260,18 @@ class StockController extends Controller
     }
 
 
-    public function order_store(Request $request){
+    public function order_store(Request $request)
+    {
         $stock_id = $request->stock_id;
         $quantity = $request->quantity;
 
         $stock = Stock::find($stock_id);
         $stock_supplier = StockSupplier::select('suppliers.*')->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->where('stock_id', $stock_id)->first();
-        if(!$stock_supplier){
+        if (!$stock_supplier) {
             Method::errorMsg('先に得意先を選択してください');
             return to_route('stock.edit.stocks', ['stock_id' => $stock_id]);
         }
-        
+
 
         $initial_order = new InitialOrder();
         $initial_order->order_date = date('Y-m-d');
@@ -281,9 +283,46 @@ class StockController extends Controller
         $initial_order->order_unit = $stock->solo_unit;
         $initial_order->deli_location = $stock->deli_location;
         $initial_order->save();
-
-
     }
+
+    // 発注一覧
+    public function initial_orders()
+    {
+        return Inertia::render('Stock/InitialOrders');
+    }
+    public function update_initial_order(Request $request)
+    {
+        $status = 1;
+        $msg = "";
+
+        $order_id = $request->order_id;
+        $field = $request->field;
+        $value = $request->value;
+
+        if (!($order_id && $field)) {
+            $status = 0;
+        }
+        $initial_order = InitialOrder::find($order_id);
+        switch ($field) {
+            case 'name':
+                $initial_order->name = $value;
+                break;
+            case 's_name':
+                $initial_order->s_name = $value;
+                break;
+                $msg = 'フィールドの値が違います。';
+            default:
+        }
+
+        // フラグを修正
+        if ($initial_order->not_found_flg) {
+            $initial_order->not_found_flg = 0;
+        }
+        $initial_order->save();
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
 
     public function store_stocks(Request $request)
     {
@@ -702,7 +741,8 @@ class StockController extends Controller
     }
 
     // アドレス用紙印刷
-    public function print(){
+    public function print()
+    {
         $locations = Location::all();
         $storage_addresses = StorageAddress::orderBy('address', 'asc')->get();
 
