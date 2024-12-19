@@ -13,7 +13,7 @@ const sort = ref("new_order");
 const filter = ref("");
 
 const createSort = (sort_field) => {
-  sort.value = sort_field
+  sort.value = sort_field;
   switch (sort_field) {
     case "new_order":
       initial_orders.value = [...initial_orders.value].sort(
@@ -100,9 +100,15 @@ const updateFilter = (filter, value) => {
       }
 
       break;
-    default:
+    case "reset":
       initial_orders.value = base_initial_orders.value;
       break;
+    default:
+      break;
+  }
+  if (initial_orders.value.length === 0) {
+    alert("フィルター条件に合う結果が見つかりませんでした。リセットを行います。");
+    updateFilter('reset');
   }
 };
 
@@ -123,84 +129,88 @@ onMounted(() => {
               倉庫格納済みおよび引き渡しが完了しているリストは変更できませんのでご注意ください。
             </p>
           </div>
-          <div id="sort_container" class="my-8">
-            <p class="mb-2 font-bold">並び替え</p>
-            <div class="button_container flex items-center justify-start">
-              <button
-                :class="{
-                  'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                  'opacity-60': sort === 'new_order',
-                }"
-                @click="createSort('new_order')"
-              >
-                新しい順
-              </button>
-              <button
-                :class="{
-                  'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                  'opacity-60': sort === 'old_order',
-                }"
-                @click="createSort('old_order')"
-              >
-                古い順
-              </button>
-            </div>
-
-            <p class="mt-4 mb-2 font-bold">フィルタ</p>
-            <div class="button_container flex items-center justify-start">
-              <div class="mr-4">
+          <div id="sort_container" class="my-8 flex items-start justify-start">
+            <div class="w-1/4">
+              <p class="mb-2 font-bold">並び替え</p>
+              <div class="button_container flex items-center justify-start">
                 <button
                   :class="{
-                    'text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded': true,
+                    'mr-4 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded': true,
                   }"
                   @click="updateFilter('reset')"
                 >
                   リセット
                 </button>
+
+                <button
+                  :class="{
+                    'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
+                    'opacity-60': sort === 'new_order',
+                  }"
+                  @click="createSort('new_order')"
+                >
+                  新しい順
+                </button>
+                <button
+                  :class="{
+                    'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
+                    'opacity-60': sort === 'old_order',
+                  }"
+                  @click="createSort('old_order')"
+                >
+                  古い順
+                </button>
               </div>
-              <div class="w-32 mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  注文者
-                </label>
-                <select
-                  @change="updateFilter('order_user', $event.target.value)"
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="order_user"
-                  id=""
-                >
-                  <option value="0">未選択</option>
-                  <option
-                    v-for="user in order_users"
-                    :key="user.id"
-                    :value="user"
+            </div>
+            <div>
+              <p class="mb-2 font-bold">フィルタ</p>
+              <div class="button_container flex items-center justify-start">
+                <div class="w-32 mr-2">
+                  <label
+                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                    for="grid-last-name"
                   >
-                    {{ user }}
-                  </option>
-                </select>
-              </div>
-              <div class="w-32 mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  納品書
-                </label>
-                <select
-                  @change="updateFilter('delifile_path', $event.target.value)"
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="order_user"
-                  id=""
-                >
-                  <option value="0">未選択</option>
-                  <option value="1">済</option>
-                  <option value="2">未</option>
-                </select>
+                    注文者
+                  </label>
+                  <select
+                    @change="updateFilter('order_user', $event.target.value)"
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    name="order_user"
+                    id=""
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="user in order_users"
+                      :key="user.id"
+                      :value="user"
+                    >
+                      {{ user }}
+                    </option>
+                  </select>
+                </div>
+                <div class="w-32 mr-2">
+                  <label
+                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                    for="grid-last-name"
+                  >
+                    納品書
+                  </label>
+                  <select
+                    @change="updateFilter('delifile_path', $event.target.value)"
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    name="order_user"
+                    id=""
+                  >
+                    <option value="0">未選択</option>
+                    <option value="1">済</option>
+                    <option value="2">未</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
+
+          <hr class="my-8" />
 
           <div class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
