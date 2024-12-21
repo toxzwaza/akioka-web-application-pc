@@ -52,7 +52,7 @@
 
                 <tbody>
                     @foreach($stocks as $stock)
-                    <tr class="border-b border-gray-200 my-4 hover:bg-slate-200 transition">
+                    <tr class="border-b border-gray-200 my-4 hover:bg-slate-200 transition {{ $stock->del_flg ? 'bg-red-100' : '' }}">
                         <td class="w-24 px-4 py-8 text-lg text-gray-900"><a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}" class="hover:text-blue-200"><img class="w-16" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}" alt=""></a></td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->id }}</td>
                         <td class="px-4 py-8 text-lg text-gray-900">{{ $stock->jan_code }}</td>

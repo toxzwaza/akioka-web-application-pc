@@ -98,10 +98,9 @@ class StockController extends Controller
     //
     public function index()
     {
-
         return Inertia::render('Stock/Index');
 
-        $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->paginate(25);
+        // $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->paginate(25);
         // dd($operation_records);
 
 
@@ -118,6 +117,36 @@ class StockController extends Controller
 
         return view('stock.index', compact('operation_records', 'operation_record_recent'));
     }
+    // 期間内の入出庫の回数を取得
+    public function getInventoryOperationRecords(Request $request)
+    {
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+        try {
+            // 入庫・出庫のみ
+            $inventory_operation_records = InventoryOperationRecord::whereIn('inventory_operation_id', [2, 8])
+                ->whereBetween('inventory_operation_records.created_at', [$start_date, $end_date])
+                ->join('inventory_operations', 'inventory_operations.id', '=', 'inventory_operation_records.inventory_operation_id')
+                ->selectRaw('DATE(inventory_operation_records.created_at) as date, inventory_operation_id, inventory_operations.name, COUNT(*) as count')
+                ->groupBy('date', 'inventory_operation_id', 'inventory_operations.name')
+                ->get();
+        } catch (Exception $e) {
+            return response()->json(['msg' => $e->getMessage()]);
+        }
+
+
+        $events = [];
+        foreach ($inventory_operation_records as $record) {
+            $events[] = [
+                'title' => $record->name . ' ' . $record->count . '回',
+                'start' => $record->date,
+            ];
+        }
+
+        return response()->json($events);
+    }
+
+
     // 在庫一覧
     public function stocks(Request $request)
     {
@@ -131,7 +160,6 @@ class StockController extends Controller
                 $stocks = StockStorage::select('stocks.*')
                     ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
                     ->where('storage_address_id', $storage_address_id)
-                    ->where('stocks.del_flg', 0)
                     ->where(function ($query) use ($keyword) {
                         $query->where('stocks.name', 'like', "%$keyword%")
                             ->orWhere('stocks.s_name', 'like', "%$keyword%")
@@ -147,7 +175,6 @@ class StockController extends Controller
                 $stocks = StockStorage::select('stocks.*')
                     ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
                     ->where('storage_address_id', $storage_address_id)
-                    ->where('stocks.del_flg', 0)
                     ->orderby('updated_at', 'desc')->paginate(20);
             }
 
@@ -158,15 +185,13 @@ class StockController extends Controller
 
         if ($keyword) {
             // キーワード検索のみ
-            $stocks = Stock::where('stocks.del_flg', 0)
-                ->where('stocks.name', 'like', "%$keyword%")
+            $stocks = Stock::where('stocks.name', 'like', "%$keyword%")
                 ->orWhere('stocks.s_name', 'like', "%$keyword%")
                 ->orWhere('stocks.jan_code', 'like', "%$keyword%")
                 ->orderby('stocks.updated_at', 'desc')->paginate(20);
         } else {
             // 検索条件なし
-            $stocks = Stock::where('stocks.del_flg', 0)
-                ->orderby('stocks.updated_at', 'desc')->paginate(20);
+            $stocks = Stock::orderby('stocks.updated_at', 'desc')->paginate(20);
         }
 
         return view('stock.stocks', compact('stocks'));

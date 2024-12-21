@@ -14,6 +14,7 @@ Route::get('/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->n
 Route::post('/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 Route::get('/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
+Route::get('/stocks/getInventoryOperationRecords', [StockController::class, 'getInventoryOperationRecords'])->name('stock.stocks.getInventoryOperationRecords');
 
 // 発注登録
 Route::get('/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');
