@@ -1,7 +1,7 @@
 <script setup>
 import Tablet from "@/Layouts/Tablet.vue";
 import { onMounted, ref, reactive } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 import axios from "axios";
 
 const props = defineProps({
@@ -24,6 +24,7 @@ const storage_addresses = ref([]);
 // 数量登録用フォーム
 const form = reactive({
   id: props.order.id,
+  stock_id: props.order.stock_id,
   storage_address_id: null,
   stock_storage_id: null,
   quantity: props.order.quantity - props.order.split_quantity_sum,
@@ -74,17 +75,13 @@ const createStock = () => {
 
 const updateDelivery = () => {
   if (confirm("納品登録をおこないますか？")) {
-    axios
-      .get(route("stock.tablet.updateDelivery"), {
-        params: form,
-      })
-      .then((res) => {
-        console.log(res.data);
-        if (res.data.status == "ok") {
-          window.location.href = route("stock.tablet.archive");
-        }
-      })
-      .catch((error) => {});
+    router.get(route("stock.tablet.updateDelivery"), {
+        id: form.id,
+        stock_id: form.stock_id,
+        stock_storage_id: form.stock_storage_id,
+        storage_address_id: form.storage_address_id,
+        quantity: form.quantity
+    });
   }
 };
 
@@ -274,7 +271,11 @@ onMounted(() => {
                           単発は注品のように倉庫で管理していない場合は、下のボタンをクリックすることで<br />在庫登録をスキップしてサイネージに表示することが可能です。
                         </h2>
                         <Link
-                          :href="route('stock.tablet.none_storage', { order_id: props.order.id })"
+                          :href="
+                            route('stock.tablet.none_storage', {
+                              order_id: props.order.id,
+                            })
+                          "
                           class="mt-2 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
                         >
                           在庫登録をスキップしてサイネージ表示
@@ -434,6 +435,93 @@ onMounted(() => {
                         新規作成
                       </button>
                     </div>
+                  </div>
+                </div>
+
+                <!-- 格納先が設定されていない場合 -->
+                <div
+                  class="w-1/3"
+                  v-if="
+                    props.order.stock_storages &&
+                    props.order.stock_storages.length == 0
+                  "
+                >
+                  <div class="mb-8">
+                    <h2 class="mb-2 text-indigo-600 text-sm">
+                      <span class="font-bold text-lg"
+                        >格納先・アドレスを登録してください。</span
+                      ><br />
+                      単発は注品のように倉庫で管理していない場合は、下のボタンをクリックすることで<br />在庫登録をスキップしてサイネージに表示することが可能です。
+                    </h2>
+                    <Link
+                      :href="
+                        route('stock.tablet.none_storage', {
+                          order_id: props.order.id,
+                        })
+                      "
+                      class="mt-2 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                      在庫登録をスキップしてサイネージ表示
+                    </Link>
+                  </div>
+
+                  <div class="relative mt-4">
+                    <label
+                      for="name"
+                      class="font-bold mb-1leading-7 text-xl text-gray-600"
+                      >格納先</label
+                    >
+                    <select
+                      @change="sortStorageAddresses($event.target.value)"
+                      name="supplier_id"
+                      id="supplier_id"
+                      class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                      :class="{
+                        'border-red-400': !stock_create_form.storage_address_id,
+                      }"
+                    >
+                      <option value="">選択してください</option>
+                      <option
+                        v-for="location in props.locations"
+                        :key="location.id"
+                        :value="location.id"
+                      >
+                        {{ location.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="relative mt-8">
+                    <label
+                      for="name"
+                      class="font-bold mb-1leading-7 text-xl text-gray-600"
+                      >アドレス</label
+                    >
+                    <select
+                      v-model="form.storage_address_id"
+                      name="storage_address_id"
+                      id="storage_address_id"
+                      class="text-center w-full bg-white bg-opacity-50 rounded border border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                      :class="{
+                        'border-red-400': !form.storage_address_id,
+                      }"
+                    >
+                      <option
+                        v-for="storage_address in storage_addresses"
+                        :key="storage_address.id"
+                        :value="storage_address.id"
+                      >
+                        {{ storage_address.address }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="p-2 w-full mt-4">
+                    <button
+                      @click="updateDelivery"
+                      class="flex mx-auto text-white bg-red-500 border-0 py-2 px-8 focus:outline-none hover:bg-red-600 rounded text-lg"
+                    >
+                      納入
+                    </button>
                   </div>
                 </div>
               </div>

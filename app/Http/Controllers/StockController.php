@@ -140,6 +140,8 @@ class StockController extends Controller
             $events[] = [
                 'title' => $record->name . ' ' . $record->count . '回',
                 'start' => $record->date,
+                'color' => "rgb(83, 187, 195)"
+                // 'url' => 'https://google.com'
             ];
         }
 

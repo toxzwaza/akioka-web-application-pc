@@ -7,16 +7,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import axios from "axios";
 
 // イベントデータをrefで管理
-const events = ref([
-  {
-    title: "出庫  〇回",
-    start: "2024-12-20",
-  },
-  {
-    title: "入庫  〇回",
-    start: "2024-12-20",
-  },
-]);
+const events = ref([]);
 
 // onMounted を使用してカレンダーを初期化
 onMounted(() => {
@@ -36,10 +27,8 @@ onMounted(() => {
       // ここで新しい月のデータを取得し、eventsを更新
       fetchEventsForMonth(info.start.toISOString().split('T')[0], info.end.toISOString().split('T')[0]).then(newEvents => {
         calendar.removeAllEvents(); // 既存のイベントを削除
+        events.value = newEvents; // eventsを新しいイベントで更新
         calendar.addEventSource(events.value); // 新しいイベントを追加
-        // events.value = newEvents;
-        // calendar.refetchEvents();
-        // console.log('events.value', events.value)
       });
 
     },
@@ -68,6 +57,9 @@ function fetchEventsForMonth(start, end) {
   });
 }
 </script>
+<style scoped>
+
+</style>
 <template>
   <div id="calendar"></div>
 </template>

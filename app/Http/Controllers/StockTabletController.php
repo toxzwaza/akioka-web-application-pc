@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Classification;
 use App\Models\InitialOrder;
+use App\Models\InventoryOperationRecord;
 use App\Models\Location;
 use App\Models\Order;
 use App\Models\SplitOrderQuantity;
@@ -83,9 +84,15 @@ class StockTabletController extends Controller
 
                 // 画像を取得
                 $order->img_path = $stock->img_path;
+                $order->stock_id = $stock->id;
 
                 // 現在の格納先アドレスリストを取得
                 $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'stock_storages.quantity as storage_quantity', 'storage_addresses.id as address_id', 'storage_addresses.address', 'storage_addresses.location_id', 'stock_storages.quantity', 'locations.name')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'location_id')->where('stock_id', $stock->id)->get();
+                if ($stock_storages->count() == 0) {
+                    // 格納先と格納先アドレス
+                    $locations = Location::all();
+                    $storage_addresses = StorageAddress::orderBy('address', 'asc')->get();
+                }
 
                 $order->stock_storages = $stock_storages;
             }
@@ -103,7 +110,7 @@ class StockTabletController extends Controller
     }
 
     // -----------------------------------------------------------------------------
-    
+
     // 納品書が登録されていないリスト
     // 品名が一致かつ、品番が一致又は含まれているモノ
     public function getInitialOrders()
@@ -276,7 +283,7 @@ class StockTabletController extends Controller
                 if ($order_id && $supplier_id && $classification_id) {
                     $order = InitialOrder::find($order_id);
 
-                    
+
 
                     $stock  = new Stock();
                     $stock->name = $order->name;
@@ -295,11 +302,10 @@ class StockTabletController extends Controller
                     $stock_storage->storage_address_id = $storage_address_id;
                     $stock_storage->quantity = 0;
                     $stock_storage->save();
-                    
+
                     // アドレスが作成されたらフラグを初期化する
                     $order->not_found_flg = null;
                     $order->save();
-
                 }
             });
         } catch (Exception $e) {
@@ -310,7 +316,8 @@ class StockTabletController extends Controller
         return response()->json(['status' => $is_success]);
     }
 
-    public function none_storage($order_id){
+    public function none_storage($order_id)
+    {
         $order = InitialOrder::find($order_id);
         $order->receive_flg = 1;
         $order->none_storage_flg = 1;
@@ -324,42 +331,70 @@ class StockTabletController extends Controller
         $id = $request->id;
         $quantity = $request->quantity;
         $stock_storage_id = $request->stock_storage_id;
+        $stock_id = $request->stock_id;
+        $storage_address_id = $request->storage_address_id;
 
-        // 在庫数量を加算する処理を追加する
-        $stock_storage = StockStorage::find($stock_storage_id);
-        if ($stock_storage) {
-            $order = InitialOrder::find($id);
-            $quantity_sum = 0;
+        $order = InitialOrder::find($id);
 
-            // 分納データが存在するかチェック
-            $split_order_quantities = SplitOrderQuantity::where('initial_order_id', $id)->get();
-            // 存在する場合、合計を取得
-            if (!$split_order_quantities->isEmpty()) {
-                $quantity_sum = $split_order_quantities->sum('quantity');
+        // 既にアドレス登録されている場合
+        if ($stock_storage_id) {
+            // 在庫数量を加算する処理を追加する
+            $stock_storage = StockStorage::find($stock_storage_id);
+            if ($stock_storage) {
+                
+                $quantity_sum = 0;
+
+                // 分納データが存在するかチェック
+                $split_order_quantities = SplitOrderQuantity::where('initial_order_id', $id)->get();
+                // 存在する場合、合計を取得
+                if (!$split_order_quantities->isEmpty()) {
+                    $quantity_sum = $split_order_quantities->sum('quantity');
+                }
+
+
+
+                if ($order->quantity == ($quantity_sum + $quantity)) {
+                    // 注文分をすべて納品した場合、受け取りフラグを立てる
+                    $order->receive_flg = 1;
+                    $order->save();
+
+                    if($stock_id){
+                        $inventory_operation_records = new InventoryOperationRecord();
+                        $inventory_operation_records->stock_id = $stock_id;
+                        $inventory_operation_records->stock_storage_id = $stock_storage_id;
+                        $inventory_operation_records->inventory_operation_id = 8;
+                        $inventory_operation_records->quantity = $order->quantity;
+                        $inventory_operation_records->save();
+                    }
+
+                    return to_route('stock.tablet.archive');
+
+                } else {
+                    // 分納の場合、split_order_quantitiesテーブルを作成
+                    $split_order_quantity = new SplitOrderQuantity();
+                    $split_order_quantity->initial_order_id = $order->id;
+                    $split_order_quantity->quantity = $quantity;
+                    $split_order_quantity->save();
+                }
+
+                // 分納した分を格納先に追加
+                $stock_storage->quantity += $quantity;
+                $stock_storage->save();
             }
-
-
-
-            if ($order->quantity == ($quantity_sum + $quantity)) {
-                // 分納でない場合受け取りフラグを立てる
-                $order->receive_flg = 1;
-                $order->save();
-            } else {
-                // 分納の場合、split_order_quantitiesテーブルを作成
-                $split_order_quantity = new SplitOrderQuantity();
-                $split_order_quantity->initial_order_id = $order->id;
-                $split_order_quantity->quantity = $quantity;
-                $split_order_quantity->save();
-            }
-
-            // 分納した分を格納先に追加
-            $stock_storage->quantity += $quantity;
+        }else{
+            // 新たに作成して、個数を登録
+            $stock_storage = new StockStorage();
+            $stock_storage->stock_id = $stock_id;
+            $stock_storage->storage_address_id = $storage_address_id;
+            $stock_storage->quantity = 0;
             $stock_storage->save();
+
+            return redirect()->back();
         }
 
         Method::msg('success', '納品数量登録が完了しました。');
 
-        return response()->json(['status' => "ok"]);
+        return redirect()->back();
     }
 
     // 引き渡し登録

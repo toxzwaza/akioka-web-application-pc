@@ -121,7 +121,12 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
-                    品名:品番
+                    品名
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    品番
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -159,7 +164,10 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-6">{{ order.com_name }}</td>
                   <td class="px-4 py-6">
-                    {{ order.name + " : " + order.s_name }}
+                    {{ order.name }}
+                  </td>
+                  <td class="px-4 py-6">
+                    {{ order.s_name }}
                   </td>
                   <td class="px-4 py-6">
                     {{ order.quantity + order.order_unit }}

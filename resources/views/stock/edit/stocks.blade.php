@@ -400,7 +400,7 @@
                                 <option class="px-2 py-1 font-semibold text-red-400" {{ $stock->del_flg == 1 ? 'selected' : ''}} value="1">非表示</option>
                             </select>
                         </div>
-                        <div>
+                        <!-- <div>
                             <label for="first-name" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">管理ステータス*</label>
 
                             <select name="not_stock_flg" id="" class="w-full font-semibold rounded border bg-gray-50 px-3 py-2 text-gray-400 outline-none ring-indigo-300 transition duration-100 focus:ring">
@@ -408,7 +408,7 @@
                                 <option class="px-2 py-1 font-semibold text-red-400" {{ $stock->not_stock_flg == 1 ? 'selected' : ''}} value="1">非対象</option>
                             </select>
                             <p class="text-xs mt-2">※非対象に設定すると在庫管理システムの検索項目とされません。</p>
-                        </div>
+                        </div> -->
 
 
 
