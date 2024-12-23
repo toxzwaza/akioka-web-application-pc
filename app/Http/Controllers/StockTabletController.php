@@ -341,7 +341,7 @@ class StockTabletController extends Controller
             // 在庫数量を加算する処理を追加する
             $stock_storage = StockStorage::find($stock_storage_id);
             if ($stock_storage) {
-                
+
                 $quantity_sum = 0;
 
                 // 分納データが存在するかチェック
@@ -358,7 +358,7 @@ class StockTabletController extends Controller
                     $order->receive_flg = 1;
                     $order->save();
 
-                    if($stock_id){
+                    if ($stock_id) {
                         $inventory_operation_records = new InventoryOperationRecord();
                         $inventory_operation_records->stock_id = $stock_id;
                         $inventory_operation_records->stock_storage_id = $stock_storage_id;
@@ -367,21 +367,25 @@ class StockTabletController extends Controller
                         $inventory_operation_records->save();
                     }
 
-                    return to_route('stock.tablet.archive');
+                    // 納品した分を格納先に追加
+                    $stock_storage->quantity += $quantity;
+                    $stock_storage->save();
 
+                    // 一覧へリダイレクト
+                    return to_route('stock.tablet.archive');
                 } else {
                     // 分納の場合、split_order_quantitiesテーブルを作成
                     $split_order_quantity = new SplitOrderQuantity();
                     $split_order_quantity->initial_order_id = $order->id;
                     $split_order_quantity->quantity = $quantity;
                     $split_order_quantity->save();
-                }
 
-                // 分納した分を格納先に追加
-                $stock_storage->quantity += $quantity;
-                $stock_storage->save();
+                    // 分納した分を格納先に追加
+                    $stock_storage->quantity += $quantity;
+                    $stock_storage->save();
+                }
             }
-        }else{
+        } else {
             // 新たに作成して、個数を登録
             $stock_storage = new StockStorage();
             $stock_storage->stock_id = $stock_id;
