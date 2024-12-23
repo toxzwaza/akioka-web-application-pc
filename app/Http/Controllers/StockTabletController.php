@@ -426,4 +426,25 @@ class StockTabletController extends Controller
         $suppliers = Supplier::all();
         return response()->json($suppliers);
     }
+
+    public function deleteInitialOrder($order_id){
+        $status = 'ng';
+        $msg = '';
+
+        if(!$order_id){
+            return response()->json(['status' => $status]);
+        }
+
+        try{
+            $initial_order = InitialOrder::find($order_id);
+            $initial_order->delete();
+            $msg = '削除処理が完了しました。';
+        }catch(Exception $e){
+
+            $msg = $e->getMessage();
+           
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
 }

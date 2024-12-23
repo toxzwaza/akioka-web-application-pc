@@ -82,6 +82,25 @@ const uploadFile = async (id) => {
   input.click();
 };
 
+const deleteInitialOrder = (id) => {
+  console.log(id)
+  if(id && confirm('削除してよろしいですか？')){
+    axios.get(route('stock.tablet.delete.initialOrder', {order_id: id }))
+    .then(res => {
+      console.log(res.data)
+      if(res.data.status === 'ok'){
+        if(confirm('削除が完了しました。再読み込みしますか？')){
+          getInitialOrders()
+        }
+      }
+    })
+    .catch( error => {
+      console.log(error)
+    })
+  }else{
+    alert('キャンセルされました。')
+  }
+}
 const searchOrders = (val) => {
   console.log(val);
   if (val) {
@@ -188,6 +207,9 @@ onMounted(() => {
                   <th
                     class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
                   ></th>
+                  <th
+                    class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
+                  ></th>
                 </tr>
               </thead>
               <tbody>
@@ -221,9 +243,17 @@ onMounted(() => {
                   <td class="w-10 text-center">
                     <button
                       @click="uploadFile(order.id)"
-                      class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded text-sm whitespace-nowrap"
+                      class="bg-transparent hover:bg-gray-500 text-gray-700 font-semibold hover:text-white py-2 px-4 border border-gray-500 hover:border-transparent rounded text-sm whitespace-nowrap"
                     >
                       納品書
+                    </button>
+                  </td>
+                  <td class="w-10 text-center px-2">
+                    <button
+                      @click="deleteInitialOrder(order.id)"
+                      class=" bg-red-500 text-white font-semibold  py-2 px-4 border border-red-500 hover:border-transparent rounded text-sm whitespace-nowrap"
+                    >
+                      削除
                     </button>
                   </td>
                 </tr>

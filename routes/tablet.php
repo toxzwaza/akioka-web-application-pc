@@ -13,6 +13,9 @@ Route::get('/stock/getAlreadDelifileInitialOrders', [StockTabletController::clas
 // 納品登録画面
 Route::get('/stock/delivery/{id}', [StockTabletController::class, 'delivery'])->name('stock.tablet.delivery');
 
+// 注文データ削除
+Route::get('/stock/delete/{order_id}', [StockTabletController::class, 'deleteInitialOrder'])->name('stock.tablet.delete.initialOrder');
+
 // 在庫新規登録
 Route::post('/stock/store', [StockTabletController::class, 'store'])->name('stock.tablet.store');
 // 在庫登録せずにサイネージ表示
