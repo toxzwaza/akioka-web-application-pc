@@ -128,6 +128,7 @@ class StockTabletController extends Controller
                 })->first();
             if ($stock) {
                 $order->img_path = $stock->img_path;
+                $order->stock_id = $stock->id;
             } else {
                 $order->not_found_flg = 1;
             }
@@ -159,6 +160,7 @@ class StockTabletController extends Controller
 
             if ($stock) {
                 $order->img_path = $stock->img_path;
+                $order->stock_id = $stock->id;
             } else {
                 $order->not_found_flg = 1;
             }

@@ -7,7 +7,12 @@ import MicroModal from "@/Components/MicroModal.vue";
 
 const modalStatus = ref(false);
 const modalImageSrc = ref("");
-const modalImage = (target) => {
+const modalStockId = ref()
+
+const modalImage = (target, stock_id) => {
+  if(stock_id){
+    modalStockId.value = stock_id
+  }
   modalStatus.value = true;
   modalImageSrc.value = target.src;
   console.log(modalImageSrc.value);
@@ -149,7 +154,7 @@ onMounted(() => {
                   </td>
                   <td class="w-24 px-4 py-6">
                     <img
-                      @click="modalImage($event.target)"
+                      @click="modalImage($event.target, order.stock_id)"
                       :src="
                         order.img_path && order.img_path.includes('https://')
                           ? order.img_path
@@ -192,6 +197,7 @@ onMounted(() => {
         v-if="modalStatus"
         @closeModal="handleCloseModal"
         :modalImageSrc="modalImageSrc"
+        :modalStockId="modalStockId"
       ></MicroModal>
     </template>
   </Tablet>
