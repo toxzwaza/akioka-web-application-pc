@@ -137,10 +137,20 @@ class StockController extends Controller
 
         $events = [];
         foreach ($inventory_operation_records as $record) {
+            $color = "";
+            switch ($record->inventory_operation_id) {
+                case 2:
+                    $color = "rgb(83, 187, 195)";
+                    break;
+                case 8;
+                    $color = "rgb(246, 69, 128)";
+                    break;
+            }
+
             $events[] = [
                 'title' => $record->name . ' ' . $record->count . '回',
                 'start' => $record->date,
-                'color' => "rgb(83, 187, 195)"
+                'color' => $color
                 // 'url' => 'https://google.com'
             ];
         }
