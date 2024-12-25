@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Promise;
 
 class NewMovieController extends Controller
 {
@@ -50,11 +51,11 @@ class NewMovieController extends Controller
             return response()->json(['error' => $e]);
         }
 
+        $base_movies =  Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.file_path', '!=', null)->where('movies.del_flg', 0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->get();
+        $movie_tags = MovieTag::all();
+        $movie_categories = MovieTagCategory::all();
 
-
-
-
-        return Inertia::render('Movie/Index', ['movies' => $movies, 'search_text' => $text]);
+        return Inertia::render('Movie/Index', ['movies' => $movies, 'base_movies' => $base_movies, 'search_text' => $text, 'tags' => $movie_tags, 'categories' => $movie_categories]);
     }
 
     public function searchMovie(Request $request)
@@ -131,6 +132,8 @@ class NewMovieController extends Controller
     }
     public function store(Request $request)
     {
+        $status = 'ok';
+        $msg = "";
 
         $title = $request->title;
         $created_at = $request->created_at;
@@ -139,48 +142,27 @@ class NewMovieController extends Controller
         $tag_id = $request->tag_id;
         $description = $request->description;
 
-
-        $movie = new Movie();
-        $movie->name = $title;
-        $movie->memo = $description;
-        $movie->movie_tag_id = $tag_id;
-        // 投稿日が記載されている場合
-        if ($created_at != 'null') {
-            $movie->created_at = $created_at;
-        }
-        $movie->save();
-
-
-        if ($file_path != 'null' || $file) {
-            
-
-            // ファイルが送信された場合ファイル優先
-            // $file_pathを保存したパスに上書き
-            if ($file) {
-                $timestamp = now()->timestamp;
-                $temp_file_path = $file->storeAs('public/movie', $timestamp . '.' . $file->getClientOriginalExtension());
-                $file_path = str_replace('/', '\\', '//192.168.0.72/' . $temp_file_path);
+        if ($file_path) {
+            $movie = new Movie();
+            $movie->name = $title;
+            $movie->memo = $description;
+            $movie->movie_tag_id = $tag_id;
+            // 投稿日が記載されている場合
+            if ($created_at != 'null') {
+                $movie->created_at = $created_at;
             }
+
+            // 一時的に無効
+            $movie->save();
+
 
             // RPAサーバーへリクエスト
             $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description);
 
 
-            // YoutubeAPIサーバへリクエスト
-            $client = new Client();
-            try {
-                $response = $client->request('GET', $url);
-                $responseArray = json_decode($response->getBody(), true);
-                $movie->file_path = $responseArray['youtube_id'];
-                $movie->save();
-            } catch (RequestException $e) {
-                // エラーハンドリング
-                return response()->json(['status' => 'ng', 'msg' => 'YouTube APIへのリクエストに失敗しました。']);
-            }
+            $msg = "動画を登録しています。(3~5分程度で完了します)";
+            return response()->json(['status' => $status, 'msg' => $msg, 'url' => $url ]);
         }
-
-
-        return to_route('movie2.show', ['movie_id' => $movie->id]);
     }
 
     public function getMemos($movie_id)

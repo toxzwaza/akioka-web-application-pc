@@ -154,7 +154,9 @@ const sendMemo = () => {
 const deleteMovie = () => {
   axios.get('http://192.168.0.142:5000/movie/youtube_delete?youtube_id=' + video_id.value)
   .then(res => {
-    console.log(res.data);
+    if(res.data.status === "ok"){
+      window.location.href = route('movie2')
+    }
   })
 }
 

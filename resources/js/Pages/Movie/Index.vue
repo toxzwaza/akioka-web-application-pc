@@ -7,11 +7,24 @@ import axios from "axios";
 
 const props = defineProps({
   movies: Array,
-  search_text: String
+  base_movies: Array,
+  search_text: String,
+  tags: Array,
+  categories: Array,
 });
 
-const movies = ref({});
-const search_text = ref("");
+const base_movies = ref([]);
+const select_movies = ref([]);
+
+// ページネーション用
+const movies = ref([]);
+
+const search_text = ref('');
+
+const categories = ref([]);
+const base_tags = ref([]);
+const tags = ref([]);
+
 const searchMovie = () => {
   console.log(search_text.value);
 
@@ -19,9 +32,39 @@ const searchMovie = () => {
     search_text: search_text.value,
   });
 };
+
+const changeCategory = (category_id) => {
+  if (!category_id) {
+    return;
+  }
+
+  tags.value = base_tags.value.filter(tag => tag.movie_tag_category_id == category_id);
+  console.log(tags.value);
+};
+
+const changeTag = (tag_id) => {
+  if(!tag_id){
+    return;
+  }
+  
+  select_movies.value = base_movies.value.filter(movie => movie.movie_tag_id == tag_id);
+  if(select_movies.value.length == 0){
+    alert('選択されたタグに一致する動画は見つかりませんでした。デフォルトに戻します。');
+    select_movies.value = movies.value.data
+  }
+
+};
+
 onMounted(() => {
   movies.value = props.movies;
+  base_movies.value = props.base_movies;
+  select_movies.value = movies.value.data;
+
   search_text.value = props.search_text;
+
+  categories.value = props.categories;
+  base_tags.value = props.tags;
+  tags.value = base_tags.value;
 });
 </script>
 <template>
@@ -31,13 +74,13 @@ onMounted(() => {
 
       <section class="text-gray-600 body-font">
         <div class="container px-5 py-24 mx-auto">
-          <div class="flex flex-col text-center w-full mb-16">
+          <div class="flex flex-col text-center w-full mb-8">
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
               動画一覧を表示します。<br />
               こちらから視聴・編集ページへ遷移することが可能です。
             </p>
 
-            <div class="mt-10 text-gray-600">
+            <div class="mt-16 text-gray-600 flex justify-between items-center">
               <form @submit.prevent class="w-1/3 flex items-center relative">
                 <input
                   v-model="search_text"
@@ -59,12 +102,54 @@ onMounted(() => {
                   </svg>
                 </span>
               </form>
+
+              <div id="sort_container" class="w-1/2">
+                <div class="flex justify-end">
+                  <div class="text-left pl-4">
+                    <label for="email" class="leading-7 text-sm text-gray-600"
+                      >カテゴリー</label
+                    >
+                    <select
+                      name=""
+                      id=""
+                      class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                      @change="changeCategory($event.target.value)"
+                    >
+                      <option value="">未選択</option>
+                      <option
+                        v-for="category in categories"
+                        :key="category.id"
+                        :value="category.id"
+                      >
+                        {{ category.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="text-left pl-4">
+                    <label for="email" class="leading-7 text-sm text-gray-600"
+                      >タグ</label
+                    >
+                    <select
+                      name=""
+                      id=""
+                      class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                      @change="changeTag($event.target.value)"
+                    >
+                      <option value="">未選択</option>
+                      <option v-for="tag in tags" :key="tag.id" :value="tag.id">
+                        {{ tag.name }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div v-if="movies.links" class="mb-8 flex justify-end">
             <Pagination :links="movies.links"></Pagination>
           </div>
+
           <div class="lg:w-full w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -108,7 +193,7 @@ onMounted(() => {
 
               <tbody>
                 <tr
-                  v-for="movie in movies.data"
+                  v-for="movie in select_movies"
                   :key="movie.id"
                   class="border-b border-gray-200 my-4 hover:bg-slate-200 transition"
                 >

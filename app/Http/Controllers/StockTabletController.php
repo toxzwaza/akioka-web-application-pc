@@ -438,6 +438,7 @@ class StockTabletController extends Controller
         try{
             $initial_order = InitialOrder::find($order_id);
             $initial_order->delete();
+            $status = "ok";
             $msg = '削除処理が完了しました。';
         }catch(Exception $e){
 
