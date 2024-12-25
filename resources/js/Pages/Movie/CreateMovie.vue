@@ -26,7 +26,7 @@ const sendMovie = () => {
     alert("すべての必須フィールドを入力してください。");
     return;
   }
-  upload_flg = true
+  upload_flg.value = true
 
   // データを送信
   const formData = new FormData();
