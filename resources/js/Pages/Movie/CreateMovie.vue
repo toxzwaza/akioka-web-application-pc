@@ -278,6 +278,7 @@ onMounted(async () => {
               {{ char }}
             </span>
           </h2>
+          <p class="mb-16 text-lg mx-auto text-red-400">この画面は閉じていただいても構いません。通常、1~2分程度でアップロードが完了します。</p>
           <div class="flex justify-center">
             <img class="w-1/3" src="/uploading.gif" alt="Uploading GIF" />
           </div>
