@@ -80,13 +80,13 @@ const props = defineProps({
         </a>
 
         <!-- リモート接続 -->
-        <a
+        <!-- <a
           :href="route('remote')"
           class="mr-5 hover:text-gray-900 flex justify-center"
         >
           <span class="mr-1 material-symbols-outlined"> computer </span>
           リモート接続
-        </a>
+        </a> -->
       </nav>
 
     </div>
@@ -420,6 +420,26 @@ const props = defineProps({
         </svg>
         フォルダ割り当て</Link
       >
+    </template>
+    <template v-else-if="route().current().startsWith('message')">
+      <Link
+        :class="{
+          'mr-5 flex mx-2 px-8 hover:text-gray-900': true,
+          'text-indigo-600 font-bold': route().current() == 'message',
+        }"
+        :href="route('message')"
+        ><svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 mr-1"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path
+            d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"
+          /></svg
+        >通知送信</Link
+      >
+
     </template>
   </nav>
 
@@ -1256,6 +1276,136 @@ const props = defineProps({
             </div>
           </li>
         </template>
+        <template v-if="route().current() === 'fax'">
+          <li aria-current="page">
+            <div class="flex items-center">
+              <svg
+                class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span
+                class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400"
+                >振り分け</span
+              >
+            </div>
+          </li>
+        </template>
+        <template v-if="route().current() === 'fax.group'">
+          <li aria-current="page">
+            <div class="flex items-center">
+              <svg
+                class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span
+                class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400"
+                >グループ</span
+              >
+            </div>
+          </li>
+        </template>
+        <template v-if="route().current() === 'fax.folder'">
+          <li aria-current="page">
+            <div class="flex items-center">
+              <svg
+                class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span
+                class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400"
+                >フォルダ割り当て</span
+              >
+            </div>
+          </li>
+        </template>
+      </template>
+
+           <template v-else-if="route().current().startsWith('message')">
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 6 10"
+            >
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m1 9 4-4-4-4"
+              />
+            </svg>
+            <a
+              :href="route('fax')"
+              class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white"
+            >
+              通知</a
+            >
+          </div>
+        </li>
+
+        <!-- 下階層 -->
+        <!-- <template v-if="route().current() === 'message.group'">
+          <li aria-current="page">
+            <div class="flex items-center">
+              <svg
+                class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span
+                class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400"
+                >グループ</span
+              >
+            </div>
+          </li>
+        </template> -->
         <template v-if="route().current() === 'fax'">
           <li aria-current="page">
             <div class="flex items-center">

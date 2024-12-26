@@ -64,6 +64,11 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
             ->prefix('remote') // 必要に応じてプレフィックスを追加
             ->group(base_path('routes/remote.php'));
+
+            // 通知ルートを追加
+            Route::middleware('web')
+            ->prefix('message') // 必要に応じてプレフィックスを追加
+            ->group(base_path('routes/message.php'));
         });
     }
 

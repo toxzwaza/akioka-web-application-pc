@@ -82,12 +82,21 @@
 
 
         <!-- リモート接続 -->
-        <a href="{{ route('remote') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('remote*') ? 'font-bold text-gray-900' : ''}}">
+        <!-- <a href="{{ route('remote') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('remote*') ? 'font-bold text-gray-900' : ''}}">
           <span class="mr-1 material-symbols-outlined">
             computer
           </span>
           リモート接続
+        </a> -->
+
+        <!-- Teams一斉通知 -->
+        <a href="{{ route('message') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('remote*') ? 'font-bold text-gray-900' : ''}}">
+          <span class="mr-1 material-symbols-outlined">
+            computer
+          </span>
+          通知
         </a>
+
       </nav>
 
 

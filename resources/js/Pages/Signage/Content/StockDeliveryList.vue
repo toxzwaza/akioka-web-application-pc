@@ -27,13 +27,13 @@ onMounted(() => {
 });
 </script>
 <template>
-  <section class="py-16 bg-red-500 text-center font-mono">
+  <!-- <section class="py-16 bg-red-500 text-center font-mono">
     <h1 class="text-6xl font-bold text-white">これはテスト画面です！</h1>
     <p class="mt-8 text-white text-2xl tracking-wide ">
       本画面上から現場の方々から頂いた発注依頼の状況を確認できます。<br />
     </p>
     <p class="underline mt-8 text-white text-2xl tracking-wide">自分が注文した物が届いているか一々聞きに来る必要なし！</p>
-  </section>
+  </section> -->
   <section id="base-container" class="text-gray-600 body-font">
     <div class="container py-24 mx-auto">
       <div class="flex flex-col text-center w-full mb-8">
