@@ -49,6 +49,7 @@ const sendNotify = () => {
       .then((res) => {
         console.log(res.data);
         msg.value = res.data.message;
+        alert(msg.value)
       })
       .catch((error) => {
         console.log(error);
