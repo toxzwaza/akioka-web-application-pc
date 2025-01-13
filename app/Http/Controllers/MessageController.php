@@ -114,6 +114,7 @@ class MessageController extends Controller
                                 "text" => $message,
                                 "color" => "good",
                                 "size" => "medium",
+                                "wrap" => True  # テキストの折り返しを有効化
                             ],
                         ],
                         '"$schema"' => "http://adaptivecards.io/schemas/adaptive-card.json",
