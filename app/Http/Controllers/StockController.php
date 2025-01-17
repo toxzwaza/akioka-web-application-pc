@@ -336,7 +336,7 @@ class StockController extends Controller
         foreach ($initial_orders as $order) {
             $stock = Stock::where('name', $order->name)
                 ->where(function ($query) use ($order) {
-                    $query->where('s_name', 'like', "%$order->s_name%")
+                    $query->where('s_name', 'like', "$order->s_name")
                         ->orWhere('s_name', $order->s_name);
                 })->first();
             if ($stock) {
