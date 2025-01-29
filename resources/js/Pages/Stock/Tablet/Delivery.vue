@@ -186,7 +186,7 @@ onMounted(() => {
                           props.order.img_path &&
                           props.order.img_path.includes('https://')
                             ? props.order.img_path
-                            : 'http://monokanri-app.local/' +
+                            : 'https://akioka.cloud/' +
                               props.order.img_path
                         "
                       />

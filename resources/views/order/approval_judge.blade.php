@@ -78,7 +78,7 @@
                 <details>
                     <summary class="my-4 text-gray-600 font-semibold">表示切り替え</summary>
 
-                    <img src="http://monokanri-app.local/{{ $approval->est_doc_path }}" alt="">
+                    <img src="https://akioka.cloud/{{ $approval->est_doc_path }}" alt="">
                 </details>
 
             </td>

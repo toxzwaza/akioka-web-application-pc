@@ -224,7 +224,7 @@ onMounted(() => {
                       :src="
                         order.img_path && order.img_path.includes('https://')
                           ? order.img_path
-                          : 'http://monokanri-app.local/' + order.img_path
+                          : 'https://akioka.cloud/' + order.img_path
                       "
                       alt=""
                     />

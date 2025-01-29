@@ -9,7 +9,7 @@
             <div class="lg:max-w-lg lg:w-4/5 md:w-3/5 mb-10 md:mb-0 px-8 py-24">
                 <h2 class="text-xl text-center mb-8 font-bold">{{ $stock->name }}</h2>
 
-                <img class="my-4 w-full object-cover object-center rounded" alt="hero" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'http://monokanri-app.local/' . $stock->img_path }}">
+                <img class="my-4 w-full object-cover object-center rounded" alt="hero" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'https://akioka.cloud/' . $stock->img_path }}">
 
 
             </div>

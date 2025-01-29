@@ -39,7 +39,7 @@
                         <td class="w-16 border-t-2 border-b-2 border-gray-200 px-4 py-8 text-center font-bold">{{ $consumOrder->id }}</td>
 
                         <td class="w-32 border-t-2 border-b-2 border-gray-200 py-2">
-                            <img class="w-full" src="{{ $consumOrder->img_path && strpos($consumOrder->img_path, 'https://') !== false ? $consumOrder->img_path : 'http://monokanri-app.local/' . $consumOrder->img_path }}" alt="">
+                            <img class="w-full" src="{{ $consumOrder->img_path && strpos($consumOrder->img_path, 'https://') !== false ? $consumOrder->img_path : 'https://akioka.cloud/' . $consumOrder->img_path }}" alt="">
                         </td>
                         <td class="w-16 border-t-2 border-b-2 border-gray-200 px-4 py-8">
                             @if($consumOrder->del_flg == 0)
