@@ -35,6 +35,10 @@ const completeOrderRequest = (order_request_id) => {
   if (quantity !== null) {
     order_config.quantity = quantity;
   }
+  if(!(order_config.user_id && order_config.quantity)){
+    alert('注文者もしくは数量が選択されていない可能性があります。')
+    return
+  }
 
   axios
     .put(route("stock.completeOrderRequest"), {
@@ -213,6 +217,7 @@ onMounted(() => {
                     }"
                   >
                     <button
+                      v-if="order_config.user_id"
                       @click="
                         completeOrderRequest(order_request.order_request_id)
                       "
@@ -220,6 +225,7 @@ onMounted(() => {
                     >
                       完了
                     </button>
+                    <span class="text-sm font-bold" v-else>発注者を選択すると完了できます</span>
                   </td>
                 </tr>
               </tbody>
