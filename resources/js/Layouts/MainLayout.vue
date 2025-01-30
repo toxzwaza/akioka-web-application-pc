@@ -12,13 +12,13 @@ const props = defineProps({
     <div
       class="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center"
     >
-      <Link
+      <a
         :href="route('home')"
         class="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0"
       >
         <img class="w-16" src="/img/base/logo.jpg" alt="" />
         <span class="ml-3 text-xl">{{ props.title }}</span>
-      </Link>
+      </a>
       <nav
         class="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400 flex flex-wrap items-center text-base justify-center"
       >
@@ -198,6 +198,19 @@ const props = defineProps({
           list_alt
         </span>
         格納先一覧</a
+      >
+      <a
+        :href="route('stock.order_requests')"
+        class="flex mx-2 px-8 hover:text-gray-900"
+        :class="{
+          'text-blue-500 font-bold':
+            route().current() == 'stock.order_requests',
+        }"
+      >
+        <span class="text-gray-500 mr-1 material-symbols-outlined">
+          list_alt
+        </span>
+        発注依頼一覧</a
       >
       <a
         :href="route('stock.initial_orders')"

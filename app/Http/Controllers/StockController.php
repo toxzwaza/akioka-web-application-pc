@@ -352,6 +352,8 @@ class StockController extends Controller
     {
         return Inertia::render('Stock/InitialOrders');
     }
+
+
     public function update_initial_order(Request $request)
     {
         $status = 1;
@@ -810,4 +812,6 @@ class StockController extends Controller
 
         return Inertia::render('Stock/StorageAddressPrint', ['locations' => $locations, 'storage_addresses' => $storage_addresses]);
     }
+
+
 }

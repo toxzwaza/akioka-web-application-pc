@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,13 @@ Route::get('/getAllInitialOrders', [StockController::class, 'getAllInitialOrders
 // 発注修正
 Route::get('stocks/initialOrders', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
 Route::post('stocks/update/initial_order', [StockController::class, 'update_initial_order'])->name('stock.update_initial_order');
+
+// 発注依頼一覧
+Route::get('stocks/order_requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');
+// 発注依頼取得
+Route::get('stocks/getOrderRequests', [OrderRequestController::class, 'getOrderRequests'])->name('stock.getOrderRequests');
+// 発注完了
+Route::put('stocks/completeOrderRequest', [OrderRequestController::class, 'completeOrderRequest'])->name('stock.completeOrderRequest');
 
 // 滞留品
 Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');

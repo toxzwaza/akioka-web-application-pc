@@ -74,10 +74,7 @@ class StockTabletController extends Controller
 
             // 物品データ取得
             $stock = Stock::where('name', $order->name)
-                ->where(function ($query) use ($order) {
-                    $query->where('s_name', 'like', "$order->s_name")
-                        ->orWhere('s_name', $order->s_name);
-                })->first();
+                ->where('s_name', $order->s_name)->first();
 
 
             if ($stock) {
@@ -250,10 +247,7 @@ class StockTabletController extends Controller
                 // 品名・品番が一致する在庫データを取得
                 // 見つからない場合は、フラグを立てる
                 $stock = Stock::where('name', $order->name)
-                    ->where(function ($query) use ($order) {
-                        $query->where('s_name', 'like', "%$order->s_name%")
-                            ->orWhere('s_name', $order->s_name);
-                    })->first();
+                    ->where('s_name', $order->s_name)->first();
 
                 if (!$stock) {
                     $order->not_found_flg = 1;
