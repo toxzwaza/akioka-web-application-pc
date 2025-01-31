@@ -153,8 +153,8 @@ onMounted(() => {
                   >
                     発注依頼日
                   </th>
-                  <th></th>
-                  <th></th>
+                  <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"></th>
+                  <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"></th>
                 </tr>
               </thead>
               <tbody>
