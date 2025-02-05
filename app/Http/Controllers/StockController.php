@@ -168,7 +168,7 @@ class StockController extends Controller
         
         try {
             // 入庫・出庫・数量変更のみ
-            $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity','inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity', 'users.name as user_name','stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path','storage_addresses.address', 'locations.name as location_name')->whereIn('inventory_operation_id', [2, 8, 9])
+            $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity','inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity', 'users.name as user_name', 'stocks.id as stock_id' ,'stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path','storage_addresses.address', 'locations.name as location_name')->whereIn('inventory_operation_id', [2, 8, 9])
 
                 ->whereDate('inventory_operation_records.created_at', $target_date)
 

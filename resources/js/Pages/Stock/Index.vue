@@ -39,11 +39,11 @@ const recordSort = (operation_id, operation_name) => {
 };
 // カレンダーの日付が選択された場合の処理
 const handleDateClick = (dateStr) => {
-  console.log(dateStr);
-  pickUpDate.value = dateStr;
-
   inventoryOperationRecordsByDate.value = [];
   inventoryOperationBaseRecords.value = [];
+
+  console.log(dateStr);
+  pickUpDate.value = dateStr;
 
   getInventoryOperationRecordByDate(dateStr);
 };
@@ -62,6 +62,8 @@ const getInventoryOperationRecordByDate = (target_date) => {
       //  二つの配列を初期化
       inventoryOperationRecordsByDate.value = res.data;
       inventoryOperationBaseRecords.value = res.data;
+
+      console.log(res.data);
     })
     .catch((error) => {
       console.log(error);
@@ -94,7 +96,15 @@ const pie_data = {
   ],
 };
 
-onMounted(() => {});
+onMounted(() => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const formattedToday = `${yyyy}-${mm}-${dd}`;
+
+  handleDateClick(formattedToday);
+});
 </script>
 <template>
   <MainLayout :title="'在庫管理'">
@@ -108,8 +118,13 @@ onMounted(() => {});
         </div>
 
         <div v-if="!inventoryOperationRecordsByDate.length > 0" class="w-1/3">
-          <PiChart :title="'サンプル円グラフ'" :pie_data="pie_data"></PiChart>
+          <!-- <PiChart :title="'サンプル円グラフ'" :pie_data="pie_data"></PiChart> -->
+          <h2 class="text-gray-600 text-xl text-center font-bold">
+            データ取得中...
+          </h2>
+          <img src="/img/base/spinner.gif" alt="" />
         </div>
+
         <div class="w-2/5 operation_record_container" v-else>
           <section class="text-gray-600 body-font">
             <div class="px-2 py-4 rounded">
@@ -202,9 +217,18 @@ onMounted(() => {});
                       {{ record.user_name }}
                     </span>
                     <span> さんが </span>
-                    <span :class="{ 'record-stock-name font-bold': true }">
-                      {{ record.stock_name }}
-                    </span>
+                    <a
+                      class="underline text-blue-500"
+                      :href="
+                        route('stock.edit.stocks', {
+                          stock_id: record.stock_id,
+                        })
+                      "
+                    >
+                      <span :class="{ 'record-stock-name font-bold': true }">
+                        {{ record.stock_name }}
+                      </span>
+                    </a>
                     <span> を </span>
                     <span class="record-quantity">
                       {{ record.quantity }}
@@ -228,9 +252,18 @@ onMounted(() => {});
                     v-if="record.inventory_operation_id == 8"
                     class="flex-grow sm:pl-6 mt-6 sm:mt-0 text-container"
                   >
-                    <span :class="{ 'record-stock-name font-bold': true }">
-                      {{ record.stock_name }}
-                    </span>
+                    <a
+                      class="underline text-blue-500"
+                      :href="
+                        route('stock.edit.stocks', {
+                          stock_id: record.stock_id,
+                        })
+                      "
+                    >
+                      <span :class="{ 'record-stock-name font-bold': true }">
+                        {{ record.stock_name }}
+                      </span>
+                    </a>
                     <span> を </span>
                     <span class="record-quantity">
                       {{ record.quantity }}
@@ -253,9 +286,19 @@ onMounted(() => {});
                     v-if="record.inventory_operation_id == 9"
                     class="flex-grow sm:pl-6 mt-6 sm:mt-0 text-container"
                   >
-                    <span :class="{ 'record-stock-name font-bold': true }">
-                      {{ record.stock_name }}
-                    </span>
+                    <a
+                      class="underline text-blue-500"
+                      :href="
+                        route('stock.edit.stocks', {
+                          stock_id: record.stock_id,
+                        })
+                      "
+                    >
+                      <span :class="{ 'record-stock-name font-bold': true }">
+                        {{ record.stock_name }}
+                      </span>
+                    </a>
+
                     <span> を </span>
                     <span class="record-quantity">
                       {{ record.bef_quantity }}
