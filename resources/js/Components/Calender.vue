@@ -1,10 +1,13 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, defineEmits } from "vue";
 import { Calendar } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import axios from "axios";
+
+// 上階層打ち上げ用
+const emit = defineEmits(['date-click'])
 
 // イベントデータをrefで管理
 const events = ref([]);
@@ -20,7 +23,8 @@ onMounted(() => {
     selectable: true,
     events: events.value,
     dateClick(info) {
-      alert(`選択された日付: ${info.dateStr}`);
+      // alert(`選択された日付: ${info.dateStr}`);
+      emit('date-click', info.dateStr)
     },
     // 月が変更されたときに呼び出されるコールバック
     datesSet(info) {

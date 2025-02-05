@@ -16,6 +16,8 @@ Route::post('/store/stocks', [StockController::class, 'store_stocks'])->name('st
 Route::get('/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
 Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
 Route::get('/stocks/getInventoryOperationRecords', [StockController::class, 'getInventoryOperationRecords'])->name('stock.stocks.getInventoryOperationRecords');
+// 対象の日付の入出庫データを取得
+Route::get('/stocks/getInventoryOperationRecordsByDate', [StockController::class, 'getInventoryOperationRecordsByDate'])->name('stock.stocks.getInventoryOperationRecordsByDate');
 
 // 発注登録
 Route::get('/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');

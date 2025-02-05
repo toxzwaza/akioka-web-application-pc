@@ -22,6 +22,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
+use function Avifinfo\read;
+
 class StockController extends Controller
 {
     public function test()
@@ -156,6 +158,32 @@ class StockController extends Controller
         }
 
         return response()->json($events);
+    }
+
+    // 指定した日の入出庫データを取得
+    public function getInventoryOperationRecordsByDate(Request $request)
+
+    {
+        $target_date = $request->target_date;
+        
+        try {
+            // 入庫・出庫のみ
+            $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity','inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity', 'users.name as user_name','stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path','storage_addresses.address', 'locations.name as location_name')->whereIn('inventory_operation_id', [2, 8])
+                ->whereDate('inventory_operation_records.created_at', $target_date)
+
+                ->join('inventory_operations', 'inventory_operations.id', '=', 'inventory_operation_records.inventory_operation_id')
+                ->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
+                ->join('stock_storages', 'stock_storages.stock_id', 'stocks.id')
+                ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
+                ->join('locations', 'locations.id', 'storage_addresses.location_id')
+                ->leftJoin('users', 'users.id','inventory_operation_records.user_id')
+                ->get();
+        } catch (Exception $e) {
+            return response()->json(['msg' => $e->getMessage()]);
+        }
+
+
+        return response()->json($inventory_operation_records);
     }
 
 
@@ -812,6 +840,4 @@ class StockController extends Controller
 
         return Inertia::render('Stock/StorageAddressPrint', ['locations' => $locations, 'storage_addresses' => $storage_addresses]);
     }
-
-
 }
