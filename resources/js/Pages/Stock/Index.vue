@@ -112,48 +112,51 @@ onMounted(() => {});
         </div>
         <div class="w-2/5 operation_record_container" v-else>
           <section class="text-gray-600 body-font">
-            <h2 class=" text-gray-800 text-xl mb-3">
-              {{ new Date(pickUpDate).toLocaleDateString("ja-JP") }}
-              <span class="text-red-600 mx-2"
-                >{{ inventoryOperationRecordsByDate.length }}件</span
-              >
-              の
-              <span
-                :class="{'mx-2 font-bold': true,
-                  'text-indigo-500': sortOperation.id == 2,
-                  'text-pink-500': sortOperation.id == 8,
-                  'text-gray-500': sortOperation.id == 9,
-                }"
-                >{{ sortOperation.name }}</span
-              >データを表示しています。
-            </h2>
-
-            <div id="sort_button_container" class="mb-3">
-              <button
-                @click="recordSort(2, '出庫')"
-                class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
-              >
-                出庫
-              </button>
-              <button
-                @click="recordSort(8, '入庫')"
-                class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
-              >
-                入庫
-              </button>
-              <button
-                @click="recordSort(9, '数量編集')"
-                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
-              >
-                数量編集
-              </button>
-              <button
-                @click="recordSort(0)"
-                class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
-              >
-                リセット
-              </button>
+            <div class="px-2 py-4 rounded">
+              <h2 class="text-gray-800 text-xl mb-3">
+                {{ new Date(pickUpDate).toLocaleDateString("ja-JP") }}
+                <span class="text-red-600 mx-2"
+                  >{{ inventoryOperationRecordsByDate.length }}件</span
+                >
+                の
+                <span
+                  :class="{
+                    'mx-2 font-bold': true,
+                    'text-indigo-500': sortOperation.id == 2,
+                    'text-pink-500': sortOperation.id == 8,
+                    'text-gray-500': sortOperation.id == 9,
+                  }"
+                  >{{ sortOperation.name }}</span
+                >データを表示しています。
+              </h2>
+              <div id="sort_button_container" class="">
+                <button
+                  @click="recordSort(2, '出庫')"
+                  class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
+                >
+                  出庫
+                </button>
+                <button
+                  @click="recordSort(8, '入庫')"
+                  class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
+                >
+                  入庫
+                </button>
+                <button
+                  @click="recordSort(9, '数量編集')"
+                  class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
+                >
+                  数量編集
+                </button>
+                <button
+                  @click="recordSort(0)"
+                  class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm mr-2"
+                >
+                  リセット
+                </button>
+              </div>
             </div>
+
             <div class="container mx-auto flex flex-wrap">
               <div
                 v-for="record in inventoryOperationRecordsByDate"
@@ -180,7 +183,11 @@ onMounted(() => {});
                     class="flex-shrink-0 w-24 h-24 bg-indigo-100 text-indigo-500 rounded-full inline-flex items-center justify-center"
                   >
                     <img
-                      :src="record.stock_img_path"
+                      :src="
+                        record.stock_img_path.includes('storage')
+                          ? 'https://akioka.cloud/' + record.stock_img_path
+                          : record.stock_img_path
+                      "
                       class="w-12 h-12"
                       alt=""
                     />
@@ -286,7 +293,7 @@ onMounted(() => {});
   overflow-y: scroll;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
   border-radius: 5px;
-  background-color: rgb(245, 245, 245);
+  background-color: rgb(240 240 240);
   & .text_container {
     & .record_location_name {
     }
