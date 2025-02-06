@@ -208,7 +208,7 @@ onMounted(() => {
                       URL
                     </a>
                     <span v-else class="text-sm text-red-500 underline"
-                      >購入URL設定</span
+                      ><a :href="route('stock.edit.stocks', { stock_id: order_request.stock_id })">購入URL設定</a></span
                     >
                   </td>
                   <td
