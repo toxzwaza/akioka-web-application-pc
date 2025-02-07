@@ -4,13 +4,25 @@ import { onMounted, reactive, ref } from "vue";
 import axios from "axios";
 
 const props = defineProps({
-    stocks: Array
-})
+  stocks: Array,
+});
 
+const retentionStocks = ref([]);
 
+const getRetentionStocks = () => {
+  axios
+    .get(route("stock.getRetentionStocks"))
+    .then((res) => {
+      console.log(res.data);
+      retentionStocks.value = res.data;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 onMounted(() => {
-    console.log(props.stocks)
-})
+  getRetentionStocks();
+});
 </script>
 <template>
   <MainLayout :title="'発注一覧'">
@@ -24,9 +36,17 @@ onMounted(() => {
               滞留品及び半滞留品が表示されます。
             </p>
           </div>
+          <!-- データロード中 -->
+          <div v-if="retentionStocks.length < 1">
+            <h2 class="text-xl text-gray-700 text-center font-serif">
+              滞留データ取得中...しばらくお待ちください。
+            </h2>
+            <div class="flex justify-center">
+              <img src="/img/base/spinner.gif" alt="" />
+            </div>
+          </div>
 
-
-          <div class="w-full mx-auto overflow-auto">
+          <div v-else class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
                 <tr>
@@ -48,6 +68,21 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
+                    格納先
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    アドレス
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    設置日
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
                     最終出庫日
                   </th>
                   <th
@@ -60,35 +95,82 @@ onMounted(() => {
                   >
                     滞留カード設置
                   </th>
-                  <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"></th>
-                 
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  ></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="stock in props.stock" :key="stock.stock_id">
-                  <td class="px-4 py-3">
-                    {{ stock.img_path.includes('storage') ? `https://akioka.cloud/${stock.img_path}` : stock.img_path }}
+                <tr v-for="stock in retentionStocks" :key="stock.stock_id">
+                  <td class="px-4 py-3 w-32">
+                    <img
+                      :src="
+                        stock.img_path && stock.img_path.includes('storage')
+                          ? `https://akioka.cloud/${stock.img_path}`
+                          : stock.img_path
+                      "
+                      alt="Stock Image"
+                    />
                   </td>
-                  <td class="px-4 py-3">
+                  <td class="px-4 py-3 w-52">
                     {{ stock.name }}
                   </td>
-                  <td class="px-4 py-3">
+                  <td class="px-4 py-3 w-38">
                     {{ stock.s_name }}
                   </td>
                   <td class="px-4 py-3">
-                    {{ stock.created_at}}
+                    {{ stock.location_name }}
                   </td>
                   <td class="px-4 py-3">
-                    滞留or半滞留
+                    {{ stock.address }}
                   </td>
                   <td class="px-4 py-3">
-                    済or未
+                    {{
+                      new Date(stock.initial_date).toLocaleDateString("ja-JP", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                    }}
                   </td>
                   <td class="px-4 py-3">
-                    <button>設置済</button>
+                    {{
+                      stock.last_shipment_date
+                        ? new Date(stock.last_shipment_date).toLocaleDateString(
+                            "ja-JP",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            }
+                          )
+                        : " - "
+                    }}
                   </td>
-
-
+                  <td
+                    :class="{
+                      'px-4 py-3': true,
+                      'text-green-500': stock.retention_code == 0,
+                      'text-orange-500 font-bold': stock.retention_code == 1,
+                      'text-red-500 font-bold': retention_code == 2,
+                    }"
+                  >
+                    {{
+                      stock.retention_code == 1
+                        ? "半滞留"
+                        : stock.retention_code == 2
+                        ? "滞留"
+                        : "正常"
+                    }}
+                  </td>
+                  <td class="px-4 py-3"></td>
+                  <td class="px-4 py-3">
+                    <button
+                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs whitespace-nowrap"
+                    >
+                      処理済
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -99,5 +181,4 @@ onMounted(() => {
   </MainLayout>
 </template>
 <style scoped lang="scss">
-
 </style>

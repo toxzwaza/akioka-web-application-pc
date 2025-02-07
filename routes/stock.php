@@ -40,7 +40,8 @@ Route::put('stocks/completeOrderRequest', [OrderRequestController::class, 'compl
 
 
 ////////// 滞留品 //////////
-Route::get('/retensions/stocks', [RetentionController::class, 'index'])->name('stock.retentions');
+Route::get('/retentions/stocks', [RetentionController::class, 'index'])->name('stock.retentions');
+Route::get('/getRetentionStocks', [RetentionController::class, 'getRetentionStocks'])->name('stock.getRetentionStocks');
 
 // 旧
 Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
