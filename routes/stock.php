@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\RaspiController;
+use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
@@ -36,10 +37,15 @@ Route::get('stocks/getOrderRequests', [OrderRequestController::class, 'getOrderR
 // 発注完了
 Route::put('stocks/completeOrderRequest', [OrderRequestController::class, 'completeOrderRequest'])->name('stock.completeOrderRequest');
 
-// 滞留品
-Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
-Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
-Route::post('/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
+
+
+////////// 滞留品 //////////
+Route::get('/retensions/stocks', [RetentionController::class, 'index'])->name('stock.retentions');
+
+// 旧
+// Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
+// Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
+// Route::post('/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
 
 
 

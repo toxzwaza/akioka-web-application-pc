@@ -185,14 +185,14 @@
       </span>
       発注一覧
     </a>
-
-    <!-- <a href="{{ route('stock.stocks.taking') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.storage_addresses') ? 'text-blue-500 font-bold' : '' }}">
+  <!-- 
+    <a href="{{ route('stock.stocks.taking') }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.storage_addresses') ? 'text-blue-500 font-bold' : '' }}">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         list_alt
       </span>
       棚卸し
-    </a>
-    <a href="{{ route('stock.retained.stocks')  }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.retained.stocks') ? 'text-blue-500 font-bold' : '' }}">
+    </a> -->
+    <!-- <a href="{{ route('stock.retained.stocks')  }}" class="flex mx-2 px-8 hover:text-gray-900 {{ Route::is('stock.retained.stocks') ? 'text-blue-500 font-bold' : '' }}">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         link
       </span>

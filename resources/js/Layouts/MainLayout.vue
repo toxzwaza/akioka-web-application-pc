@@ -199,7 +199,7 @@ const props = defineProps({
         </span>
         格納先一覧</a
       >
-      <a
+      <Link
         :href="route('stock.order_requests')"
         class="flex mx-2 px-8 hover:text-gray-900"
         :class="{
@@ -210,9 +210,9 @@ const props = defineProps({
         <span class="text-gray-500 mr-1 material-symbols-outlined">
           list_alt
         </span>
-        発注依頼一覧</a
+        発注依頼一覧</Link
       >
-      <a
+      <Link
         :href="route('stock.initial_orders')"
         class="flex mx-2 px-8 hover:text-gray-900"
         :class="{
@@ -223,7 +223,21 @@ const props = defineProps({
         <span class="text-gray-500 mr-1 material-symbols-outlined">
           list_alt
         </span>
-        発注一覧</a
+        発注一覧</Link
+      >
+
+      <Link
+        :href="route('stock.retentions')"
+        class="flex mx-2 px-8 hover:text-gray-900"
+        :class="{
+          'text-blue-500 font-bold':
+            route().current() == 'stock.retensions',
+        }"
+      >
+        <span class="text-gray-500 mr-1 material-symbols-outlined">
+          list_alt
+        </span>
+        滞留品</Link
       >
 
       <!-- <Link
