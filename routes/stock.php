@@ -43,9 +43,9 @@ Route::put('stocks/completeOrderRequest', [OrderRequestController::class, 'compl
 Route::get('/retensions/stocks', [RetentionController::class, 'index'])->name('stock.retentions');
 
 // 旧
-// Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
-// Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
-// Route::post('/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
+Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
+Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
+Route::post('/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
 
 
 
