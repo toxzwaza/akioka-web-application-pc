@@ -9,26 +9,29 @@ use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class TestController extends Controller
 {
     //
     public function test()
     {
+        $records = InventoryOperationRecord::select('stock_id', 'stocks.name', 'stocks.img_path','stocks.s_name',DB::raw('count(*) as count'))
+            ->leftJoin('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
+            ->where('inventory_operation_id', 2)
+            ->groupBy('stock_id', 'stocks.name', 'stocks.img_path', 'stocks.s_name')
+            ->orderBy('count', 'desc')
+            ->get();
 
-        $retained_stocks = LastTreatRecord::select('stocks.name as stock_name', 'stocks.price', 'stock_storages.quantity')->join('stocks', 'stocks.id', 'last_treat_records.stock_id')->join('stock_storages', 'stock_storages.stock_id', 'last_treat_records.stock_id')->where('treat', '廃棄')->get();
+        return Inertia::render('Test/Test', [
+            'records' => $records
+        ]);
+        
 
-        $total = 0;
-        foreach($retained_stocks as $stock){
-            $cal = $stock->price * $stock->quantity;
-            $total += $cal;
 
-            echo "<p>{$stock->stock_name} 金額:{$total}</p>";
-        }
-
-        echo "<p>合計：{$total}</p>";
     }
 
     public function storage_address_test()
