@@ -268,14 +268,6 @@ class StockController extends Controller
 
         return view('stock.stock_storages', compact('storage_location_addresses'));
     }
-    public function suppliers()
-    {
-
-
-        $suppliers = Supplier::orderby('updated_at', 'desc')->paginate(20);
-
-        return view('stock.suppliers', compact('suppliers'));
-    }
 
 
     // 在庫編集
@@ -582,14 +574,6 @@ class StockController extends Controller
         return redirect()->route('stock.storage_addresses.create');
     }
 
-    // 取引先作成
-    public function create_suppliers()
-    {
-
-        return view('stock.create.suppliers');
-    }
-    // 取引先編集
-    public function supplier_edit() {}
 
 
     public function update_stock_storage(Request $request)

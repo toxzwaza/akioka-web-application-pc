@@ -5,6 +5,7 @@ use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockSupplierController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
 
@@ -54,6 +55,7 @@ Route::get('/stocks/add_supplier', [StockController::class, 'stock_add_supplier'
 Route::post('/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
 Route::get('/stock_suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
 
+
 // 格納先
 Route::get('/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
 Route::get('/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
@@ -67,9 +69,11 @@ Route::post('/stock_storage/update', [StockController::class, 'update_stock_stor
 Route::get('/stock_storage/delete', [StockController::class, 'delete_stock_storage'])->name('stock.stock_storage.delete');
 Route::post('/stock_storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
 
-Route::get('/suppliers', [StockController::class, 'suppliers'])->name('stock.suppliers');
-Route::get('/suppliers/create', [StockController::class, 'create_suppliers'])->name('stock.suppliers.create');
-Route::get('/edit/suppliers/{supplier_id}', [StockController::class, 'supplier_edit'])->name('stock.suppliers.edit');
+Route::get('/suppliers', [StockSupplierController::class, 'index'])->name('stock.suppliers');
+Route::get('/suppliers/create', [StockSupplierController::class, 'create'])->name('stock.suppliers.create');
+Route::post('/suppliers/store', [StockSupplierController::class, 'store'])->name('stock.suppliers.store');
+Route::get('/suppliers/edit/{supplier_id}', [StockSupplierController::class, 'edit'])->name('stock.suppliers.edit');
+
 
 // Location追加
 Route::get('/create/locations', [StockController::class, 'store_location'])->name('stock.locations.create');
