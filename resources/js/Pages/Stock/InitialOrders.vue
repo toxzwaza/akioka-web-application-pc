@@ -474,7 +474,7 @@ onMounted(() => {
         </div>
 
         <div id="img_modal">
-          
+              
           <img
             :src="modal_status.img_path"
             alt=""

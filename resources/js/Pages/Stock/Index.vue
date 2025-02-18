@@ -199,7 +199,7 @@ onMounted(() => {
                   >
                     <img
                       :src="
-                        record.stock_img_path.includes('storage')
+                        record.stock_img_path && record.stock_img_path.includes('storage')
                           ? 'https://akioka.cloud/' + record.stock_img_path
                           : record.stock_img_path
                       "
