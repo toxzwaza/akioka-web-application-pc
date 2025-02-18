@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InitialOrder;
 use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\LastTreatRecord;
+use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
@@ -19,18 +21,8 @@ class TestController extends Controller
     //
     public function test()
     {
-        $records = InventoryOperationRecord::select('stock_id', 'stocks.name', 'stocks.img_path','stocks.s_name',DB::raw('count(*) as count'))
-            ->leftJoin('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
-            ->where('inventory_operation_id', 2)
-            ->groupBy('stock_id', 'stocks.name', 'stocks.img_path', 'stocks.s_name')
-            ->orderBy('count', 'desc')
-            ->get();
 
-        return Inertia::render('Test/Test', [
-            'records' => $records
-        ]);
-        
-
+    
 
     }
 

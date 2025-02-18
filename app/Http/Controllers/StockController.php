@@ -165,10 +165,10 @@ class StockController extends Controller
 
     {
         $target_date = $request->target_date;
-        
+
         try {
             // 入庫・出庫・数量変更のみ
-            $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity','inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity', 'users.name as user_name', 'stocks.id as stock_id' ,'stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path','storage_addresses.address', 'locations.name as location_name')->whereIn('inventory_operation_id', [2, 8, 9])
+            $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity', 'inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity', 'users.name as user_name', 'stocks.id as stock_id', 'stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path', 'storage_addresses.address', 'locations.name as location_name')->whereIn('inventory_operation_id', [2, 8, 9])
 
                 ->whereDate('inventory_operation_records.created_at', $target_date)
 
@@ -177,7 +177,7 @@ class StockController extends Controller
                 ->join('stock_storages', 'stock_storages.stock_id', 'stocks.id')
                 ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
                 ->join('locations', 'locations.id', 'storage_addresses.location_id')
-                ->leftJoin('users', 'users.id','inventory_operation_records.user_id')
+                ->leftJoin('users', 'users.id', 'inventory_operation_records.user_id')
                 ->get();
         } catch (Exception $e) {
             return response()->json(['msg' => $e->getMessage()]);
@@ -349,21 +349,9 @@ class StockController extends Controller
     // 全ての発注データを取得
     public function getAllInitialOrders()
     {
-        $initial_orders = InitialOrder::where(function ($query) {
-            $query->whereNull('receive_flg')
-                ->orWhere('receive_flg', 0);
-        })->orderBy('order_date', 'desc')->get();
 
-        foreach ($initial_orders as $order) {
-            $stock = Stock::where('name', $order->name)
-                ->where(function ($query) use ($order) {
-                    $query->where('s_name', 'like', "$order->s_name")
-                        ->orWhere('s_name', $order->s_name);
-                })->first();
-            if ($stock) {
-                $order->img_path = $stock->img_path;
-            }
-        }
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path')->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')->orderBy('order_date', 'desc')->get();
+
 
         return response()->json($initial_orders);
     }
@@ -371,7 +359,12 @@ class StockController extends Controller
     // 発注一覧
     public function initial_orders()
     {
-        return Inertia::render('Stock/InitialOrders');
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path')
+            ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
+            ->orderBy('order_date', 'desc')
+            ->paginate(50);
+        
+        return Inertia::render('Stock/InitialOrders', ['initial_orders' => $initial_orders]);
     }
 
 

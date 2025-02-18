@@ -25,7 +25,7 @@ onMounted(() => {
 });
 </script>
 <template>
-  <MainLayout :title="'発注一覧'">
+  <MainLayout :title="'滞留品一覧'">
     <template #content>
       <h1 class="text-center text-xl font-bold text-gray-800">滞留品一覧</h1>
 

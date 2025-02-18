@@ -5,9 +5,14 @@ import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 
+const props = defineProps({
+  initial_orders: Object,
+});
+
 const base_initial_orders = ref([]);
 const initial_orders = ref([]);
 const order_users = ref([]);
+const com_names = ref([]);
 
 const sort = ref("new_order");
 const filter = ref("");
@@ -29,19 +34,6 @@ const createSort = (sort_field) => {
       break;
   }
 };
-const getInitialOrders = () => {
-  axios
-    .get(route("stock.getAllInitialOrders"))
-    .then((res) => {
-      initial_orders.value = res.data;
-      base_initial_orders.value = res.data;
-      console.log(initial_orders.value);
-      updateOrderUsers();
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-};
 
 const updateOrderUsers = () => {
   const unique_order_users = [
@@ -49,6 +41,13 @@ const updateOrderUsers = () => {
   ];
   order_users.value = unique_order_users;
   console.log(unique_order_users);
+};
+const updateComName = () => {
+  const unique_com_names = [
+    ...new Set(initial_orders.value.map((order) => order.com_name)),
+  ];
+  com_names.value = unique_com_names;
+  console.log(unique_com_names);
 };
 
 const updateNameOrSName = (id, field, value) => {
@@ -100,6 +99,23 @@ const updateFilter = (filter, value) => {
       }
 
       break;
+    case "com_name":
+      initial_orders.value = initial_orders.value.filter(
+        (order) => order.com_name === value
+      );
+      break;
+    case "nameOrSname":
+      if (value) {
+        initial_orders.value = initial_orders.value.filter(
+          (order) =>
+            (order.name && order.name.includes(value)) ||
+            (order.s_name && order.s_name.includes(value))
+        );
+      }else{
+        initial_orders.value = []
+      }
+
+      break;
     case "reset":
       initial_orders.value = base_initial_orders.value;
       break;
@@ -107,13 +123,18 @@ const updateFilter = (filter, value) => {
       break;
   }
   if (initial_orders.value.length === 0) {
-    alert("フィルター条件に合う結果が見つかりませんでした。リセットを行います。");
-    updateFilter('reset');
+    alert(
+      "フィルター条件に合う結果が見つかりませんでした。リセットを行います。"
+    );
+    updateFilter("reset");
   }
 };
 
 onMounted(() => {
-  getInitialOrders();
+  initial_orders.value = props.initial_orders.data;
+  base_initial_orders.value = props.initial_orders.data;
+  updateOrderUsers();
+  updateComName();
 });
 </script>
 <template>
@@ -162,9 +183,52 @@ onMounted(() => {
                 </button>
               </div>
             </div>
+            <div class="mr-8">
+              <p class="mb-2 font-bold">検索</p>
+              <div class="button_container flex items-center justify-start">
+                <div class="w-62 mr-2">
+                  <label
+                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                    for="grid-last-name"
+                  >
+                    品名・品番から検索
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="text"
+                    name=""
+                    id=""
+                    @change="updateFilter('nameOrSname', $event.target.value)"
+                  />
+                </div>
+              </div>
+            </div>
             <div>
               <p class="mb-2 font-bold">フィルタ</p>
               <div class="button_container flex items-center justify-start">
+                <div class="w-32 mr-2">
+                  <label
+                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                    for="grid-last-name"
+                  >
+                    注文先
+                  </label>
+                  <select
+                    @change="updateFilter('com_name', $event.target.value)"
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    name="order_user"
+                    id=""
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="com_name in com_names"
+                      :key="com_name"
+                      :value="com_name"
+                    >
+                      {{ com_name }}
+                    </option>
+                  </select>
+                </div>
                 <div class="w-32 mr-2">
                   <label
                     class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -193,7 +257,7 @@ onMounted(() => {
                     class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                     for="grid-last-name"
                   >
-                    納品書
+                    ステータス
                   </label>
                   <select
                     @change="updateFilter('delifile_path', $event.target.value)"
@@ -211,6 +275,9 @@ onMounted(() => {
           </div>
 
           <hr class="my-8" />
+          <div class="mb-8 flex justify-end">
+            <Pagination :links="props.initial_orders.links" />
+          </div>
 
           <div class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
@@ -243,23 +310,35 @@ onMounted(() => {
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    style="
+                      border-radius: 10px 0 0 10px;
+                      background-color: #ffabab;
+                    "
                   >
                     品名
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    style="background-color: rgb(255 188 188)"
                   >
                     品番
                   </th>
+
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
+                    style="border-radius: 0 10px 10px 0"
+                  >
+                    納入予定日
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     数量
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
-                    納品書
+                    ステータス
                   </th>
                 </tr>
               </thead>
@@ -296,6 +375,7 @@ onMounted(() => {
                       name="name"
                       v-model="order.name"
                       id=""
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
@@ -311,9 +391,19 @@ onMounted(() => {
                       name="s_name"
                       v-model="order.s_name"
                       id=""
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
                   </td>
+
                   <td class="px-4 py-3 text-lg text-gray-900">
+                    <input
+                      type="date"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    />
+                  </td>
+                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     {{ order.quantity }}
                   </td>
                   <td
