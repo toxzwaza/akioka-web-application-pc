@@ -401,6 +401,23 @@ class StockController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
+    public function update_expected_delivery_date(Request $request){
+        $status = true;
+
+        try{
+            $order_id = $request->order_id;
+            $expected_delivery_date = $request->expected_delivery_date;
+            $initial_order = InitialOrder::find($order_id);
+            $initial_order->expected_delivery_date = $expected_delivery_date;
+            $initial_order->save();
+
+        }catch(Exception $e){
+            $status = false;
+        }
+        return response()->json(['status' =>$status]);
+
+    }
+
 
     public function store_stocks(Request $request)
     {

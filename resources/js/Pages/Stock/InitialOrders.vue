@@ -9,6 +9,24 @@ const props = defineProps({
   initial_orders: Object,
 });
 
+const modal_status = reactive({
+  status: false,
+  img_path: "",
+})
+
+const openModal = img_path => {
+  modal_status.img_path = ''
+  
+  if(!img_path){
+    return
+  }
+
+  modal_status.img_path = img_path && img_path.includes('storage') ? `https://akioka.cloud/${img_path}` : img_path.includes('deli_file') ? `https://akioka.cloud/storage/${img_path}` : img_path
+
+  modal_status.status = true
+
+}
+
 const base_initial_orders = ref([]);
 const initial_orders = ref([]);
 const order_users = ref([]);
@@ -111,8 +129,8 @@ const updateFilter = (filter, value) => {
             (order.name && order.name.includes(value)) ||
             (order.s_name && order.s_name.includes(value))
         );
-      }else{
-        initial_orders.value = []
+      } else {
+        initial_orders.value = [];
       }
 
       break;
@@ -130,6 +148,20 @@ const updateFilter = (filter, value) => {
   }
 };
 
+const updateExpectedDeliveryDate = (order_id, expected_delivery_date) => {
+  console.log(order_id, expected_delivery_date);
+  axios
+    .post(route("stock.update_expected_delivery_date"), {
+      order_id: order_id,
+      expected_delivery_date: expected_delivery_date,
+    })
+    .then((res) => {
+      console.log(res.data);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 onMounted(() => {
   initial_orders.value = props.initial_orders.data;
   base_initial_orders.value = props.initial_orders.data;
@@ -280,6 +312,12 @@ onMounted(() => {
           </div>
 
           <div class="w-full mx-auto overflow-auto">
+            <p class="mb-2">
+              <span class="text-green-500 font-bold">緑色</span
+              >の注文Noをクリックすると<span class="font-bold text-red-600"
+                >納品書</span
+              >を確認できます。
+            </p>
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
                 <tr>
@@ -335,11 +373,6 @@ onMounted(() => {
                   >
                     数量
                   </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    ステータス
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -348,7 +381,16 @@ onMounted(() => {
                   :key="order.id"
                   :class="{ 'bg-indigo-50': !order.img_path }"
                 >
-                  <td class="px-4 py-3">{{ order.order_no }}</td>
+                  <td
+                    :class="{
+                      'px-4 py-3': true,
+                      'text-green-500 font-bold cursor-pointer':
+                        order.receive_flg,
+                    }"
+                    @click="openModal(order.delifile_path)"
+                  >
+                    {{ order.order_no }}
+                  </td>
                   <td class="w-24 px-4 py-6">
                     <img
                       :src="
@@ -356,6 +398,7 @@ onMounted(() => {
                           ? order.img_path
                           : 'https://akioka.cloud/' + order.img_path
                       "
+                      @click="openModal(order.img_path)"
                       alt=""
                     />
                   </td>
@@ -397,22 +440,21 @@ onMounted(() => {
 
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
+                      @change="
+                        updateExpectedDeliveryDate(
+                          order.id,
+                          $event.target.value
+                        )
+                      "
                       type="date"
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order.expected_delivery_date"
                     />
                   </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     {{ order.quantity }}
-                  </td>
-                  <td
-                    :class="{
-                      'px-4 py-3 text-lg text-gray-900': true,
-                      'font-bold text-red-400': order.delifile_path,
-                    }"
-                  >
-                    {{ order.delifile_path ? "済" : "未" }}
                   </td>
                 </tr>
               </tbody>
@@ -420,6 +462,66 @@ onMounted(() => {
           </div>
         </div>
       </section>
+      <div id="modal" :class="{'active' : modal_status.status}">
+        <div id="close_container">
+          <button
+            @click="modal_status.status = !modal_status.status"
+            class="modal__close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
+            aria-label="Close modal"
+          >
+            <i class="fa fa-times"></i> 
+          </button>
+        </div>
+
+        <div id="img_modal">
+          
+          <img
+            :src="modal_status.img_path"
+            alt=""
+          />
+        </div>
+      </div>
     </template>
   </MainLayout>
 </template>
+<style scoped lang="scss">
+#modal {
+  position: fixed;
+  bottom: 0;
+
+
+  width: 90vw;
+
+  padding: 1rem;
+
+  background-color: rgb(227 226 226 / 96%);
+box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px 10px 0 0 ;
+  height: 0;
+  transform: translateY(100%);
+  &.active{
+    height: 60vh;
+    transform: translateY(0);
+    transition: all 0.5s;
+  }
+
+
+  & #close_container{
+    width: 100%;
+    display: flex;
+    justify-content: end;
+  }
+
+  & #img_modal {
+    height: 92%;
+    display: flex;
+    justify-content: center;
+
+    & img {
+      height: 100%;
+      object-fit: contain;
+      box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    }
+  }
+}
+</style>
