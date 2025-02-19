@@ -6,15 +6,14 @@ import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 const props = defineProps({
   order_users: Array,
-  user_id: Number
+  user_id: Number,
 });
 
 // 注文者
 const order_config = reactive({
   user_id: null,
-  user_name: null,
-  quantity: null
-})
+  user_name: null
+});
 
 const order_requests = ref([]);
 
@@ -31,44 +30,57 @@ const getOrderRequests = () => {
 };
 
 const completeOrderRequest = (order_request_id) => {
-  const quantity = prompt("数量を入力してください:");
-  if (quantity !== null) {
-    order_config.quantity = quantity;
-  }
-  if(!(order_config.user_id && order_config.quantity)){
-    alert('注文者もしくは数量が選択されていない可能性があります。')
-    return
+  const order_request = order_requests.value.find(
+    (request) => request.id === order_request_id
+  );
+  console.log(order_request);
+
+  if (order_request.stock_price && order_request.quantity) {
+    if (
+      confirm(
+        `以下の内容で発注登録してよろしいですか？\n単価:${
+          order_request.stock_price
+        }\n数量:${order_request.quantity}\n金額:${
+          order_request.stock_price * order_request.quantity
+        }`
+      )
+    ) {
+      axios
+        .put(route("stock.completeOrderRequest"), {
+          order_request_id: order_request_id,
+          user_id: order_config.user_id,
+          price: order_request.stock_price,
+          quantity: order_request.quantity
+        })
+
+        .then((res) => {
+          if (res.data) {
+            alert("発注完了登録を実行しました");
+            getOrderRequests();
+          }
+        })
+        .catch((error) => {});
+    }
+  } else {
+    return alert("数量もしくは金額が入力されていません。");
   }
 
-  axios
-    .put(route("stock.completeOrderRequest"), {
-      order_request_id: order_request_id,
-      user_id: order_config.user_id,
-      quantity: order_config.quantity
-    })
-
-    .then((res) => {
-      if (res.data) {
-        alert("発注完了登録を実行しました");
-        getOrderRequests();
-      }
-    })
-    .catch((error) => {});
+  return;
 };
 
 const handleUserId = (user_id) => {
-  order_config.user_id = user_id
-  const selectedUser = props.order_users.find(user => user.id == user_id);
+  order_config.user_id = user_id;
+  const selectedUser = props.order_users.find((user) => user.id == user_id);
   if (selectedUser) {
     order_config.user_name = selectedUser.name;
-    console.log(selectedUser.name)
+    console.log(selectedUser.name);
   }
-}
+};
 onMounted(() => {
   getOrderRequests();
 
-  if(props.user_id){
-    handleUserId(props.user_id)
+  if (props.user_id) {
+    handleUserId(props.user_id);
   }
 });
 </script>
@@ -87,7 +99,10 @@ onMounted(() => {
             </p>
           </div>
 
-          <div v-if="!order_config.user_id" class="w-1/2 mx-auto mb-8 p-4 bg-gray-100">
+          <div
+            v-if="!order_config.user_id"
+            class="w-1/2 mx-auto mb-8 p-4 bg-gray-100"
+          >
             <h2 class="text-xl text-red-500 font-bold mb-4">
               発注者を選択してください。
             </h2>
@@ -119,7 +134,9 @@ onMounted(() => {
           </div>
 
           <div class="w-full mx-auto overflow-auto">
-            <h2 class="mb-4 text-lg font-bold">注文者：{{ order_config.user_name }}</h2>
+            <h2 class="mb-4 text-lg font-bold">
+              注文者：{{ order_config.user_name }}
+            </h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
                 <tr>
@@ -146,15 +163,24 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
-                    個数
+                    数量
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    単価
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
                     発注依頼日
                   </th>
-                  <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"></th>
-                  <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"></th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  ></th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  ></th>
                 </tr>
               </thead>
               <tbody>
@@ -181,8 +207,25 @@ onMounted(() => {
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ order_request.s_name }}
                   </td>
+                  <td class="px-4 py-3 text-lg text-gray-900 w-32">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order_request.quantity"
+                      @input="order_request.quantity = $event.target.value"
+                    />
+                  </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order_request.quantity }}
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order_request.stock_price"
+                      @input="order_request.stock_price = $event.target.value"
+                    />
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{
@@ -191,9 +234,7 @@ onMounted(() => {
                       )
                     }}
                   </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order_request.quantity }}
-                  </td>
+
                   <td
                     :class="{
                       'px-4 py-3 text-lg text-gray-900': true,
@@ -208,7 +249,14 @@ onMounted(() => {
                       URL
                     </a>
                     <span v-else class="text-sm text-red-500 underline"
-                      ><a :href="route('stock.edit.stocks', { stock_id: order_request.stock_id })">購入URL設定</a></span
+                      ><a
+                        :href="
+                          route('stock.edit.stocks', {
+                            stock_id: order_request.stock_id,
+                          })
+                        "
+                        >購入URL設定</a
+                      ></span
                     >
                   </td>
                   <td
@@ -225,7 +273,9 @@ onMounted(() => {
                     >
                       完了
                     </button>
-                    <span class="text-sm font-bold" v-else>発注者を選択すると完了できます</span>
+                    <span class="text-sm font-bold" v-else
+                      >発注者を選択すると完了できます</span
+                    >
                   </td>
                 </tr>
               </tbody>

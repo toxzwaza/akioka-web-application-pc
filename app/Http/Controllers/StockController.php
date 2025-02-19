@@ -394,6 +394,12 @@ class StockController extends Controller
             default:
         }
 
+        // stock_idを更新
+        $stock = Stock::where('name', $initial_order->name)->where('s_name', $initial_order->s_name)->first();
+        if($stock){
+            $initial_order->stock_id = $stock->id;
+        }
+
         // フラグを修正
         if ($initial_order->not_found_flg) {
             $initial_order->not_found_flg = 0;

@@ -86,7 +86,7 @@ const updateNameOrSName = (id, field, value) => {
     .then((res) => {
       if (res.data.status) {
         confirm("更新が完了しました。");
-        getInitialOrders();
+        window.location.reload()
       } else {
         if (
           confirm(
