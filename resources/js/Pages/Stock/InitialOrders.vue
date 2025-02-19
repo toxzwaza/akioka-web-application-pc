@@ -524,7 +524,7 @@ onMounted(() => {
           </div>
         </div>
       </section>
-      <div id="modal" :class="{ active: modal_status.status }">
+      <div id="modal" :class="{ active: modal_status.status }" @click="modal_status.status = false">
         <div id="close_container">
           <button
             @click="modal_status.status = !modal_status.status"
