@@ -12,7 +12,7 @@ const props = defineProps({
 // 注文者
 const order_config = reactive({
   user_id: null,
-  user_name: null
+  user_name: null,
 });
 
 const order_requests = ref([]);
@@ -35,10 +35,10 @@ const completeOrderRequest = (order_request_id) => {
   );
   console.log(order_request);
 
-  if (order_request.stock_price && order_request.quantity) {
+  if (order_request.stock_price && order_request.quantity && order_request.stock_supplier) {
     if (
       confirm(
-        `以下の内容で発注登録してよろしいですか？\n単価:${
+        `以下の内容で発注登録してよろしいですか？\n発注先:${order_request.stock_supplier.supplier_name}\n単価:${
           order_request.stock_price
         }\n数量:${order_request.quantity}\n金額:${
           order_request.stock_price * order_request.quantity
@@ -50,7 +50,7 @@ const completeOrderRequest = (order_request_id) => {
           order_request_id: order_request_id,
           user_id: order_config.user_id,
           price: order_request.stock_price,
-          quantity: order_request.quantity
+          quantity: order_request.quantity,
         })
 
         .then((res) => {
@@ -62,7 +62,7 @@ const completeOrderRequest = (order_request_id) => {
         .catch((error) => {});
     }
   } else {
-    return alert("数量もしくは金額が入力されていません。");
+    return alert("数量・金額・取引先が入力されていません。");
   }
 
   return;
@@ -173,6 +173,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
+                    発注先(リードタイム)
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
                     発注依頼日
                   </th>
                   <th
@@ -227,6 +232,25 @@ onMounted(() => {
                       @input="order_request.stock_price = $event.target.value"
                     />
                   </td>
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    <span v-if="order_request.stock_supplier"
+                      >{{ `${order_request.stock_supplier.supplier_name}` }} ({{
+                        order_request.stock_supplier.lead_time ?  `${order_request.stock_supplier.lead_time}日` : "未"
+                      }})</span
+                    >
+
+                    <span v-else class="text-sm text-red-500 underline"
+                      ><a
+                        :href="
+                          route('stock.edit.stocks', {
+                            stock_id: order_request.stock_id,
+                          })
+                        "
+                        >取引先を設定してください。</a
+                      ></span
+                    >
+                  </td>
+
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{
                       new Date(order_request.created_at).toLocaleDateString(
