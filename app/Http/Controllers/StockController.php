@@ -293,6 +293,8 @@ class StockController extends Controller
         }
 
         return view('stock.edit.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
+
+        // return Inertia::render('Stock/Stocks/Show', ['stock' => $stock, 'classifications' => $classifications, 'processes' => $processes, 'stock_storages' => $stock_storages, 'locations' => $locations, 'storage_addresses' => $storage_addresses, 'stock_suppliers' => $stock_suppliers]);
     }
 
     // 発注登録
@@ -409,6 +411,24 @@ class StockController extends Controller
             $expected_delivery_date = $request->expected_delivery_date;
             $initial_order = InitialOrder::find($order_id);
             $initial_order->expected_delivery_date = $expected_delivery_date;
+            $initial_order->save();
+
+        }catch(Exception $e){
+            $status = false;
+        }
+        return response()->json(['status' =>$status]);
+
+    }
+
+    public function update_delivery_date(Request $request){
+        $status = true;
+
+        try{
+            $order_id = $request->order_id;
+            $delivery_date = $request->delivery_date;
+
+            $initial_order = InitialOrder::find($order_id);
+            $initial_order->delivery_date = $delivery_date;
             $initial_order->save();
 
         }catch(Exception $e){

@@ -31,6 +31,7 @@ Route::get('/getAllInitialOrders', [StockController::class, 'getAllInitialOrders
 Route::get('stocks/initialOrders', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
 Route::post('stocks/update/initial_order', [StockController::class, 'update_initial_order'])->name('stock.update_initial_order');
 Route::post('stocks/update/expected_delivery_date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
+Route::post('stocks/update/delivery_date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');
 
 // 発注依頼一覧
 Route::get('stocks/order_requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');

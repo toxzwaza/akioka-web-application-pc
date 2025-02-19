@@ -12,20 +12,24 @@ const props = defineProps({
 const modal_status = reactive({
   status: false,
   img_path: "",
-})
+});
 
-const openModal = img_path => {
-  modal_status.img_path = ''
-  
-  if(!img_path){
-    return
+const openModal = (img_path) => {
+  modal_status.img_path = "";
+
+  if (!img_path) {
+    return;
   }
 
-  modal_status.img_path = img_path && img_path.includes('storage') ? `https://akioka.cloud/${img_path}` : img_path.includes('deli_file') ? `https://akioka.cloud/storage/${img_path}` : img_path
+  modal_status.img_path =
+    img_path && img_path.includes("storage")
+      ? `https://akioka.cloud/${img_path}`
+      : img_path.includes("deli_file")
+      ? `https://akioka.cloud/storage/${img_path}`
+      : img_path;
 
-  modal_status.status = true
-
-}
+  modal_status.status = true;
+};
 
 const base_initial_orders = ref([]);
 const initial_orders = ref([]);
@@ -157,6 +161,22 @@ const updateExpectedDeliveryDate = (order_id, expected_delivery_date) => {
     })
     .then((res) => {
       console.log(res.data);
+      alert('納入予定日を更新しました。')
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const updateDeliveryDate = (order_id, delivery_date) => {
+  axios
+    .post(route("stock.update_delivery_date"), {
+      order_id: order_id,
+      delivery_date: delivery_date,
+    })
+    .then((res) => {
+      console.log(res.data);
+      alert('納入日を確定しました。')
     })
     .catch((error) => {
       console.log(error);
@@ -167,6 +187,8 @@ onMounted(() => {
   base_initial_orders.value = props.initial_orders.data;
   updateOrderUsers();
   updateComName();
+
+  console.log(initial_orders.value);
 });
 </script>
 <template>
@@ -363,15 +385,30 @@ onMounted(() => {
                   </th>
 
                   <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-400"
+                  >
+                    納入予定日
+                  </th>
+                  <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
                     style="border-radius: 0 10px 10px 0"
                   >
-                    納入予定日
+                    納入日
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    単価
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     数量
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    金額
                   </th>
                 </tr>
               </thead>
@@ -453,8 +490,33 @@ onMounted(() => {
                       :value="order.expected_delivery_date"
                     />
                   </td>
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    <input
+                      @change="
+                        updateDeliveryDate(
+                          order.id,
+                          $event.target.value
+                        )
+                      "
+                      type="date"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order.delivery_date"
+                    />
+                  </td>
+
+                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                    {{ order.price.toLocaleString() }}
+                  </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     {{ order.quantity }}
+                  </td>
+                  <td
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
+                    {{ order.calc_price.toLocaleString() }}
+                    <span class="text-xs text-gray-600">円</span>
                   </td>
                 </tr>
               </tbody>
@@ -462,23 +524,19 @@ onMounted(() => {
           </div>
         </div>
       </section>
-      <div id="modal" :class="{'active' : modal_status.status}">
+      <div id="modal" :class="{ active: modal_status.status }">
         <div id="close_container">
           <button
             @click="modal_status.status = !modal_status.status"
             class="modal__close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
             aria-label="Close modal"
           >
-            <i class="fa fa-times"></i> 
+            <i class="fa fa-times"></i>
           </button>
         </div>
 
         <div id="img_modal">
-              
-          <img
-            :src="modal_status.img_path"
-            alt=""
-          />
+          <img :src="modal_status.img_path" alt="" />
         </div>
       </div>
     </template>
@@ -489,24 +547,22 @@ onMounted(() => {
   position: fixed;
   bottom: 0;
 
-
   width: 90vw;
 
   padding: 1rem;
 
   background-color: rgb(227 226 226 / 96%);
-box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px 10px 0 0 ;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px 10px 0 0;
   height: 0;
   transform: translateY(100%);
-  &.active{
-    height: 60vh;
+  &.active {
+    height: 90vh;
     transform: translateY(0);
     transition: all 0.5s;
   }
 
-
-  & #close_container{
+  & #close_container {
     width: 100%;
     display: flex;
     justify-content: end;
