@@ -29,20 +29,31 @@ const getOrderRequests = () => {
     });
 };
 
-const completeOrderRequest = (order_request_id) => {
-  const order_request = order_requests.value.find(
+const getOrderRequestByOrderRequestId = (order_request_id) => {
+  let order_request = null;
+
+  order_request = order_requests.value.find(
     (request) => request.id === order_request_id
   );
-  console.log(order_request);
 
-  if (order_request.stock_price && order_request.quantity && order_request.stock_supplier) {
+  return order_request;
+};
+
+const completeOrderRequest = (order_request_id) => {
+  const order_request = getOrderRequestByOrderRequestId(order_request_id);
+
+  if (
+    order_request.stock_price &&
+    order_request.quantity &&
+    order_request.stock_supplier
+  ) {
     if (
       confirm(
-        `以下の内容で発注登録してよろしいですか？\n発注先:${order_request.stock_supplier.supplier_name}\n単価:${
-          order_request.stock_price
-        }\n数量:${order_request.quantity}\n金額:${
-          order_request.stock_price * order_request.quantity
-        }`
+        `以下の内容で発注登録してよろしいですか？\n発注先:${
+          order_request.stock_supplier.supplier_name
+        }\n単価:${order_request.stock_price}\n数量:${
+          order_request.quantity
+        }\n金額:${order_request.stock_price * order_request.quantity}`
       )
     ) {
       axios
@@ -75,6 +86,29 @@ const handleUserId = (user_id) => {
     order_config.user_name = selectedUser.name;
     console.log(selectedUser.name);
   }
+};
+
+const purchaseOrder = (order_request_id) => {
+  const order_request = getOrderRequestByOrderRequestId(order_request_id);
+  if (
+    !(
+      order_request.stock_price &&
+      order_request.quantity &&
+      order_request.stock_supplier
+    )
+  ) {
+    return alert("数量・金額・取引先が入力されていません。");
+  }
+
+  router.get(
+    route("stock.purchase_order", { order_request_id: order_request_id }),
+    {
+      user_id: order_config.user_id,
+      supplier_id: order_request.stock_supplier.supplier_id,
+      price: order_request.stock_price,
+      quantity: order_request.quantity,
+    }
+  );
 };
 onMounted(() => {
   getOrderRequests();
@@ -182,10 +216,10 @@ onMounted(() => {
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  ></th>
+                  >注文書</th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  ></th>
+                  >完了</th>
                 </tr>
               </thead>
               <tbody>
@@ -195,7 +229,15 @@ onMounted(() => {
                   :class="{ 'bg-indigo-50': !order_request.img_path }"
                 >
                   <td class="px-4 py-3">
-                    {{ order_request.order_request_id }}
+                    <a
+                      class="underline text-blue-500"
+                      :href="
+                        route('stock.edit.stocks', {
+                          stock_id: order_request.stock_id,
+                        })
+                      "
+                      >{{ order_request.order_request_id }}</a
+                    >
                   </td>
                   <td class="w-24 px-4 py-6">
                     <img
@@ -235,7 +277,9 @@ onMounted(() => {
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <span v-if="order_request.stock_supplier"
                       >{{ `${order_request.stock_supplier.supplier_name}` }} ({{
-                        order_request.stock_supplier.lead_time ?  `${order_request.stock_supplier.lead_time}日` : "未"
+                        order_request.stock_supplier.lead_time
+                          ? `${order_request.stock_supplier.lead_time}日`
+                          : "未"
                       }})</span
                     >
 
@@ -272,16 +316,14 @@ onMounted(() => {
                     >
                       URL
                     </a>
-                    <span v-else class="text-sm text-red-500 underline"
-                      ><a
-                        :href="
-                          route('stock.edit.stocks', {
-                            stock_id: order_request.stock_id,
-                          })
-                        "
-                        >購入URL設定</a
-                      ></span
+                    <button
+                      v-else-if="order_config.user_id"
+                      @click="purchaseOrder(order_request.id)"
+                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
                     >
+                      発注書
+                    </button>
+                    <span v-else class="text-sm text-red-500">注文者を選択してください。</span>
                   </td>
                   <td
                     :class="{

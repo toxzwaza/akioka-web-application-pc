@@ -8,4 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class OrderRequest extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'user_id', // ここにuser_idを追加
+        'supplier_id',
+        'price',
+        'quantity',
+        // 他のフィールドも必要に応じて追加
+    ];
+    
 }

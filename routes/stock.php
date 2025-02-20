@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\OrderRequestController;
+use App\Http\Controllers\PurchaseOrder;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
@@ -35,6 +36,8 @@ Route::post('stocks/update/delivery_date', [StockController::class, 'update_deli
 
 // 発注依頼一覧
 Route::get('stocks/order_requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');
+// 発注書表示
+Route::get('stocks/purchase_order/{order_request_id}', [PurchaseOrder::class, 'index'])->name('stock.purchase_order');
 // 発注依頼取得
 Route::get('stocks/getOrderRequests', [OrderRequestController::class, 'getOrderRequests'])->name('stock.getOrderRequests');
 // 発注完了
