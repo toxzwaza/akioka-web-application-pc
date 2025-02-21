@@ -115,7 +115,9 @@ onMounted(() => {
                 ).toLocaleString()
               }}
             </td>
-            <td class="text-center border px-4 py-5"></td>
+            <td class="text-center border px-4 py-5">
+                {{ props.order_request.request_user_name }}
+            </td>
           </tr>
           <tr class="bg-gray-100">
             <td class="text-center border px-4 py-5"></td>
@@ -181,8 +183,7 @@ onMounted(() => {
       </table>
     </div>
     <div id="bottom_content" class="mt-6 flex items-start justify-between">
-      <textarea class="w-1/2" name="" id="" cols="30" rows="10">
-(備考)</textarea
+      <textarea class="w-1/2" name="" id="" cols="30" rows="10"></textarea
       >
 
       <div class="details w-1/2 pl-4">

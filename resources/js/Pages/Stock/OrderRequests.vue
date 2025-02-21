@@ -216,6 +216,11 @@ onMounted(() => {
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    依頼者
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >注文書</th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -301,6 +306,12 @@ onMounted(() => {
                         "ja-JP"
                       )
                     }}
+                  </td>
+                  <td 
+                      :class="{
+                      'px-4 py-3 text-lg text-gray-900': true,
+                    }">
+                    {{ order_request.request_user_name }}
                   </td>
 
                   <td

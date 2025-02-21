@@ -27,7 +27,7 @@ class OrderRequestController extends Controller
     public function getOrderRequests()
     {
         // 未受理の注文依頼のみ取得
-        $order_requests = OrderRequest::select('order_requests.id', 'order_requests.stock_id', 'order_requests.id as order_request_id', 'stocks.img_path','stocks.name','stocks.s_name', 'stocks.price as stock_price' ,'stocks.url', 'order_requests.quantity', 'order_requests.created_at')->join('stocks', 'stocks.id',  'order_requests.stock_id')->where('status', 0)->get();
+        $order_requests = OrderRequest::select('order_requests.id', 'order_requests.stock_id', 'order_requests.id as order_request_id', 'stocks.img_path','stocks.name','stocks.s_name', 'stocks.price as stock_price' ,'stocks.url', 'order_requests.quantity', 'order_requests.created_at', 'users.name as request_user_name')->join('stocks', 'stocks.id',  'order_requests.stock_id')->leftJoin('users','users.id','order_requests.request_user_id')->where('status', 0)->get();
 
         foreach($order_requests as $order_request){
            $stock_supplier = StockSupplier::select('suppliers.id as supplier_id','suppliers.name as supplier_name','stock_suppliers.lead_time')->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->where('stock_id', $order_request->stock_id)->where('stock_suppliers.del_flg', 0)->first();

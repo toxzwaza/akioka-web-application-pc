@@ -31,11 +31,13 @@ class PurchaseOrder extends Controller
                 'suppliers.name as supplier_name',
                 'suppliers.tel as supplier_tel',
                 'suppliers.fax as supplier_fax',
-                'users.name as user_name'
+                'users.name as user_name',
+                'request_user.name as request_user_name'
             )
             ->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
             ->join('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')
             ->join('users', 'users.id', '=', 'order_requests.user_id')
+            ->leftJoin('users as request_user', 'request_user.id', '=', 'order_requests.request_user_id')
             ->where('order_requests.id', $order_request_id)
             ->first();
         }
