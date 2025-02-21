@@ -54,7 +54,6 @@ class AcceptController extends Controller
             $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
 
             $url = route('stock.accept', ['order_request_id' => $order_request_id]);
-
             Helper::sendNotify(['ka-arakawa@akioka-ltd.jp'], $message, $url);
         } catch (Exception $e) {
             $status = false;
