@@ -70,15 +70,21 @@ class AcceptController extends Controller
         $order_request_id = $request->order_request_id;
         $accept_flg = $request->accept_flg;
 
+
+
         try {
+            if($accept_flg){
+                $order_request = OrderRequest::find($order_request_id);
+                $order_request->accept_flg = $accept_flg;
+                $order_request->save();
+            }
+
             $order_request = OrderRequest::select('order_requests.accept_flg', 'stocks.name as stock_name', 'stocks.s_name as stock_s_name')->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->where('order_requests.id', $order_request_id)
                 ->first();
-            $order_request->accept_flg = $accept_flg;
-            $order_request->save();
 
             // 通知者リスト
-            $notify_list = ['村上飛羽', '三谷優月', '岡堂莉子', '中村仁美'];
+            $notify_list = ['村上飛羽','三谷優月', '岡堂莉子', '中村仁美'];
 
             if ($accept_flg == 2) {
                 $message = $order_request->stock_name . ' ' . $order_request->stock_s_name . "の発注依頼が承認されました。\n\n以下のURLから発注を行ってください。";
