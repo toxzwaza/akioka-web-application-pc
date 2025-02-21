@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcceptController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PurchaseOrder;
@@ -40,6 +41,12 @@ Route::get('stocks/order_requests', [OrderRequestController::class, 'index'])->n
 Route::get('stocks/purchase_order/{order_request_id}', [PurchaseOrder::class, 'index'])->name('stock.purchase_order');
 // 発注依頼取得
 Route::get('stocks/getOrderRequests', [OrderRequestController::class, 'getOrderRequests'])->name('stock.getOrderRequests');
+// 承認依頼
+Route::post('/accept/order_request', [AcceptController::class, 'sendAccept'])->name('stock.accept.order_request');
+// 承認用画面
+Route::get('/stocks/accept', [AcceptController::class, 'index'])->name('stock.accept');
+// 承認結果送信
+Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.accept.store');
 // 発注完了
 Route::put('stocks/completeOrderRequest', [OrderRequestController::class, 'completeOrderRequest'])->name('stock.completeOrderRequest');
 

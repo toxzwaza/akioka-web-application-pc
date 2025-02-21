@@ -9,6 +9,8 @@ const props = defineProps({
   user_id: Number,
 });
 
+
+
 // 注文者
 const order_config = reactive({
   user_id: null,
@@ -39,6 +41,30 @@ const getOrderRequestByOrderRequestId = (order_request_id) => {
   return order_request;
 };
 
+// 承認依頼
+const sendAccept = (order_request_id) => {
+  console.log(order_request_id)
+  if(order_request_id){
+    axios.post(route('stock.accept.order_request'), {
+      order_request_id: order_request_id
+    })
+    .then(res => {
+      console.log(res.data)
+      if(res.data.status){
+        alert('承認依頼を送信しました。')
+        const order_request = order_requests.value.find(request => request.id === order_request_id);
+        if (order_request) {
+          order_request.accept_flg = 1;
+        }
+      }
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+}  
+
+// 完了処理
 const completeOrderRequest = (order_request_id) => {
   const order_request = getOrderRequestByOrderRequestId(order_request_id);
 
@@ -221,10 +247,19 @@ onMounted(() => {
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >注文書</th>
+                  >
+                    注文書
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    承認
+                  </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >完了</th>
+                  >
+                    完了
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -307,10 +342,11 @@ onMounted(() => {
                       )
                     }}
                   </td>
-                  <td 
-                      :class="{
+                  <td
+                    :class="{
                       'px-4 py-3 text-lg text-gray-900': true,
-                    }">
+                    }"
+                  >
                     {{ order_request.request_user_name }}
                   </td>
 
@@ -334,7 +370,24 @@ onMounted(() => {
                     >
                       発注書
                     </button>
-                    <span v-else class="text-sm text-red-500">注文者を選択してください。</span>
+                    <span v-else class="text-sm text-red-500"
+                      >注文者を選択してください。</span
+                    >
+                  </td>
+                  <td
+                    :class="{
+                      'px-4 py-3 text-lg text-gray-900 w-24': true,
+                    }"
+                  >
+                    <button
+                      @click="sendAccept(order_request.id)"
+                      v-if="order_request.accept_flg === 0"
+                      class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full"
+                    >
+                      依頼
+                    </button>
+                    <span class="text-sm bg-orange-500 hover:bg-orange-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 1">待ち</span>
+                    <span class="text-sm bg-yellow-500 hover:bg-yellow-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 2">済み</span>
                   </td>
                   <td
                     :class="{
