@@ -382,12 +382,13 @@ onMounted(() => {
                     <button
                       @click="sendAccept(order_request.id)"
                       v-if="order_request.accept_flg === 0"
-                      class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full"
+                      class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-full"
                     >
                       依頼
                     </button>
                     <span class="text-sm bg-orange-500 hover:bg-orange-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 1">待ち</span>
-                    <span class="text-sm bg-yellow-500 hover:bg-yellow-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 2">済み</span>
+                    <span class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 2">承認</span>
+                    <span class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 3">却下</span>
                   </td>
                   <td
                     :class="{
