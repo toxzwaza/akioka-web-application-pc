@@ -43,6 +43,8 @@ class AcceptController extends Controller
     public function sendAccept(Request $request)
     {
         $status = true;
+        $msg = "";
+
         try {
             $order_request_id = $request->order_request_id;
             $order_request = OrderRequest::find($order_request_id);
@@ -56,10 +58,11 @@ class AcceptController extends Controller
             Helper::sendNotify(['ka-arakawa@akioka-ltd.jp'], $message, $url);
         } catch (Exception $e) {
             $status = false;
+            $msg = $e->getMessage();
         }
 
 
-        return response()->json(['status' => $status]);
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
     public function store(Request $request)
@@ -77,7 +80,6 @@ class AcceptController extends Controller
 
             // 通知者リスト
             $notify_list = ['村上飛羽', '三谷優月', '岡堂莉子', '中村仁美'];
-            $url = route('stock.order_requests');
 
             if ($accept_flg == 2) {
                 $message = $order_request->stock_name . ' ' . $order_request->stock_s_name . "の発注依頼が承認されました。\n\n以下のURLから発注を行ってください。";
@@ -87,7 +89,7 @@ class AcceptController extends Controller
 
             foreach ($notify_list as $notify) {
                 $user = User::where('name', $notify)->first();
-                Helper::sendNotify([$user->email], $message, $url);
+                Helper::sendNotify([$user->email], $message, route('stock.order_requests', ['user_id' => $user->id]));
             }
         } catch (Exception $e) {
             $status = false;
