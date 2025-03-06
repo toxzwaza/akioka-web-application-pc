@@ -119,8 +119,8 @@ onMounted(() => {
       <div class="stream_container mb-8">
         <div>
           <span class="location_name text-gray-600 font-mono mb-1 inline-block"
-            >備品倉庫</span
-          >
+            >備品倉庫
+          </span>
           <div class="stream_img_div transition-all duration-500" :class="{'w-1/5' : !watchUpStream , 'w-full text-center' : watchUpStream}">
             <span class="rec_icon">REC●</span>
             <img @click="watchUpStream = !watchUpStream" class="transition-all duration-500" src="//192.168.210.91:8080?action=stream" alt="" />
