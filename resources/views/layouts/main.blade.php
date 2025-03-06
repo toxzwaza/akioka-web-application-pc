@@ -145,6 +145,12 @@
       </span>
       アキオカ従業員参照
     </a>
+    <a href="{{ route('master.calender') }}" class="flex mx-2 px-8 hover:text-gray-900">
+      <span class="text-gray-500 mr-1 material-symbols-outlined">
+        list_alt
+      </span>
+      カレンダー
+    </a>
 
 
     @elseif(Route::is('stock*'))

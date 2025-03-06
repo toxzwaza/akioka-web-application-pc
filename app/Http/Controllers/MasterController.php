@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Classification;
 use App\Models\Group;
+use App\Models\Holiday;
 use App\Models\Position;
 use App\Models\Process;
 use App\Models\User;
@@ -310,5 +311,38 @@ class MasterController extends Controller
     {
 
         return;
+    }
+
+    // カレンダー編集
+    public function calender()
+    {
+
+        return Inertia::render('Master/Calender');
+    }
+    public function get_holidays(Request $request)
+    {
+        $holidays = Holiday::where('is_holiday', '=', 1)->pluck('date');
+
+        return response()->json($holidays);
+    }
+    public function store_holiday(Request $request)
+    {
+        $holidays = $request->collect('holidays');
+        $status = true;
+
+        try {
+            foreach ($holidays as $holiday_date) {
+                $holiday = new Holiday();
+                $holiday->date = $holiday_date;
+                $holiday->is_holiday = 1;
+                $holiday->save();
+            }
+        } catch (Exception $e) {
+            $status = false;
+            return response()->json(['status' => $status, 'error' => $e->getMessage()]);
+        }
+
+
+        return response()->json(['status' => $status]);
     }
 }

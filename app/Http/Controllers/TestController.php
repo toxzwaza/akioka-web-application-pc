@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Services\Helper;
 use App\Models\InitialOrder;
 use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
@@ -21,6 +22,9 @@ class TestController extends Controller
     //
     public function test()
     {
+        $response = Helper::sendNotify(['to-murakami@akioka-ltd.jp'], 'test');
+
+        dd($response);
 
     
 
