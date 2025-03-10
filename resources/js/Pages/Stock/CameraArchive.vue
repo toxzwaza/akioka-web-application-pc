@@ -13,6 +13,9 @@ const getCameraMovies = () => {
   .then(res => {
     console.log(res.data)
     movies.value = res.data
+    if(res.data.length > 0){
+      selectWatchMovie(res.data[0])
+    }
   })
   .catch(error => {
     console.log(error)
@@ -56,7 +59,12 @@ onMounted(()=> {
               </thead>
               <tbody>
                 <tr v-for="movie in movies" :key="movie.id">
-                  <td class="px-4 py-3">{{ movie }}</td>
+                  <td :class="{'px-4 py-3' : true , 'text-green-500 font-bold text-lg': videoUrl.includes(movie)}" >
+                    <span v-if="videoUrl.includes(movie)">
+                      <i class="fas fa-play-circle text-green-500"></i>
+                    </span>
+                    {{ movie }}
+                  </td>
                   <td class="w-10 text-center px-4 py-3">
                     <button @click="selectWatchMovie(movie)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm whitespace-nowrap">
                     視聴  
