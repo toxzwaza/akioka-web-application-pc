@@ -119,8 +119,9 @@ onMounted(() => {
       <div class="stream_container mb-8">
         <div>
           <Link :href="route('stock.camera')">
-            <span class="location_name text-gray-600 font-mono mb-1 inline-block"
-            >備品倉庫
+            <span
+              class="location_name text-gray-600 font-mono mb-1 inline-block"
+              >備品倉庫
             </span>
           </Link>
 
@@ -327,6 +328,53 @@ onMounted(() => {
                         }}</span>
                         <span class="record_address">{{ record.address }}</span>
                       </p>
+                      <p class="text-gray-500 text-sm text-right">
+                        {{
+                          new Date(record.created_at).toLocaleTimeString(
+                            "ja-JP",
+                            { hour: "2-digit", minute: "2-digit" }
+                          )
+                        }}
+                      </p>
+                    </div>
+                    <!-- 数量調整の場合 -->
+                    <div
+                      v-if="record.inventory_operation_id == 9"
+                      class="flex-grow sm:pl-6 mt-6 sm:mt-0 text-container"
+                    >
+                      <a
+                        class="underline text-blue-500"
+                        :href="
+                          route('stock.edit.stocks', {
+                            stock_id: record.stock_id,
+                          })
+                        "
+                      >
+                        <span :class="{ 'record-stock-name font-bold': true }">
+                          {{ record.stock_name }}
+                        </span>
+                      </a>
+
+                      <span> を </span>
+                      <span class="record-quantity">
+                        {{ record.bef_quantity }}
+                      </span>
+                      <span> 個から </span>
+                      <span class="record-operation-name">
+                        {{ record.quantity }}
+                      </span>
+                      個へ
+                      <span class="record-operation-name">
+                        {{ record.inventory_operation_name }}
+                      </span>
+                      <span> しました。 </span>
+                      <p class="leading-relaxed text-md">
+                        <span class="font-bold mr-2 record_location_name">{{
+                          record.location_name
+                        }}</span>
+                        <span class="record_address">{{ record.address }}</span>
+                      </p>
+
                       <p class="text-gray-500 text-sm text-right">
                         {{
                           new Date(record.created_at).toLocaleTimeString(
