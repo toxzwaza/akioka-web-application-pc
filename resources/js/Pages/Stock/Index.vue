@@ -15,7 +15,7 @@ const sortOperation = reactive({
 });
 
 // ストリーミング動画を拡大表示
-const watchUpStream = ref(false)
+const watchUpStream = ref(false);
 
 const inventoryOperationBaseRecords = ref([]);
 const inventoryOperationRecordsByDate = ref([]);
@@ -118,12 +118,26 @@ onMounted(() => {
       <!-- 監視カメラ映像 -->
       <div class="stream_container mb-8">
         <div>
-          <span class="location_name text-gray-600 font-mono mb-1 inline-block"
+          <Link :href="route('stock.camera')">
+            <span class="location_name text-gray-600 font-mono mb-1 inline-block"
             >備品倉庫
-          </span>
-          <div class="stream_img_div transition-all duration-500" :class="{'w-1/5' : !watchUpStream , 'w-full text-center' : watchUpStream}">
+            </span>
+          </Link>
+
+          <div
+            class="stream_img_div transition-all duration-500"
+            :class="{
+              'w-1/5': !watchUpStream,
+              'w-full text-center': watchUpStream,
+            }"
+          >
             <span class="rec_icon">REC●</span>
-            <img @click="watchUpStream = !watchUpStream" class="transition-all duration-500" src="//192.168.210.91:8080?action=stream" alt="" />
+            <img
+              @click="watchUpStream = !watchUpStream"
+              class="transition-all duration-500"
+              src="//192.168.210.91:8080?action=stream"
+              alt=""
+            />
           </div>
         </div>
       </div>
@@ -225,6 +239,8 @@ onMounted(() => {
                           record.stock_img_path.includes('storage')
                             ? 'https://akioka.cloud/' + record.stock_img_path
                             : record.stock_img_path
+                            ? record.stock_img_path
+                            : '/img/base/camera.png'
                         "
                         class="w-12 h-12"
                         alt=""
@@ -321,43 +337,27 @@ onMounted(() => {
                       </p>
                     </div>
 
-                    <!-- 数量調整の場合 -->
+                    <!-- 録画開始の場合 -->
                     <div
-                      v-if="record.inventory_operation_id == 9"
+                      v-if="record.inventory_operation_id == 11"
                       class="flex-grow sm:pl-6 mt-6 sm:mt-0 text-container"
                     >
-                      <a
-                        class="underline text-blue-500"
-                        :href="
-                          route('stock.edit.stocks', {
-                            stock_id: record.stock_id,
-                          })
-                        "
-                      >
-                        <span :class="{ 'record-stock-name font-bold': true }">
-                          {{ record.stock_name }}
-                        </span>
-                      </a>
-
-                      <span> を </span>
-                      <span class="record-quantity">
-                        {{ record.bef_quantity }}
-                      </span>
-                      <span> 個から </span>
-                      <span class="record-operation-name">
-                        {{ record.quantity }}
-                      </span>
-                      個へ
-                      <span class="record-operation-name">
-                        {{ record.inventory_operation_name }}
-                      </span>
-                      <span> しました。 </span>
-                      <p class="leading-relaxed text-md">
-                        <span class="font-bold mr-2 record_location_name">{{
-                          record.location_name
-                        }}</span>
-                        <span class="record_address">{{ record.address }}</span>
+                      <p class="font-bold text-gray-700">録画開始</p>
+                      <p class="text-gray-500 text-sm text-right">
+                        {{
+                          new Date(record.created_at).toLocaleTimeString(
+                            "ja-JP",
+                            { hour: "2-digit", minute: "2-digit" }
+                          )
+                        }}
                       </p>
+                    </div>
+                    <!-- 録画終了の場合 -->
+                    <div
+                      v-if="record.inventory_operation_id == 12"
+                      class="flex-grow sm:pl-6 mt-6 sm:mt-0 text-container"
+                    >
+                      <p class="font-bold text-gray-700">録画終了</p>
                       <p class="text-gray-500 text-sm text-right">
                         {{
                           new Date(record.created_at).toLocaleTimeString(

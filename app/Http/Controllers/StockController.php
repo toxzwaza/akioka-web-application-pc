@@ -170,15 +170,15 @@ class StockController extends Controller
             // 入庫・出庫・数量変更のみ
             $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity', 'inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity',
             'inventory_operation_records.created_at', 'users.name as user_name', 'stocks.id as stock_id', 'stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path', 'storage_addresses.address', 'locations.name as location_name')
-            ->whereIn('inventory_operation_id', [2, 8, 9])
+            ->whereIn('inventory_operation_id', [2, 8, 9, 11, 12])
 
                 ->whereDate('inventory_operation_records.created_at', $target_date)
 
                 ->join('inventory_operations', 'inventory_operations.id', '=', 'inventory_operation_records.inventory_operation_id')
-                ->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
-                ->join('stock_storages', 'stock_storages.stock_id', 'stocks.id')
-                ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
-                ->join('locations', 'locations.id', 'storage_addresses.location_id')
+                ->leftJoin('stocks', 'stocks.id', 'inventory_operation_records.stock_id')
+                ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
+                ->leftJoin('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
+                ->leftJoin('locations', 'locations.id', 'storage_addresses.location_id')
                 ->leftJoin('users', 'users.id', 'inventory_operation_records.user_id')
                 ->orderBy('inventory_operation_records.created_at', 'desc')
                 ->get();
