@@ -10,6 +10,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockSupplierController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
+use App\Http\Controllers\CameraController;
 
 // 在庫管理システム
 Route::get('/test', [StockController::class, 'test'])->name('stock.test');
@@ -74,6 +75,9 @@ Route::get('/storage_addresses/create', [StockController::class, 'create_storage
 Route::get('/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
 Route::get('/storage_addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
 
+// 監視カメラ録画映像
+Route::get('/camera' ,[CameraController::class, 'index'])->name('stock.camera');
+Route::get('/camera/getCameraMovies', [CameraController::class, 'getCameraMovies'])->name('stock.getCameraMovies');
 
 
 
