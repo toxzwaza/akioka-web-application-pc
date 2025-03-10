@@ -37,8 +37,8 @@ onMounted(()=> {
       </h1>
 
     <div class="flex justify-between items-start">
-              <section class="w-1/3 text-gray-600 body-font">
-        <div class="container px-5 mx-auto">
+              <section class="w-1/4 text-gray-600 body-font">
+        <div class="container mx-auto">
 
           <div class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
@@ -57,7 +57,7 @@ onMounted(()=> {
               <tbody>
                 <tr v-for="movie in movies" :key="movie.id">
                   <td class="px-4 py-3">{{ movie }}</td>
-                  <td class="w-10 text-center">
+                  <td class="w-10 text-center px-4 py-3">
                     <button @click="selectWatchMovie(movie)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm whitespace-nowrap">
                     視聴  
                   </button>
@@ -75,6 +75,7 @@ onMounted(()=> {
           <video 
           :key="videoKey"
           controls  
+          autoplay
           width="640" 
           height="360"
           class="h-full w-full rounded-lg shadow-lg"
