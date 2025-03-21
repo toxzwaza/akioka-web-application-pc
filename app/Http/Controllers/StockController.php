@@ -168,9 +168,21 @@ class StockController extends Controller
 
         try {
             // 入庫・出庫・数量変更のみ
-            $inventory_operation_records = InventoryOperationRecord::select('inventory_operations.name as inventory_operation_name', 'inventory_operation_records.quantity', 'inventory_operation_records.inventory_operation_id', 'inventory_operation_records.bef_quantity',
-            'inventory_operation_records.created_at', 'users.name as user_name', 'stocks.id as stock_id', 'stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'stocks.img_path as stock_img_path', 'storage_addresses.address', 'locations.name as location_name')
-            ->whereIn('inventory_operation_id', [2, 8, 9, 11, 12])
+            $inventory_operation_records = InventoryOperationRecord::select(
+                'inventory_operations.name as inventory_operation_name',
+                'inventory_operation_records.quantity',
+                'inventory_operation_records.inventory_operation_id',
+                'inventory_operation_records.bef_quantity',
+                'inventory_operation_records.created_at',
+                'users.name as user_name',
+                'stocks.id as stock_id',
+                'stocks.name as stock_name',
+                'stocks.s_name as stock_s_name',
+                'stocks.img_path as stock_img_path',
+                'storage_addresses.address',
+                'locations.name as location_name'
+            )
+                ->whereIn('inventory_operation_id', [2, 8, 9, 11, 12])
 
                 ->whereDate('inventory_operation_records.created_at', $target_date)
 
@@ -364,11 +376,15 @@ class StockController extends Controller
     // 発注一覧
     public function initial_orders()
     {
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path')
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stock_suppliers.lead_time as base_lead_time')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
+            ->leftJoin('stock_suppliers', function($join) {
+                $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
+                     ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
+            })
             ->orderBy('order_date', 'desc')
             ->paginate(50);
-        
+
         return Inertia::render('Stock/InitialOrders', ['initial_orders' => $initial_orders]);
     }
 
@@ -399,7 +415,7 @@ class StockController extends Controller
 
         // stock_idを更新
         $stock = Stock::where('name', $initial_order->name)->where('s_name', $initial_order->s_name)->first();
-        if($stock){
+        if ($stock) {
             $initial_order->stock_id = $stock->id;
         }
 
@@ -412,39 +428,60 @@ class StockController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
-    public function update_expected_delivery_date(Request $request){
+    public function update_expected_delivery_date(Request $request)
+    {
         $status = true;
 
-        try{
+        try {
             $order_id = $request->order_id;
             $expected_delivery_date = $request->expected_delivery_date;
             $initial_order = InitialOrder::find($order_id);
             $initial_order->expected_delivery_date = $expected_delivery_date;
             $initial_order->save();
-
-        }catch(Exception $e){
+        } catch (Exception $e) {
             $status = false;
         }
-        return response()->json(['status' =>$status]);
-
+        return response()->json(['status' => $status]);
     }
 
-    public function update_delivery_date(Request $request){
+    public function update_delivery_date(Request $request)
+    {
         $status = true;
+        $new_lead_time = null;
 
-        try{
+        try {
             $order_id = $request->order_id;
             $delivery_date = $request->delivery_date;
 
             $initial_order = InitialOrder::find($order_id);
             $initial_order->delivery_date = $delivery_date;
+
+            // リードタイムを代入
+            if ($initial_order->order_date && $initial_order->delivery_date) {
+                $delivery_date = \Carbon\Carbon::parse($delivery_date);
+                $order_date = \Carbon\Carbon::parse($initial_order->order_date);
+                $lead_time = $delivery_date->diffInDays($order_date);
+                $initial_order->lead_time = $lead_time;
+            }
             $initial_order->save();
 
-        }catch(Exception $e){
+            // 平均リードタイムを再計算
+            $average_lead_time = InitialOrder::where('stock_id', $initial_order->stock_id)->where('supplier_id', $initial_order->supplier_id)->avg('lead_time');
+            $new_lead_time = round($average_lead_time);
+
+
+            $stock_supplier = StockSupplier::where('stock_id', $initial_order->stock_id)->where('supplier_id', $initial_order->supplier_id)->first();
+
+            if($stock_supplier){
+                $stock_supplier->lead_time = $new_lead_time;
+                $stock_supplier->save();
+            }
+
+        } catch (Exception $e) {
             $status = false;
         }
-        return response()->json(['status' =>$status]);
-
+        
+        return response()->json(['status' => $status, 'new_lead_time' => $new_lead_time]);
     }
 
 

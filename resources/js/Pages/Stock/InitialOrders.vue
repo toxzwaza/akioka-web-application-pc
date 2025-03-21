@@ -86,7 +86,7 @@ const updateNameOrSName = (id, field, value) => {
     .then((res) => {
       if (res.data.status) {
         confirm("更新が完了しました。");
-        window.location.reload()
+        window.location.reload();
       } else {
         if (
           confirm(
@@ -161,7 +161,7 @@ const updateExpectedDeliveryDate = (order_id, expected_delivery_date) => {
     })
     .then((res) => {
       console.log(res.data);
-      alert('納入予定日を更新しました。')
+      alert("納入予定日を更新しました。");
     })
     .catch((error) => {
       console.log(error);
@@ -175,8 +175,15 @@ const updateDeliveryDate = (order_id, delivery_date) => {
       delivery_date: delivery_date,
     })
     .then((res) => {
-      console.log(res.data);
-      alert('納入日を確定しました。')
+      console.log(res.data)
+
+      if (res.data.status) {
+        if (res.data.new_lead_time) {
+          alert(`納入日を登録しました。\nマスタの平均リードタイムを${res.data.new_lead_time}日に更新しました。`);
+        } else {
+          alert("納入日を登録しました。");
+        }
+      }
     })
     .catch((error) => {
       console.log(error);
@@ -398,6 +405,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
+                    LT
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
                     単価
                   </th>
                   <th
@@ -493,10 +505,7 @@ onMounted(() => {
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
                       @change="
-                        updateDeliveryDate(
-                          order.id,
-                          $event.target.value
-                        )
+                        updateDeliveryDate(order.id, $event.target.value)
                       "
                       type="date"
                       name=""
@@ -504,6 +513,19 @@ onMounted(() => {
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.delivery_date"
                     />
+                  </td>
+
+                  <td
+                    :class="{'ml-2 px-4 py-3 text-lg whitespace-nowrap' : true , 'text-gray-400': order.base_lead_time != null , 'text-gray-700': order.lead_time != null}"
+
+                  >
+                    {{
+                      order.lead_time
+                        ? `${order.lead_time}日`
+                        : order.base_lead_time
+                        ? `≒ ${order.base_lead_time}日`
+                        : "-"
+                    }}
                   </td>
 
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
@@ -524,7 +546,11 @@ onMounted(() => {
           </div>
         </div>
       </section>
-      <div id="modal" :class="{ active: modal_status.status }" @click="modal_status.status = false">
+      <div
+        id="modal"
+        :class="{ active: modal_status.status }"
+        @click="modal_status.status = false"
+      >
         <div id="close_container">
           <button
             @click="modal_status.status = !modal_status.status"
