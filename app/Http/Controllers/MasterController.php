@@ -16,13 +16,9 @@ use Inertia\Inertia;
 class MasterController extends Controller
 {
     //
-    public function index()
-    {
-        // 現状は、従業員追加ページへリダイレクト
-        return to_route('master.create.user');
+    public function index() {
 
-
-        return view('master.index');
+        return Inertia::render('Master/Home');
     }
 
 
@@ -32,20 +28,21 @@ class MasterController extends Controller
         $groups = Group::all();
         $positions = Position::all();
         $processes = Process::all();
-        return view('master.create_user', compact('groups', 'positions', 'processes'));
+
+
+        return Inertia::render('Master/Users/Create', ['groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
     }
 
 
     public function users()
     {
-        $users  = User::
-        select('users.id', 'users.name', 'users.group_id', 'users.position_id','users.process_id','users.gender_flg','users.email','users.emp_no', 'groups.name as group_name', 'positions.name as position_name', 'processes.name as process_name')
-        ->leftJoin('groups', 'groups.id', 'users.group_id')
-        ->leftJoin('positions', 'positions.id', 'users.position_id')
-        ->leftJoin('processes', 'processes.id', 'users.process_id')
-        ->orderBy('emp_no', 'asc')
-        ->where('del_flg', 0)
-        ->get();
+        $users  = User::select('users.id', 'users.name', 'users.group_id', 'users.position_id', 'users.process_id', 'users.gender_flg', 'users.email', 'users.emp_no', 'groups.name as group_name', 'positions.name as position_name', 'processes.name as process_name')
+            ->leftJoin('groups', 'groups.id', 'users.group_id')
+            ->leftJoin('positions', 'positions.id', 'users.position_id')
+            ->leftJoin('processes', 'processes.id', 'users.process_id')
+            ->orderBy('emp_no', 'asc')
+            ->where('del_flg', 0)
+            ->get();
 
         // 部署一覧
         $groups  = Group::all();
@@ -54,8 +51,7 @@ class MasterController extends Controller
         // 役職一覧
         $positions  = Position::all();
 
-        return Inertia::render('Master/Users', ['users' => $users, 'groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
-
+        return Inertia::render('Master/Users/Index', ['users' => $users, 'groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
     }
 
 
@@ -63,10 +59,12 @@ class MasterController extends Controller
 
     public function store_user(Request $request)
     {
-
+        $id = $request->id;
         $name = $request->name;
+        $emp_no = $request->emp_no;
+        $gender_flg = $request->gender_flg;
         $email = $request->email;
-        $pwd = $request->pwd ?? 'pwd';
+        $pwd = $request->password ?? 'pwd';
         $fax_folder_name = $request->fax_folder_name;
         $group_id = $request->group_id;
         $position_id = $request->position_id;
@@ -76,46 +74,48 @@ class MasterController extends Controller
         $part_flg = $request->part_flg ? 1 : 0;
         $always_order_flg = $request->always_order_flg ? 1 : 0;
 
+        $status = true;
+        $msg = "";
+
+
         try {
-            $user = new User();
-            $user->name = $name;
-            $user->email = $email;
-            $user->password = $pwd;
-            $user->group_id = $group_id;
-            $user->position_id = $position_id;
-            $user->process_id = $process_id;
-            $user->is_admin = $is_admin;
-            $user->dispatch_flg = $dispatch_flg;
-            $user->part_flg = $part_flg;
-            $user->always_order_flg = $always_order_flg;
-            $user->fax_folder_name = $fax_folder_name;
+            $user = $id ? User::find($id) : new User();
+            $user->fill([
+                'name' => $name,
+                'emp_no' => $emp_no,
+                'gender_flg' => $gender_flg,
+                'email' => $email,
+                'password' => $pwd,
+                'group_id' => $group_id,
+                'position_id' => $position_id,
+                'process_id' => $process_id,
+                'is_admin' => $is_admin,
+                'dispatch_flg' => $dispatch_flg,
+                'part_flg' => $part_flg,
+                'always_order_flg' => $always_order_flg,
+                'fax_folder_name' => $fax_folder_name,
+            ]);
             $user->save();
         } catch (Exception $e) {
-            Method::errorMsg();
-            return redirect()->back();
+            $status = false;
+            $msg = $e->getMessage();
         }
 
 
-        Method::msg('success', 'ユーザー登録が完了しました。');
-        return redirect()->back();
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
-    public function edit_user($user_id)
+    public function show_user($user_id)
     {
-        $user = User::where('id', '=', $user_id)->first();
+        $user = User::where('id', $user_id)->first();
 
         $groups = Group::all();
         $positions = Position::all();
         $processes = Process::all();
 
-        return view('master.edit_user', compact('user', 'groups', 'positions', 'processes'));
+        return Inertia::render('Master/Users/Show', ['user' => $user, 'groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
     }
 
-    public function store()
-    {
-
-        return;
-    }
 
     // カレンダー編集
     public function calender()

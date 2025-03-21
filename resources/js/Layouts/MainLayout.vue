@@ -307,15 +307,15 @@ const props = defineProps({
     </template>
 
     <template v-else-if="route().current().startsWith('lunch')">
-      <Link
+      <a
         :href="route('lunch.order-archive')"
         class="flex mx-2 px-8 hover:text-gray-900"
-        >弁当注文履歴</Link
+        >弁当注文履歴</a
       >
-      <Link
+      <a
         :href="route('lunch.create_description')"
         class="flex mx-2 px-8 hover:text-gray-900"
-        >備考作成</Link
+        >備考作成</a
       >
     </template>
 

@@ -139,12 +139,7 @@
       </span>
       全従業員参照
     </a>
-    <a href="{{ route('master.akioka-users') }}" class="flex mx-2 px-8 hover:text-gray-900">
-      <span class="text-gray-500 mr-1 material-symbols-outlined">
-        list_alt
-      </span>
-      アキオカ従業員参照
-    </a>
+
     <a href="{{ route('master.calender') }}" class="flex mx-2 px-8 hover:text-gray-900">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
         list_alt
@@ -237,6 +232,7 @@
 
 
     @elseif(Route::is('lunch*'))
+    <a href="{{ route('lunch.order') }}" class="flex mx-2 px-8 hover:text-gray-900">当日弁当発注書</a>
     <a href="{{ route('lunch.order-archive') }}" class="flex mx-2 px-8 hover:text-gray-900">弁当注文履歴</a>
     <a href="{{ route('lunch.create_description') }}" class="flex mx-2 px-8 hover:text-gray-900">備考作成</a>
     @elseif(Route::is('movie*'))

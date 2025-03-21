@@ -1,6 +1,7 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import { onMounted, ref } from "vue";
+import { Link } from "@inertiajs/vue3"
 import QRCode from "qrcode";
 
 const props = defineProps({
@@ -77,26 +78,30 @@ const clearFilter = () => {
 };
 
 function printElement() {
-    // 印刷用のiframeを作成
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    // iframeのドキュメントに現在のページのスタイルをコピー
-    const styleSheets = Array.from(document.styleSheets);
-    const styles = styleSheets.map(sheet => {
-        try {
-            return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
-        } catch (e) {
-            return '';
-        }
-    }).join('\n');
+  // 印刷用のiframeを作成
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
 
-    // 印刷したい要素を取得
-    const printContent = document.getElementById('print_container');
-    
-    // iframeのドキュメントに内容を書き込む
-    iframe.contentDocument.write(`
+  // iframeのドキュメントに現在のページのスタイルをコピー
+  const styleSheets = Array.from(document.styleSheets);
+  const styles = styleSheets
+    .map((sheet) => {
+      try {
+        return Array.from(sheet.cssRules)
+          .map((rule) => rule.cssText)
+          .join("\n");
+      } catch (e) {
+        return "";
+      }
+    })
+    .join("\n");
+
+  // 印刷したい要素を取得
+  const printContent = document.getElementById("print_container");
+
+  // iframeのドキュメントに内容を書き込む
+  iframe.contentDocument.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -107,21 +112,20 @@ function printElement() {
         </body>
         </html>
     `);
-    
-    iframe.contentDocument.close();
-    
-    // 印刷
-    iframe.contentWindow.focus();
-    setTimeout(() => {
-        iframe.contentWindow.print();
-    }, 500); // 500ミリ秒の待機時間を追加
-    
-    // 印刷後にiframeを削除
-    setTimeout(() => {
-        document.body.removeChild(iframe);
-    }, 1000);
-}
 
+  iframe.contentDocument.close();
+
+  // 印刷
+  iframe.contentWindow.focus();
+  setTimeout(() => {
+    iframe.contentWindow.print();
+  }, 500); // 500ミリ秒の待機時間を追加
+
+  // 印刷後にiframeを削除
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+  }, 1000);
+}
 
 onMounted(() => {
   base_users.value = props.users;
@@ -297,6 +301,9 @@ onMounted(() => {
                   >
                     役職
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm"
+                  ></th>
                 </tr>
               </thead>
               <tbody>
@@ -304,7 +311,6 @@ onMounted(() => {
                   v-for="user in filter_users"
                   :key="user.id"
                   class="even:bg-gray-100 hover:bg-green-100 transition-all duration-100"
-                  @click="user.select_flg = !user.select_flg"
                 >
                   <td class="px-4 py-3">
                     <input
@@ -322,6 +328,14 @@ onMounted(() => {
                   <td class="px-4 py-3">{{ user.group_name }}</td>
                   <td class="px-4 py-3">{{ user.process_name }}</td>
                   <td class="px-4 py-3">{{ user.position_name }}</td>
+                  <td class="px-4 py-3">
+                    <Link
+                      :href="route('master.show.user', { user_id: user.id })"
+                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
+                    >
+                      詳細
+                    </Link>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -331,7 +345,7 @@ onMounted(() => {
       <section v-else>
         <div class="mb-2">
           <button
-          @click="printElement"
+            @click="printElement"
             class="mr-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
           >
             印刷

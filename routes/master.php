@@ -14,5 +14,5 @@ Route::post('/store/holiday', [MasterController::class, 'store_holiday'])->name(
 
 Route::get('/create/users', [MasterController::class, 'create_user'])->name('master.create.user');
 Route::post('/store/users', [MasterController::class, 'store_user'])->name('master.store.users');
-Route::get('/store', [MasterController::class, 'store'])->name('master.store');
-Route::get('/edit/users/{user_id}', [MasterController::class, 'edit_user'])->name('master.edit.user');
+
+Route::get('/show/users/{user_id}', [MasterController::class, 'show_user'])->name('master.show.user');

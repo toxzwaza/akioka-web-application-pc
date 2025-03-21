@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lunch;
 use App\Models\LunchOrder;
 use App\Models\LunchOrderArchive;
 use App\Models\TodayLunchDescription;
 use App\Services\Method;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LunchController extends Controller
 {
@@ -16,8 +18,32 @@ class LunchController extends Controller
     {
 
 
-
         return view('lunch.index');
+    }
+    public function order()
+    {
+
+        $price = Lunch::find(1)->price;
+        $lunch_order = LunchOrder::whereDate('date', \Carbon\Carbon::today()->format('Y-m-d'))->where('order_flg', 1)->get();
+        $today_lunch_description = TodayLunchDescription::whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
+
+        $count = count($lunch_order);
+
+        // 注文書アーカイブが存在しない場合
+        $lunch_order_archive = LunchOrderArchive::whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
+        if (!$lunch_order_archive) {
+            $lunch_order_archive = new LunchOrderArchive();
+            $lunch_order_archive->lunch_count = $count;
+            $lunch_order_archive->side_dish_count = 0;
+            $lunch_order_archive->lunch_calc = $count * $price;
+            $lunch_order_archive->side_dish_calc = 0;
+            $lunch_order_archive->memo = $today_lunch_description->description ?? '';
+            $lunch_order_archive->user_id = 117;
+            $lunch_order_archive->save();
+        }
+
+
+        return Inertia::render('Lunch/Order', ['count' => $count, 'price' => $price, 'today_lunch_description' => $today_lunch_description->description ?? '']);
     }
 
     public function order_archive(Request $request)
@@ -84,7 +110,7 @@ class LunchController extends Controller
     {
         $orders = LunchOrderArchive::selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as created_date, lunch_count, side_dish_count')->get();
         $orders = response()->json($orders);
-        
+
         return $orders;
     }
 }
