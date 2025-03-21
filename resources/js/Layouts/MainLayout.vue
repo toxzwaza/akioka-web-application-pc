@@ -115,15 +115,6 @@ const props = defineProps({
         全従業員参照</Link
       >
       <Link
-        :href="route('master.akioka-users')"
-        class="flex mx-2 px-8 hover:text-gray-900"
-      >
-        <span class="text-gray-500 mr-1 material-symbols-outlined">
-          list_alt
-        </span>
-        アキオカ従業員参照</Link
-      >
-      <Link
         :href="route('master.calender')"
         class="flex mx-2 px-8 hover:text-gray-900"
       >
