@@ -11,9 +11,11 @@ use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -22,9 +24,22 @@ class TestController extends Controller
     //
     public function test()
     {
-        $response = Helper::sendNotify(['to-murakami@akioka-ltd.jp'], 'test');
+        $url = "http://192.168.0.143:5000/movie/youtube_upload?id=244&file_path=%5C%5Cfserver%5Cshare%5CRPA%5Cbentou%5Ctesat.mp4&title=test&description=test";
 
-        dd($response);
+        // Promiseを待機
+        $promise = Http::async()->get($url);
+        
+        try {
+            $response = $promise->wait();
+            if ($response->successful()) {
+                // 処理を実行しながらreturn で trueをjsonで変換
+                return response()->json(true);
+            } else {
+                return response()->json(false);
+            }
+        } catch (Exception $e) {
+            return response()->json(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
+        }
 
     
 

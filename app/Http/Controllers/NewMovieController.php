@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Services\Helper;
 use App\Models\Movie;
 use App\Models\MovieMemo;
 use App\Models\MovieTag;
@@ -14,6 +15,7 @@ use Inertia\Inertia;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise;
+use Illuminate\Support\Facades\Http;
 
 class NewMovieController extends Controller
 {
@@ -128,11 +130,14 @@ class NewMovieController extends Controller
         // カテゴリー一覧を取得
         $movie_categories = MovieTagCategory::all();
 
-        return Inertia::render('Movie/CreateMovie', ['movie_categories' => $movie_categories]);
+        // ログイン者を取得
+        $user = User::where('id', session('user.id'))->first();
+
+        return Inertia::render('Movie/CreateMovie', ['movie_categories' => $movie_categories, 'user' => $user]);
     }
     public function store(Request $request)
     {
-        $status = 'ok';
+        $status = true;
         $msg = "";
 
         $title = $request->title;
@@ -141,28 +146,33 @@ class NewMovieController extends Controller
         $file = $request->file('file');
         $tag_id = $request->tag_id;
         $description = $request->description;
+        $email = $request->email ?? '';
 
-        if ($file_path) {
-            $movie = new Movie();
-            $movie->name = $title;
-            $movie->memo = $description;
-            $movie->movie_tag_id = $tag_id;
-            // 投稿日が記載されている場合
-            if ($created_at != 'null') {
-                $movie->created_at = $created_at;
+        try {
+            if ($file_path) {
+                $movie = new Movie();
+                $movie->name = $title;
+                $movie->memo = $description ?? '未設定';
+                $movie->movie_tag_id = $tag_id;
+
+                // 投稿日が記載されている場合
+                if ($created_at != 'null') {
+                    $movie->created_at = $created_at;
+                }
+                $movie->save();
+
+
+                // RPAサーバーへリクエスト
+                $url = "http://192.168.0.143:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description) . "&mention_id=" . urlencode($email);
+                $msg = $url;
+                $response = Http::get($url);
             }
-
-            // 一時的に無効
-            $movie->save();
-
-
-            // RPAサーバーへリクエスト
-            $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description);
-
-
-            $msg = "動画を登録しています。(3~5分程度で完了します)";
-            return response()->json(['status' => $status, 'msg' => $msg, 'url' => $url ]);
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
         }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
     public function getMemos($movie_id)

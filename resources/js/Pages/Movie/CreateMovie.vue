@@ -8,6 +8,7 @@ import { getCategories, getCategoryTags } from "@/Helper/getByAxios";
 
 const props = defineProps({
   movie_categories: Array,
+  user: Object,
 });
 const form = reactive({
   created_at: null,
@@ -26,7 +27,7 @@ const sendMovie = () => {
     alert("すべての必須フィールドを入力してください。");
     return;
   }
-  upload_flg.value = true
+  upload_flg.value = true;
 
   // データを送信
   const formData = new FormData();
@@ -36,6 +37,7 @@ const sendMovie = () => {
   formData.append("file", form.file);
   formData.append("tag_id", form.tag_id);
   formData.append("description", form.description);
+  formData.append("email", props.user.email);
 
   axios
     .post(route("movie2.store"), formData, {
@@ -44,20 +46,7 @@ const sendMovie = () => {
       },
     })
     .then((res) => {
-      if (res.data.status === "ok" && res.data.url) {
-        // RPAを起動
-        axios
-          .get(res.data.url)
-          .then((res) => {
-            upload_flg = false
-            window.location.href = route("movie2");
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      } else {
-        alert(res.data.msg);
-      }
+
     })
     .catch((error) => {
       console.log(error);
@@ -66,7 +55,7 @@ const sendMovie = () => {
 const handleFileChange = (event) => {
   const file = event.target.files[0];
   const maxSizeInMB = 500;
-  const maxSizeInBytes = maxSizeInMB * 1024 * 1024; 
+  const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
   // 500MBをバイトに変換
 
   if (file) {
@@ -89,6 +78,7 @@ const get_category_tags = async (category_id) => {
 
 onMounted(async () => {
   categories.value = await getCategories();
+  console.log(props.user);
 });
 </script>
 <template>
@@ -107,7 +97,7 @@ onMounted(async () => {
             <p
               class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg"
             >
-              動画をアップロードすることができます。
+              動画をアップロードすることができます。<br />
             </p>
           </div>
 
@@ -116,6 +106,11 @@ onMounted(async () => {
             class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2"
             method="post"
           >
+            <h4 class="font-bold text-indigo-500">
+              通知先：{{ props.user.name }}({{ props.user.email }}) <br>
+              <span class="text-sm font-normal">※teamsよりログイン者宛てに送信されます。</span>
+            </h4>
+
             <div class="sm:col-span-2">
               <label
                 for="file"
@@ -278,7 +273,10 @@ onMounted(async () => {
               {{ char }}
             </span>
           </h2>
-          <p class="mb-16 text-lg mx-auto text-red-400">この画面は閉じていただいても構いません。通常、1~2分程度でアップロードが完了します。</p>
+          <p class="mb-16 text-lg mx-auto text-red-400">
+            動画をアップロードしています。<br>
+            アップロードが完了するとteamsよりメッセージが送信されます。
+          </p>
           <div class="flex justify-center">
             <img class="w-1/3" src="/uploading.gif" alt="Uploading GIF" />
           </div>
