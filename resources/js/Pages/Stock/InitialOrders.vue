@@ -204,7 +204,7 @@ onMounted(() => {
       <h1 class="text-center text-xl font-bold text-gray-800">発注一覧</h1>
 
       <section class="text-gray-600 body-font">
-        <div class="container px-5 py-12 mx-auto">
+        <div class="py-12 mx-auto">
           <div class="flex flex-col text-center w-full mb-20">
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
               発注確認と品名・品番の修正が可能です。<br />

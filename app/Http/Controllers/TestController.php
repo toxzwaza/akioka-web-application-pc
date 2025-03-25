@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Services\Helper;
+use App\Models\ImportProduct;
 use App\Models\InitialOrder;
 use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
@@ -24,21 +25,12 @@ class TestController extends Controller
     //
     public function test()
     {
-        $url = "http://192.168.0.143:5000/movie/youtube_upload?id=244&file_path=%5C%5Cfserver%5Cshare%5CRPA%5Cbentou%5Ctesat.mp4&title=test&description=test";
-
-        // Promiseを待機
-        $promise = Http::async()->get($url);
-        
-        try {
-            $response = $promise->wait();
-            if ($response->successful()) {
-                // 処理を実行しながらreturn で trueをjsonで変換
-                return response()->json(true);
-            } else {
-                return response()->json(false);
-            }
-        } catch (Exception $e) {
-            return response()->json(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
+        $importProducts = ImportProduct::where('price', 'like', "¥%")->get();
+        foreach ($importProducts as $importProduct) {
+            echo "<p>" . $importProduct->parts_num . " : " . $importProduct->price . "</p>";
+            // $importProduct->price = str_replace("\\\\",'',$importProduct->price);
+            // $importProduct->price = null;
+            // $importProduct->save();
         }
 
     
