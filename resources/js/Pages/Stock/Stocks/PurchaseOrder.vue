@@ -4,6 +4,8 @@ import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
   order_request: Object,
+  current_month_holidays: Array,
+  next_month_holidays: Array,
 });
 
 const print_status = ref(false);
@@ -23,7 +25,12 @@ onMounted(() => {
 <template>
   <div v-if="!print_status" class="m-8">
     <div>
-      <p class="mb-4">注文書内容が正しいことを確認し、以下の<span class="font-bold text-blue-500">発注ボタン</span>からFAXを送信してください。</p>
+      <p class="mb-4">
+        注文書内容が正しいことを確認し、以下の<span
+          class="font-bold text-blue-500"
+          >発注ボタン</span
+        >からFAXを送信してください。
+      </p>
     </div>
 
     <button
@@ -60,9 +67,23 @@ onMounted(() => {
       </div>
       <div class="center_container text-center p-4">
         <h3 class="font-bold text-xl mb-4">休業日</h3>
-        <p>
-          1月1-5, 11-12,18-19,25-26日<br />
-          2月1-2, 8-9日, 15-16日, 22-23日
+        <p class="font-bold">
+          {{ new Date().getMonth() + 1 }}月
+          <span
+          class="font-normal"
+            v-for="currentMonth in current_month_holidays"
+            :key="currentMonth.id"
+            >{{ new Date(currentMonth.date).getDate() }},</span
+          >日
+        </p>
+        <p class="font-bold">
+          {{ new Date().getMonth() + 2 }}月
+          <span
+          class="font-normal"
+            v-for="nextMonth in next_month_holidays"
+            :key="nextMonth.id"
+            >{{ new Date(nextMonth.date).getDate() }},</span
+          >日
         </p>
       </div>
       <div class="right_container">
@@ -84,8 +105,8 @@ onMounted(() => {
           <tr>
             <th class="px-4 py-2 text-gray-700">品名</th>
             <th class="px-4 py-2 text-gray-700">品番</th>
-            <th class="px-4 py-2 text-gray-700">社内在庫数</th>
-            <th class="px-4 py-2 text-gray-700">在庫消化予定日</th>
+            <th class="px-4 py-2 text-gray-700">納入場所</th>
+            <th class="px-4 py-2 text-gray-700">納入希望日</th>
             <th class="px-4 py-2 text-gray-700">数量</th>
             <th class="px-4 py-2 text-gray-700">単価</th>
             <th class="px-4 py-2 text-gray-700">金額(税抜価格)</th>
@@ -100,8 +121,12 @@ onMounted(() => {
             <td class="text-center border px-4 py-5">
               {{ props.order_request.stock_s_name ?? "-" }}
             </td>
-            <td class="text-center border px-4 py-5">-</td>
-            <td class="text-center border px-4 py-5">-</td>
+            <td class="text-center border px-4 py-5">
+              {{ props.order_request.deli_location ?? "-" }}
+            </td>
+            <td class="text-center border px-4 py-5">
+              <input class="p-0 border-transparent" type="date" name="" id="">
+            </td>
             <td class="text-center border px-4 py-5">
               {{ props.order_request.quantity }}
             </td>
@@ -116,7 +141,7 @@ onMounted(() => {
               }}
             </td>
             <td class="text-center border px-4 py-5">
-                {{ props.order_request.request_user_name }}
+              {{ props.order_request.request_user_name }}
             </td>
           </tr>
           <tr class="bg-gray-100">
@@ -183,8 +208,7 @@ onMounted(() => {
       </table>
     </div>
     <div id="bottom_content" class="mt-6 flex items-start justify-between">
-      <textarea class="w-1/2" name="" id="" cols="30" rows="10"></textarea
-      >
+      <textarea class="w-1/2" name="" id="" cols="30" rows="10"></textarea>
 
       <div class="details w-1/2 pl-4">
         <p class="text-sm font-serif">
