@@ -73,7 +73,7 @@
                     <tr class="border-b border-gray-200 my-2 hover:bg-slate-200 transition">
 
                         <td class="w-1/6 py-2 px-2 text-gray-900">
-                            <a href="{{ route('stock.edit.stocks', ['stock_id' => $stock->id ]) }}" class="hover:text-blue-200 w-full">
+                            <a href="{{ route('stock.show.stocks', ['stock_id' => $stock->id ]) }}" class="hover:text-blue-200 w-full">
                                 <img class="w-full" src="{{ $stock->img_path && strpos($stock->img_path, 'https://') !== false ? $stock->img_path : 'https://akioka.cloud/' . $stock->img_path }}" alt="">
                             </a>
                         </td>

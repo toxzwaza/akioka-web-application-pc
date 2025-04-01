@@ -1,15 +1,22 @@
 <?php
+
 namespace App\Services;
 
-class Method{
+use App\Models\InitialOrder;
+use App\Models\StockSupplier;
 
-    public static function msg($status="info", $msg){
+class Method
+{
+
+    public static function msg($status = "info", $msg)
+    {
 
         session()->flash('message', $msg);
         session()->flash('status', $status);
     }
-    
-    public static function isLogin(){
+
+    public static function isLogin()
+    {
         $is_success = false;
 
         if (session('user')) {
@@ -18,14 +25,45 @@ class Method{
         }
         return $is_success;
     }
-    public static function errorMsg(){
-        self::msg('error','エラーが発生しました。管理者へ連絡してください。');
+    public static function errorMsg()
+    {
+        self::msg('error', 'エラーが発生しました。管理者へ連絡してください。');
     }
 
-    public static function checkNull($target){
-        if(!$target){
+    public static function checkNull($target)
+    {
+        if (!$target) {
             self::errorMsg();
             return redirect()->back();
+        }
+    }
+
+    // 納品日セットトリードタイム再計算
+    public static function setDeliveryDateAndUpdateLeadTime($initial_order_id, $delivery_date)
+    {
+        $initial_order = InitialOrder::find($initial_order_id);
+        $initial_order->delivery_date = $delivery_date;
+
+        // リードタイムを代入
+        if ($initial_order->order_date && $initial_order->delivery_date) {
+            $delivery_date = \Carbon\Carbon::parse($delivery_date);
+            $order_date = \Carbon\Carbon::parse($initial_order->order_date);
+            $lead_time = $delivery_date->diffInDays($order_date);
+            $initial_order->lead_time = $lead_time;
+        }
+
+
+        // 平均リードタイムを再計算
+        $average_lead_time = InitialOrder::where('stock_id', $initial_order->stock_id)->where('supplier_id', $initial_order->supplier_id)->avg('lead_time');
+        $new_lead_time = round($average_lead_time);
+        $initial_order->save();
+
+
+        $stock_supplier = StockSupplier::where('stock_id', $initial_order->stock_id)->where('supplier_id', $initial_order->supplier_id)->first();
+
+        if ($stock_supplier) {
+            $stock_supplier->lead_time = $new_lead_time;
+            $stock_supplier->save();
         }
     }
 }

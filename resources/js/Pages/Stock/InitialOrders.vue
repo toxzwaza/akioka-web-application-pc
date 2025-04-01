@@ -4,9 +4,12 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import Purchase from "@/Components/Purchase.vue";
 
 const props = defineProps({
   initial_orders: Object,
+  current_month_holidays: Array,
+  next_month_holidays: Array,
 });
 
 const modal_status = reactive({
@@ -14,19 +17,24 @@ const modal_status = reactive({
   img_path: "",
 });
 
-const openModal = (img_path) => {
+const print_order = ref(null)
+
+const openModal = (img_path, order) => {
   modal_status.img_path = "";
 
-  if (!img_path) {
-    return;
+  // 納品書
+  if (img_path) {
+    modal_status.img_path =
+      img_path && img_path.includes("storage")
+        ? `https://akioka.cloud/${img_path}`
+        : img_path.includes("deli_file")
+        ? `https://akioka.cloud/storage/${img_path}`
+        : img_path;
+  }else if(order){
+    // 発注書
+    print_order.value = order
+    console.log('セットしました。', print_order.value)
   }
-
-  modal_status.img_path =
-    img_path && img_path.includes("storage")
-      ? `https://akioka.cloud/${img_path}`
-      : img_path.includes("deli_file")
-      ? `https://akioka.cloud/storage/${img_path}`
-      : img_path;
 
   modal_status.status = true;
 };
@@ -175,11 +183,13 @@ const updateDeliveryDate = (order_id, delivery_date) => {
       delivery_date: delivery_date,
     })
     .then((res) => {
-      console.log(res.data)
+      console.log(res.data);
 
       if (res.data.status) {
         if (res.data.new_lead_time) {
-          alert(`納入日を登録しました。\nマスタの平均リードタイムを${res.data.new_lead_time}日に更新しました。`);
+          alert(
+            `納入日を登録しました。\nマスタの平均リードタイムを${res.data.new_lead_time}日に更新しました。`
+          );
         } else {
           alert("納入日を登録しました。");
         }
@@ -422,13 +432,23 @@ onMounted(() => {
                   >
                     金額
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    発注書
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    納品書
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr
                   v-for="order in initial_orders"
                   :key="order.id"
-                  :class="{ 'bg-indigo-50': !order.img_path }"
+                  :class="{ 'bg-indigo-50': !order.stock_id }"
                 >
                   <td
                     :class="{
@@ -436,7 +456,6 @@ onMounted(() => {
                       'text-green-500 font-bold cursor-pointer':
                         order.receive_flg,
                     }"
-                    @click="openModal(order.delifile_path)"
                   >
                     {{ order.order_no }}
                   </td>
@@ -516,8 +535,11 @@ onMounted(() => {
                   </td>
 
                   <td
-                    :class="{'ml-2 px-4 py-3 text-lg whitespace-nowrap' : true , 'text-gray-400': order.base_lead_time != null , 'text-gray-700': order.lead_time != null}"
-
+                    :class="{
+                      'ml-2 px-4 py-3 text-lg whitespace-nowrap': true,
+                      'text-gray-400': order.base_lead_time != null,
+                      'text-gray-700': order.lead_time != null,
+                    }"
                   >
                     {{
                       order.lead_time
@@ -540,6 +562,27 @@ onMounted(() => {
                     {{ order.calc_price.toLocaleString() }}
                     <span class="text-xs text-gray-600">円</span>
                   </td>
+                  <td
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
+                    <button
+                    @click="openModal(null, order)"
+                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    >
+                      発注書
+                    </button>
+                  </td>
+                  <td
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
+                    <button
+                      v-if="order.delifile_path"
+                      class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      @click="openModal(order.delifile_path)"
+                    >
+                      納品書
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -549,7 +592,6 @@ onMounted(() => {
       <div
         id="modal"
         :class="{ active: modal_status.status }"
-        @click="modal_status.status = false"
       >
         <div id="close_container">
           <button
@@ -561,9 +603,16 @@ onMounted(() => {
           </button>
         </div>
 
-        <div id="img_modal">
+        <div v-if="modal_status.img_path" id="img_modal">
           <img :src="modal_status.img_path" alt="" />
         </div>
+
+        <Purchase
+          v-else
+          :current_month_holidays="props.current_month_holidays"
+          :next_month_holidays="props.next_month_holidays"
+          :order="print_order"
+        />
       </div>
     </template>
   </MainLayout>
@@ -603,6 +652,32 @@ onMounted(() => {
       height: 100%;
       object-fit: contain;
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    }
+  }
+}
+
+#purchase_container {
+  width: 297mm;
+  height: 210mm;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  border: 1px solid rgba(221, 221, 221, 0.705);
+  & #top_content {
+    & > div {
+      width: 30%;
+    }
+
+    & .center_container {
+      border: 1px solid rgba(82, 82, 82, 0.555);
+      border-radius: 3px;
+    }
+  }
+
+  & #bottom_content {
+    height: 16%;
+    & textarea {
+      height: 100%;
+      border: 1px solid rgba(82, 82, 82, 0.555);
+      border-radius: 3px;
     }
   }
 }

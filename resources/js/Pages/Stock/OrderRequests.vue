@@ -272,7 +272,7 @@ onMounted(() => {
                     <a
                       class="underline text-blue-500"
                       :href="
-                        route('stock.edit.stocks', {
+                        route('stock.show.stocks', {
                           stock_id: order_request.stock_id,
                         })
                       "
@@ -326,7 +326,7 @@ onMounted(() => {
                     <span v-else class="text-sm text-red-500 underline"
                       ><a
                         :href="
-                          route('stock.edit.stocks', {
+                          route('stock.show.stocks', {
                             stock_id: order_request.stock_id,
                           })
                         "

@@ -206,51 +206,62 @@ class StockController extends Controller
     // 在庫一覧
     public function stocks(Request $request)
     {
+        $suppliers = StockSupplier::select('suppliers.id', 'suppliers.name')->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->distinct()->get();
         $keyword = $request->keyword;
-        $storage_address_id = $request->storage_address_id;
-
-        if ($storage_address_id) {
-
-            if ($keyword) {
-                // 格納アドレスと検索キーワード
-                $stocks = StockStorage::select('stocks.*')
-                    ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
-                    ->where('storage_address_id', $storage_address_id)
-                    ->where(function ($query) use ($keyword) {
-                        $query->where('stocks.name', 'like', "%$keyword%")
-                            ->orWhere('stocks.s_name', 'like', "%$keyword%")
-                            ->orWhere('stocks.jan_code', 'like', "%$keyword%");
-                    })
-                    ->orderby('updated_at', 'desc')
-                    ->paginate(20);
-
-                // $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->join('classifications', 'stocks.classification_id', 'classifications.id')->where('stocks.name', 'like', "%$keyword%")->orWhere('stocks.s_name', 'like', "%$keyword%")->orWhere('stocks.jan_code', 'like', "%$keyword%")->orderby('stocks.updated_at', 'desc')->paginate(20);
-            } else {
-                // 格納アドレスのみ
-
-                $stocks = StockStorage::select('stocks.*')
-                    ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
-                    ->where('storage_address_id', $storage_address_id)
-                    ->orderby('updated_at', 'desc')->paginate(20);
-            }
+        $supplier_name = $request->supplier_name;
 
 
-            return view('stock.stocks', compact('stocks'));
-        }
 
+        $stocks = Stock::select('stocks.*', 'classifications.name as classification_name', 'suppliers.id as supplier_id', 'suppliers.name as supplier_name', 'suppliers.supplier_no')
+            ->leftJoin('classifications', 'classifications.id', 'stocks.classification_id')
+            ->leftJoin('stock_suppliers', 'stock_suppliers.stock_id', 'stocks.id')
+            ->leftJoin('suppliers', 'stock_suppliers.supplier_id', 'suppliers.id')
+            ->orderBy('updated_at', 'desc');
 
         if ($keyword) {
-            // キーワード検索のみ
-            $stocks = Stock::where('stocks.name', 'like', "%$keyword%")
-                ->orWhere('stocks.s_name', 'like', "%$keyword%")
-                ->orWhere('stocks.jan_code', 'like', "%$keyword%")
-                ->orderby('stocks.updated_at', 'desc')->paginate(20);
-        } else {
-            // 検索条件なし
-            $stocks = Stock::orderby('stocks.updated_at', 'desc')->paginate(20);
+            $stocks->where(function ($query) use ($keyword) {
+                $query->where('stocks.name', 'like', "%{$keyword}%")
+                    ->orWhere('stocks.s_name', 'like', "%{$keyword}%");
+            });
         }
 
-        return view('stock.stocks', compact('stocks'));
+        if ($supplier_name) {
+            $stocks->where('suppliers.name', $supplier_name);
+        }
+
+        $stocks = $stocks->paginate(60);
+
+
+        return Inertia::render('Stock/Stocks/Index', ['stocks' => $stocks, 'suppliers' => $suppliers, 'supplier_name' => $supplier_name, 'keyword' => $keyword]);
+    }
+
+    public function getStocks(Request $request)
+    {
+        $keyword = $request->keyword;
+        $supplier_id = $request->supplier_id;
+
+        $stocks = Stock::select('stocks.*', 'classifications.name as classification_name', 'suppliers.id as supplier_id', 'suppliers.name as supplier_name', 'suppliers.supplier_no')
+            ->leftJoin('classifications', 'classifications.id', 'stocks.classification_id')
+            ->leftJoin('stock_suppliers', 'stock_suppliers.stock_id', 'stocks.id')
+            ->leftJoin('suppliers', 'stock_suppliers.supplier_id', 'suppliers.id')
+            ->orderBy('updated_at', 'desc');
+
+        if ($keyword) {
+            $stocks->where(function ($query) use ($keyword) {
+                $query->where('stocks.name', 'like', "%{$keyword}%")
+                    ->orWhere('stocks.s_name', 'like', "%{$keyword}%");
+            });
+        }
+
+        if ($supplier_id) {
+            $supplier_name = Supplier::find($supplier_id)->name;
+
+            $stocks->where('suppliers.name', $supplier_name);
+        }
+
+        $stocks = $stocks->paginate(20);
+
+        return response()->json($stocks);
     }
 
     // 
@@ -286,30 +297,40 @@ class StockController extends Controller
 
 
     // 在庫編集
-    public function stock_edit($stock_id)
+    public function stock_show($stock_id)
     {
         $stock = Stock::where('id', $stock_id)->first();
         $classifications = Classification::all();
         $processes = Process::all();
         $locations = Location::all();
 
-        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->get();
-
-
+        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)
+        ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
+        ->get();
 
         // 在庫状況
         $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)->get();
         // dd($stock_storages);
 
-        try {
-            $storage_addresses = StorageAddress::where('location_id', $stock_storages[0]->location_id)->orderby('address', 'asc')->get();
-        } catch (Exception $e) {
-            $storage_addresses = StorageAddress::where('location_id', 1)->get();
-        }
+        $storage_addresses = StorageAddress::select('id', 'address', 'location_id')->orderBy('address', 'asc')->get();
 
-        return view('stock.edit.stocks', compact('stock', 'classifications', 'processes', 'stock_storages', 'locations', 'storage_addresses', 'stock_suppliers'));
+        $users = User::select('id', 'name')->get();
+        $suppliers = Supplier::select('id', 'name', 'supplier_no')->get();
 
-        // return Inertia::render('Stock/Stocks/Show', ['stock' => $stock, 'classifications' => $classifications, 'processes' => $processes, 'stock_storages' => $stock_storages, 'locations' => $locations, 'storage_addresses' => $storage_addresses, 'stock_suppliers' => $stock_suppliers]);
+        // 直近の発注情報を一件取得
+        $initial_order = InitialOrder::where('stock_id', $stock_id)->orderBy('order_date', 'desc')->first();
+
+        return Inertia::render('Stock/Stocks/Show',
+         ['stock' => $stock, 
+         'classifications' => $classifications, 
+         'processes' => $processes, 
+         'stock_storages' => $stock_storages, 
+         'locations' => $locations, 
+         'storage_addresses' => $storage_addresses, 'stock_suppliers' => $stock_suppliers,
+         'users' => $users,
+         'suppliers' => $suppliers,
+         'initial_order' => $initial_order
+        ]);
     }
 
     // 発注登録
@@ -347,7 +368,7 @@ class StockController extends Controller
         $stock_supplier = StockSupplier::select('suppliers.*')->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->where('stock_id', $stock_id)->first();
         if (!$stock_supplier) {
             Method::errorMsg('先に得意先を選択してください');
-            return to_route('stock.edit.stocks', ['stock_id' => $stock_id]);
+            return to_route('stock.show.stocks', ['stock_id' => $stock_id]);
         }
 
 
@@ -367,27 +388,15 @@ class StockController extends Controller
     public function getAllInitialOrders()
     {
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path')->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')->orderBy('order_date', 'desc')->get();
+        $initial_orders = InitialOrder::
+        select('initial_orders.*', 'stocks.img_path')
+        ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
+        ->orderBy('order_date', 'desc')
+        ->get();
 
 
         return response()->json($initial_orders);
     }
-
-    // 発注一覧
-    public function initial_orders()
-    {
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stock_suppliers.lead_time as base_lead_time')
-            ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
-            ->leftJoin('stock_suppliers', function($join) {
-                $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
-                     ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
-            })
-            ->orderBy('order_date', 'desc')
-            ->paginate(50);
-
-        return Inertia::render('Stock/InitialOrders', ['initial_orders' => $initial_orders]);
-    }
-
 
     public function update_initial_order(Request $request)
     {
@@ -453,94 +462,76 @@ class StockController extends Controller
             $order_id = $request->order_id;
             $delivery_date = $request->delivery_date;
 
-            $initial_order = InitialOrder::find($order_id);
-            $initial_order->delivery_date = $delivery_date;
-
-            // リードタイムを代入
-            if ($initial_order->order_date && $initial_order->delivery_date) {
-                $delivery_date = \Carbon\Carbon::parse($delivery_date);
-                $order_date = \Carbon\Carbon::parse($initial_order->order_date);
-                $lead_time = $delivery_date->diffInDays($order_date);
-                $initial_order->lead_time = $lead_time;
-            }
-            $initial_order->save();
-
-            // 平均リードタイムを再計算
-            $average_lead_time = InitialOrder::where('stock_id', $initial_order->stock_id)->where('supplier_id', $initial_order->supplier_id)->avg('lead_time');
-            $new_lead_time = round($average_lead_time);
-
-
-            $stock_supplier = StockSupplier::where('stock_id', $initial_order->stock_id)->where('supplier_id', $initial_order->supplier_id)->first();
-
-            if($stock_supplier){
-                $stock_supplier->lead_time = $new_lead_time;
-                $stock_supplier->save();
-            }
-
+            Method::setDeliveryDateAndUpdateLeadTime($order_id, $delivery_date);
         } catch (Exception $e) {
             $status = false;
         }
-        
+
         return response()->json(['status' => $status, 'new_lead_time' => $new_lead_time]);
     }
 
 
     public function store_stocks(Request $request)
     {
+
+        $status = true;
+        $msg = "";
+
         $stock_id = $request->stock_id;
-        $stock_no = $request->stock_no;
         $name = $request->name;
         $jan_code = $request->jan_code;
         $s_name = $request->s_name;
         $img_path = $request->img_path;
         $price = $request->price;
         $url = $request->url;
-        $del_flg = $request->del_flg;
         $purchase_identification_number = $request->purchase_identification_number;
         $solo_unit = $request->solo_unit;
         $org_unit = $request->org_unit;
-        $main_unit_flg = $request->main_unit_flg;
         $quantity_per_org = $request->quantity_per_org;
         $classification_id = $request->classification_id;
         $deli_location = $request->deli_location;
-        $process_code = $request->process_code;
-        $memo = $request->memo;
+        $del_flg = $request->del_flg;
 
+        try {
+            $stock = null;
+            $is_new = false;
 
+            if ($stock_id) {
 
-        $stock = Stock::find($stock_id);
-        if (!$stock) {
-            $stock = new Stock();
+                $stock = Stock::find($stock_id);
+                if (!$stock) {
+                    $stock = new Stock();
+                    $is_new = true;
+                }
+            }
+
+            $stock->name = $name;
+            $stock->s_name = $s_name;
+            $stock->jan_code = $jan_code;
+            $stock->url = $url;
+            $stock->img_path = $img_path;
+            $stock->price = $price;
+            $stock->purchase_identification_number = $purchase_identification_number;
+            $stock->solo_unit = $solo_unit;
+            $stock->org_unit = $org_unit;
+            $stock->quantity_per_org = $quantity_per_org;
+            $stock->classification_id = $classification_id;
+            $stock->deli_location = $deli_location;
+            $stock->del_flg = $del_flg;
+            $stock->save();
+
+            // 新規追加と編集の記録を残す
+            if($is_new){
+
+            }else{
+
+            }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
         }
-        if ($request->hasFile('upload_file')) {
 
-            $image = $request->file('upload_file');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $img_path = 'storage/' . $image->storeAs('stock', $imageName, 'stock');
-        }
-        $stock->name = $name;
-        $stock->stock_no = $stock_no;
-        $stock->s_name = $s_name;
-        $stock->jan_code = $jan_code;
-        $stock->url = $url;
-        $stock->img_path = $img_path;
-        $stock->price = $price;
-        $stock->purchase_identification_number = $purchase_identification_number;
-        $stock->solo_unit = $solo_unit;
-        $stock->org_unit = $org_unit;
-        $stock->quantity_per_org = $quantity_per_org;
-        $stock->main_unit_flg = $main_unit_flg;
-        $stock->classification_id = $classification_id;
-        $stock->deli_location = $deli_location;
-        $stock->process_code = $process_code;
-        $stock->memo = $memo;
-        $stock->del_flg = $del_flg ?? 0;
-        $stock->save();
-
-        Method::msg('success', '完了しました。');
-        // dd($stock_id, $stock_no, $name, $jan_code, $s_name, $img_path, $url, $purchase_identification_number, $solo_unit, $org_unit, $main_unit_flg,$quantity_per_org, $classification_id, $deli_location, $process_code, $memo);
-
-        return redirect()->back();
+        return response()->json(['status' => $status, 'msg' => $msg ]);
     }
 
     // 棚卸し
@@ -568,7 +559,8 @@ class StockController extends Controller
     public function create_stocks()
     {
         $classifications = Classification::all();
-        return view('stock.create.stocks', compact('classifications'));
+
+        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications]);
     }
     // 格納先作成
     public function create_storage_addresses()

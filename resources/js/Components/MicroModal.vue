@@ -50,7 +50,7 @@ const emit = defineEmits(["closeModal"]);
             :class="{
               'bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded  text-sm font-mono': true,
             }"
-            :href="route('stock.edit.stocks', { stock_id: currentStockId })"
+            :href="route('stock.show.stocks', { stock_id: currentStockId })"
             >在庫編集ページへ遷移</a
           >
         </div>

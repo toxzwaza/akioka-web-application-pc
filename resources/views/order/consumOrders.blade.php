@@ -53,7 +53,7 @@
 
                             @endif
                         </td>
-                        <td class=" border-t-2 border-b-2 border-gray-200 px-4 py-8"><a class="hover:text-indigo-600 hover:font-semibold" href="{{ route('stock.edit.stocks', ['stock_id' => $consumOrder->stock_id]) }}">{{ $consumOrder->stock_name }}</a></td>
+                        <td class=" border-t-2 border-b-2 border-gray-200 px-4 py-8"><a class="hover:text-indigo-600 hover:font-semibold" href="{{ route('stock.show.stocks', ['stock_id' => $consumOrder->stock_id]) }}">{{ $consumOrder->stock_name }}</a></td>
                         <td class="whitespace-nowrap border-t-2 border-b-2 border-gray-200 px-4 py-8">{{ $consumOrder->user_name }}</td>
                         <td class="whitespace-nowrap border-t-2 border-b-2 border-gray-200 px-4 py-8 text-lg text-gray-900">{{ number_format($consumOrder->price) }}円</td>
                         <td class="w-1/5 border-t-2 border-b-2 border-gray-200  text-center">

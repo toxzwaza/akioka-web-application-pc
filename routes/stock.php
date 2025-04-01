@@ -11,85 +11,86 @@ use App\Http\Controllers\StockSupplierController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\CameraController;
+use App\Http\Controllers\InitialOrderController;
+use App\Http\Controllers\SupplierController;
 
 // 在庫管理システム
 Route::get('/test', [StockController::class, 'test'])->name('stock.test');
 Route::get('/', [StockController::class, 'index'])->name('stock');
 Route::get('/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
-Route::get('/edit/stocks/{stock_id}', [StockController::class, 'stock_edit'])->name('stock.edit.stocks');
-Route::post('/store/stocks', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
+Route::get('/stocks/get', [StockController::class, 'getStocks'])->name('stock.getStocks');
+Route::get('/stocks/show/{stock_id}', [StockController::class, 'stock_show'])->name('stock.show.stocks');
+Route::post('/stocks/store', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
+// 新規在庫作成
 Route::get('/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
-Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
-Route::get('/stocks/getInventoryOperationRecords', [StockController::class, 'getInventoryOperationRecords'])->name('stock.stocks.getInventoryOperationRecords');
-// 対象の日付の入出庫データを取得
-Route::get('/stocks/getInventoryOperationRecordsByDate', [StockController::class, 'getInventoryOperationRecordsByDate'])->name('stock.stocks.getInventoryOperationRecordsByDate');
+// Route::post('/stocks/store', [StockController::class, 'store_stocks'])->name('stock.stocks.store');
 
+Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
+Route::get('/stocks/inventory/records', [StockController::class, 'getInventoryOperationRecords'])->name('stock.stocks.getInventoryOperationRecords');
+// 対象の日付の入出庫データを取得
+Route::get('/stocks/inventory/records/date', [StockController::class, 'getInventoryOperationRecordsByDate'])->name('stock.stocks.getInventoryOperationRecordsByDate');
+
+// 発注関連
+Route::get('/initial-order', [InitialOrderController::class, 'index'])->name('stock.initialOrders');
+Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->name('stock.create.initialOrders');
 // 発注登録
-Route::get('/initialOrder/stocks/{stock_id}', [StockController::class, 'order_stock'])->name('stock.order');
-Route::post('/initialOrder/store', [StockController::class, 'order_store'])->name('stock.order.store');
-// 全ての発注データを取得
-Route::get('/getAllInitialOrders', [StockController::class, 'getAllInitialOrders'])->name('stock.getAllInitialOrders');
+
+Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
 
 // 発注修正
-Route::get('stocks/initialOrders', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
-Route::post('stocks/update/initial_order', [StockController::class, 'update_initial_order'])->name('stock.update_initial_order');
-Route::post('stocks/update/expected_delivery_date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
-Route::post('stocks/update/delivery_date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');
+Route::get('/initial-orders/edit', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
+Route::post('/initial-orders/update', [StockController::class, 'update_initial_order'])->name('stock.update_initial_order');
+Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
+Route::post('/initial-orders/update/delivery-date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');
 
 // 発注依頼一覧
-Route::get('stocks/order_requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');
+Route::get('/order-requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');
 // 発注書表示
-Route::get('stocks/purchase_order/{order_request_id}', [PurchaseOrder::class, 'index'])->name('stock.purchase_order');
+Route::get('/purchase-order/{order_request_id}', [PurchaseOrder::class, 'index'])->name('stock.purchase_order');
 // 発注依頼取得
-Route::get('stocks/getOrderRequests', [OrderRequestController::class, 'getOrderRequests'])->name('stock.getOrderRequests');
+Route::get('/order-requests/get', [OrderRequestController::class, 'getOrderRequests'])->name('stock.getOrderRequests');
 // 承認依頼
-Route::post('/accept/order_request', [AcceptController::class, 'sendAccept'])->name('stock.accept.order_request');
+Route::post('/accept/order-request', [AcceptController::class, 'sendAccept'])->name('stock.accept.order_request');
 // 承認用画面
-Route::get('/stocks/accept', [AcceptController::class, 'index'])->name('stock.accept');
+Route::get('/accept', [AcceptController::class, 'index'])->name('stock.accept');
 // 承認結果送信
 Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.accept.store');
 // 発注完了
-Route::put('stocks/completeOrderRequest', [OrderRequestController::class, 'completeOrderRequest'])->name('stock.completeOrderRequest');
+Route::put('/order-requests/complete', [OrderRequestController::class, 'completeOrderRequest'])->name('stock.completeOrderRequest');
 
-
-
-////////// 滞留品 //////////
-Route::get('/retentions/stocks', [RetentionController::class, 'index'])->name('stock.retentions');
-Route::get('/getRetentionStocks', [RetentionController::class, 'getRetentionStocks'])->name('stock.getRetentionStocks');
+// 滞留品
+Route::get('/retentions', [RetentionController::class, 'index'])->name('stock.retentions');
+Route::get('/retentions/get', [RetentionController::class, 'getRetentionStocks'])->name('stock.getRetentionStocks');
 
 // 旧
-Route::get('/retained/stocks', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
-Route::post('/reatained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
-Route::post('/last_reatained/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
+Route::get('/retained', [StockController::class, 'retained_stocks'])->name('stock.retained.stocks');
+Route::post('/retained/store', [StockController::class, 'store_retained_stocks'])->name('stock.store.retained.stocks');
+Route::post('/retained/last/store', [StockController::class, 'store_last_treat_record'])->name('stock.store.last_retained.stocks');
 
-
-
-Route::get('/stocks/add_supplier', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
-Route::post('/stock_suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
-Route::get('/stock_suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
-
+// 得意先
+Route::post('/stock-suppliers/store', [StockSupplierController::class, 'store'])->name('stock.stock_supplier.store');
+// Route::get('/suppliers/add', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
+// Route::post('/suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
+// Route::get('/suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
 
 // 格納先
-Route::get('/storage_addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
-Route::get('/storage_addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
-Route::get('/create/storage_addresses', [StockController::class, 'store_storage_address'])->name('stock.storage_address.create');
-Route::get('/storage_addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
+Route::get('/storage-addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
+Route::get('/storage-addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
+Route::post('/storage-addresses/store', [StockController::class, 'store_storage_address'])->name('stock.storage_address.store');
+Route::get('/storage-addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
 
 // 監視カメラ録画映像
-Route::get('/camera' ,[CameraController::class, 'index'])->name('stock.camera');
-Route::get('/camera/getCameraMovies', [CameraController::class, 'getCameraMovies'])->name('stock.getCameraMovies');
+Route::get('/camera', [CameraController::class, 'index'])->name('stock.camera');
+Route::get('/camera/movies', [CameraController::class, 'getCameraMovies'])->name('stock.getCameraMovies');
 
+Route::post('/stock-storage/update', [StockController::class, 'update_stock_storage'])->name('stock.stock_storage.update');
+Route::get('/stock-storage/delete', [StockController::class, 'delete_stock_storage'])->name('stock.stock_storage.delete');
+Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
 
-
-Route::post('/stock_storage/update', [StockController::class, 'update_stock_storage'])->name('stock.stock_storage.update');
-Route::get('/stock_storage/delete', [StockController::class, 'delete_stock_storage'])->name('stock.stock_storage.delete');
-Route::post('/stock_storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
-
-Route::get('/suppliers', [StockSupplierController::class, 'index'])->name('stock.suppliers');
-Route::get('/suppliers/create', [StockSupplierController::class, 'create'])->name('stock.suppliers.create');
-Route::post('/suppliers/store', [StockSupplierController::class, 'store'])->name('stock.suppliers.store');
-Route::get('/suppliers/edit/{supplier_id}', [StockSupplierController::class, 'edit'])->name('stock.suppliers.edit');
-
+Route::get('/suppliers', [SupplierController::class, 'index'])->name('stock.suppliers');
+Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('stock.suppliers.create');
+Route::post('/suppliers/store', [SupplierController::class, 'store'])->name('stock.suppliers.store');
+Route::get('/suppliers/edit/{supplier_id}', [SupplierController::class, 'edit'])->name('stock.suppliers.edit');
 
 // Location追加
-Route::get('/create/locations', [StockController::class, 'store_location'])->name('stock.locations.create');
+Route::get('/locations/create', [StockController::class, 'store_location'])->name('stock.locations.create');

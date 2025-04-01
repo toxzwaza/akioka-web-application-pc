@@ -4,89 +4,630 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
-
 const props = defineProps({
-  initial_orders: Object,
+  classifications: Array,
+  stock: Object,
+  processes: Array,
+  stock_storages: Array,
+  locations: Array,
+  storage_addresses: Array,
+  stock_suppliers: Array,
+  users: Array,
+  suppliers: Array,
+  initial_order: Object,
 });
 
-onMounted(() => {});
+const select_storage_addresses = ref([]);
+
+const form = reactive({
+  stock_id: null,
+  name: null,
+  s_name: null,
+  jan_code: null,
+  img_path: null,
+  url: null,
+  purchase_identification_number: null,
+  price: null,
+  solo_unit: null,
+  org_unit: null,
+  quantity_per_org: null,
+  classification_id: null,
+  deli_location: null,
+  del_flg: null,
+
+  order_user: null,
+  user_id: null,
+  supplier_id: null,
+  lead_time: null,
+  quantity: null,
+  calc_price: null,
+
+  location_id: 0,
+  storage_address_id: 0,
+  stock_storage_quantity: null,
+
+  stock_supplier_supplier_id: null,
+  stock_supplier_lead_time: null,
+});
+
+const createInitialOrder = () => {
+  if (
+    !form.order_user ||
+    !form.user_id ||
+    !form.supplier_id ||
+    !form.lead_time ||
+    !form.quantity ||
+    !form.calc_price
+  ) {
+    return alert("必須項目が入力されていません。");
+  }
+
+  // 在庫追加と発注登録
+  axios
+    .post(route("stock.store.initialOrders"), form)
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        if (confirm("発注登録が完了しました。続けて発注登録を行いますか？")) {
+          window.location.reload();
+        } else {
+          window.location.href = route("stock");
+        }
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+const createStockStorage = () => {};
+const createStockSupplier = () => {
+  if (
+    !form.stock_id ||
+    !form.stock_supplier_supplier_id ||
+    !form.stock_supplier_lead_time
+  ) {
+    return alert("必須入力項目が入力されていません。");
+  }
+
+  axios
+    .post(route("stock.stock_supplier.store"), {
+      stock_id: form.stock_id,
+      supplier_id: form.stock_supplier_supplier_id,
+      lead_time: form.stock_supplier_lead_time,
+    })
+    .then((res) => {
+      if (res.data.status) {
+        if (confirm("手配先登録が完了しました。")) {
+          window.location.reload();
+        }
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const editStock = () => {
+  // 在庫編集
+  axios
+    .post(route("stock.store.stocks"), form)
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        if (confirm("編集が完了しました。続けて在庫を追加しますか？")) {
+          window.location.reload();
+        } else {
+          window.location.href = route("stock");
+        }
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const handleLocation = (location_id) => {
+  console.log(props.storage_addresses);
+
+  select_storage_addresses.value = props.storage_addresses.filter(
+    (storage_address) => storage_address.location_id == location_id
+  );
+};
+
+onMounted(() => {
+  console.log(props.initial_order);
+
+  if (props.initial_order) {
+    form.user_id = props.initial_order.user_id;
+    form.order_user = props.initial_order.order_user_id ?? 0
+    form.quantity = props.initial_order.quantity
+    form.calc_price = props.initial_order.calc_price
+  }
+
+  form.stock_id = props.stock.id;
+  form.name = props.stock.name;
+  form.s_name = props.stock.s_name;
+  form.jan_code = props.stock.jan_code;
+  form.img_path = props.stock.img_path;
+  form.url = props.stock.url;
+  form.purchase_identification_number =
+    props.stock.purchase_identification_number;
+  form.price = props.stock.price;
+  form.solo_unit = props.stock.solo_unit;
+  form.org_unit = props.stock.org_unit;
+  form.quantity_per_org = props.stock.quantity_per_org;
+  form.classification_id = props.stock.classification_id;
+  form.deli_location = props.stock.deli_location;
+  form.del_flg = props.stock.del_flg;
+
+  if (props.stock_suppliers && props.stock_suppliers.length > 0) {
+    form.supplier_id = props.stock_suppliers[0].id;
+    form.lead_time = props.stock_suppliers[0].lead_time;
+  }
+});
 </script>
 <template>
-  <MainLayout :title="'在庫編集'">
+  <MainLayout :title="'在庫詳細'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">在庫編集</h1>
-      <div class="flex justify-between py-12">
-        <div id="left_container" class="w-1/2">
-          <h2>品名：</h2>
-          <h3>品番：</h3>
-          <div class="img_container">
-            <img src="" alt="" />
+      <h1 class="text-center text-xl font-bold text-gray-800">在庫詳細</h1>
+      <div class="flex justify-center py-12">
+        <div id="left_container" class="w-2/5">
+          <!-- 発注登録 -->
+          <div class="mt-8 bg-red-50 p-4">
+            <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
+            <p class="text-gray-700 mb-3 text-sm">※直近の発注データをセットしています。必要に応じて変更してください。</p>
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.order_user,
+                  }"
+                  for="name"
+                >
+                  *注文依頼者
+                </label>
+                <select
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.order_user"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.user_id,
+                  }"
+                >
+                  *発注者
+                </label>
+                <select
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.user_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.supplier_id,
+                  }"
+                  for="name"
+                >
+                  *手配先
+                </label>
+                <select
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  id="name"
+                  v-model="form.supplier_id"
+                >
+                  <option value="">未選択</option>
+                  <option
+                    v-for="supplier in props.stock_suppliers"
+                    :key="supplier.id"
+                    :value="supplier.id"
+                  >
+                    {{
+                      supplier.supplier_no != ""
+                        ? `${supplier.supplier_no} : ${supplier.name}`
+                        : supplier.name
+                    }}
+                  </option>
+                </select>
+              </div>
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.lead_time,
+                  }"
+                  for="name"
+                >
+                  *リードタイム
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="name"
+                  type="number"
+                  placeholder=""
+                  v-model="form.lead_time"
+                />
+              </div>
+            </div>
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.quantity,
+                  }"
+                  for="name"
+                >
+                  *数量
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="name"
+                  type="text"
+                  placeholder=""
+                  v-model="form.quantity"
+                  @change="form.calc_price = form.price * form.quantity"
+                />
+              </div>
+
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.calc_price,
+                  }"
+                  for="s_name"
+                >
+                  *金額
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="s_name"
+                  type="number"
+                  placeholder=""
+                  v-model="form.calc_price"
+                />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-center sm:col-span-2">
+              <button
+                @click="createInitialOrder"
+                class="inline-block rounded-lg bg-red-500 px-8 py-3 text-center font-semibold text-white outline-none ring-red-300 transition duration-100 hover:bg-red-600 focus-visible:ring active:bg-red-700 text-xs"
+              >
+                登録
+              </button>
+            </div>
+          </div>
+          <!-- 手配先設定 -->
+          <div class="mt-8 bg-gray-100 p-4">
+            <h3 class="text-lg font-bold dark:text-white mb-2">手配先設定</h3>
+
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.stock_supplier_supplier_id,
+                  }"
+                  for="name"
+                >
+                  *手配先
+                </label>
+                <select
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  id="name"
+                  v-model="form.stock_supplier_supplier_id"
+                >
+                  <option value="">未選択</option>
+                  <option
+                    v-for="supplier in props.suppliers"
+                    :key="supplier.id"
+                    :value="supplier.id"
+                  >
+                    {{
+                      supplier.supplier_no != "" || supplier.supplier_no != null
+                        ? `${supplier.supplier_no} : ${supplier.name}`
+                        : supplier.name
+                    }}
+                  </option>
+                </select>
+              </div>
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.stock_supplier_lead_time,
+                  }"
+                  for="name"
+                >
+                  *リードタイム
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="name"
+                  type="number"
+                  placeholder=""
+                  v-model="form.stock_supplier_lead_time"
+                />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-center sm:col-span-2">
+              <button
+                @click.prevent="createStockSupplier"
+                class="inline-block rounded-lg bg-gray-500 px-8 py-3 text-center font-semibold text-white outline-none ring-gray-300 transition duration-100 hover:bg-gray-600 focus-visible:ring active:bg-gray-700 text-xs"
+              >
+                登録
+              </button>
+            </div>
+
+            <hr class="my-8" />
+
+            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+              <table
+                class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+              >
+                <thead
+                  class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+                >
+                  <tr>
+                    <th scope="col" class="px-6 py-3">手配先</th>
+                    <th scope="col" class="px-6 py-3">リードタイム</th>
+                    <th scope="col" class="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200"
+                    v-for="stock_supplier in props.stock_suppliers"
+                    :key="stock_supplier.id"
+                  >
+                    <td
+                      scope="row"
+                      class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    >
+                      {{ stock_supplier.name }}
+                    </td>
+                    <td class="px-6 py-4">{{ stock_supplier.lead_time }}</td>
+                    <td class="px-6 py-4">
+                      <a
+                        href="#"
+                        class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                        >Edit</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 格納先 -->
+          <div class="mt-8 bg-gray-100 p-4">
+            <h3 class="text-lg font-bold dark:text-white mb-2">格納先設定</h3>
+
+            <form action="" class="mb-6">
+              <div class="flex flex-wrap -mx-3 mb-1">
+                <div class="w-1/3 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.location_id,
+                    }"
+                    for="name"
+                  >
+                    *倉庫
+                  </label>
+                  <select
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    v-model="form.location_id"
+                    @change="handleLocation($event.target.value)"
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="location in props.locations"
+                      :key="location.id"
+                      :value="location.id"
+                    >
+                      {{ location.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="w-1/3 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.storage_address_id,
+                    }"
+                  >
+                    *アドレス
+                  </label>
+                  <select
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    v-model="form.storage_address_id"
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="address in select_storage_addresses"
+                      :key="address.id"
+                      :value="address.id"
+                    >
+                      {{ address.address }}
+                    </option>
+                  </select>
+                </div>
+                <div class="w-1/3 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.stock_storage_quantity,
+                    }"
+                  >
+                    *数量
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="number"
+                    v-model="form.stock_storage_quantity"
+                  />
+                </div>
+              </div>
+
+              <div class="flex justify-center">
+                <button
+                  @click="createStockStorage"
+                  class="inline-block rounded-lg bg-gray-500 px-8 py-3 text-center font-semibold text-white outline-none ring-gray-300 transition duration-100 hover:bg-gray-600 focus-visible:ring active:bg-gray-700 text-xs"
+                >
+                  登録
+                </button>
+              </div>
+            </form>
+
+            <hr class="my-8" />
+
+            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+              <table
+                class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+              >
+                <thead
+                  class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+                >
+                  <tr>
+                    <th scope="col" class="px-6 py-3">倉庫</th>
+                    <th scope="col" class="px-6 py-3">アドレス</th>
+                    <th scope="col" class="px-6 py-3">個数</th>
+                    <th scope="col" class="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200"
+                    v-for="stock_storage in props.stock_storages"
+                    :key="stock_storage.stock_storage_id"
+                  >
+                    <td
+                      scope="row"
+                      class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    >
+                      {{ stock_storage.location_name }}
+                    </td>
+                    <td class="px-6 py-4">{{ stock_storage.address }}</td>
+                    <td class="px-6 py-4">{{ stock_storage.quantity }}</td>
+                    <td class="px-6 py-4">
+                      <a
+                        href="#"
+                        class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                        >Edit</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div id="right_container" class="w-1/2">
-          <form class="w-full max-w-lg">
+
+        <div id="right_container" class="w-2/5 p-4">
+          <h3 class="text-lg font-bold dark:text-white mb-2">在庫編集</h3>
+
+          <!-- 画像 -->
+          <img
+            class="mb-8"
+            :src="
+              stock.img_path && stock.img_path.includes('https://')
+                ? stock.img_path
+                : 'https://akioka.cloud/' + stock.img_path
+            "
+            alt=""
+          />
+
+          <form class="w-full mx-auto">
             <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-full md:w-1/2 px-3 mb-6 md:mb-0">
+              <div class="w-full px-3">
                 <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-first-name"
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.name,
+                  }"
+                  for="name"
                 >
                   ID
                 </label>
                 <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
-                  id="grid-first-name"
-                  type="text"
-                  placeholder="Jane"
-                />
-              </div>
-              <div class="w-full md:w-1/2 px-3">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  在庫No
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="grid-last-name"
-                  type="text"
-                  placeholder="Doe"
+                  class="appearance-none block w-full bg-gray-300 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 pointer-events-none"
+                  id="name"
+                  type="number"
+                  placeholder=""
+                  v-model="form.stock_id"
                 />
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full px-3">
                 <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-password"
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.name,
+                  }"
+                  for="name"
                 >
-                  品名
+                  *品名
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="grid-password"
-                  type="password"
-                  placeholder="******************"
+                  id="name"
+                  type="text"
+                  placeholder=""
+                  v-model="form.name"
                 />
-                <p class="text-gray-600 text-xs italic">
-                  Make it as long and as crazy as you'd like
-                </p>
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full px-3">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-password"
+                  for="s_name"
                 >
                   品番
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="grid-password"
-                  type="password"
-                  placeholder="******************"
+                  id="s_name"
+                  type="text"
+                  placeholder=""
+                  v-model="form.s_name"
                 />
               </div>
             </div>
@@ -94,31 +635,33 @@ onMounted(() => {});
               <div class="w-full px-3">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-password"
+                  for="jan_code"
                 >
                   JANコード
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="grid-password"
-                  type="password"
-                  placeholder="******************"
+                  id="jan_code"
+                  type="text"
+                  placeholder=""
+                  v-model="form.jan_code"
                 />
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-full md:w-1/2 px-3 mb-6 md:mb-0">
+              <div class="w-full md:w-1/2 px-3">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-first-name"
+                  for="grid-last-name"
                 >
                   画像URL
                 </label>
                 <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
-                  id="grid-first-name"
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="grid-last-name"
                   type="text"
-                  placeholder="Jane"
+                  placeholder="https://****"
+                  v-model="form.img_path"
                 />
               </div>
               <div class="w-full md:w-1/2 px-3">
@@ -132,7 +675,8 @@ onMounted(() => {});
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   id="grid-last-name"
                   type="text"
-                  placeholder="Doe"
+                  placeholder="https://****"
+                  v-model="form.url"
                 />
               </div>
             </div>
@@ -147,90 +691,154 @@ onMounted(() => {});
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   id="grid-password"
-                  type="password"
-                  placeholder="******************"
+                  type="text"
+                  placeholder=""
+                  v-model="form.purchase_identification_number"
                 />
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full px-3">
                 <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.price,
+                  }"
                   for="grid-password"
                 >
-                  価格
+                  *価格
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   id="grid-password"
-                  type="password"
-                  placeholder="******************"
+                  type="number"
+                  placeholder=""
+                  v-model="form.price"
                 />
               </div>
             </div>
 
-            
-
-            <div class="flex flex-wrap -mx-3 mb-2">
+            <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                   for="grid-city"
                 >
-                  単位
+                  単位1
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   id="grid-city"
                   type="text"
-                  placeholder="Albuquerque"
+                  placeholder="個"
+                  v-model="form.solo_unit"
                 />
               </div>
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-state"
+                  for="grid-city"
                 >
-                  State
-                </label>
-                <div class="relative">
-                  <select
-                    class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id="grid-state"
-                  >
-                    <option>New Mexico</option>
-                    <option>Missouri</option>
-                    <option>Texas</option>
-                  </select>
-                  <div
-                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
-                  >
-                    <svg
-                      class="fill-current h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-zip"
-                >
-                  Zip
+                  単位2
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="grid-zip"
+                  id="grid-city"
                   type="text"
-                  placeholder="90210"
+                  placeholder="箱"
+                  v-model="form.org_unit"
                 />
               </div>
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-city"
+                >
+                  換算値<span class="ml-2 text-gray-500 text-xs"
+                    >※納品時の数量登録</span
+                  >
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="grid-city"
+                  type="number"
+                  placeholder=""
+                  v-model="form.quantity_per_org"
+                />
+              </div>
+            </div>
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.classification_id,
+                  }"
+                  for="grid-city"
+                >
+                  *備品カテゴリ
+                </label>
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.classification_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="classification in classifications"
+                    :key="classification.id"
+                    :value="classification.id"
+                  >
+                    {{ classification.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-city"
+                >
+                  配送先
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="grid-city"
+                  type="text"
+                  placeholder=""
+                  v-model="form.deli_location"
+                />
+              </div>
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-city"
+                >
+                  表示フラグ
+                </label>
+                <select
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-green-500 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 font-bold': true,
+                    'text-red-500': form.del_flg,
+                  }"
+                  id="grid-city"
+                  type="text"
+                  placeholder=""
+                  v-model="form.del_flg"
+                >
+                  <option class="text-green-500" value="0">表示</option>
+                  <option class="text-red-500" value="1">非表示</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-center sm:col-span-2">
+              <button
+                @click.prevent="editStock"
+                class="mt-8 inline-block rounded-lg bg-green-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-green-300 transition duration-100 hover:bg-green-600 focus-visible:ring active:bg-green-700 md:text-base"
+              >
+                変更
+              </button>
             </div>
           </form>
         </div>
@@ -240,16 +848,18 @@ onMounted(() => {});
 </template>
 <style scoped lang="scss">
 #left_container {
-  & .img_container {
-    height: 20vh;
-    width: 20vw;
-    & img {
-      height: 100%;
-      width: 100%;
-      object-fit: contain;
-    }
-  }
+  padding: 0 2rem;
 }
 #right_container {
+  // & .img_content {
+  //   height: 30%;
+  //   width: 100%;
+
+  //   & img {
+  //     height: 100%;
+  //     width: 100%;
+  //     object-fit: contain;
+  //   }
+  // }
 }
 </style>

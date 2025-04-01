@@ -12,6 +12,8 @@ use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
+use App\Models\Supplier;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,16 +27,22 @@ class TestController extends Controller
     //
     public function test()
     {
-        $importProducts = ImportProduct::where('price', 'like', "¥%")->get();
-        foreach ($importProducts as $importProduct) {
-            echo "<p>" . $importProduct->parts_num . " : " . $importProduct->price . "</p>";
-            // $importProduct->price = str_replace("\\\\",'',$importProduct->price);
-            // $importProduct->price = null;
-            // $importProduct->save();
+        $initial_orders = InitialOrder::all();
+        foreach ($initial_orders as $initial_order) {
+            
+            $user_name = $initial_order->order_user;
+
+            if ($user_name && !$initial_order->order_user_id) {
+
+                $user = User::where('name', $user_name)->first();
+
+                if ($user) {
+                    $initial_order->order_user_id = $user->id;
+                    $initial_order->save();
+                }
+            }
         }
-
-    
-
+        dd('完了');
     }
 
     public function storage_address_test()

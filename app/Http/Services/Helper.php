@@ -2,6 +2,7 @@
 
 namespace App\Http\Services;
 
+use App\Models\InitialOrder;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
@@ -24,5 +25,16 @@ class Helper
         ]);
 
         return $response;
+    }
+
+    // 注文No作成
+    public static function createOrderNo(){
+        $nextCount = InitialOrder::whereDate('created_at', now()->toDateString())->count();
+
+        // Sはシステムの略（重複しないようにする為に設定。発注がシステムで統一された頃にS-を排除する）
+        
+        $order_no = 'S-' . now()->format('y-m-') . ($nextCount + 1);
+
+        return $order_no;
     }
 }

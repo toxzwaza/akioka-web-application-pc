@@ -261,7 +261,7 @@ onMounted(() => {
                       <a
                         class="underline text-blue-500"
                         :href="
-                          route('stock.edit.stocks', {
+                          route('stock.show.stocks', {
                             stock_id: record.stock_id,
                           })
                         "
@@ -304,7 +304,7 @@ onMounted(() => {
                       <a
                         class="underline text-blue-500"
                         :href="
-                          route('stock.edit.stocks', {
+                          route('stock.show.stocks', {
                             stock_id: record.stock_id,
                           })
                         "
@@ -345,7 +345,7 @@ onMounted(() => {
                       <a
                         class="underline text-blue-500"
                         :href="
-                          route('stock.edit.stocks', {
+                          route('stock.show.stocks', {
                             stock_id: record.stock_id,
                           })
                         "
