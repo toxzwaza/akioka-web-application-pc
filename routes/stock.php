@@ -34,8 +34,9 @@ Route::get('/stocks/inventory/records/date', [StockController::class, 'getInvent
 Route::get('/initial-order', [InitialOrderController::class, 'index'])->name('stock.initialOrders');
 Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->name('stock.create.initialOrders');
 // 発注登録
-
 Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
+// 納入希望日設定
+Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
 
 // 発注修正
 Route::get('/initial-orders/edit', [StockController::class, 'initial_orders'])->name('stock.initial_orders');

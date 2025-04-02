@@ -33,7 +33,7 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stock_suppliers.lead_time as base_lead_time')
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url','stock_suppliers.lead_time as base_lead_time')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
@@ -82,11 +82,19 @@ class InitialOrderController extends Controller
         $quantity = $request->quantity;
         $calc_price = $request->calc_price;
 
+        
+        $order_user_name = '';
+
+        $user = User::where('id', $order_user)->first();
+        if ($user) {
+            $order_user_name = $user->name;
+        }
+
         try {
             $supplier = Supplier::find($supplier_id);
 
             if (!$stock_id) {
-                DB::transaction(function () use ($name, $s_name, $jan_code, $url, $img_path, $price, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $order_user, $user_id, $supplier_id, $lead_time, $quantity, $calc_price, $supplier) {
+                DB::transaction(function () use ($name, $s_name, $jan_code, $url, $img_path, $price, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $order_user, $user_id, $supplier_id, $lead_time, $quantity, $calc_price, $supplier, $order_user_name) {
                     $stock = new Stock();
                     $stock->name = $name;
                     $stock->s_name = $s_name;
@@ -102,12 +110,6 @@ class InitialOrderController extends Controller
                     $stock->deli_location = $deli_location;
                     $stock->save();
 
-                    $user = User::where('name', $order_user)->first();
-                    $order_user_name = '';
-                    if ($user) {
-                        $order_user_name = $user->name;
-                    }
-
                     $initial_order = new InitialOrder();
                     $initial_order->stock_id = $stock->id;
                     $initial_order->order_no = Helper::createOrderNo();
@@ -122,7 +124,7 @@ class InitialOrderController extends Controller
                     $initial_order->order_user_id = $order_user;
                     $initial_order->user_id = $user_id;
                     $initial_order->supplier_id = $supplier_id;
-                    $initial_order->lead_time = $lead_time;
+                    $initial_order->price = $price;
                     $initial_order->quantity = $quantity;
                     $initial_order->calc_price = $calc_price;
                     $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $lead_time . ' days'));
@@ -135,6 +137,7 @@ class InitialOrderController extends Controller
                     $stock_supplier->save();
                 });
             } else {
+
                 $initial_order = new InitialOrder();
                 $initial_order->stock_id = $stock_id;
                 $initial_order->order_no = Helper::createOrderNo();
@@ -145,10 +148,12 @@ class InitialOrderController extends Controller
                 $initial_order->s_name = $s_name;
                 $initial_order->order_unit = $solo_unit;
                 $initial_order->deli_location = $deli_location;
-                $initial_order->order_user_id = $order_user;
                 $initial_order->user_id = $user_id;
+                $initial_order->order_user_id = $order_user;
+                $initial_order->order_user = $order_user_name;
                 $initial_order->supplier_id = $supplier_id;
                 $initial_order->lead_time = $lead_time;
+                $initial_order->price = $price;
                 $initial_order->quantity = $quantity;
                 $initial_order->calc_price = $calc_price;
                 $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $lead_time . ' days'));
@@ -160,5 +165,26 @@ class InitialOrderController extends Controller
         }
 
         return response()->json(['status' => $status, 'message' => $msg]);
+    }
+
+    public function update_desired_delivery_date(Request $request)
+    {
+        $initial_order_id = $request->initial_order_id;
+        $desired_delivery_date = $request->desired_delivery_date;
+
+        $status = true;
+
+        try{
+            $initial_order = InitialOrder::find($initial_order_id);
+            $initial_order->desired_delivery_date = $desired_delivery_date;
+            $initial_order->save();
+
+        }catch(Exception $e){
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+        
+        
     }
 }

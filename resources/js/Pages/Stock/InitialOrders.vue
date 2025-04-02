@@ -17,7 +17,7 @@ const modal_status = reactive({
   img_path: "",
 });
 
-const print_order = ref(null)
+const print_order = ref(null);
 
 const openModal = (img_path, order) => {
   modal_status.img_path = "";
@@ -30,10 +30,9 @@ const openModal = (img_path, order) => {
         : img_path.includes("deli_file")
         ? `https://akioka.cloud/storage/${img_path}`
         : img_path;
-  }else if(order){
+  } else if (order) {
     // 発注書
-    print_order.value = order
-    console.log('セットしました。', print_order.value)
+    print_order.value = order;
   }
 
   modal_status.status = true;
@@ -199,6 +198,25 @@ const updateDeliveryDate = (order_id, delivery_date) => {
       console.log(error);
     });
 };
+
+// 納入希望日を保存する
+const handleDeliveryDateUpdate = (date) => {
+  console.log("選択された納入希望日:", date, print_order.value);
+  axios
+    .post(route("stock.update_desired_delivery_date"), {
+      initial_order_id: print_order.value.id,
+      desired_delivery_date: date
+    })
+    .then((res) => {
+      if(res.data.status){
+        alert('納入希望日を設定しました。')
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+    });
+};
+
 onMounted(() => {
   initial_orders.value = props.initial_orders.data;
   base_initial_orders.value = props.initial_orders.data;
@@ -566,11 +584,14 @@ onMounted(() => {
                     class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                   >
                     <button
-                    @click="openModal(null, order)"
+                      v-if="!order.url"
+                      @click="openModal(null, order)"
                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs"
                     >
                       発注書
                     </button>
+
+                    <a v-else class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs" :href="order.url" target="blank">URL</a>
                   </td>
                   <td
                     class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
@@ -589,10 +610,7 @@ onMounted(() => {
           </div>
         </div>
       </section>
-      <div
-        id="modal"
-        :class="{ active: modal_status.status }"
-      >
+      <div id="modal" :class="{ active: modal_status.status }">
         <div id="close_container">
           <button
             @click="modal_status.status = !modal_status.status"
@@ -612,6 +630,7 @@ onMounted(() => {
           :current_month_holidays="props.current_month_holidays"
           :next_month_holidays="props.next_month_holidays"
           :order="print_order"
+          @update-delivery-date="handleDeliveryDateUpdate"
         />
       </div>
     </template>

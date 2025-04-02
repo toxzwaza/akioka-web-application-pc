@@ -58,6 +58,14 @@ function printElement() {
 }
 
 
+// emitを定義
+const emit = defineEmits(['update-delivery-date']);
+
+// 日付変更時のハンドラー
+const handleDateChange = (value) => {
+  emit('update-delivery-date', value);
+};
+
 // orderの変更を監視
 watch(
   () => props.order,
@@ -151,8 +159,8 @@ watch(
                 <input
                   class="p-0 border-transparent"
                   type="date"
-                  name=""
-                  id=""
+                  @change="handleDateChange($event.target.value)"
+                  :value="order.desired_delivery_date"
                 />
               </td>
               <td class="text-center border px-4 py-5">{{ order.quantity }}</td>
