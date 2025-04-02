@@ -44,10 +44,13 @@ const form = reactive({
 
   location_id: 0,
   storage_address_id: 0,
+
+  stock_storage_id: 0,
   stock_storage_quantity: null,
 
   stock_supplier_supplier_id: null,
   stock_supplier_lead_time: null,
+
 });
 
 const createInitialOrder = () => {
@@ -57,7 +60,8 @@ const createInitialOrder = () => {
     !form.supplier_id ||
     !form.lead_time ||
     !form.quantity ||
-    !form.calc_price
+    !form.calc_price ||
+    !form.stock_storage_id
   ) {
     return alert("必須項目が入力されていません。");
   }
@@ -135,7 +139,7 @@ const handleLocation = (location_id) => {
 };
 
 onMounted(() => {
-  console.log(props.initial_order);
+  console.log(props.stock_storages);
 
   if (props.initial_order) {
     form.user_id = props.initial_order.user_id;
@@ -164,6 +168,11 @@ onMounted(() => {
     form.supplier_id = props.stock_suppliers[0].id;
     form.lead_time = props.stock_suppliers[0].lead_time;
   }
+
+  if(props.stock_storages && props.stock_storages.length == 1){
+    form.stock_storage_id = props.stock_storages[0].stock_storage_id
+  }
+
 });
 </script>
 <template>
@@ -173,7 +182,7 @@ onMounted(() => {
       <div class="flex justify-center py-12">
         <div id="left_container" class="w-2/5">
           <!-- 発注登録 -->
-          <div class="mt-8 bg-red-50 p-4">
+          <div class="bg-red-50 p-4">
               <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
             <div v-if="props.stock_suppliers.length > 0">
               <p v-if="props.initial_order != null " class="text-gray-700 mb-3 text-sm">
@@ -319,6 +328,38 @@ onMounted(() => {
                     v-model="form.calc_price"
                   />
                 </div>
+              </div>
+              <div class="flex flex-wrap -mx-3 mb-6">
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.stock_storage_id,
+                    }"
+                    for="name"
+                  >
+                    *想定格納場所
+                  </label>
+                  <select
+                    :class="{
+                      'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                    }"
+                    id="name"
+                    v-model="form.stock_storage_id"
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="stock_storage in props.stock_storages"
+                      :key="stock_storage.stock_storage_id"
+                      :value="stock_storage.stock_storage_id"
+                    >
+                      {{
+                        `${stock_storage.location_name}:${stock_storage.address}`
+                      }}
+                    </option>
+                  </select>
+                </div>
+
               </div>
 
               <div class="flex items-center justify-center sm:col-span-2">
@@ -536,6 +577,7 @@ onMounted(() => {
                     <th scope="col" class="px-6 py-3">倉庫</th>
                     <th scope="col" class="px-6 py-3">アドレス</th>
                     <th scope="col" class="px-6 py-3">個数</th>
+                    <th scope="col" class="px-6 py-3">発注点</th>
                     <th scope="col" class="px-6 py-3"></th>
                   </tr>
                 </thead>
@@ -553,6 +595,7 @@ onMounted(() => {
                     </td>
                     <td class="px-6 py-4">{{ stock_storage.address }}</td>
                     <td class="px-6 py-4">{{ stock_storage.quantity }}</td>
+                    <td class="px-6 py-4">{{ stock_storage.reorder_point }}</td>
                     <td class="px-6 py-4">
                       <a
                         href="#"
@@ -567,9 +610,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div id="right_container" class="w-2/5 p-4">
-          <h3 class="text-lg font-bold dark:text-white mb-2">在庫編集</h3>
-
+        <div id="right_container" class="w-2/5 px-4">
           <!-- 画像 -->
           <img
             class="mb-8"

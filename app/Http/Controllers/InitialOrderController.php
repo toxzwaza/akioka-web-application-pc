@@ -6,7 +6,9 @@ use App\Http\Services\Helper;
 use App\Models\Classification;
 use App\Models\Holiday;
 use App\Models\InitialOrder;
+use App\Models\InventoryOperationRecord;
 use App\Models\Stock;
+use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\Supplier;
 use App\Models\User;
@@ -33,7 +35,7 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url','stock_suppliers.lead_time as base_lead_time')
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
@@ -81,8 +83,8 @@ class InitialOrderController extends Controller
         $lead_time = $request->lead_time;
         $quantity = $request->quantity;
         $calc_price = $request->calc_price;
+        $stock_storage_id = $request->stock_storage_id;
 
-        
         $order_user_name = '';
 
         $user = User::where('id', $order_user)->first();
@@ -159,6 +161,37 @@ class InitialOrderController extends Controller
                 $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $lead_time . ' days'));
                 $initial_order->save();
             }
+
+            // 格納先が設定されている場合、発注点を更新
+            if ($stock_storage_id) {
+                // 発注点を自動更新
+                $stock = StockStorage::select(
+                    'stocks.*',
+                    'stock_storages.reorder_point',
+                    'stock_storages.quantity'
+                )
+                    ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
+                    ->where('stock_storages.id', $stock_storage_id)->first();
+
+                // 発注依頼を記録
+                $inventoryOperationRecord = new InventoryOperationRecord();
+                $inventoryOperationRecord->inventory_operation_id = 7;
+                $inventoryOperationRecord->stock_id = $stock_id;
+                $inventoryOperationRecord->stock_storage_id = $stock_storage_id;
+                $inventoryOperationRecord->bef_quantity = $stock->quantity;
+                $inventoryOperationRecord->save();
+
+                // 発注点再計算
+                $reorder_point_avg = InventoryOperationRecord::where('stock_storage_id', $stock_storage_id)
+                    ->where('inventory_operation_id', 7)
+                    ->avg('bef_quantity');
+
+                // 発注点を更新
+                $stock_storage = StockStorage::find($stock_storage_id);
+                $stock_storage->reorder_point = $reorder_point_avg;
+                $stock_storage->save();
+                
+            }
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
@@ -174,17 +207,14 @@ class InitialOrderController extends Controller
 
         $status = true;
 
-        try{
+        try {
             $initial_order = InitialOrder::find($initial_order_id);
             $initial_order->desired_delivery_date = $desired_delivery_date;
             $initial_order->save();
-
-        }catch(Exception $e){
+        } catch (Exception $e) {
             $status = false;
         }
 
         return response()->json(['status' => $status]);
-        
-        
     }
 }

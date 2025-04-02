@@ -166,7 +166,7 @@ class StockController extends Controller
                 'storage_addresses.address',
                 'locations.name as location_name'
             )
-                ->whereIn('inventory_operation_id', [2, 8, 9, 11, 12])
+                ->whereIn('inventory_operation_id', [2, 7, 8, 9, 11, 12,13, 15, 16])
 
                 ->whereDate('inventory_operation_records.created_at', $target_date)
 
@@ -293,7 +293,11 @@ class StockController extends Controller
         ->get();
 
         // 在庫状況
-        $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)->get();
+        $stock_storages = StockStorage::
+        select('stock_storages.id as stock_storage_id', 'quantity', 'reorder_point','locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')
+        ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
+        ->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)
+        ->get();
         // dd($stock_storages);
 
         $storage_addresses = StorageAddress::select('id', 'address', 'location_id')->orderBy('address', 'asc')->get();

@@ -224,8 +224,11 @@ onMounted(() => {
                     :class="{
                       'flex-shrink-0 w-6 h-6 rounded-full mt-10 sm:mt-0 inline-flex items-center justify-center  text-white relative z-10 title-font font-medium text-sm': true,
                       'bg-indigo-500': record.inventory_operation_id == 2,
+                      'bg-orange-500': record.inventory_operation_id == 7,
                       'bg-pink-500': record.inventory_operation_id == 8,
-                      'bg-gray-500': record.inventory_operation_id == 9,
+                      'bg-red-500': record.inventory_operation_id == 9,
+                      'bg-gray-500': record.inventory_operation_id == 11 || record.inventory_operation_id == 12,
+                      'bg-green-500': record.inventory_operation_id == 13,
                     }"
                   ></div>
                   <div
@@ -337,6 +340,41 @@ onMounted(() => {
                         }}
                       </p>
                     </div>
+
+                    <!-- 発注依頼の場合 -->
+                    <div
+                      v-if="record.inventory_operation_id == 7"
+                      class="flex-grow sm:pl-6 mt-6 sm:mt-0 text-container"
+                    >
+                      <a
+                        class="underline text-blue-500"
+                        :href="
+                          route('stock.show.stocks', {
+                            stock_id: record.stock_id,
+                          })
+                        "
+                      >
+                        <span :class="{ 'record-stock-name font-bold': true }">
+                          {{ record.stock_name }}
+                        </span>
+                      </a>
+                      <span> が発注依頼されました。 </span>
+                      
+                      <p class="leading-relaxed text-md">
+                        <span class="font-bold mr-2 record_location_name">{{
+                          record.location_name
+                        }}</span>
+                        <span class="record_address">{{ record.address }}</span>
+                      </p>
+                      <p class="text-gray-500 text-sm text-right">
+                        {{
+                          new Date(record.created_at).toLocaleTimeString(
+                            "ja-JP",
+                            { hour: "2-digit", minute: "2-digit" }
+                          )
+                        }}
+                      </p>
+                    </div>
                     <!-- 数量調整の場合 -->
                     <div
                       v-if="record.inventory_operation_id == 9"
@@ -429,11 +467,8 @@ onMounted(() => {
 .operation_record_container {
   padding: 2%;
   // margin-left: 2%;
-  max-height: 60vh;
+  max-height: 100vh;
   overflow-y: scroll;
-  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-  border-radius: 5px;
-  background-color: rgb(240 240 240);
   & .text_container {
     & .record_location_name {
     }
