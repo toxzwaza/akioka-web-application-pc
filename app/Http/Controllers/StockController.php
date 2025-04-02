@@ -102,22 +102,6 @@ class StockController extends Controller
     {
         return Inertia::render('Stock/Index');
 
-        // $operation_records = InventoryOperationRecord::select('stocks.name as stock_name', 'inventory_operations.name as operation_name', 'inventory_operations.id as operation_id', 'inventory_operation_records.created_at', 'users.name as user_name', 'inventory_operation_records.quantity', 'inventory_operation_records.est_quantity')->join('inventory_operations', 'inventory_operations.id', 'inventory_operation_records.inventory_operation_id')->join('stock_storages', 'stock_storages.id', 'inventory_operation_records.stock_storage_id')->join('stocks', 'stocks.id', 'inventory_operation_records.stock_id')->join('users', 'users.id', 'inventory_operation_records.user_id')->orderby('inventory_operation_records.updated_at', 'desc')->paginate(25);
-        // dd($operation_records);
-
-
-        $operation_record_recent = [];
-        for ($i = 0; $i < 6; $i++) {
-            $recent_count = InventoryOperationRecord::whereDate('created_at', now()->subDays(5 - $i)->toDateString())
-                ->count();
-            $operation_record_recent[] = $recent_count;
-        }
-        // dd($operation_record_recent);
-
-        // dd($operation_record_recent);
-
-
-        return view('stock.index', compact('operation_records', 'operation_record_recent'));
     }
     // 期間内の入出庫の回数を取得
     public function getInventoryOperationRecords(Request $request)

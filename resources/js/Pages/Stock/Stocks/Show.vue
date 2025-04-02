@@ -139,9 +139,9 @@ onMounted(() => {
 
   if (props.initial_order) {
     form.user_id = props.initial_order.user_id;
-    form.order_user = props.initial_order.order_user_id ?? 0
-    form.quantity = props.initial_order.quantity
-    form.calc_price = props.initial_order.calc_price
+    form.order_user = props.initial_order.order_user_id ?? 0;
+    form.quantity = props.initial_order.quantity;
+    form.calc_price = props.initial_order.calc_price;
   }
 
   form.stock_id = props.stock.id;
@@ -174,158 +174,166 @@ onMounted(() => {
         <div id="left_container" class="w-2/5">
           <!-- 発注登録 -->
           <div class="mt-8 bg-red-50 p-4">
-            <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
-            <p class="text-gray-700 mb-3 text-sm">※直近の発注データをセットしています。必要に応じて変更してください。</p>
-            <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-1/2 px-3">
-                <label
-                  :class="{
-                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.order_user,
-                  }"
-                  for="name"
-                >
-                  *注文依頼者
-                </label>
-                <select
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  v-model="form.order_user"
-                >
-                  <option value="0">未選択</option>
-                  <option
-                    v-for="user in props.users"
-                    :key="user.id"
-                    :value="user.id"
+              <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
+            <div v-if="props.stock_suppliers.length > 0">
+              <p v-if="props.initial_order != null " class="text-gray-700 mb-3 text-sm">
+                ※直近の発注データをセットしています。必要に応じて変更してください。
+              </p>
+              <div class="flex flex-wrap -mx-3 mb-6">
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.order_user,
+                    }"
+                    for="name"
                   >
-                    {{ user.name }}
-                  </option>
-                </select>
+                    *注文依頼者
+                  </label>
+                  <select
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    v-model="form.order_user"
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="user in props.users"
+                      :key="user.id"
+                      :value="user.id"
+                    >
+                      {{ user.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.user_id,
+                    }"
+                  >
+                    *発注者
+                  </label>
+                  <select
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    v-model="form.user_id"
+                  >
+                    <option value="0">未選択</option>
+                    <option
+                      v-for="user in props.users"
+                      :key="user.id"
+                      :value="user.id"
+                    >
+                      {{ user.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex flex-wrap -mx-3 mb-6">
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.supplier_id,
+                    }"
+                    for="name"
+                  >
+                    *手配先
+                  </label>
+                  <select
+                    :class="{
+                      'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                    }"
+                    id="name"
+                    v-model="form.supplier_id"
+                  >
+                    <option value="">未選択</option>
+                    <option
+                      v-for="supplier in props.stock_suppliers"
+                      :key="supplier.id"
+                      :value="supplier.id"
+                    >
+                      {{
+                        supplier.supplier_no != ""
+                          ? `${supplier.supplier_no} : ${supplier.name}`
+                          : supplier.name
+                      }}
+                    </option>
+                  </select>
+                </div>
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.lead_time,
+                    }"
+                    for="name"
+                  >
+                    *リードタイム
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    id="name"
+                    type="number"
+                    placeholder=""
+                    v-model="form.lead_time"
+                  />
+                </div>
+              </div>
+              <div class="flex flex-wrap -mx-3 mb-6">
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.quantity,
+                    }"
+                    for="name"
+                  >
+                    *数量
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    id="name"
+                    type="text"
+                    placeholder=""
+                    v-model="form.quantity"
+                    @change="form.calc_price = form.price * form.quantity"
+                  />
+                </div>
+
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.calc_price,
+                    }"
+                    for="s_name"
+                  >
+                    *金額
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    id="s_name"
+                    type="number"
+                    placeholder=""
+                    v-model="form.calc_price"
+                  />
+                </div>
               </div>
 
-              <div class="w-1/2 px-3">
-                <label
-                  :class="{
-                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.user_id,
-                  }"
+              <div class="flex items-center justify-center sm:col-span-2">
+                <button
+                  @click="createInitialOrder"
+                  class="inline-block rounded-lg bg-red-500 px-8 py-3 text-center font-semibold text-white outline-none ring-red-300 transition duration-100 hover:bg-red-600 focus-visible:ring active:bg-red-700 text-xs"
                 >
-                  *発注者
-                </label>
-                <select
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  v-model="form.user_id"
-                >
-                  <option value="0">未選択</option>
-                  <option
-                    v-for="user in props.users"
-                    :key="user.id"
-                    :value="user.id"
-                  >
-                    {{ user.name }}
-                  </option>
-                </select>
+                  登録
+                </button>
               </div>
             </div>
-            <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-1/2 px-3">
-                <label
-                  :class="{
-                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.supplier_id,
-                  }"
-                  for="name"
-                >
-                  *手配先
-                </label>
-                <select
-                  :class="{
-                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
-                  }"
-                  id="name"
-                  v-model="form.supplier_id"
-                >
-                  <option value="">未選択</option>
-                  <option
-                    v-for="supplier in props.stock_suppliers"
-                    :key="supplier.id"
-                    :value="supplier.id"
-                  >
-                    {{
-                      supplier.supplier_no != ""
-                        ? `${supplier.supplier_no} : ${supplier.name}`
-                        : supplier.name
-                    }}
-                  </option>
-                </select>
-              </div>
-              <div class="w-1/2 px-3">
-                <label
-                  :class="{
-                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.lead_time,
-                  }"
-                  for="name"
-                >
-                  *リードタイム
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="name"
-                  type="number"
-                  placeholder=""
-                  v-model="form.lead_time"
-                />
-              </div>
-            </div>
-            <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-1/2 px-3">
-                <label
-                  :class="{
-                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.quantity,
-                  }"
-                  for="name"
-                >
-                  *数量
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="name"
-                  type="text"
-                  placeholder=""
-                  v-model="form.quantity"
-                  @change="form.calc_price = form.price * form.quantity"
-                />
-              </div>
-
-              <div class="w-1/2 px-3">
-                <label
-                  :class="{
-                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.calc_price,
-                  }"
-                  for="s_name"
-                >
-                  *金額
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="s_name"
-                  type="number"
-                  placeholder=""
-                  v-model="form.calc_price"
-                />
-              </div>
-            </div>
-
-            <div class="flex items-center justify-center sm:col-span-2">
-              <button
-                @click="createInitialOrder"
-                class="inline-block rounded-lg bg-red-500 px-8 py-3 text-center font-semibold text-white outline-none ring-red-300 transition duration-100 hover:bg-red-600 focus-visible:ring active:bg-red-700 text-xs"
-              >
-                登録
-              </button>
-            </div>
+            <p v-else>
+              手配先が設定されていません。先に手配先を登録してください。<br>
+              リードタイムは取引に応じて自動で設定されるため、厳格に設定する必要はありません。
+            </p>
           </div>
           <!-- 手配先設定 -->
           <div class="mt-8 bg-gray-100 p-4">

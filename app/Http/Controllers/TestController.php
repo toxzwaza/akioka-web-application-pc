@@ -27,22 +27,34 @@ class TestController extends Controller
     //
     public function test()
     {
-        $initial_orders = InitialOrder::all();
-        foreach ($initial_orders as $initial_order) {
-            
-            $user_name = $initial_order->order_user;
+        // $del_stocks = Stock::where('del_flg', 1)->get();
+        // foreach ($del_stocks as $del_stock) {
+        //     $del_stock->delete();
+        // }
+        // return;
 
-            if ($user_name && !$initial_order->order_user_id) {
+        // $distinct_stocks = Stock::select('name', 's_name')
+        //     ->groupBy('name', 's_name')
+        //     ->havingRaw('COUNT(*) > 1')
+        //     ->get();
 
-                $user = User::where('name', $user_name)->first();
+        // echo count($distinct_stocks);
 
-                if ($user) {
-                    $initial_order->order_user_id = $user->id;
-                    $initial_order->save();
-                }
-            }
-        }
-        dd('完了');
+
+        // foreach ($distinct_stocks as $distinct_stock) {
+        //     echo '<p>' . $distinct_stock->name . ' : ' . $distinct_stock->s_name . '</p>';
+
+        //     $stocks = Stock::where('name', $distinct_stock->name)
+        //         ->where('s_name', $distinct_stock->s_name)
+        //         ->orderBy('id', 'desc')
+        //         ->get();
+
+        //     $latest_stock = $stocks->shift(); // 一番新しいレコードを取得してリストから削除
+
+        //     foreach ($stocks as $stock) {
+        //         $stock->delete();
+        //     }
+        // }
     }
 
     public function storage_address_test()
