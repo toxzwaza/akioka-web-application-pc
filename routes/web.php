@@ -68,6 +68,9 @@ Route::get('/order/approval/{id}', [OrderController::class, 'approval_judge'])->
 Route::get('/order/object_request/{id}', [OrderController::class, 'object_request_judge'])->name('order.object_request.judge');
 
 Route::get('/lunch', [LunchController::class, 'index'])->name('lunch');
+Route::get('/lunch/reserve', [LunchController::class, 'reserve'])->name('lunch.reserve');
+Route::post('/lunch/reserve/store', [LunchController::class, 'reserve_store'])->name('lunch.reserve.store');
+Route::delete('/lunch/reserve/delete', [LunchController::class, 'reserve_delete'])->name('lunch.reserve.delete');
 Route::get('/lunch/order', [LunchController::class, 'order'])->name('lunch.order');
 Route::get('/lunch/order-archive', [LunchController::class, 'order_archive'])->name('lunch.order-archive');
 Route::get('/lunch/order-users', [LunchController::class, 'order_users'])->name('lunch.order-users');

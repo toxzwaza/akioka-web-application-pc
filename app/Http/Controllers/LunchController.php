@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Lunch;
 use App\Models\LunchOrder;
 use App\Models\LunchOrderArchive;
 use App\Models\TodayLunchDescription;
+use App\Models\User;
 use App\Services\Method;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -16,7 +19,7 @@ class LunchController extends Controller
     //
     public function index()
     {
-        // return view('lunch.index');
+        return redirect()->route('lunch.order');
         return Inertia::render('Lunch/Index');
     }
     public function order()
@@ -43,6 +46,59 @@ class LunchController extends Controller
 
 
         return Inertia::render('Lunch/Order', ['count' => $count, 'price' => $price, 'today_lunch_description' => $today_lunch_description->description ?? '']);
+    }
+
+    public function reserve(Request $request)
+    {
+
+        $users = User::select('id', 'name', 'group_id')->where('del_flg', 0)->get();
+        $groups = Group::get();
+        
+        // 明日以降の弁当注文データを取得
+        $lunch_orders = LunchOrder::select('lunch_orders.id','lunch_orders.created_at', 'lunch_orders.date', 'users.name as user_name')->join('users', 'users.id', 'lunch_orders.user_id')->whereDate('date', Carbon::tomorrow()->format('Y-m-d'))->where('order_flg', 1)->get();
+
+        return Inertia::render('Lunch/Reserve', ['users' => $users, 'groups' => $groups, 'lunch_orders' => $lunch_orders]);
+    }
+
+    public function reserve_store(Request $request)
+    {
+
+        $status = true;
+
+        $user_id = $request->user_id;
+        $date = $request->date;
+
+
+        try {
+            $lunch_order = new LunchOrder();
+            $lunch_order->lunch_id = 1;
+            $lunch_order->user_id = $user_id;
+            $lunch_order->date = $date;
+            $lunch_order->order_flg = 1;
+            $lunch_order->save();
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+    }
+    public function reserve_delete(Request $request)
+    {
+
+        $status = true;
+
+        $lunch_order_id = $request->lunch_order_id;
+
+        try {
+            $lunch_order = LunchOrder::find($lunch_order_id);
+            if($lunch_order){
+                $lunch_order->delete();
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
     }
 
     public function order_archive(Request $request)
