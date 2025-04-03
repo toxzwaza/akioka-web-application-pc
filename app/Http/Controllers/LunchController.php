@@ -53,9 +53,9 @@ class LunchController extends Controller
 
         $users = User::select('id', 'name', 'group_id')->where('del_flg', 0)->get();
         $groups = Group::get();
-        
+
         // 明日以降の弁当注文データを取得
-        $lunch_orders = LunchOrder::select('lunch_orders.id','lunch_orders.created_at', 'lunch_orders.date', 'users.name as user_name')->join('users', 'users.id', 'lunch_orders.user_id')->whereDate('date', Carbon::tomorrow()->format('Y-m-d'))->where('order_flg', 1)->get();
+        $lunch_orders = LunchOrder::select('lunch_orders.id', 'lunch_orders.created_at', 'lunch_orders.date', 'users.name as user_name')->join('users', 'users.id', 'lunch_orders.user_id')->whereDate('date', Carbon::tomorrow()->format('Y-m-d'))->where('order_flg', 1)->get();
 
         return Inertia::render('Lunch/Reserve', ['users' => $users, 'groups' => $groups, 'lunch_orders' => $lunch_orders]);
     }
@@ -91,7 +91,7 @@ class LunchController extends Controller
 
         try {
             $lunch_order = LunchOrder::find($lunch_order_id);
-            if($lunch_order){
+            if ($lunch_order) {
                 $lunch_order->delete();
             }
         } catch (Exception $e) {
@@ -167,5 +167,90 @@ class LunchController extends Controller
         $orders = response()->json($orders);
 
         return $orders;
+    }
+
+    public function export(Request $request)
+    {
+        $date = '';
+        $calc_start_date = '';
+        $calc_end_date = '';
+
+        $date = $request->date;
+        if (!$date) {
+            $date = now()->format('Y-m');
+
+            $calc_start_date = now()->subMonth()->format('Y-m') . '-21';
+            $calc_end_date = now()->format('Y-m') . '-20';
+        }
+
+        $calc_start_date = Carbon::parse($date)->subMonth()->format('Y-m') . '-21';
+        $calc_end_date = $date . '-20';
+
+
+        // dd($calc_start_date, $calc_end_date);
+
+        $monthOrders = LunchOrder::select('user_id', 'users.name as user_name', 'users.dispatch_flg', 'users.part_flg')->join('users', 'users.id', 'lunch_orders.user_id')->distinct()->whereDate('date', '>=', $calc_start_date)->whereDate('date', '<=', $calc_end_date)->orderBy('dispatch_flg', 'asc')->orderby('part_flg', 'asc')->orderby('users.id', 'asc')->get();
+
+        $calc = [];
+        $calc_lunch_count = 0;
+        $calc_side_dish_count = 0;
+
+        foreach ($monthOrders as $monthOrder) {
+
+
+            $lunch_count = LunchOrder::whereDate('date', '>=', $calc_start_date)->whereDate('date', '<=', $calc_end_date)->where('user_id', $monthOrder->user_id)->where('lunch_id', '1')->where('order_flg', '1')->count();
+            $side_dish_count = LunchOrder::whereDate('date', '>=', $calc_start_date)->whereDate('date', '<=', $calc_end_date)->where('user_id', $monthOrder->user_id)->where('lunch_id', '2')->where('order_flg', '1')->count();
+
+            $monthOrder->lunch_count = $lunch_count;
+            $monthOrder->side_dish_count = $side_dish_count;
+
+            $calc = ($lunch_count * 360) + ($side_dish_count * 270);
+            $monthOrder->calc = $calc;
+
+            if (!($monthOrder->dispatch_flg)) {
+                // 非常勤もしくは、派遣社員ではない人
+
+                $calc_lunch_count += $lunch_count;
+                $calc_side_dish_count += $side_dish_count;
+            }
+
+            if ($monthOrder->dispatch_flg) {
+                $monthOrder->attribute = '派遣・非常勤';
+            } else if ($monthOrder->part_flg) {
+                $monthOrder->attribute = "パート社員";
+            } else {
+                $monthOrder->attribute = "正社員";
+            }
+        }
+
+        // dd($monthOrders);
+
+        $fileName = "order.csv";
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+        $columns = ['名前', '社員属性', '弁当個数', 'おかずのみ個数', '合計'];
+        $callback = function () use ($monthOrders, $columns) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns);
+            foreach ($monthOrders as $monthOrder) {
+                fputcsv($file, [
+                    $monthOrder->user_name,
+                    $monthOrder->attribute,
+                    $monthOrder->lunch_count,
+                    $monthOrder->side_dish_count,
+                    number_format($monthOrder->calc)
+
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
