@@ -50,8 +50,18 @@ const form = reactive({
 
   stock_supplier_supplier_id: null,
   stock_supplier_lead_time: null,
-
 });
+
+const toggleStockRequest = () => {
+  axios.get(route('stock.toggle.stock_request', {stock_id: form.stock_id}))
+  .then( res => {
+    console.log(res.data)
+    if(res.data.status){
+      alert('現場依頼物品設定を更新しました')
+      window.location.reload()
+    }
+  })
+}
 
 const createInitialOrder = () => {
   if (
@@ -169,10 +179,9 @@ onMounted(() => {
     form.lead_time = props.stock_suppliers[0].lead_time;
   }
 
-  if(props.stock_storages && props.stock_storages.length == 1){
-    form.stock_storage_id = props.stock_storages[0].stock_storage_id
+  if (props.stock_storages && props.stock_storages.length == 1) {
+    form.stock_storage_id = props.stock_storages[0].stock_storage_id;
   }
-
 });
 </script>
 <template>
@@ -183,9 +192,12 @@ onMounted(() => {
         <div id="left_container" class="w-2/5">
           <!-- 発注登録 -->
           <div class="bg-red-50 p-4">
-              <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
+            <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
             <div v-if="props.stock_suppliers.length > 0">
-              <p v-if="props.initial_order != null " class="text-gray-700 mb-3 text-sm">
+              <p
+                v-if="props.initial_order != null"
+                class="text-gray-700 mb-3 text-sm"
+              >
                 ※直近の発注データをセットしています。必要に応じて変更してください。
               </p>
               <div class="flex flex-wrap -mx-3 mb-6">
@@ -359,7 +371,6 @@ onMounted(() => {
                     </option>
                   </select>
                 </div>
-
               </div>
 
               <div class="flex items-center justify-center sm:col-span-2">
@@ -372,7 +383,7 @@ onMounted(() => {
               </div>
             </div>
             <p v-else>
-              手配先が設定されていません。先に手配先を登録してください。<br>
+              手配先が設定されていません。先に手配先を登録してください。<br />
               リードタイムは取引に応じて自動で設定されるため、厳格に設定する必要はありません。
             </p>
           </div>
@@ -607,6 +618,33 @@ onMounted(() => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <!-- 弁場依頼物品設定 -->
+          <div class="mt-8 bg-gray-100 p-4">
+            <h3 class="text-lg font-bold dark:text-white mb-2">
+              現場依頼物品設定
+            </h3>
+
+            <div v-if="stock.stock_request_id">
+              <!-- 番号も表示 -->
+
+
+              <button
+                @click="toggleStockRequest"
+                class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded"
+              >
+                設定済
+              </button>
+            </div>
+
+            <button
+              v-else
+              @click="toggleStockRequest"
+              class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-6 px-4 rounded"
+            >
+              未設定
+            </button>
           </div>
         </div>
 

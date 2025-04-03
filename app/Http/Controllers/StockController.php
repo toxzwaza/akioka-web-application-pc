@@ -11,6 +11,7 @@ use App\Models\Location;
 use App\Models\Process;
 use App\Models\RetainedStock;
 use App\Models\Stock;
+use App\Models\StockRequest;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
@@ -101,7 +102,6 @@ class StockController extends Controller
     public function index()
     {
         return Inertia::render('Stock/Index');
-
     }
     // 期間内の入出庫の回数を取得
     public function getInventoryOperationRecords(Request $request)
@@ -166,7 +166,7 @@ class StockController extends Controller
                 'storage_addresses.address',
                 'locations.name as location_name'
             )
-                ->whereIn('inventory_operation_id', [2, 7, 8, 9, 11, 12,13, 15, 16])
+                ->whereIn('inventory_operation_id', [2, 7, 8, 9, 11, 12, 13, 15, 16])
 
                 ->whereDate('inventory_operation_records.created_at', $target_date)
 
@@ -283,21 +283,23 @@ class StockController extends Controller
     // 在庫編集
     public function stock_show($stock_id)
     {
-        $stock = Stock::where('id', $stock_id)->first();
+        $stock = Stock::select('stocks.*', 'stock_requests.id as stock_request_id', 'stock_requests.orderNumber')
+            ->leftJoin('stock_requests', 'stock_requests.stock_id', 'stocks.id')->where('stocks.id', $stock_id)
+            ->first();
+
         $classifications = Classification::all();
         $processes = Process::all();
         $locations = Location::all();
 
         $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)
-        ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
-        ->get();
+            ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
+            ->get();
 
         // 在庫状況
-        $stock_storages = StockStorage::
-        select('stock_storages.id as stock_storage_id', 'quantity', 'reorder_point','locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')
-        ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
-        ->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)
-        ->get();
+        $stock_storages = StockStorage::select('stock_storages.id as stock_storage_id', 'quantity', 'reorder_point', 'locations.name as location_name', 'address', 'location_id', 'storage_addresses.id as storage_address_id')
+            ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
+            ->join('locations', 'locations.id', 'storage_addresses.location_id')->where('stock_id', $stock_id)
+            ->get();
         // dd($stock_storages);
 
         $storage_addresses = StorageAddress::select('id', 'address', 'location_id')->orderBy('address', 'asc')->get();
@@ -308,17 +310,21 @@ class StockController extends Controller
         // 直近の発注情報を一件取得
         $initial_order = InitialOrder::where('stock_id', $stock_id)->orderBy('order_date', 'desc')->first();
 
-        return Inertia::render('Stock/Stocks/Show',
-         ['stock' => $stock, 
-         'classifications' => $classifications, 
-         'processes' => $processes, 
-         'stock_storages' => $stock_storages, 
-         'locations' => $locations, 
-         'storage_addresses' => $storage_addresses, 'stock_suppliers' => $stock_suppliers,
-         'users' => $users,
-         'suppliers' => $suppliers,
-         'initial_order' => $initial_order
-        ]);
+        return Inertia::render(
+            'Stock/Stocks/Show',
+            [
+                'stock' => $stock,
+                'classifications' => $classifications,
+                'processes' => $processes,
+                'stock_storages' => $stock_storages,
+                'locations' => $locations,
+                'storage_addresses' => $storage_addresses,
+                'stock_suppliers' => $stock_suppliers,
+                'users' => $users,
+                'suppliers' => $suppliers,
+                'initial_order' => $initial_order
+            ]
+        );
     }
 
     // 発注登録
@@ -376,11 +382,10 @@ class StockController extends Controller
     public function getAllInitialOrders()
     {
 
-        $initial_orders = InitialOrder::
-        select('initial_orders.*', 'stocks.img_path')
-        ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
-        ->orderBy('order_date', 'desc')
-        ->get();
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path')
+            ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
+            ->orderBy('order_date', 'desc')
+            ->get();
 
 
         return response()->json($initial_orders);
@@ -509,17 +514,15 @@ class StockController extends Controller
             $stock->save();
 
             // 新規追加と編集の記録を残す
-            if($is_new){
-
-            }else{
-
+            if ($is_new) {
+            } else {
             }
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
         }
 
-        return response()->json(['status' => $status, 'msg' => $msg ]);
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
     // 棚卸し
@@ -880,5 +883,24 @@ class StockController extends Controller
         $storage_addresses = StorageAddress::orderBy('address', 'asc')->get();
 
         return Inertia::render('Stock/StorageAddressPrint', ['locations' => $locations, 'storage_addresses' => $storage_addresses]);
+    }
+
+    public function toggle_stock_request($stock_id)
+    {
+        $status = true;
+
+        try {
+            $stock_request = StockRequest::where('stock_id', $stock_id)->first();
+            if ($stock_request) {
+                $stock_request->delete();
+            } else {
+                $stock_request = new StockRequest();
+                $stock_request->stock_id = $stock_id;
+                $stock_request->save();
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+        return response()->json(['status' => $status]);
     }
 }

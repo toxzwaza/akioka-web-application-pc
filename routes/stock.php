@@ -20,6 +20,8 @@ Route::get('/', [StockController::class, 'index'])->name('stock');
 Route::get('/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
 Route::get('/stocks/get', [StockController::class, 'getStocks'])->name('stock.getStocks');
 Route::get('/stocks/show/{stock_id}', [StockController::class, 'stock_show'])->name('stock.show.stocks');
+Route::get('/stocks/stock-request/{stock_id}', [StockController::class, 'toggle_stock_request'])->name('stock.toggle.stock_request');
+
 Route::post('/stocks/store', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 // 新規在庫作成
 Route::get('/stocks/create', [StockController::class, 'create_stocks'])->name('stock.stocks.create');
@@ -37,6 +39,7 @@ Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->
 Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
 // 納入希望日設定
 Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
+
 
 // 発注修正
 Route::get('/initial-orders/edit', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
