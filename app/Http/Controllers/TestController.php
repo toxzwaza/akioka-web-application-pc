@@ -27,34 +27,8 @@ class TestController extends Controller
     //
     public function test()
     {
-        // $del_stocks = Stock::where('del_flg', 1)->get();
-        // foreach ($del_stocks as $del_stock) {
-        //     $del_stock->delete();
-        // }
-        // return;
-
-        // $distinct_stocks = Stock::select('name', 's_name')
-        //     ->groupBy('name', 's_name')
-        //     ->havingRaw('COUNT(*) > 1')
-        //     ->get();
-
-        // echo count($distinct_stocks);
 
 
-        // foreach ($distinct_stocks as $distinct_stock) {
-        //     echo '<p>' . $distinct_stock->name . ' : ' . $distinct_stock->s_name . '</p>';
-
-        //     $stocks = Stock::where('name', $distinct_stock->name)
-        //         ->where('s_name', $distinct_stock->s_name)
-        //         ->orderBy('id', 'desc')
-        //         ->get();
-
-        //     $latest_stock = $stocks->shift(); // 一番新しいレコードを取得してリストから削除
-
-        //     foreach ($stocks as $stock) {
-        //         $stock->delete();
-        //     }
-        // }
     }
 
     public function storage_address_test()

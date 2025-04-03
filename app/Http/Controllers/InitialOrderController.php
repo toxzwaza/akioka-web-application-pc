@@ -35,12 +35,14 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time')
+        $initial_orders = InitialOrder::
+        select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel' , 'suppliers.fax')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
                     ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
             })
+            ->leftJoin('suppliers', 'suppliers.id', 'initial_orders.supplier_id')
             ->orderBy('order_date', 'desc')
             ->paginate(50);
 

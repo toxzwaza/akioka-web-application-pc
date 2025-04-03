@@ -16,9 +16,8 @@ class LunchController extends Controller
     //
     public function index()
     {
-
-
-        return view('lunch.index');
+        // return view('lunch.index');
+        return Inertia::render('Lunch/Index');
     }
     public function order()
     {

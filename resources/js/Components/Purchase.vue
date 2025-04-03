@@ -1,5 +1,5 @@
 <script setup>
-import { watch } from "vue";
+import { watch, ref } from "vue";
 
 const props = defineProps({
   current_month_holidays: Array,
@@ -7,31 +7,39 @@ const props = defineProps({
   order: Object,
 });
 
+const shortest = ref(false);
+
 function printElement() {
-  // 印刷用のiframeを作成
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  document.body.appendChild(iframe);
+  // 納入希望日が入力されていない場合最短とする
+  if (!props.order.desired_delivery_date) {
+    shortest.value = true;
+  }
 
-  // iframeのドキュメントに現在のページのスタイルをコピー
-  const styleSheets = Array.from(document.styleSheets);
-  const styles = styleSheets
-    .map((sheet) => {
-      try {
-        return Array.from(sheet.cssRules)
-          .map((rule) => rule.cssText)
-          .join("\n");
-      } catch (e) {
-        return "";
-      }
-    })
-    .join("\n");
+  setTimeout(() => {
+    // 印刷用のiframeを作成
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
 
-  // 印刷したい要素を取得
-  const printContent = document.getElementById("purchase_container");
+    // iframeのドキュメントに現在のページのスタイルをコピー
+    const styleSheets = Array.from(document.styleSheets);
+    const styles = styleSheets
+      .map((sheet) => {
+        try {
+          return Array.from(sheet.cssRules)
+            .map((rule) => rule.cssText)
+            .join("\n");
+        } catch (e) {
+          return "";
+        }
+      })
+      .join("\n");
 
-  // iframeのドキュメントに内容を書き込む
-  iframe.contentDocument.write(`
+    // 印刷したい要素を取得
+    const printContent = document.getElementById("purchase_container");
+
+    // iframeのドキュメントに内容を書き込む
+    iframe.contentDocument.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -43,27 +51,27 @@ function printElement() {
         </html>
     `);
 
-  iframe.contentDocument.close();
+    iframe.contentDocument.close();
 
-  // 印刷
-  iframe.contentWindow.focus();
-  setTimeout(() => {
-    iframe.contentWindow.print();
-  }, 500); // 500ミリ秒の待機時間を追加
+    // 印刷
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+      iframe.contentWindow.print();
+    }, 500); // 500ミリ秒の待機時間を追加
 
-  // 印刷後にiframeを削除
-  setTimeout(() => {
-    document.body.removeChild(iframe);
-  }, 1000);
+    // 印刷後にiframeを削除
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  }, 500);
 }
 
-
 // emitを定義
-const emit = defineEmits(['update-delivery-date']);
+const emit = defineEmits(["update-delivery-date"]);
 
 // 日付変更時のハンドラー
 const handleDateChange = (value) => {
-  emit('update-delivery-date', value);
+  emit("update-delivery-date", value);
 };
 
 // orderの変更を監視
@@ -77,21 +85,20 @@ watch(
 </script>
 <template>
   <div v-if="order">
-
     <div id="purchase_container" class="p-4">
       <button
-      id="print_button"
-      @click="printElement"
+        id="print_button"
+        @click="printElement"
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
-        印刷 & FAX 
+        印刷 & FAX
       </button>
 
       <h1 class="text-center font-bold text-2xl py-4 mb-4">注文書</h1>
 
       <div id="top_content" class="flex justify-around items-center">
         <div class="left_container">
-          <h2 class="font-bold text-xl">会社名 御中</h2>
+          <h2 class="font-bold text-xl">{{ order.com_name }} 御中</h2>
           <div class="number">
             <p>TEL: {{ order.tel }}</p>
             <p>FAX: {{ order.fax }}</p>
@@ -157,14 +164,18 @@ watch(
               </td>
               <td class="text-center border px-4 py-5">
                 <input
+                  v-if="!shortest"
                   class="p-0 border-transparent"
                   type="date"
                   @change="handleDateChange($event.target.value)"
                   :value="order.desired_delivery_date"
                 />
+                <p v-else @click="shortest = false" class="font-bold">最短</p>
               </td>
               <td class="text-center border px-4 py-5">{{ order.quantity }}</td>
-              <td class="text-center border px-4 py-5">{{ order.price.toLocaleString() }}</td>
+              <td class="text-center border px-4 py-5">
+                {{ order.price.toLocaleString() }}
+              </td>
               <td class="text-center border px-4 py-5">
                 {{ order.calc_price.toLocaleString() }}
               </td>
@@ -260,7 +271,7 @@ watch(
   border: 1px solid rgba(221, 221, 221, 0.705);
   position: relative;
 
-  & #print_button{
+  & #print_button {
     position: absolute;
     right: 5mm;
     top: 5mm;
