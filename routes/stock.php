@@ -21,6 +21,7 @@ Route::get('/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
 Route::get('/stocks/get', [StockController::class, 'getStocks'])->name('stock.getStocks');
 Route::get('/stocks/show/{stock_id}', [StockController::class, 'stock_show'])->name('stock.show.stocks');
 Route::get('/stocks/stock-request/{stock_id}', [StockController::class, 'toggle_stock_request'])->name('stock.toggle.stock_request');
+Route::post('/stocks/stock-request/update', [StockController::class, 'update_stock_request'])->name('stock.update.stock_request');
 
 Route::post('/stocks/store', [StockController::class, 'store_stocks'])->name('stock.store.stocks');
 // 新規在庫作成

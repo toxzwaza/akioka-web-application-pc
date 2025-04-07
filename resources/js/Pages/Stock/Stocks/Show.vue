@@ -50,18 +50,49 @@ const form = reactive({
 
   stock_supplier_supplier_id: null,
   stock_supplier_lead_time: null,
+
+  orderNumber: null,
+  alias: null,
 });
+const updateStockRequest = (flg) => {
+  const update_data = {
+    stock_id: form.stock_id,
+  };
+
+  if (flg === "alias") {
+    update_data.alias = form.alias;
+  } else if (flg === "orderNumber") {
+    update_data.orderNumber = form.orderNumber;
+  }
+
+  axios
+    .post(route("stock.update.stock_request"), update_data)
+    .then((res) => {
+      if (res.data.status) {
+        alert("依頼情報を更新しました");
+        window.location.reload();
+      } else {
+        alert("更新に失敗しました");
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      alert("エラーが発生しました");
+    });
+};
+
 
 const toggleStockRequest = () => {
-  axios.get(route('stock.toggle.stock_request', {stock_id: form.stock_id}))
-  .then( res => {
-    console.log(res.data)
-    if(res.data.status){
-      alert('現場依頼物品設定を更新しました')
-      window.location.reload()
-    }
-  })
-}
+  axios
+    .get(route("stock.toggle.stock_request", { stock_id: form.stock_id }))
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("現場依頼物品設定を更新しました");
+        window.location.reload();
+      }
+    });
+};
 
 const createInitialOrder = () => {
   if (
@@ -182,6 +213,9 @@ onMounted(() => {
   if (props.stock_storages && props.stock_storages.length == 1) {
     form.stock_storage_id = props.stock_storages[0].stock_storage_id;
   }
+
+  form.alias = props.stock.alias;
+  form.orderNumber = props.stock.orderNumber;
 });
 </script>
 <template>
@@ -627,8 +661,39 @@ onMounted(() => {
             </h3>
 
             <div v-if="stock.stock_request_id">
-              <!-- 番号も表示 -->
-
+              <!-- 番号・名前も表示 -->
+              <div class="flex justify-between">
+                <div class="w-1/2 pr-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    }"
+                  >
+                    表示名
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="text"
+                    v-model="form.alias"
+                    @change="updateStockRequest('alias')"
+                  />
+                </div>
+                <div class="w-1/2 pl-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    }"
+                  >
+                    表示順
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="number"
+                    v-model="form.orderNumber"
+                    @change="updateStockRequest('orderNumber')"
+                  />
+                </div>
+              </div>
 
               <button
                 @click="toggleStockRequest"

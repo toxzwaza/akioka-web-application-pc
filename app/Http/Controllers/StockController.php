@@ -283,7 +283,7 @@ class StockController extends Controller
     // 在庫編集
     public function stock_show($stock_id)
     {
-        $stock = Stock::select('stocks.*', 'stock_requests.id as stock_request_id', 'stock_requests.orderNumber')
+        $stock = Stock::select('stocks.*', 'stock_requests.id as stock_request_id', 'stock_requests.orderNumber', 'stock_requests.alias')
             ->leftJoin('stock_requests', 'stock_requests.stock_id', 'stocks.id')->where('stocks.id', $stock_id)
             ->first();
 
@@ -901,6 +901,31 @@ class StockController extends Controller
         } catch (Exception $e) {
             $status = false;
         }
+        return response()->json(['status' => $status]);
+    }
+
+    public function update_stock_request(Request $request)
+    {
+        $status = true;
+
+        $stock_id = $request->stock_id;
+        $alias = $request->alias;
+        $orderNumber = $request->orderNumber;
+
+        try {
+            $stock_request = StockRequest::where('stock_id', $stock_id)->first();
+            if ($alias) {
+
+                $stock_request->alias = $alias;
+            }
+            if ($orderNumber) {
+                $stock_request->orderNumber = $orderNumber;
+            }
+            $stock_request->save();
+        } catch (Exception $e) {
+            $status = false;
+        }
+
         return response()->json(['status' => $status]);
     }
 }
