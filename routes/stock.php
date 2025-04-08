@@ -61,7 +61,11 @@ Route::get('/accept', [AcceptController::class, 'index'])->name('stock.accept');
 // 承認結果送信
 Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.accept.store');
 // 発注完了
-Route::put('/order-requests/complete', [OrderRequestController::class, 'completeOrderRequest'])->name('stock.completeOrderRequest');
+Route::put('/order-requests/complete', [OrderRequestController::class, 'delete'])->name('stock.completeOrderRequest');
+// 発注依頼削除
+Route::delete('/order-requests/delete', [OrderRequestController::class, 'delete'])->name('stock.deleteOrderRequest');
+// 発注依頼から発注作成
+Route::post('/order-requests/create/initial-order', [OrderRequestController::class, 'createInitialOrder'])->name('stock.createInitialOrder');
 
 // 滞留品
 Route::get('/retentions', [RetentionController::class, 'index'])->name('stock.retentions');

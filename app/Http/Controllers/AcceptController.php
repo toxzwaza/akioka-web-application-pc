@@ -39,7 +39,8 @@ class AcceptController extends Controller
 
         return Inertia::render('Stock/Accept/Index', ['order_request' => $order_request]);
     }
-    //
+
+    // 承認依頼送信
     public function sendAccept(Request $request)
     {
         $status = true;
@@ -51,10 +52,27 @@ class AcceptController extends Controller
             $order_request->accept_flg = 1;
             $order_request->save();
 
-            $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+            $notify_users = [];
+            $url = "https://akioka.cloud/accept/order-request?user_id=";
 
-            $url = route('stock.accept', ['order_request_id' => $order_request_id]);
-            Helper::sendNotify(['ka-arakawa@akioka-ltd.jp'], $message, $url);
+            if($order_request->new_stock_flg){
+                // 新規品の場合は常務承認
+                // array_push($notify_users, 63);
+                array_push($notify_users, 91);
+                $url .= "91";
+            }else{
+                // 既存品は部長承認
+                // array_push($notify_users, 36);
+                array_push($notify_users, 91);
+                $url .= "91";
+            }
+
+            $title = "在庫管理システムからの通知です。";
+            $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+            
+
+            Helper::createNotifyQueue($title, $message, $url, $notify_users);
+
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();

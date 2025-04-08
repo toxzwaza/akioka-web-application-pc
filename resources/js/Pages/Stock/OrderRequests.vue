@@ -9,8 +9,6 @@ const props = defineProps({
   user_id: Number,
 });
 
-
-
 // 注文者
 const order_config = reactive({
   user_id: null,
@@ -43,26 +41,64 @@ const getOrderRequestByOrderRequestId = (order_request_id) => {
 
 // 承認依頼
 const sendAccept = (order_request_id) => {
-  console.log(order_request_id)
-  if(order_request_id){
-    axios.post(route('stock.accept.order_request'), {
-      order_request_id: order_request_id
-    })
-    .then(res => {
-      console.log(res.data)
-      if(res.data.status){
-        alert('承認依頼を送信しました。')
-        const order_request = order_requests.value.find(request => request.id === order_request_id);
-        if (order_request) {
-          order_request.accept_flg = 1;
+  if (order_request_id) {
+    const order_request = getOrderRequestByOrderRequestId(order_request_id);
+    if (
+      !(
+        order_request.stock_price &&
+        order_request.quantity &&
+        order_request.stock_supplier
+      )
+    ) {
+      return alert("数量・単価・金額・取引先が入力されていません。");
+    }
+
+    axios
+      .post(route("stock.accept.order_request"), {
+        order_request_id: order_request_id,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status) {
+          alert("承認依頼を送信しました。");
+          const order_request = order_requests.value.find(
+            (request) => request.id === order_request_id
+          );
+          if (order_request) {
+            order_request.accept_flg = 1;
+          }
         }
-      }
-    })
-    .catch(error => {
-      console.log(error)
-    })
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
-}  
+};
+// 発注依頼から発注作成
+const sendInitialOrder = (order_request_id) => {
+  console.log(order_request_id);
+  if (confirm("発注登録を行いますか？")) {
+    axios
+      .post(route("stock.createInitialOrder"), {
+        order_request_id: order_request_id,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status) {
+          alert(
+            "発注登録が完了しました。発注一覧から発注情報を確認してください。"
+          );
+          window.location.reload();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+};
+
+// 発注数量更新
+const updateQuantity = (order_request_id, quantity) => {};
 
 // 完了処理
 const completeOrderRequest = (order_request_id) => {
@@ -99,10 +135,34 @@ const completeOrderRequest = (order_request_id) => {
         .catch((error) => {});
     }
   } else {
-    return alert("数量・金額・取引先が入力されていません。");
+    return alert("数量・単価・金額・取引先が入力されていません。");
   }
 
   return;
+};
+
+const deleteOrderRequest = (order_request_id) => {
+  console.log(order_request_id);
+  if (confirm("発注依頼を削除してよろしいですか？")) {
+    axios
+      .delete(route("stock.deleteOrderRequest"), {
+        params: {
+          order_request_id: order_request_id,
+        },
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status) {
+          alert("発注依頼を削除しました。");
+          window.location.reload();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  } else {
+    alert("発注依頼削除を取り消しました。");
+  }
 };
 
 const handleUserId = (user_id) => {
@@ -123,7 +183,7 @@ const purchaseOrder = (order_request_id) => {
       order_request.stock_supplier
     )
   ) {
-    return alert("数量・金額・取引先が入力されていません。");
+    return alert("数量・単価・金額・取引先が入力されていません。");
   }
 
   router.get(
@@ -223,12 +283,27 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
+                    現在個数
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
                     数量
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
                     単価
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    金額
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    送料
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -260,6 +335,9 @@ onMounted(() => {
                   >
                     完了
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  ></th>
                 </tr>
               </thead>
               <tbody>
@@ -294,6 +372,7 @@ onMounted(() => {
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ order_request.s_name }}
                   </td>
+                  <td class="px-4 py-3 text-lg text-gray-900">{{}}</td>
                   <td class="px-4 py-3 text-lg text-gray-900 w-32">
                     <input
                       type="number"
@@ -301,7 +380,9 @@ onMounted(() => {
                       id=""
                       class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order_request.quantity"
-                      @input="order_request.quantity = $event.target.value"
+                      @change="
+                        updateQuantity(order_request.id, $event.target.value)
+                      "
                     />
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
@@ -313,6 +394,18 @@ onMounted(() => {
                       :value="order_request.stock_price"
                       @input="order_request.stock_price = $event.target.value"
                     />
+                  </td>
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order_request.calc_price"
+                    />
+                  </td>
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    {{ order_request.postage }}
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <span v-if="order_request.stock_supplier"
@@ -382,13 +475,27 @@ onMounted(() => {
                     <button
                       @click="sendAccept(order_request.id)"
                       v-if="order_request.accept_flg === 0"
-                      class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-full"
+                      class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
                     >
                       依頼
                     </button>
-                    <span class="text-sm bg-orange-500 hover:bg-orange-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 1">待ち</span>
-                    <span class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 2">承認</span>
-                    <span class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full" v-else-if="order_request.accept_flg === 3">却下</span>
+                    <span
+                      class="text-sm bg-orange-500 text-white py-2 px-4 rounded-full"
+                      v-else-if="order_request.accept_flg === 1"
+                      >待ち</span
+                    >
+                    <button
+                      @click="sendInitialOrder(order_request.id)"
+                      v-if="order_request.accept_flg === 2"
+                      class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-full"
+                    >
+                      承認
+                    </button>
+                    <span
+                      class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full"
+                      v-else-if="order_request.accept_flg === 3"
+                      >却下</span
+                    >
                   </td>
                   <td
                     :class="{
@@ -407,6 +514,20 @@ onMounted(() => {
                     <span class="text-sm font-bold" v-else
                       >発注者を選択すると完了できます</span
                     >
+                  </td>
+                  <td
+                    :class="{
+                      'px-4 py-3 text-lg text-gray-900': true,
+                    }"
+                  >
+                    <button
+                      @click="
+                        deleteOrderRequest(order_request.order_request_id)
+                      "
+                      class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded whitespace-nowrap"
+                    >
+                      削除
+                    </button>
                   </td>
                 </tr>
               </tbody>

@@ -7,6 +7,7 @@ use App\Models\Classification;
 use App\Models\Holiday;
 use App\Models\InitialOrder;
 use App\Models\InventoryOperationRecord;
+use App\Models\OrderRequest;
 use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
@@ -35,8 +36,7 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::
-        select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel' , 'suppliers.fax')
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
@@ -86,19 +86,13 @@ class InitialOrderController extends Controller
         $quantity = $request->quantity;
         $calc_price = $request->calc_price;
         $stock_storage_id = $request->stock_storage_id;
+        $postage = $request->postage;
 
-        $order_user_name = '';
-
-        $user = User::where('id', $order_user)->first();
-        if ($user) {
-            $order_user_name = $user->name;
-        }
 
         try {
-            $supplier = Supplier::find($supplier_id);
 
             if (!$stock_id) {
-                DB::transaction(function () use ($name, $s_name, $jan_code, $url, $img_path, $price, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $order_user, $user_id, $supplier_id, $lead_time, $quantity, $calc_price, $supplier, $order_user_name) {
+                DB::transaction(function () use ($name, $s_name, $jan_code, $url, $img_path, $price, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $order_user, $user_id, $supplier_id, $lead_time, $quantity, $calc_price, $postage) {
                     $stock = new Stock();
                     $stock->name = $name;
                     $stock->s_name = $s_name;
@@ -114,25 +108,20 @@ class InitialOrderController extends Controller
                     $stock->deli_location = $deli_location;
                     $stock->save();
 
-                    $initial_order = new InitialOrder();
-                    $initial_order->stock_id = $stock->id;
-                    $initial_order->order_no = Helper::createOrderNo();
-                    $initial_order->order_date = date('Y-m-d');
-                    $initial_order->com_no = $supplier->supplier_no;
-                    $initial_order->com_name = $supplier->name;
-                    $initial_order->name = $name;
-                    $initial_order->s_name = $s_name;
-                    $initial_order->order_unit = $solo_unit;
-                    $initial_order->deli_location = $deli_location;
-                    $initial_order->order_user = $order_user_name;
-                    $initial_order->order_user_id = $order_user;
-                    $initial_order->user_id = $user_id;
-                    $initial_order->supplier_id = $supplier_id;
-                    $initial_order->price = $price;
-                    $initial_order->quantity = $quantity;
-                    $initial_order->calc_price = $calc_price;
-                    $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $lead_time . ' days'));
-                    $initial_order->save();
+                    // 発注依頼データ作成
+                    $order_request = new OrderRequest();
+                    $order_request->stock_id = $stock->id;
+                    $order_request->request_user_id = $order_user;
+                    $order_request->user_id = $user_id;
+                    $order_request->supplier_id = $supplier_id;
+                    $order_request->lead_time = $lead_time;
+                    $order_request->quantity = $quantity;
+                    $order_request->price = $price;
+                    $order_request->calc_price = $calc_price;
+                    $order_request->new_stock_flg = 1;
+                    $order_request->postage = $postage;
+                    $order_request->save();
+
 
                     $stock_supplier = new StockSupplier();
                     $stock_supplier->stock_id = $stock->id;
@@ -142,26 +131,19 @@ class InitialOrderController extends Controller
                 });
             } else {
 
-                $initial_order = new InitialOrder();
-                $initial_order->stock_id = $stock_id;
-                $initial_order->order_no = Helper::createOrderNo();
-                $initial_order->order_date = date('Y-m-d');
-                $initial_order->com_no = $supplier->supplier_no;
-                $initial_order->com_name = $supplier->name;
-                $initial_order->name = $name;
-                $initial_order->s_name = $s_name;
-                $initial_order->order_unit = $solo_unit;
-                $initial_order->deli_location = $deli_location;
-                $initial_order->user_id = $user_id;
-                $initial_order->order_user_id = $order_user;
-                $initial_order->order_user = $order_user_name;
-                $initial_order->supplier_id = $supplier_id;
-                $initial_order->lead_time = $lead_time;
-                $initial_order->price = $price;
-                $initial_order->quantity = $quantity;
-                $initial_order->calc_price = $calc_price;
-                $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $lead_time . ' days'));
-                $initial_order->save();
+                // 発注依頼データを作成
+                $order_request = new OrderRequest();
+                $order_request->stock_id = $stock_id;
+                $order_request->request_user_id = $order_user;
+                $order_request->user_id = $user_id;
+                $order_request->supplier_id = $supplier_id;
+                $order_request->lead_time = $lead_time;
+                $order_request->quantity = $quantity;
+                $order_request->price = $price;
+                $order_request->calc_price = $calc_price;
+                $order_request->new_stock_flg = 0;
+                $order_request->postage = $postage;
+                $order_request->save();
             }
 
             // 格納先が設定されている場合、発注点を更新
@@ -192,7 +174,6 @@ class InitialOrderController extends Controller
                 $stock_storage = StockStorage::find($stock_storage_id);
                 $stock_storage->reorder_point = $reorder_point_avg;
                 $stock_storage->save();
-                
             }
         } catch (Exception $e) {
             $status = false;
@@ -219,4 +200,6 @@ class InitialOrderController extends Controller
 
         return response()->json(['status' => $status]);
     }
+
+
 }

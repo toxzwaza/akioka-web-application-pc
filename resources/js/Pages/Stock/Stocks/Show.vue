@@ -41,6 +41,7 @@ const form = reactive({
   lead_time: null,
   quantity: null,
   calc_price: null,
+  postage: null,
 
   location_id: 0,
   storage_address_id: 0,
@@ -81,7 +82,6 @@ const updateStockRequest = (flg) => {
     });
 };
 
-
 const toggleStockRequest = () => {
   axios
     .get(route("stock.toggle.stock_request", { stock_id: form.stock_id }))
@@ -101,8 +101,7 @@ const createInitialOrder = () => {
     !form.supplier_id ||
     !form.lead_time ||
     !form.quantity ||
-    !form.calc_price ||
-    !form.stock_storage_id
+    !form.calc_price
   ) {
     return alert("必須項目が入力されていません。");
   }
@@ -226,7 +225,7 @@ onMounted(() => {
         <div id="left_container" class="w-2/5">
           <!-- 発注登録 -->
           <div class="bg-red-50 p-4">
-            <h3 class="text-lg font-bold dark:text-white mb-2">発注登録</h3>
+            <h3 class="text-lg font-bold dark:text-white mb-2">発注依頼登録</h3>
             <div v-if="props.stock_suppliers.length > 0">
               <p
                 v-if="props.initial_order != null"
@@ -380,11 +379,10 @@ onMounted(() => {
                   <label
                     :class="{
                       'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.stock_storage_id,
                     }"
                     for="name"
                   >
-                    *想定格納場所
+                    想定格納場所
                   </label>
                   <select
                     :class="{
@@ -404,6 +402,23 @@ onMounted(() => {
                       }}
                     </option>
                   </select>
+                </div>
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    }"
+                    for="s_name"
+                  >
+                    送料(※その他費用)
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    id="s_name"
+                    type="number"
+                    placeholder=""
+                    v-model="form.postage"
+                  />
                 </div>
               </div>
 

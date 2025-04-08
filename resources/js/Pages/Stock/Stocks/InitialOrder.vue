@@ -24,6 +24,7 @@ const form = reactive({
   quantity_per_org: null,
   classification_id: null,
   deli_location: null,
+  postage: null,
 
   order_user: null,
   user_id: null,
@@ -318,7 +319,7 @@ onMounted(() => {});
 
             <hr class="my-8" />
 
-            <h2 class="mt-8 mb-2">発注登録</h2>
+            <h2 class="mt-8 mb-2">発注依頼登録</h2>
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-1/2 px-3">
                 <label
@@ -457,6 +458,25 @@ onMounted(() => {});
                   type="number"
                   placeholder=""
                   v-model="form.calc_price"
+                />
+              </div>
+            </div>
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                  }"
+                  for="name"
+                >
+                  送料(※その他費用)
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="name"
+                  type="number"
+                  placeholder=""
+                  v-model="form.postage"
                 />
               </div>
             </div>
