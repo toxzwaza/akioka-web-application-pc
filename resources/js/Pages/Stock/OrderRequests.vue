@@ -100,10 +100,22 @@ const sendInitialOrder = (order_request_id) => {
 
 // 発注数量更新
 const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
-  console.log(flg, order_request);
+
+  let master = {
+    price: false,
+    postage: false
+  }
+
   switch (flg) {
-    case "quantity":
     case "price":
+      if (
+        confirm(
+          "単価が変更されました。設定した単価をマスタに設定しますか？"
+        )
+      ) {
+        master.price = true
+      }
+    case "quantity":
       if (confirm("数量もしくは単価が変更されました。金額を再計算しますか？")) {
         order_request.calc_price =
           order_request.quantity * order_request.stock_price;
@@ -112,6 +124,13 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
     case "calc_price":
       break;
     case "postage":
+      if (
+        confirm(
+          "送料が変更されました。設定した送料をマスタに設定しますか？"
+        )
+      ) {
+        master.postage = true
+      }
       break;
   }
 
@@ -122,6 +141,9 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       price: order_request.stock_price,
       calc_price: order_request.calc_price,
       postage: order_request.postage,
+      is_update_price: master.price,
+      is_update_postage: master.postage,
+      supplier_id: order_request.supplier_id,
     })
     .then((res) => {
       console.log(res.data);

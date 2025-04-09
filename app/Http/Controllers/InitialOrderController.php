@@ -127,6 +127,7 @@ class InitialOrderController extends Controller
                     $stock_supplier->stock_id = $stock->id;
                     $stock_supplier->supplier_id = $supplier_id;
                     $stock_supplier->lead_time = $lead_time;
+                    $stock_supplier->postage = $postage ?? 0;
                     $stock_supplier->save();
                 });
             } else {

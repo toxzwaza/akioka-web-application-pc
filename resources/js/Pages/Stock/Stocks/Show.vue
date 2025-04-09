@@ -182,10 +182,11 @@ onMounted(() => {
   console.log(props.stock_storages);
 
   if (props.initial_order) {
-    form.user_id = props.initial_order.user_id;
-    form.order_user = props.initial_order.order_user_id ?? 0;
-    form.quantity = props.initial_order.quantity;
-    form.calc_price = props.initial_order.calc_price;
+    form.user_id = props.initial_order.user_id
+    form.order_user = props.initial_order.order_user_id ?? 0
+    form.quantity = props.initial_order.quantity
+    form.calc_price = props.initial_order.calc_price
+    form.postage = props.initial_order.postage
   }
 
   form.stock_id = props.stock.id;
@@ -382,7 +383,7 @@ onMounted(() => {
                     }"
                     for="name"
                   >
-                    想定格納場所
+                    想定格納場所(※発注点更新用)
                   </label>
                   <select
                     :class="{
@@ -513,6 +514,7 @@ onMounted(() => {
                   <tr>
                     <th scope="col" class="px-6 py-3">手配先</th>
                     <th scope="col" class="px-6 py-3">リードタイム</th>
+                    <th scope="col" class="px-6 py-3">送料</th>
                     <th scope="col" class="px-6 py-3"></th>
                   </tr>
                 </thead>
@@ -529,6 +531,7 @@ onMounted(() => {
                       {{ stock_supplier.name }}
                     </td>
                     <td class="px-6 py-4">{{ stock_supplier.lead_time }}</td>
+                    <td class="px-6 py-4">{{ stock_supplier.postage }}</td>
                     <td class="px-6 py-4">
                       <a
                         href="#"

@@ -291,7 +291,7 @@ class StockController extends Controller
         $processes = Process::all();
         $locations = Location::all();
 
-        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg')->where('stock_id', $stock_id)
+        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg', 'stock_suppliers.postage')->where('stock_id', $stock_id)
             ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
             ->get();
 

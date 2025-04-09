@@ -164,7 +164,8 @@ class OrderRequestController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
-    public function updateOrderRequest(Request $request){
+    public function updateOrderRequest(Request $request)
+    {
         $status = true;
 
         $order_request_id = $request->order_request_id;
@@ -172,8 +173,12 @@ class OrderRequestController extends Controller
         $price = $request->price;
         $calc_price = $request->calc_price;
         $postage = $request->postage;
+        $is_update_price = $request->is_update_price;
+        $is_update_postage = $request->is_update_postage;
+        $supplier_id = $request->supplier_id;
 
-        try{
+
+        try {
             $order_request = OrderRequest::find($order_request_id);
             $order_request->quantity = $quantity;
             $order_request->price = $price;
@@ -182,13 +187,23 @@ class OrderRequestController extends Controller
             $order_request->save();
 
             // マスタに設定する場合は追記
+            if ($is_update_price) {
+                $stock = Stock::find($order_request->stock_id);
+                $stock->price = $price;
+                $stock->save();
+            }
 
-            
-        }catch(Exception $e){
+            if ($is_update_postage && $supplier_id) {
+                $stock_supplier = StockSupplier::where('stock_id', $order_request->stock_id)->where('supplier_id', $supplier_id)->first();
+                if ($stock_supplier) {
+                    $stock_supplier->postage = $postage;
+                    $stock_supplier->save();
+                }
+            }
+        } catch (Exception $e) {
             $status = false;
         }
 
         return response()->json(['status' => $status]);
-            
     }
 }
