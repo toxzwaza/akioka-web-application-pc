@@ -16,6 +16,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 
 class InitialOrderController extends Controller
@@ -88,48 +89,62 @@ class InitialOrderController extends Controller
         $stock_storage_id = $request->stock_storage_id;
         $postage = $request->postage;
 
+        $upload_file = $request->file('upload_file');
 
         try {
 
             if (!$stock_id) {
-                DB::transaction(function () use ($name, $s_name, $jan_code, $url, $img_path, $price, $purchase_identification_number, $solo_unit, $org_unit, $quantity_per_org, $classification_id, $deli_location, $order_user, $user_id, $supplier_id, $lead_time, $quantity, $calc_price, $postage) {
-                    $stock = new Stock();
-                    $stock->name = $name;
-                    $stock->s_name = $s_name;
-                    $stock->jan_code = $jan_code;
-                    $stock->url = $url;
-                    $stock->img_path = $img_path ?? 'storage/stock/not-image-sample2.png';
-                    $stock->price = $price;
-                    $stock->purchase_identification_number = $purchase_identification_number;
-                    $stock->solo_unit = $solo_unit;
-                    $stock->org_unit = $org_unit;
-                    $stock->quantity_per_org = $quantity_per_org;
-                    $stock->classification_id = $classification_id;
-                    $stock->deli_location = $deli_location;
-                    $stock->save();
+                $stock = new Stock();
+                $stock->name = $name;
+                $stock->s_name = $s_name;
+                $stock->jan_code = $jan_code;
+                $stock->url = $url;
+                $stock->img_path = $img_path ?? 'storage/stock/not-image-sample2.png';
+                $stock->price = $price;
+                $stock->purchase_identification_number = $purchase_identification_number;
+                $stock->solo_unit = $solo_unit;
+                $stock->org_unit = $org_unit;
+                $stock->quantity_per_org = $quantity_per_org;
+                $stock->classification_id = $classification_id;
+                $stock->deli_location = $deli_location;
+                $stock->save();
 
-                    // 発注依頼データ作成
-                    $order_request = new OrderRequest();
-                    $order_request->stock_id = $stock->id;
-                    $order_request->request_user_id = $order_user;
-                    $order_request->user_id = $user_id;
-                    $order_request->supplier_id = $supplier_id;
-                    $order_request->lead_time = $lead_time;
-                    $order_request->quantity = $quantity;
-                    $order_request->price = $price;
-                    $order_request->calc_price = $calc_price;
-                    $order_request->new_stock_flg = 1;
-                    $order_request->postage = $postage;
-                    $order_request->save();
+                // 発注依頼データ作成
+                $order_request = new OrderRequest();
+                $order_request->stock_id = $stock->id;
+                $order_request->request_user_id = $order_user;
+                $order_request->user_id = $user_id;
+                $order_request->supplier_id = $supplier_id;
+                $order_request->lead_time = $lead_time;
+                $order_request->quantity = $quantity;
+                $order_request->price = $price;
+                $order_request->calc_price = $calc_price;
+                $order_request->new_stock_flg = 1;
+                $order_request->postage = $postage;
+                $order_request->save();
 
+                // 稟議書がある場合
+                if ($upload_file) {
+                    // VPSのLaravel APIのエンドポイントURL（例）
+                    $vpsApiUrl = 'https://akioka.cloud/api/order_request/upload_file';
 
-                    $stock_supplier = new StockSupplier();
-                    $stock_supplier->stock_id = $stock->id;
-                    $stock_supplier->supplier_id = $supplier_id;
-                    $stock_supplier->lead_time = $lead_time;
-                    $stock_supplier->postage = $postage ?? 0;
-                    $stock_supplier->save();
-                });
+                    // POSTリクエストをマルチパート形式で送信
+                    $response = Http::asMultipart()->attach(
+                        'upload_file', // 相手側のAPIが期待するinput名
+                        file_get_contents($upload_file->getRealPath()),
+                        $upload_file->getClientOriginalName()
+                    )->post($vpsApiUrl, [
+                        // 他に送信したいデータがあればここに追加
+                        'order_request_id' => $order_request->id,
+                    ]);
+                }
+                
+                $stock_supplier = new StockSupplier();
+                $stock_supplier->stock_id = $stock->id;
+                $stock_supplier->supplier_id = $supplier_id;
+                $stock_supplier->lead_time = $lead_time;
+                $stock_supplier->postage = $postage ?? 0;
+                $stock_supplier->save();
             } else {
 
                 // 発注依頼データを作成
@@ -201,6 +216,4 @@ class InitialOrderController extends Controller
 
         return response()->json(['status' => $status]);
     }
-
-
 }
