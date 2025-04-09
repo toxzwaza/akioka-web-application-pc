@@ -56,7 +56,7 @@ const sendAccept = (order_request_id) => {
     axios
       .post(route("stock.accept.order_request"), {
         order_request_id: order_request_id,
-        user_id: order_config.user_id
+        user_id: order_config.user_id,
       })
       .then((res) => {
         console.log(res.data);
@@ -99,7 +99,40 @@ const sendInitialOrder = (order_request_id) => {
 };
 
 // 発注数量更新
-const updateQuantity = (order_request_id, quantity) => {};
+const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
+  console.log(flg, order_request);
+  switch (flg) {
+    case "quantity":
+    case "price":
+      if (confirm("数量もしくは単価が変更されました。金額を再計算しますか？")) {
+        order_request.calc_price =
+          order_request.quantity * order_request.stock_price;
+      }
+      break;
+    case "calc_price":
+      break;
+    case "postage":
+      break;
+  }
+
+  axios
+    .put(route("stock.updateOrderRequest"), {
+      order_request_id: order_request.id,
+      quantity: order_request.quantity,
+      price: order_request.stock_price,
+      calc_price: order_request.calc_price,
+      postage: order_request.postage,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        console.log("更新完了しました。");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
 // 完了処理
 const completeOrderRequest = (order_request_id) => {
@@ -172,9 +205,9 @@ const handleUserId = (user_id) => {
   if (selectedUser) {
     order_config.user_name = selectedUser.name;
     console.log(selectedUser.name);
-  }else{
-    order_config.user_id = null
-    order_config.user_name = null
+  } else {
+    order_config.user_id = null;
+    order_config.user_name = null;
   }
 };
 
@@ -223,9 +256,7 @@ onMounted(() => {
             </p>
           </div>
 
-          <div
-            class="w-1/2 mx-auto mb-8 p-4 bg-gray-100"
-          >
+          <div class="w-1/2 mx-auto mb-8 p-4 bg-gray-100">
             <h2 class="text-xl text-red-500 font-bold mb-4">
               担当者を選択してください。
             </h2>
@@ -284,14 +315,19 @@ onMounted(() => {
                     品番
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     現在個数
                   </th>
                   <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    発注点
+                  </th>
+                  <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
-                    数量
+                    発注数量
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -370,16 +406,24 @@ onMounted(() => {
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ order_request.s_name }}
                   </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">{{}}</td>
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    {{ order_request.stock_storage_quantity }}
+                  </td>
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    {{ order_request.reorder_point }}
+                  </td>
                   <td class="px-4 py-3 text-lg text-gray-900 w-32">
                     <input
                       type="number"
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order_request.quantity"
+                      v-model="order_request.quantity"
                       @change="
-                        updateQuantity(order_request.id, $event.target.value)
+                        updateQuantityPriceCalcPricePostage(
+                          'quantity',
+                          order_request
+                        )
                       "
                     />
                   </td>
@@ -389,8 +433,13 @@ onMounted(() => {
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order_request.stock_price"
-                      @input="order_request.stock_price = $event.target.value"
+                      v-model="order_request.stock_price"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'price',
+                          order_request
+                        )
+                      "
                     />
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
@@ -399,11 +448,29 @@ onMounted(() => {
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order_request.calc_price"
+                      v-model="order_request.calc_price"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'calc_price',
+                          order_request
+                        )
+                      "
                     />
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order_request.postage }}
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order_request.postage"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'postage',
+                          order_request
+                        )
+                      "
+                    />
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <span v-if="order_request.supplier_id"
@@ -496,7 +563,9 @@ onMounted(() => {
                         >却下</span
                       >
                     </div>
-                    <span v-else><i class="fas fa-eye-slash text-gray-500"></i></span>
+                    <span v-else
+                      ><i class="fas fa-eye-slash text-gray-500"></i
+                    ></span>
                   </td>
                   <td
                     :class="{

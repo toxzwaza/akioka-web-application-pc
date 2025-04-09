@@ -60,6 +60,9 @@ Route::post('/accept/order-request', [AcceptController::class, 'sendAccept'])->n
 Route::get('/accept', [AcceptController::class, 'index'])->name('stock.accept');
 // 承認結果送信
 Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.accept.store');
+// 発注依頼更新（数量、単価、金額、送料）
+Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrderRequest'])->name('stock.updateOrderRequest');
+
 // 発注完了
 Route::put('/order-requests/complete', [OrderRequestController::class, 'delete'])->name('stock.completeOrderRequest');
 // 発注依頼削除
