@@ -48,8 +48,16 @@ class AcceptController extends Controller
 
         try {
             $order_request_id = $request->order_request_id;
+            $user_id = $request->user_id; //注文者
+
             $order_request = OrderRequest::find($order_request_id);
             $order_request->accept_flg = 1;
+            $order_request->user_id = $user_id;
+
+            // システム自動発注依頼の場合は承認依頼者を発注依頼者とする
+            if($order_request->request_user_id == 117){
+                $order_request->request_user_id = $user_id;
+            }
             $order_request->save();
 
             $notify_users = [];
@@ -57,14 +65,12 @@ class AcceptController extends Controller
 
             if($order_request->new_stock_flg){
                 // 新規品の場合は常務承認
-                // array_push($notify_users, 63);
-                array_push($notify_users, 91);
-                $url .= "91";
+                array_push($notify_users, 63);
+                $url .= "63";
             }else{
                 // 既存品は部長承認
-                // array_push($notify_users, 36);
-                array_push($notify_users, 91);
-                $url .= "91";
+                array_push($notify_users, 36);
+                $url .= "36";
             }
 
             $title = "在庫管理システムからの通知です。";

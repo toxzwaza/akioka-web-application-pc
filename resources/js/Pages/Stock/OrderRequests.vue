@@ -47,7 +47,7 @@ const sendAccept = (order_request_id) => {
       !(
         order_request.stock_price &&
         order_request.quantity &&
-        order_request.stock_supplier
+        order_request.supplier_id
       )
     ) {
       return alert("数量・単価・金額・取引先が入力されていません。");
@@ -56,6 +56,7 @@ const sendAccept = (order_request_id) => {
     axios
       .post(route("stock.accept.order_request"), {
         order_request_id: order_request_id,
+        user_id: order_config.user_id
       })
       .then((res) => {
         console.log(res.data);
@@ -107,12 +108,12 @@ const completeOrderRequest = (order_request_id) => {
   if (
     order_request.stock_price &&
     order_request.quantity &&
-    order_request.stock_supplier
+    order_request.supplier_id
   ) {
     if (
       confirm(
         `以下の内容で発注登録してよろしいですか？\n発注先:${
-          order_request.stock_supplier.supplier_name
+          order_request.supplier_name
         }\n単価:${order_request.stock_price}\n数量:${
           order_request.quantity
         }\n金額:${order_request.stock_price * order_request.quantity}`
@@ -171,6 +172,9 @@ const handleUserId = (user_id) => {
   if (selectedUser) {
     order_config.user_name = selectedUser.name;
     console.log(selectedUser.name);
+  }else{
+    order_config.user_id = null
+    order_config.user_name = null
   }
 };
 
@@ -180,7 +184,7 @@ const purchaseOrder = (order_request_id) => {
     !(
       order_request.stock_price &&
       order_request.quantity &&
-      order_request.stock_supplier
+      order_request.supplier_id
     )
   ) {
     return alert("数量・単価・金額・取引先が入力されていません。");
@@ -190,7 +194,7 @@ const purchaseOrder = (order_request_id) => {
     route("stock.purchase_order", { order_request_id: order_request_id }),
     {
       user_id: order_config.user_id,
-      supplier_id: order_request.stock_supplier.supplier_id,
+      supplier_id: order_request.supplier_id,
       price: order_request.stock_price,
       quantity: order_request.quantity,
     }
@@ -220,11 +224,10 @@ onMounted(() => {
           </div>
 
           <div
-            v-if="!order_config.user_id"
             class="w-1/2 mx-auto mb-8 p-4 bg-gray-100"
           >
             <h2 class="text-xl text-red-500 font-bold mb-4">
-              発注者を選択してください。
+              担当者を選択してください。
             </h2>
             <div class="">
               <div class="">
@@ -232,7 +235,7 @@ onMounted(() => {
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                   for="grid-password"
                 >
-                  発注者
+                  担当者
                 </label>
                 <select
                   name=""
@@ -320,20 +323,15 @@ onMounted(() => {
                   >
                     依頼者
                   </th>
-                  <th
+                  <!-- <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
                     注文書
-                  </th>
+                  </th> -->
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     承認
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    完了
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -408,10 +406,10 @@ onMounted(() => {
                     {{ order_request.postage }}
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
-                    <span v-if="order_request.stock_supplier"
-                      >{{ `${order_request.stock_supplier.supplier_name}` }} ({{
-                        order_request.stock_supplier.lead_time
-                          ? `${order_request.stock_supplier.lead_time}日`
+                    <span v-if="order_request.supplier_id"
+                      >{{ `${order_request.supplier_name}` }} ({{
+                        order_request.stock_supplier_lead_time
+                          ? `${order_request.stock_supplier_lead_time}日`
                           : "未"
                       }})</span
                     >
@@ -443,7 +441,7 @@ onMounted(() => {
                     {{ order_request.request_user_name }}
                   </td>
 
-                  <td
+                  <!-- <td
                     :class="{
                       'px-4 py-3 text-lg text-gray-900': true,
                     }"
@@ -466,54 +464,39 @@ onMounted(() => {
                     <span v-else class="text-sm text-red-500"
                       >注文者を選択してください。</span
                     >
-                  </td>
+                  </td> -->
                   <td
                     :class="{
                       'px-4 py-3 text-lg text-gray-900 w-24': true,
                     }"
                   >
-                    <button
-                      @click="sendAccept(order_request.id)"
-                      v-if="order_request.accept_flg === 0"
-                      class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
-                    >
-                      依頼
-                    </button>
-                    <span
-                      class="text-sm bg-orange-500 text-white py-2 px-4 rounded-full"
-                      v-else-if="order_request.accept_flg === 1"
-                      >待ち</span
-                    >
-                    <button
-                      @click="sendInitialOrder(order_request.id)"
-                      v-if="order_request.accept_flg === 2"
-                      class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-full"
-                    >
-                      承認
-                    </button>
-                    <span
-                      class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full"
-                      v-else-if="order_request.accept_flg === 3"
-                      >却下</span
-                    >
-                  </td>
-                  <td
-                    :class="{
-                      'px-4 py-3 text-lg text-gray-900': true,
-                    }"
-                  >
-                    <button
-                      v-if="order_config.user_id"
-                      @click="
-                        completeOrderRequest(order_request.order_request_id)
-                      "
-                      class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-full"
-                    >
-                      完了
-                    </button>
-                    <span class="text-sm font-bold" v-else
-                      >発注者を選択すると完了できます</span
-                    >
+                    <div v-if="order_config.user_id">
+                      <button
+                        v-if="order_request.accept_flg === 0"
+                        @click="sendAccept(order_request.id)"
+                        class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
+                      >
+                        依頼
+                      </button>
+                      <span
+                        class="text-sm bg-orange-500 text-white py-2 px-4 rounded-full"
+                        v-else-if="order_request.accept_flg === 1"
+                        >待ち</span
+                      >
+                      <button
+                        @click="sendInitialOrder(order_request.id)"
+                        v-if="order_request.accept_flg === 2"
+                        class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-full"
+                      >
+                        承認
+                      </button>
+                      <span
+                        class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full"
+                        v-else-if="order_request.accept_flg === 3"
+                        >却下</span
+                      >
+                    </div>
+                    <span v-else><i class="fas fa-eye-slash text-gray-500"></i></span>
                   </td>
                   <td
                     :class="{
