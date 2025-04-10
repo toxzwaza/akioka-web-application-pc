@@ -6,40 +6,41 @@ import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 
 const form = reactive({
-    name: null,
-    s_name: null,
-    jan_code: null,
-    img_path: null,
-    url: null,
-    purchase_identification_number: null,
-    price: null,
-    solo_unit: null,
-    org_unit: null,
-    quantity_per_org: null,
-    classification_id : null,
-    deli_location: null,
-})
+  name: null,
+  s_name: null,
+  jan_code: null,
+  img_path: null,
+  url: null,
+  purchase_identification_number: null,
+  price: null,
+  solo_unit: null,
+  org_unit: null,
+  quantity_per_org: null,
+  classification_id: null,
+  deli_location: null,
+});
 
 const createStock = () => {
-    // 在庫追加
-    axios.post(route('stock.store.stocks'), form)
-    .then(res => {
-        console.log(res.data)
-        if(res.data.status){
-            if(confirm('登録が完了しました。続けて在庫を追加しますか？')){
-                window.location.reload()
-            }else{
-                window.location.href = route('stock')
-            }
+  // 在庫追加
+  axios
+    .post(route("stock.store.stocks"), form)
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        if (confirm("登録が完了しました。続けて在庫を追加しますか？")) {
+          window.location.reload();
+        } else {
+          window.location.href = route("stock");
         }
+      }
     })
-    .catch(error => {
-        console.log(error)
-    })
-}
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
 const props = defineProps({
-    classifications: Array
+  classifications: Array,
 });
 
 onMounted(() => {});
@@ -54,7 +55,10 @@ onMounted(() => {});
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full px-3">
                 <label
-                  :class="{'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2' : true, 'text-red-500' : !form.name }"
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.name,
+                  }"
                   for="name"
                 >
                   *品名
@@ -157,7 +161,10 @@ onMounted(() => {});
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full px-3">
                 <label
-                  :class="{'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2' : true, 'text-red-500' : !form.price }"
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.price,
+                  }"
                   for="grid-password"
                 >
                   *価格
@@ -224,16 +231,28 @@ onMounted(() => {});
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
                 <label
-                  :class="{'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2' : true, 'text-red-500' : !form.classification_id }"
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.classification_id,
+                  }"
                   for="grid-city"
                 >
                   *備品カテゴリ
                 </label>
-                <select name="" id="" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                v-model="form.classification_id"
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.classification_id"
                 >
-                    <option value="0">未選択</option>
-                    <option v-for="classification in classifications" :key="classification.id" :value="classification.id">{{ classification.name }}</option>
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="classification in classifications"
+                    :key="classification.id"
+                    :value="classification.id"
+                  >
+                    {{ classification.name }}
+                  </option>
                 </select>
               </div>
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
@@ -251,11 +270,11 @@ onMounted(() => {});
                   v-model="form.deli_location"
                 />
               </div>
-
             </div>
 
             <div class="flex items-center justify-between sm:col-span-2 mt-16">
               <button
+                @click.prevent="createStock"
                 class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >
                 新規登録
