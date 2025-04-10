@@ -514,7 +514,9 @@ onMounted(() => {});
             <div class="flex items-center justify-center w-full">
               <label
                 for="dropzone-file"
-                class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+                :class="{'flex flex-col items-center justify-center w-full h-64 border-2 border-green-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-green-600 dark:hover:border-green-500 dark:hover:bg-gray-600': true,
+                'border-red-300' : !form.upload_file
+                }"
               >
                 <div
                   class="flex flex-col items-center justify-center pt-5 pb-6"
@@ -538,8 +540,8 @@ onMounted(() => {});
                     <span class="font-semibold text-lg">稟議書</span
                     >をアップロードしてください。
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    Only PDF DATA.
+                  <p class="text-xs text-green-500 dark:text-green-400 text-center">
+                    {{ form.upload_file ? `${form.upload_file.name} が選択されています。` : '' }} <br>
                   </p>
                 </div>
                 <input
@@ -547,6 +549,7 @@ onMounted(() => {});
                   type="file"
                   class="hidden"
                   @change="uploadFile"
+                accept="application/pdf"
                 />
               </label>
             </div>
