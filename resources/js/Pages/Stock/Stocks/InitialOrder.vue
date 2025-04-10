@@ -4,6 +4,7 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue";
 
 const props = defineProps({
   classifications: Array,
@@ -101,11 +102,12 @@ const createStockAndInitialOrder = () => {
 onMounted(() => {});
 </script>
 <template>
-  <MainLayout :title="'新規品発注登録'">
+  <MainLayout :title="'新規品発注依頼登録'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">
-        新規品発注登録
-      </h1>
+      <MainTitle
+        :top="'新規品発注依頼'"
+        :sub="'在庫を登録・手配先登録・発注依頼登録を同時に行います。既存品で発注したい場合は、在庫追加より在庫データを登録した後、在庫一覧より発注依頼を行ってください。'"
+      />
       <div class="flex justify-between py-12">
         <div id="right_container" class="w-full">
           <form class="w-1/2 mx-auto">
@@ -514,8 +516,9 @@ onMounted(() => {});
             <div class="flex items-center justify-center w-full">
               <label
                 for="dropzone-file"
-                :class="{'flex flex-col items-center justify-center w-full h-64 border-2 border-green-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-green-600 dark:hover:border-green-500 dark:hover:bg-gray-600': true,
-                'border-red-300' : !form.upload_file
+                :class="{
+                  'flex flex-col items-center justify-center w-full h-64 border-2 border-green-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-green-600 dark:hover:border-green-500 dark:hover:bg-gray-600': true,
+                  'border-red-300': !form.upload_file,
                 }"
               >
                 <div
@@ -540,8 +543,15 @@ onMounted(() => {});
                     <span class="font-semibold text-lg">稟議書</span
                     >をアップロードしてください。
                   </p>
-                  <p class="text-xs text-green-500 dark:text-green-400 text-center">
-                    {{ form.upload_file ? `${form.upload_file.name} が選択されています。` : '' }} <br>
+                  <p
+                    class="text-xs text-green-500 dark:text-green-400 text-center"
+                  >
+                    {{
+                      form.upload_file
+                        ? `${form.upload_file.name} が選択されています。`
+                        : ""
+                    }}
+                    <br />
                   </p>
                 </div>
                 <input
@@ -549,7 +559,7 @@ onMounted(() => {});
                   type="file"
                   class="hidden"
                   @change="uploadFile"
-                accept="application/pdf"
+                  accept="application/pdf"
                 />
               </label>
             </div>

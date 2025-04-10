@@ -2,6 +2,8 @@
 import MainLayout from "@/Layouts/MainLayout.vue";
 import { onMounted, ref, reactive } from "vue";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
+
 const props = defineProps({
   price: Number,
   count: Number,
@@ -13,8 +15,8 @@ const today = ref("");
 const handleKeyDown = (event) => {
   switch (event.key) {
     case "p":
-        printElement();
-        break;
+      printElement();
+      break;
   }
 };
 
@@ -78,9 +80,10 @@ onMounted(() => {
 <template>
   <MainLayout>
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        当日弁当発注書
-      </h1>
+      <MainTitle
+        :top="'当日弁当注文書'"
+        :sub="'本日の弁当発注用注文書の確認と印刷ができます。'"
+      />
 
       <section id="print_content">
         <h1 class="doc-title">注文書</h1>
@@ -151,12 +154,9 @@ onMounted(() => {
               </tr>
               <tr>
                 <td class="desc" colspan="3" rowspan="3">
-                  <textarea
-                    name="memo"
-                    id="memo"
-                    cols="30"
-                    rows="5"
-                  >{{ props.today_lunch_description }}</textarea>
+                  <textarea name="memo" id="memo" cols="30" rows="5">{{
+                    props.today_lunch_description
+                  }}</textarea>
                 </td>
                 <td class="cal font-bold text-center">小計</td>
                 <td class="cal font-bold text-center">

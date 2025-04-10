@@ -1,7 +1,8 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import { onMounted, ref, reactive } from "vue";
-import axios from "axios"
+import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const props = defineProps({
   groups: Array,
@@ -22,34 +23,34 @@ const form = reactive({
   is_admin: null,
   dispatch_flg: null,
   part_flg: null,
-  always_order_flg: null
+  always_order_flg: null,
 });
 
 const createUser = () => {
-    console.log(form)
-    axios.post(route('master.store.users'), form)
-    .then(res => {
-        console.log(res.data)
-        if(res.data.status){
-            if(confirm('ユーザー登録が完了しました。続けて登録を行いますか？')){
-                window.location.reload()
-            }else{
-                window.location.href = route('master')
-            }
+  console.log(form);
+  axios
+    .post(route("master.store.users"), form)
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        if (confirm("ユーザー登録が完了しました。続けて登録を行いますか？")) {
+          window.location.reload();
+        } else {
+          window.location.href = route("master");
         }
+      }
     })
-    .catch(error => {
-        console.log(error)
-    })
-}
+    .catch((error) => {
+      console.log(error);
+    });
+};
 onMounted(() => {});
 </script>
 <template>
   <MainLayout>
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        従業員登録
-      </h1>
+      <MainTitle :top="'従業員登録'" :sub="'従業員登録をおこないます。設定した内容は全従業員参照画面から確認できます。'" />
+
 
       <form
         method="post"
@@ -58,7 +59,9 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="name"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, }"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+            }"
             >社員番号</label
           >
           <input
@@ -70,7 +73,10 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="name"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, 'text-red-500': !form.name}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              'text-red-500': !form.name,
+            }"
             >氏名</label
           >
           <input
@@ -82,7 +88,9 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="email"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+            }"
             >Email</label
           >
           <input
@@ -95,7 +103,10 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="pwd"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, 'text-red-500': !form.password}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              'text-red-500': !form.password,
+            }"
             >パスワード</label
           >
           <input
@@ -108,7 +119,9 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="pwd"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, }"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+            }"
             >性別</label
           >
           <div class="flex items-center">
@@ -138,7 +151,10 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="group_id"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, 'text-red-500': !form.group_id}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              'text-red-500': !form.group_id,
+            }"
             >所属部署</label
           >
           <select
@@ -147,13 +163,25 @@ onMounted(() => {});
             v-model="form.group_id"
           >
             <option value="0">未選択</option>
-            <option v-for="group in props.groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+            <option
+              v-for="group in props.groups"
+              :key="group.id"
+              :value="group.id"
+            >
+              {{ group.name }}
+            </option>
           </select>
         </div>
-        <div class="sm:col-span-2" v-if="form.group_id == 3 || form.group_id == 4">
+        <div
+          class="sm:col-span-2"
+          v-if="form.group_id == 3 || form.group_id == 4"
+        >
           <label
             for="process_id"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, 'text-red-500': form.group_id == 3 || form.group_id == 4 }"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              'text-red-500': form.group_id == 3 || form.group_id == 4,
+            }"
             >製造工程</label
           >
           <p class="text-sm mb-4 text-gray-500">
@@ -166,7 +194,13 @@ onMounted(() => {});
               v-model="form.process_id"
             >
               <option value="0" selected>未選択</option>
-              <option v-for="process in props.processes" :value="process.id" :key="process.id">{{ process.name }}</option>
+              <option
+                v-for="process in props.processes"
+                :value="process.id"
+                :key="process.id"
+              >
+                {{ process.name }}
+              </option>
             </select>
           </div>
         </div>
@@ -174,7 +208,10 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="position_id"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, 'text-red-500': !form.position_id}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              'text-red-500': !form.position_id,
+            }"
             >役職</label
           >
           <select
@@ -183,7 +220,13 @@ onMounted(() => {});
             v-model="form.position_id"
           >
             <option value="0">未選択</option>
-            <option v-for="position in positions" :key="position.id" :value="position.id">{{ position.name }}</option>
+            <option
+              v-for="position in positions"
+              :key="position.id"
+              :value="position.id"
+            >
+              {{ position.name }}
+            </option>
           </select>
         </div>
 
@@ -193,7 +236,9 @@ onMounted(() => {});
           <div class="sm:col-span-2">
             <label
               for="fax_folder_name"
-              :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true}"
+              :class="{
+                'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              }"
               >FAX振り分けフォルダ名</label
             >
             <p class="text-sm mb-4 text-gray-500">
@@ -215,7 +260,9 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="is_admin"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+            }"
             >管理者フラグ</label
           >
           <br />
@@ -229,7 +276,9 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="dispatch_flg"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+            }"
             >非常勤・派遣フラグ</label
           >
           <br />
@@ -243,7 +292,9 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="part_flg"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+            }"
             >パート社員フラグ</label
           >
           <br />
@@ -258,7 +309,10 @@ onMounted(() => {});
         <div class="sm:col-span-2">
           <label
             for="always_order_flg"
-            :class="{'mb-2 inline-block text-sm text-gray-800 sm:text-base': true, 'text-red-500': !form.name}"
+            :class="{
+              'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
+              'text-red-500': !form.name,
+            }"
             >弁当注文グループ参加フラグ</label
           >
           <br />
@@ -275,7 +329,7 @@ onMounted(() => {});
 
         <div class="flex items-center justify-between sm:col-span-2 mt-8">
           <button
-          @click.prevent="createUser"
+            @click.prevent="createUser"
             class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
           >
             新期登録

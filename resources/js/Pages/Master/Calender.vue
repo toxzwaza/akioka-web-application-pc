@@ -7,6 +7,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import jaLocale from "@fullcalendar/core/locales/ja";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const holidays = ref([]);
 const events = ref([]);
@@ -116,9 +117,7 @@ const calendarOptions = {
 <template>
   <MainLayout title="在庫管理">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        カレンダー
-      </h1>
+      <MainTitle :top="'カレンダー設定'" :sub="'社内カレンダーの設定画面です。設定した休日情報は発注書にて使用されます。'"/>
       <div class="flex justify-between">
         <div class="p-6 w-2/3">
           <h2 class="text-xl font-bold mb-4">社内休日カレンダー設定</h2>

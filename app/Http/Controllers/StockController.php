@@ -494,14 +494,13 @@ class StockController extends Controller
             $is_new = !$stock_id || !$stock;
             if ($is_new) {
                 $stock = new Stock();
-                $stock->img_path = 'storage/stock/not-image-sample2.png';
             }
 
             $stock->name = $name;
             $stock->s_name = $s_name;
             $stock->jan_code = $jan_code;
             $stock->url = $url;
-            $stock->img_path = $img_path;
+            $stock->img_path = $img_path ?? 'storage/stock/not-image-sample2.png';
             $stock->price = $price;
             $stock->purchase_identification_number = $purchase_identification_number;
             $stock->solo_unit = $solo_unit;

@@ -4,6 +4,8 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
+
 const props = defineProps({
   order_users: Array,
   user_id: Number,
@@ -266,17 +268,10 @@ onMounted(() => {
 <template>
   <MainLayout :title="'発注依頼一覧'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">発注依頼一覧</h1>
+      <MainTitle :top="'発注依頼一覧'" :sub="'在庫管理システムより取得した発注依頼を完了することができます。'"/>
 
       <section class="text-gray-600 body-font">
         <div class="py-12 mx-auto">
-          <div class="flex flex-col text-center w-full mb-20">
-            <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
-              在庫管理システムより取得した発注依頼を完了することができます。<br />
-              URLをクリックすることで設定済みの注文ページが開きます。<br />
-              注文完了後は、完了ボタンを押下してください。
-            </p>
-          </div>
 
           <div class="w-1/2 mx-auto mb-8 p-4 bg-gray-100">
             <h2 class="text-xl text-red-500 font-bold mb-4">

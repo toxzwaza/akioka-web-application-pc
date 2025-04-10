@@ -4,6 +4,7 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const props = defineProps({
   users: Array,
@@ -77,9 +78,7 @@ onMounted(() => {
 <template>
   <MainLayout :title="'弁当予約'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        弁当予約
-      </h1>
+      <MainTitle :top="'弁当予約'" :sub="'弁当の予約を行います。当日の過不足や調整等にもご利用頂けます。'"/>
 
       <section class="text-gray-600 body-font">
         <div class="px-5 mx-auto">

@@ -4,6 +4,7 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue";
 
 const props = defineProps({
   stocks: Object,
@@ -42,8 +43,10 @@ onMounted(() => {
 <template>
   <MainLayout :title="'在庫一覧'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">在庫一覧</h1>
-
+      <MainTitle
+        :top="'在庫一覧'"
+        :sub="'登録済みの在庫データの確認を行います。'"
+      />
       <section class="text-gray-600 body-font">
         <div class="py-12 mx-auto">
           <div class="flex flex-col text-center w-full mb-20"></div>
@@ -202,7 +205,10 @@ onMounted(() => {
                 <tr
                   v-for="stock in filter_stocks"
                   :key="stock.id"
-                  :class="{'hover:bg-indigo-50 transition-all duration-100' :true, 'bg-gray-200': stock.del_flg }"
+                  :class="{
+                    'hover:bg-indigo-50 transition-all duration-100': true,
+                    'bg-gray-200': stock.del_flg,
+                  }"
                   @click="redirectStock(stock.id)"
                 >
                   <td class="w-24 px-4 py-6">

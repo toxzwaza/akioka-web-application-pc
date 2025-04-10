@@ -2,6 +2,7 @@
 import MainLayout from "@/Layouts/MainLayout.vue";
 import { reactive, onMounted } from "vue";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue";
 
 const props = defineProps({
   supplier: Object,
@@ -71,26 +72,15 @@ onMounted(() => {
     <template #content>
       <div>
         <section class="text-gray-600 body-font">
+          <MainTitle
+            :top="'取引先追加'"
+            :sub="'取引先の登録を行います。必須項目を入力して、追加ボタンを押してください。'"
+          />
           <div
-            class="container mx-auto flex px-5 py-24 md:flex-row flex-col items-start justify-center"
+            class="container mx-auto flex px-5 md:flex-row flex-col items-start justify-center"
           >
             <div class="bg-white py-6 sm:py-8 lg:py-12">
               <div class="mx-auto max-w-screen-2xl px-4 md:px-8">
-                <!-- text - start -->
-                <div class="mb-10 md:mb-16">
-                  <h2
-                    class="mb-4 text-center text-2xl font-bold text-gray-800 md:mb-6 lg:text-3xl"
-                  >
-                    {{ props.edit ? `取引先編集` : `取引先追加` }}
-                  </h2>
-
-                  <p
-                    class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg"
-                  >
-                    在庫新規追加を行います。
-                  </p>
-                </div>
-
                 <form class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
                   <div>
                     <label

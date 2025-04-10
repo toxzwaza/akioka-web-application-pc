@@ -4,6 +4,7 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const form = reactive({
   name: null,
@@ -48,7 +49,8 @@ onMounted(() => {});
 <template>
   <MainLayout :title="'在庫追加'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">在庫追加</h1>
+
+      <MainTitle :top="'在庫追加'" :sub="'在庫を登録を行います。必須項目を入力して、新規登録ボタンを押してください。作成した物品データは在庫一覧より確認できます。'"/>
       <div class="flex justify-between py-12">
         <div id="right_container" class="w-full">
           <form class="w-1/2 mx-auto">

@@ -3,6 +3,7 @@ import MainLayout from "@/Layouts/MainLayout.vue";
 import { onMounted, ref } from "vue";
 import { Link } from "@inertiajs/vue3"
 import QRCode from "qrcode";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const props = defineProps({
   users: Array,
@@ -135,10 +136,7 @@ onMounted(() => {
 <template>
   <MainLayout>
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        従業員一覧
-      </h1>
-
+      <MainTitle :top="'従業員一覧'" :sub="'従業員情報を確認できます。新規登録する場合は、従業員登録ページから行ってください。'"/>
       <h3 class="mb-4 text-lg text-gray-700 font-bold">フィルター</h3>
       <form class="w-full mb-12">
         <!-- 検索条件 -->

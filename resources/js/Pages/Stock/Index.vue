@@ -4,6 +4,7 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 import Calender from "@/Components/Calender.vue";
 import PiChart from "@/Components/PiChart.vue";
@@ -112,9 +113,7 @@ onMounted(() => {
 <template>
   <MainLayout :title="'在庫管理'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        在庫管理
-      </h1>
+      <MainTitle :top="'在庫管理HOME'" :sub="'入出庫および物品の作業履歴の確認が可能です。'"/>
       <!-- 監視カメラ映像 -->
       <div class="stream_container mb-8">
         <div>
@@ -483,7 +482,7 @@ onMounted(() => {
 
 .stream_container {
   padding: 1rem 2rem;
-  background-color: rgb(238, 238, 238);
+  // background-color: rgb(238, 238, 238);
   border-radius: 5px;
 
   & .stream_img_div {

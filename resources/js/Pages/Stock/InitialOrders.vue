@@ -5,6 +5,7 @@ import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
+import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const props = defineProps({
   initial_orders: Object,
@@ -229,16 +230,10 @@ onMounted(() => {
 <template>
   <MainLayout :title="'発注一覧'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">発注一覧</h1>
+      <MainTitle :top="'発注一覧'" :sub="'発注情報の確認ができます。ログインすることで、品名・品番の修正が可能です。'"/>
 
       <section class="text-gray-600 body-font">
         <div class="py-12 mx-auto">
-          <div class="flex flex-col text-center w-full mb-20">
-            <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
-              発注確認と品名・品番の修正が可能です。<br />
-              倉庫格納済みおよび引き渡しが完了しているリストは変更できませんのでご注意ください。
-            </p>
-          </div>
           <div id="sort_container" class="my-8 flex items-start justify-start">
             <div class="w-1/4">
               <p class="mb-2 font-bold">並び替え</p>
