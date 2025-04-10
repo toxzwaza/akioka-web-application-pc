@@ -491,7 +491,7 @@ class StockController extends Controller
 
 
             $stock = $stock_id ? Stock::find($stock_id) : new Stock();
-            $is_new = !$stock_id || !$stock;
+            $is_new = !$stock_id || !$stock ;
             if ($is_new) {
                 $stock = new Stock();
             }

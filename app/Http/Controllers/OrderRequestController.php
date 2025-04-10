@@ -149,6 +149,7 @@ class OrderRequestController extends Controller
                 $initial_order->quantity = $order_request->quantity;
                 $initial_order->calc_price = $order_request->calc_price;
                 $initial_order->postage = $order_request->postage;
+                $initial_order->file_path = $order_request->file_path;
                 $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $order_request->lead_time . ' days'));
                 $initial_order->save();
 

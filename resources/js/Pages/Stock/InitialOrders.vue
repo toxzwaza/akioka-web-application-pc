@@ -455,6 +455,11 @@ onMounted(() => {
                   >
                     納品書
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    稟議書
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -597,6 +602,17 @@ onMounted(() => {
                       @click="openModal(order.delifile_path)"
                     >
                       納品書
+                    </button>
+                  </td>
+                  <td
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
+                    <button
+                      v-if="order.file_path"
+                      class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      @click="openModal(order.file_path)"
+                    >
+                      稟議書
                     </button>
                   </td>
                 </tr>
