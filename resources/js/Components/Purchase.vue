@@ -145,6 +145,7 @@ watch(
         <table class="table-auto w-full">
           <thead>
             <tr>
+              <th class="px-4 py-2 text-gray-700">注文No</th>
               <th class="px-4 py-2 text-gray-700">品名</th>
               <th class="px-4 py-2 text-gray-700">品番</th>
               <th class="px-4 py-2 text-gray-700">納入場所</th>
@@ -157,12 +158,13 @@ watch(
           </thead>
           <tbody>
             <tr class="">
-              <td class="text-center border px-4 py-5">{{ order.name }}</td>
-              <td class="text-center border px-4 py-5">{{ order.s_name }}</td>
-              <td class="text-center border px-4 py-5">
+              <td class="text-center border px-1 py-5">{{ order.order_no }}</td>
+              <td class="text-center border px-1 py-5">{{ order.name }}</td>
+              <td class="text-center border px-1 py-5">{{ order.s_name }}</td>
+              <td class="text-center border px-1 py-5">
                 {{ order.deli_location }}
               </td>
-              <td class="text-center border px-4 py-5">
+              <td class="text-center border px-1 py-5">
                 <input
                   v-if="!shortest"
                   class="p-0 border-transparent"
@@ -172,77 +174,73 @@ watch(
                 />
                 <p v-else @click="shortest = false" class="font-bold">最短</p>
               </td>
-              <td class="text-center border px-4 py-5">{{ order.quantity }}</td>
-              <td class="text-center border px-4 py-5">
+              <td class="text-center border px-1 py-5">{{ order.quantity }}</td>
+              <td class="text-center border px-1 py-5">
                 {{ order.price.toLocaleString() }}
               </td>
-              <td class="text-center border px-4 py-5">
+              <td class="text-center border px-1 py-5">
                 {{ order.calc_price.toLocaleString() }}
               </td>
-              <td class="text-center border px-4 py-5">
+              <td class="text-center border px-1 py-5">
                 {{ order.order_user }}
               </td>
             </tr>
             <tr class="bg-gray-100">
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
             </tr>
             <tr class="">
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
             </tr>
             <tr class="bg-gray-100">
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
             </tr>
             <tr class="">
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
             </tr>
             <tr class="bg-gray-100">
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
+              <td class="text-center border px-1 py-5"></td>
             </tr>
-            <tr class="">
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-              <td class="text-center border px-4 py-5"></td>
-            </tr>
+
           </tbody>
         </table>
       </div>
