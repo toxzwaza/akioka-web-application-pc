@@ -5,7 +5,7 @@ import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
-import MainTitle from "@/Components/Title/MainTitle.vue"
+import MainTitle from "@/Components/Title/MainTitle.vue";
 
 const props = defineProps({
   initial_orders: Object,
@@ -17,10 +17,10 @@ const modal_status = reactive({
   status: false,
   img_path: "",
 });
+const purchase_list = ref([]);
+const print_order = ref([]);
 
-const print_order = ref(null);
-
-const openModal = (img_path, order) => {
+const openModal = (img_path, order, flg) => {
   modal_status.img_path = "";
 
   // 納品書
@@ -33,8 +33,12 @@ const openModal = (img_path, order) => {
         : img_path;
   } else if (order) {
     // 発注書
-    print_order.value = order;
+    // print_order.value.push(order);
+    purchase_list.value = []
+    handleSelect(order);
   }
+
+  print_order.value = purchase_list.value;
 
   modal_status.status = true;
 };
@@ -206,16 +210,47 @@ const handleDeliveryDateUpdate = (date) => {
   axios
     .post(route("stock.update_desired_delivery_date"), {
       initial_order_id: print_order.value.id,
-      desired_delivery_date: date
+      desired_delivery_date: date,
     })
     .then((res) => {
-      if(res.data.status){
-        alert('納入希望日を設定しました。')
+      if (res.data.status) {
+        alert("納入希望日を設定しました。");
       }
     })
     .catch((error) => {
-      console.log(error)
+      console.log(error);
     });
+};
+
+const handleSelect = (order) => {
+  console.log(order);
+  const index = purchase_list.value.findIndex((item) => item.id === order.id);
+
+  if (index !== -1) {
+    purchase_list.value.splice(index, 1);
+    console.log(purchase_list.value);
+    return;
+  }
+
+  if (purchase_list.value.length > 5) {
+    alert("同時に一つの注文書に含めることができるのは6件以内です。");
+    order.select_flg = false;
+    console.log(purchase_list.value);
+    return;
+  }
+
+  if (
+    purchase_list.value.length > 0 &&
+    purchase_list.value[0].supplier_id !== order.supplier_id
+  ) {
+    alert("複数の注文先の発注情報を含めることはできません。");
+    order.select_flg = false;
+    console.log(purchase_list.value);
+    return;
+  }
+
+  purchase_list.value.push(order);
+  console.log(purchase_list.value);
 };
 
 onMounted(() => {
@@ -230,7 +265,10 @@ onMounted(() => {
 <template>
   <MainLayout :title="'発注一覧'">
     <template #content>
-      <MainTitle :top="'発注一覧'" :sub="'発注情報の確認ができます。ログインすることで、品名・品番の修正が可能です。'"/>
+      <MainTitle
+        :top="'発注一覧'"
+        :sub="'発注情報の確認ができます。ログインすることで、品名・品番の修正が可能です。'"
+      />
 
       <section class="text-gray-600 body-font">
         <div class="py-12 mx-auto">
@@ -363,16 +401,36 @@ onMounted(() => {
             <Pagination :links="props.initial_orders.links" />
           </div>
 
-          <div class="w-full mx-auto overflow-auto">
+          <div
+            v-if="purchase_list.length > 1"
+            class="mt-12 mb-2 flex justify-end"
+          >
+            <button
+              @click="openModal(null, null, 'multi')"
+              class="bg-red-500 hover:bg-red-500 text-white font-bold py-2 px-4 rounded"
+            >
+              まとめて発注書作成
+            </button>
+          </div>
+
+          <div class="w-full mx-auto overflow-x-scroll">
             <p class="mb-2">
               <span class="text-green-500 font-bold">緑色</span
               >の注文Noをクリックすると<span class="font-bold text-red-600"
                 >納品書</span
               >を確認できます。
             </p>
-            <table class="table-auto w-full text-left whitespace-no-wrap">
+            <table
+              id="table_container"
+              class="table-auto w-full text-left whitespace-no-wrap"
+            >
               <thead>
                 <tr>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
+                  >
+                    選択
+                  </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                   >
@@ -415,12 +473,17 @@ onMounted(() => {
                   </th>
 
                   <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
+                  >
+                    納入希望日
+                  </th>
+                  <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-400"
                   >
                     納入予定日
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-500"
                     style="border-radius: 0 10px 10px 0"
                   >
                     納入日
@@ -468,6 +531,15 @@ onMounted(() => {
                   :key="order.id"
                   :class="{ 'bg-indigo-50': !order.stock_id }"
                 >
+                  <td class="text-center">
+                    <input
+                      type="checkbox"
+                      name=""
+                      id=""
+                      @change="handleSelect(order)"
+                      v-model="order.select_flg"
+                    />
+                  </td>
                   <td
                     :class="{
                       'px-4 py-3': true,
@@ -524,6 +596,15 @@ onMounted(() => {
                     />
                   </td>
 
+                  <td class="px-4 py-3 text-lg text-gray-900">
+                    <input
+                      type="date"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order.desired_delivery_date"
+                    />
+                  </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
                       @change="
@@ -591,7 +672,13 @@ onMounted(() => {
                       発注書
                     </button>
 
-                    <a v-else class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs" :href="order.url" target="blank">URL</a>
+                    <a
+                      v-else
+                      class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      :href="order.url"
+                      target="blank"
+                      >URL</a
+                    >
                   </td>
                   <td
                     class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
@@ -640,7 +727,7 @@ onMounted(() => {
           v-else
           :current_month_holidays="props.current_month_holidays"
           :next_month_holidays="props.next_month_holidays"
-          :order="print_order"
+          :orders="print_order"
           @update-delivery-date="handleDeliveryDateUpdate"
         />
       </div>
@@ -648,6 +735,10 @@ onMounted(() => {
   </MainLayout>
 </template>
 <style scoped lang="scss">
+#table_container {
+  width: 130vw;
+}
+
 #modal {
   position: fixed;
   bottom: 0;

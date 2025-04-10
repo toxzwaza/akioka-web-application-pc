@@ -4,16 +4,20 @@ import { watch, ref } from "vue";
 const props = defineProps({
   current_month_holidays: Array,
   next_month_holidays: Array,
-  order: Object,
+  orders: Array,
 });
 
 const shortest = ref(false);
 
+const description = ref("");
+
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
-  if (!props.order.desired_delivery_date) {
-    shortest.value = true;
-  }
+  props.orders.forEach((order) => {
+    if (!order.desired_delivery_date) {
+      order.shortest = true;
+    }
+  });
 
   setTimeout(() => {
     // 印刷用のiframeを作成
@@ -69,14 +73,14 @@ function printElement() {
 // emitを定義
 const emit = defineEmits(["update-delivery-date"]);
 
-// 日付変更時のハンドラー
+// 納入希望日 変更時のハンドラー
 const handleDateChange = (value) => {
   emit("update-delivery-date", value);
 };
 
 // orderの変更を監視
 watch(
-  () => props.order,
+  () => props.orders,
   (newOrder, oldOrder) => {
     console.log("Order updated:", newOrder);
   },
@@ -84,7 +88,19 @@ watch(
 ); // オブジェクトのネストされたプロパティの変更も検知
 </script>
 <template>
-  <div v-if="order">
+  <div class="mx-auto mb-6" id="description_area">
+    <span class="font-bold text-gray-700">備考入力エリア</span>
+    <textarea
+      class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+      name=""
+      id=""
+      cols="30"
+      rows="10"
+      v-model="description"
+    ></textarea>
+  </div>
+
+  <div v-if="orders.length > 0">
     <div id="purchase_container" class="p-4">
       <button
         id="print_button"
@@ -98,10 +114,10 @@ watch(
 
       <div id="top_content" class="flex justify-around items-center">
         <div class="left_container">
-          <h2 class="font-bold text-xl">{{ order.com_name }} 御中</h2>
+          <h2 class="font-bold text-xl">{{ orders[0].com_name }} 御中</h2>
           <div class="number">
-            <p>TEL: {{ order.tel }}</p>
-            <p>FAX: {{ order.fax }}</p>
+            <p>TEL: {{ orders[0].tel }}</p>
+            <p>FAX: {{ orders[0].fax }}</p>
           </div>
           <p class="text-sm font-serif mt-2">
             お世話になります。<br />
@@ -137,115 +153,89 @@ watch(
           <div class="pl-2 mt-1">
             <p class="tracking-wider text-sm">TEL:086-522-7686</p>
             <p class="tracking-wider text-sm">FAX:086-522-7674</p>
-            <p class="tracking-wider text-sm">発注者：{{ order.user_name }}</p>
+            <p class="tracking-wider text-sm">
+              発注者：{{ orders[0].user_name }}
+            </p>
           </div>
         </div>
       </div>
-      <div id="main_content" class="mt-4">
+      <div id="main_content" class="">
         <table class="table-auto w-full">
           <thead>
             <tr>
-              <th class="px-4 py-2 text-gray-700">注文No</th>
-              <th class="px-4 py-2 text-gray-700">品名</th>
-              <th class="px-4 py-2 text-gray-700">品番</th>
-              <th class="px-4 py-2 text-gray-700">納入場所</th>
-              <th class="px-4 py-2 text-gray-700">納入希望日</th>
-              <th class="px-4 py-2 text-gray-700">数量</th>
-              <th class="px-4 py-2 text-gray-700">単価</th>
-              <th class="px-4 py-2 text-gray-700">金額(税抜価格)</th>
-              <th class="px-4 py-2 text-gray-700">注文指示者</th>
+              <th class="order_no px-4 py-2 text-gray-700">注文No</th>
+              <th class="name px-4 py-2 text-gray-700">品名</th>
+              <th class="s_name px-4 py-2 text-gray-700">品番</th>
+              <th class="deli_location px-4 py-2 text-gray-700">納入場所</th>
+              <th class="desired_date px-4 py-2 text-gray-700">納入希望日</th>
+              <th class="quantity px-4 py-2 text-gray-700">数量</th>
+              <th class="price px-4 py-2 text-gray-700">単価</th>
+              <th class="calc_price px-4 py-2 text-gray-700">金額(税抜価格)</th>
+              <th class="order_user px-4 py-2 text-gray-700">注文指示者</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="">
-              <td class="text-center border px-1 py-5">{{ order.order_no }}</td>
-              <td class="text-center border px-1 py-5">{{ order.name }}</td>
-              <td class="text-center border px-1 py-5">{{ order.s_name }}</td>
-              <td class="text-center border px-1 py-5">
+            <tr v-for="order in orders" :key="order.id" class="">
+              <td class="order_no text-center border">{{ order.order_no }}</td>
+              <td class="name text-center border">{{ order.name }}</td>
+              <td class="s_name text-center border">{{ order.s_name }}</td>
+              <td class="deli_location text-center border">
                 {{ order.deli_location }}
               </td>
-              <td class="text-center border px-1 py-5">
+              <td class="desired_date text-center border">
+                <p
+                  v-if="order.shortest"
+                  @click="shortest = false"
+                  class="font-bold"
+                >
+                  最短
+                </p>
+
                 <input
-                  v-if="!shortest"
+                  v-else-if="order.desired_delivery_date"
                   class="p-0 border-transparent"
                   type="date"
-                  @change="handleDateChange($event.target.value)"
                   :value="order.desired_delivery_date"
                 />
-                <p v-else @click="shortest = false" class="font-bold">最短</p>
+                <input
+                  v-else-if="!order.desired_delivery_date"
+                  class="p-0 border-transparent"
+                  type="date"
+                  :value="order.desired_delivery_date"
+                />
               </td>
-              <td class="text-center border px-1 py-5">{{ order.quantity }}</td>
-              <td class="text-center border px-1 py-5">
+              <td class="quantity text-center border">{{ order.quantity }}</td>
+              <td class="price text-center border">
                 {{ order.price.toLocaleString() }}
               </td>
-              <td class="text-center border px-1 py-5">
+              <td class="calc_price text-center border">
                 {{ order.calc_price.toLocaleString() }}
               </td>
-              <td class="text-center border px-1 py-5">
+              <td class="order_user text-center border">
                 {{ order.order_user }}
               </td>
             </tr>
-            <tr class="bg-gray-100">
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-            </tr>
-            <tr class="">
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-            </tr>
-            <tr class="bg-gray-100">
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-            </tr>
-            <tr class="">
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-            </tr>
-            <tr class="bg-gray-100">
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-              <td class="text-center border px-1 py-5"></td>
-            </tr>
-
           </tbody>
         </table>
       </div>
       <div id="bottom_content" class="mt-6 flex items-start justify-between">
-        <textarea class="w-1/2" name="" id="" cols="30" rows="10"></textarea>
+        <!-- <textarea
+          class="w-1/2"
+          name=""
+          id=""
+          cols="30"
+          rows="10"
+          v-model="description"
+        ></textarea> -->
+        <div class="textarea">
+          <div class="text font-bold">
+            備考
+
+            <p>
+              {{ description }}
+            </p>
+          </div>
+        </div>
 
         <div class="details w-1/2 pl-4">
           <p class="text-sm font-serif">
@@ -260,6 +250,10 @@ watch(
   </div>
 </template>
 <style scoped lang="scss">
+#description_area {
+  width: 297mm;
+}
+
 #purchase_container {
   background-color: white;
   margin: 0 auto;
@@ -268,6 +262,60 @@ watch(
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
   border: 1px solid rgba(221, 221, 221, 0.705);
   position: relative;
+
+  & #main_content {
+    margin-top: 4mm;
+
+    & table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+
+      & thead,
+      tbody {
+        width: 100%;
+      }
+
+      & td,
+      th {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 3.3mm 0.6mm;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 3.6mm;
+
+        &.order_no {
+          width: 10%;
+        }
+        &.name {
+          width: 19%;
+        }
+        &.s_name {
+          width: 18%;
+        }
+        &.deli_location {
+          width: 6%;
+        }
+        &.desired_date {
+          width: 15%;
+        }
+        &.quantity {
+          width: 5%;
+        }
+        &.price {
+          width: 8%;
+        }
+        &.calc_price {
+          width: 8%;
+        }
+        &.order_user {
+          width: 6%;
+        }
+      }
+    }
+  }
 
   & #print_button {
     position: absolute;
@@ -288,11 +336,26 @@ watch(
   }
 
   & #bottom_content {
+    position: absolute;
+    bottom: 2mm;
+
     height: 16%;
-    & textarea {
+    & .textarea {
       height: 100%;
+      width: 50%;
       border: 1px solid rgba(82, 82, 82, 0.555);
       border-radius: 3px;
+      position: relative;
+
+      & .text {
+        position: absolute;
+        top: 2mm;
+        left: 2mm;
+
+        & p {
+          font-weight: normal;
+        }
+      }
     }
   }
 }
