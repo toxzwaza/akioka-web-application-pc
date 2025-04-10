@@ -69,7 +69,7 @@ class Helper
 
         // Sはシステムの略（重複しないようにする為に設定。発注がシステムで統一された頃にS-を排除する）
 
-        $order_no = 'S-' . now()->format('y-m-') . ($nextCount + 1);
+        $order_no = 'S-' . now()->format('y-m-d-') . ($nextCount + 1);
 
         return $order_no;
     }
