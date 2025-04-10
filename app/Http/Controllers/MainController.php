@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\Method;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MainController extends Controller
 {
     //
     public function index()
     {
+        return Inertia::render('Home');
 
-        return view('home');
+        // return view('home');
     }
     public function login()
     {
