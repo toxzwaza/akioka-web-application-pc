@@ -489,13 +489,12 @@ class StockController extends Controller
             $stock = null;
             $is_new = false;
 
-            if ($stock_id) {
 
-                $stock = Stock::find($stock_id);
-                if (!$stock) {
-                    $stock = new Stock();
-                    $is_new = true;
-                }
+            $stock = $stock_id ? Stock::find($stock_id) : new Stock();
+            $is_new = !$stock_id || !$stock;
+            if ($is_new) {
+                $stock = new Stock();
+                $stock->img_path = 'storage/stock/not-image-sample2.png';
             }
 
             $stock->name = $name;
