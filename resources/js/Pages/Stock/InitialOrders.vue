@@ -445,6 +445,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
+                    工程
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
                     注文依頼者
                   </th>
                   <th
@@ -566,6 +571,7 @@ onMounted(() => {
                       alt=""
                     />
                   </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-center">{{ order.stock_process_id ? `${order.stock_process_code}:${order.stock_process_name}`  : '-' }}</td>
                   <td class="px-4 py-3 whitespace-nowrap">{{ order.order_user }}</td>
                   <td class="px-4 py-3 whitespace-nowrap">{{ order.manage_user_name }}</td>
                   <td class="px-4 py-3 text-lg text-gray-900">
