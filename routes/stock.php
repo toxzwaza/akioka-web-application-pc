@@ -40,15 +40,23 @@ Route::get('/initial-order', [InitialOrderController::class, 'index'])->name('st
 Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->name('stock.create.initialOrders');
 // 発注登録
 Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
-// 納入希望日設定
-Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
+
+
 
 
 // 発注修正
 Route::get('/initial-orders/edit', [StockController::class, 'initial_orders'])->name('stock.initial_orders');
 Route::post('/initial-orders/update', [StockController::class, 'update_initial_order'])->name('stock.update_initial_order');
-Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
-Route::post('/initial-orders/update/delivery-date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');
+
+Route::post('/initial-order/update/date', [InitialOrderController::class, 'update_date'])->name('stock.update_date');
+
+// 単価変更に伴う再発注依頼
+Route::post('/initial-order/update/price', [InitialOrderController::class, 'update_price'])->name('stock.update_price');
+
+// Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
+// Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
+// Route::post('/initial-orders/update/delivery-date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');
+
 
 // 発注依頼一覧
 Route::get('/order-requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');

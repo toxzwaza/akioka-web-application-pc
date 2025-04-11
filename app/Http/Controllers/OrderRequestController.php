@@ -41,9 +41,9 @@ class OrderRequestController extends Controller
             'stocks.img_path',
             'stocks.name',
             'stocks.s_name',
-            'stocks.price as stock_price',
             'stocks.url',
             'order_requests.quantity',
+            'order_requests.price as stock_price',
             'order_requests.created_at',
             'users.name as request_user_name',
             'order_requests.postage',
@@ -131,6 +131,7 @@ class OrderRequestController extends Controller
         try {
             if ($order_request) {
                 $initial_order = new InitialOrder();
+                $initial_order->order_request_id = $order_request->id;
                 $initial_order->stock_id = $order_request->stock_id;
                 $initial_order->order_no = Helper::createOrderNo();
                 $initial_order->order_date = date('Y-m-d');

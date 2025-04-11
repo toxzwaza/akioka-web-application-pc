@@ -38,7 +38,7 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax', 'users.name as manage_user_name', 'stock_processes.code' , 'stock_processes.name as stock_process_name')
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax', 'users.name as manage_user_name', 'stock_processes.code as stock_process_code', 'stock_processes.name as stock_process_name')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
@@ -149,7 +149,7 @@ class InitialOrderController extends Controller
                         'order_request_id' => $order_request->id,
                     ]);
                 }
-                
+
                 $stock_supplier = new StockSupplier();
                 $stock_supplier->stock_id = $stock->id;
                 $stock_supplier->supplier_id = $supplier_id;
@@ -211,21 +211,81 @@ class InitialOrderController extends Controller
         return response()->json(['status' => $status, 'message' => $msg]);
     }
 
-    public function update_desired_delivery_date(Request $request)
+    public function update_date(Request $request)
     {
+        $flg = $request->flg;
         $initial_order_id = $request->initial_order_id;
-        $desired_delivery_date = $request->desired_delivery_date;
+        $date = $request->date;
 
         $status = true;
 
         try {
             $initial_order = InitialOrder::find($initial_order_id);
-            $initial_order->desired_delivery_date = $desired_delivery_date;
+            switch ($flg) {
+                case 'desired':
+                    // 納入希望日
+                    $initial_order->desired_delivery_date = $date;
+                    break;
+                case 'expected':
+                    // 納入予定日
+                    $initial_order->expected_delivery_date = $date;
+                    break;
+                case 'delivery':
+                    // 納入日
+                    $initial_order->delivery_date = $date;
+                    break;
+            }
             $initial_order->save();
         } catch (Exception $e) {
             $status = false;
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function update_price(Request $request)
+    {
+        $status = true;
+        $msg =  '';
+
+        $initial_order_id = $request->initial_order_id;
+        $price = $request->price;
+
+        // return response()->json(['price' => $price]);
+
+        try {
+            $initial_order = InitialOrder::find($initial_order_id);
+            if ($initial_order) {
+                $order_request = OrderRequest::find($initial_order->order_request_id);
+                if ($order_request) {
+                    $order_request->price = $price;
+                    $order_request->calc_price = $price * $order_request->quantity;
+                    $order_request->status = 0;
+                    $order_request->accept_flg = 0;
+                    $order_request->save();
+
+                    // 発注データを削除
+                    $initial_order->delete();
+
+                    // 再発注依頼を通知
+                    $inventory_operation_record = new InventoryOperationRecord();
+                    $inventory_operation_record->inventory_operation_id = 17;
+                    $inventory_operation_record->stock_id = $order_request->stock_id;
+                    $inventory_operation_record->save();
+
+                } else {
+                    $status = false;
+                    $msg = '発注依頼データが見つかりません';
+                }
+            } else {
+                $status = false;
+                $msg = '発注データが見つかりません';
+            }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 }

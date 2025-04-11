@@ -91,7 +91,9 @@ const sendInitialOrder = (order_request_id) => {
           alert(
             "発注登録が完了しました。発注一覧から発注情報を確認してください。"
           );
-          window.location.reload();
+          order_requests.value = order_requests.value.filter(
+            (request) => request.id !== order_request_id
+          );
         }
       })
       .catch((error) => {
@@ -252,6 +254,15 @@ const purchaseOrder = (order_request_id) => {
     }
   );
 };
+
+const skipAccept = (order_request_id) => {
+  console.log(order_request_id);
+  if (confirm("承認をスキップして発注データを作成します。よろしいですか？（開発中）")) {
+    order_requests.value = order_requests.value.filter(
+      (request) => request.id !== order_request_id
+    );
+  }
+};
 onMounted(() => {
   getOrderRequests();
 
@@ -279,7 +290,7 @@ onMounted(() => {
             >
               <div class="sm:mx-auto sm:w-full sm:max-w-sm">
                 <img
-                  class="mt-10  mx-auto h-10 w-auto"
+                  class="mt-10 mx-auto h-10 w-auto"
                   src="/img/base/AK_logo.png"
                   alt="Your Company"
                 />
@@ -416,6 +427,9 @@ onMounted(() => {
                   >
                     承認
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  ></th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   ></th>
@@ -554,37 +568,12 @@ onMounted(() => {
                   >
                     {{ order_request.request_user_name }}
                   </td>
-
-                  <!-- <td
-                    :class="{
-                      'px-4 py-3 text-lg text-gray-900': true,
-                    }"
-                  >
-                    <a
-                      v-if="order_request.url"
-                      class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
-                      :href="order_request.url"
-                      target="blank"
-                    >
-                      URL
-                    </a>
-                    <button
-                      v-else-if="order_config.user_id"
-                      @click="purchaseOrder(order_request.id)"
-                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
-                    >
-                      発注書
-                    </button>
-                    <span v-else class="text-sm text-red-500"
-                      >注文者を選択してください。</span
-                    >
-                  </td> -->
                   <td
                     :class="{
                       'px-4 py-3 text-lg text-gray-900 w-24': true,
                     }"
                   >
-                    <div v-if="order_config.user_id">
+                    <div v-if="order_config.user_id" class="flex">
                       <button
                         v-if="order_request.accept_flg === 0"
                         @click="sendAccept(order_request.id)"
@@ -610,9 +599,14 @@ onMounted(() => {
                         >却下</span
                       >
                     </div>
-                    <span v-else
-                      ><i class="fas fa-eye-slash text-gray-500"></i
-                    ></span>
+                  </td>
+                  <td>
+                    <button
+                      @click="skipAccept(order_request.id)"
+                      class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded whitespace-nowrap"
+                    >
+                      承認スキップ
+                    </button>
                   </td>
                   <td
                     :class="{

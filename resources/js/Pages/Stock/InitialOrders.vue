@@ -169,45 +169,89 @@ const updateFilter = (filter, value) => {
   }
 };
 
-const updateExpectedDeliveryDate = (order_id, expected_delivery_date) => {
-  console.log(order_id, expected_delivery_date);
-  axios
-    .post(route("stock.update_expected_delivery_date"), {
-      order_id: order_id,
-      expected_delivery_date: expected_delivery_date,
-    })
-    .then((res) => {
-      console.log(res.data);
-      alert("納入予定日を更新しました。");
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+const updateDate = (flg, order_id, date) => {
+  console.log(flg, order_id, date);
+  if (flg) {
+    axios
+      .post(route("stock.update_date"), {
+        flg: flg,
+        initial_order_id: order_id,
+        date: date,
+      })
+      .then((res) => {
+        console.log(res.data);
+        alert("納入予定日を更新しました。");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 };
 
-const updateDeliveryDate = (order_id, delivery_date) => {
-  axios
-    .post(route("stock.update_delivery_date"), {
-      order_id: order_id,
-      delivery_date: delivery_date,
-    })
-    .then((res) => {
-      console.log(res.data);
+//  単価改定
+const handlePrice = (order, price) => {
 
-      if (res.data.status) {
-        if (res.data.new_lead_time) {
-          alert(
-            `納入日を登録しました。\nマスタの平均リードタイムを${res.data.new_lead_time}日に更新しました。`
-          );
-        } else {
-          alert("納入日を登録しました。");
-        }
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  // 値上がりした場合
+  if(order.price < price){
+    if(confirm('単価が変更されました。\n値上がりしている為、再承認が必要です。\n発注依頼をおこないますか？')){
+        axios.post(route('stock.update_price'), {
+          initial_order_id: order.id,
+          price: price
+        })
+        .then(res => {
+          console.log(res.data)
+          if(res.data.status){
+            alert('再度、発注依頼を作成しました。')
+            initial_orders.value = initial_orders.value.filter(o => o.id !== order.id)
+          }
+        })
+        .catch(error => {
+          console.log(error)
+        })
+
+    }
+  }
+
 };
+// const updateExpectedDeliveryDate = (order_id, expected_delivery_date) => {
+//   console.log(order_id, expected_delivery_date);
+//   axios
+//     .post(route("stock.update_expected_delivery_date"), {
+//       order_id: order_id,
+//       expected_delivery_date: expected_delivery_date,
+//     })
+//     .then((res) => {
+//       console.log(res.data);
+//       alert("納入予定日を更新しました。");
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
+
+// const updateDeliveryDate = (order_id, delivery_date) => {
+//   axios
+//     .post(route("stock.update_delivery_date"), {
+//       order_id: order_id,
+//       delivery_date: delivery_date,
+//     })
+//     .then((res) => {
+//       console.log(res.data);
+
+//       if (res.data.status) {
+//         if (res.data.new_lead_time) {
+//           alert(
+//             `納入日を登録しました。\nマスタの平均リードタイムを${res.data.new_lead_time}日に更新しました。`
+//           );
+//         } else {
+//           alert("納入日を登録しました。");
+//         }
+//       }
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
 
 // 納入希望日を保存する
 const handleDeliveryDateUpdate = (date) => {
@@ -261,7 +305,6 @@ const handleSelect = (order) => {
 const login = () => {
   if (props.admin_users.some((user) => user.password == pwd.value)) {
     is_login.value = true;
-    alert('ログインしました')
   }
 };
 onMounted(() => {
@@ -668,6 +711,9 @@ onMounted(() => {
                       id=""
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.desired_delivery_date"
+                      @change="
+                        updateDate('desired', order.id, $event.target.value)
+                      "
                     />
                     <span v-else>{{
                       order.desired_delivery_date
@@ -681,10 +727,7 @@ onMounted(() => {
                     <input
                       v-if="is_login"
                       @change="
-                        updateExpectedDeliveryDate(
-                          order.id,
-                          $event.target.value
-                        )
+                        updateDate('expected', order.id, $event.target.value)
                       "
                       type="date"
                       name=""
@@ -704,7 +747,7 @@ onMounted(() => {
                     <input
                       v-if="is_login"
                       @change="
-                        updateDeliveryDate(order.id, $event.target.value)
+                        updateDate('delivery', order.id, $event.target.value)
                       "
                       type="date"
                       name=""
@@ -738,7 +781,14 @@ onMounted(() => {
                   </td>
 
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
-                    {{ order.price.toLocaleString() }}
+                    <input
+                      v-if="is_login"
+                      type="number"
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order.price"
+                      @change="handlePrice(order, $event.target.value)"
+                    />
+                    <span v-else>{{ order.price.toLocaleString() }}</span>
                   </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     {{ order.quantity }}
