@@ -58,6 +58,7 @@ class InitialOrderController extends Controller
 
         $classifications = Classification::select('id', 'name')->get();
         $users = User::select('id', 'name')->get();
+        $admin_users = User::select('id', 'name')->where('is_admin', 1)->get();
         $suppliers = Supplier::select('id', 'name', 'supplier_no')->get();
         $stock_processes = StockProcess::select('id', 'name')->get();
 

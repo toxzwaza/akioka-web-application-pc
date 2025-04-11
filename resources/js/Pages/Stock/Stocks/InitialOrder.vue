@@ -8,6 +8,7 @@ import MainTitle from "@/Components/Title/MainTitle.vue";
 const props = defineProps({
   classifications: Array,
   users: Array,
+  admin_users: Array,
   suppliers: Array,
   stock_processes: Array,
 });
@@ -421,12 +422,9 @@ onMounted(() => {});
                 >
                   *発注者
                 </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="text"
-                  list="users"
-                  v-model="form.user_id"
-                />
+                <select name="" id="" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" v-model="form.user_id">
+                  <option v-for="user in props.admin_users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                </select>
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
