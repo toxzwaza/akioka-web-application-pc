@@ -11,6 +11,7 @@ use App\Models\Location;
 use App\Models\Process;
 use App\Models\RetainedStock;
 use App\Models\Stock;
+use App\Models\StockProcess;
 use App\Models\StockRequest;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
@@ -305,10 +306,15 @@ class StockController extends Controller
         $storage_addresses = StorageAddress::select('id', 'address', 'location_id')->orderBy('address', 'asc')->get();
 
         $users = User::select('id', 'name')->get();
+        $admin_users = User::select('id', 'name')->where('is_admin', 1)->get();
+
         $suppliers = Supplier::select('id', 'name', 'supplier_no')->get();
 
         // 直近の発注情報を一件取得
         $initial_order = InitialOrder::where('stock_id', $stock_id)->orderBy('order_date', 'desc')->first();
+
+        // 在庫使用工程
+        $stock_processes = StockProcess::select('id', 'name')->get();
 
         return Inertia::render(
             'Stock/Stocks/Show',
@@ -321,10 +327,23 @@ class StockController extends Controller
                 'storage_addresses' => $storage_addresses,
                 'stock_suppliers' => $stock_suppliers,
                 'users' => $users,
+                'admin_users' => $admin_users,
                 'suppliers' => $suppliers,
-                'initial_order' => $initial_order
+                'initial_order' => $initial_order,
+                'stock_processes' => $stock_processes
             ]
         );
+    }
+    public function getInitialOrders(Request $request)
+    {
+        $stock_id = $request->stock_id;
+
+        $initial_orders = InitialOrder::
+        select('order_user','order_date','quantity','price', 'calc_price', 'com_name', 'delivery_date', 'receive_flg')
+        ->where('stock_id', $stock_id)
+        ->orderBy('order_date', 'desc')->get();
+
+        return response()->json($initial_orders);
     }
 
     // 発注登録
@@ -483,6 +502,7 @@ class StockController extends Controller
         $quantity_per_org = $request->quantity_per_org;
         $classification_id = $request->classification_id;
         $deli_location = $request->deli_location;
+        $stock_process_id = $request->stock_process_id;
         $del_flg = $request->del_flg;
 
         try {
@@ -491,7 +511,7 @@ class StockController extends Controller
 
 
             $stock = $stock_id ? Stock::find($stock_id) : new Stock();
-            $is_new = !$stock_id || !$stock ;
+            $is_new = !$stock_id || !$stock;
             if ($is_new) {
                 $stock = new Stock();
             }
@@ -508,6 +528,7 @@ class StockController extends Controller
             $stock->quantity_per_org = $quantity_per_org;
             $stock->classification_id = $classification_id;
             $stock->deli_location = $deli_location;
+            $stock->stock_process_id = $stock_process_id;
             $stock->del_flg = $del_flg;
             $stock->save();
 
@@ -548,8 +569,9 @@ class StockController extends Controller
     public function create_stocks()
     {
         $classifications = Classification::all();
+        $stock_processes = StockProcess::select('id', 'name')->get();
 
-        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications]);
+        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications, 'stock_processes' => $stock_processes]);
     }
     // 格納先作成
     public function create_storage_addresses()

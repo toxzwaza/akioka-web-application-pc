@@ -4,7 +4,7 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
-import MainTitle from "@/Components/Title/MainTitle.vue"
+import MainTitle from "@/Components/Title/MainTitle.vue";
 
 const props = defineProps({
   order_users: Array,
@@ -102,20 +102,17 @@ const sendInitialOrder = (order_request_id) => {
 
 // 発注数量更新
 const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
-
   let master = {
     price: false,
-    postage: false
-  }
+    postage: false,
+  };
 
   switch (flg) {
     case "price":
       if (
-        confirm(
-          "単価が変更されました。設定した単価をマスタに設定しますか？"
-        )
+        confirm("単価が変更されました。設定した単価をマスタに設定しますか？")
       ) {
-        master.price = true
+        master.price = true;
       }
     case "quantity":
       if (confirm("数量もしくは単価が変更されました。金額を再計算しますか？")) {
@@ -127,11 +124,9 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       break;
     case "postage":
       if (
-        confirm(
-          "送料が変更されました。設定した送料をマスタに設定しますか？"
-        )
+        confirm("送料が変更されました。設定した送料をマスタに設定しますか？")
       ) {
-        master.postage = true
+        master.postage = true;
       }
       break;
   }
@@ -268,45 +263,80 @@ onMounted(() => {
 <template>
   <MainLayout :title="'発注依頼一覧'">
     <template #content>
-      <MainTitle :top="'発注依頼一覧'" :sub="'在庫管理システムより取得した発注依頼を完了することができます。'"/>
+      <MainTitle
+        :top="'発注依頼一覧'"
+        :sub="'在庫管理システムより取得した発注依頼を完了することができます。'"
+      />
 
       <section class="text-gray-600 body-font">
-        <div class="py-12 mx-auto">
+        <div class="mx-auto">
+          <div
+            v-if="!order_config.user_id"
+            class="w-full mx-auto mb-8 p-4 bg-gray-100"
+          >
+            <div
+              class="flex min-h-full flex-col justify-center px-6 py-4 lg:px-8"
+            >
+              <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+                <img
+                  class="mt-10  mx-auto h-10 w-auto"
+                  src="/img/base/AK_logo.png"
+                  alt="Your Company"
+                />
+              </div>
 
-          <div class="w-1/2 mx-auto mb-8 p-4 bg-gray-100">
-            <h2 class="text-xl text-red-500 font-bold mb-4">
-              担当者を選択してください。
-            </h2>
-            <div class="">
-              <div class="">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-password"
-                >
-                  担当者
-                </label>
-                <select
-                  name=""
-                  id=""
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  @change="handleUserId($event.target.value)"
-                >
-                  <option value="0">選択してください</option>
-                  <option
-                    v-for="order_user in order_users"
-                    :key="order_user.id"
-                    :value="order_user.id"
+              <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+                <form class="space-y-6" action="#" method="POST">
+                  <div>
+                    <label
+                      for="email"
+                      class="block text-sm/6 font-medium text-gray-900"
+                      >ログインユーザー</label
+                    >
+                    <div class="mt-2">
+                      <select
+                        name=""
+                        id=""
+                        class="block w-full rounded-md bg-white px-3 py-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                        @change="handleUserId($event.target.value)"
+                      >
+                        <option value="0">選択してください</option>
+                        <option
+                          v-for="order_user in order_users"
+                          :key="order_user.id"
+                          :value="order_user.id"
+                        >
+                          {{ order_user.name }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <button
+                      type="submit"
+                      class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                      Sign in
+                    </button>
+                  </div>
+                </form>
+
+                <p class="mt-10 text-center text-sm/6 text-gray-500">
+                  Not a member?
+                  <a
+                    href="#"
+                    class="font-semibold text-indigo-600 hover:text-indigo-500"
+                    >管理者に確認してください。</a
                   >
-                    {{ order_user.name }}
-                  </option>
-                </select>
+                </p>
               </div>
             </div>
           </div>
 
-          <div class="w-full mx-auto overflow-auto">
+          <div v-else class="w-full mx-auto overflow-auto">
             <h2 class="mb-4 text-lg font-bold">
-              注文者：{{ order_config.user_name }}
+              ログイン中：{{ order_config.user_name }}
             </h2>
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>

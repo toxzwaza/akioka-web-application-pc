@@ -28,7 +28,12 @@ class TestController extends Controller
     public function test()
     {
 
-
+        $stocks = Stock::where('classification_id', 11)->get();
+        // dd(count($stocks));
+        foreach ($stocks as $stock) {
+            $stock->stock_process_id = 29;
+            $stock->save();
+        }
     }
 
     public function storage_address_test()

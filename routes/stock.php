@@ -20,6 +20,8 @@ Route::get('/', [StockController::class, 'index'])->name('stock');
 Route::get('/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
 Route::get('/stocks/get', [StockController::class, 'getStocks'])->name('stock.getStocks');
 Route::get('/stocks/show/{stock_id}', [StockController::class, 'stock_show'])->name('stock.show.stocks');
+// 発注履歴取得
+Route::get('/stocks/initial-orders/get', [StockController::class, 'getInitialOrders'])->name('stock.getInitialOrders');
 Route::get('/stocks/stock-request/{stock_id}', [StockController::class, 'toggle_stock_request'])->name('stock.toggle.stock_request');
 Route::post('/stocks/stock-request/update', [StockController::class, 'update_stock_request'])->name('stock.update.stock_request');
 

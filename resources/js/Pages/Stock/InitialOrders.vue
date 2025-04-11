@@ -14,6 +14,7 @@ const props = defineProps({
 });
 
 const modal_status = reactive({
+  type: null,
   status: false,
   img_path: "",
 });
@@ -444,7 +445,12 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
-                    注文者
+                    注文依頼者
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    担当者
                   </th>
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -560,7 +566,8 @@ onMounted(() => {
                       alt=""
                     />
                   </td>
-                  <td class="px-4 py-3">{{ order.order_user }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap">{{ order.order_user }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap">{{ order.manage_user_name }}</td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
                   </td>
@@ -708,6 +715,8 @@ onMounted(() => {
           </div>
         </div>
       </section>
+
+      <!-- モーダルウィンドウ -->
       <div id="modal" :class="{ active: modal_status.status }">
         <div id="close_container">
           <button
@@ -753,7 +762,7 @@ onMounted(() => {
   height: 0;
   transform: translateY(100%);
   &.active {
-    height: 90vh;
+    height: 99vh;
     transform: translateY(0);
     transition: all 0.5s;
   }

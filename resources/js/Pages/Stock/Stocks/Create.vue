@@ -4,7 +4,12 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
-import MainTitle from "@/Components/Title/MainTitle.vue"
+import MainTitle from "@/Components/Title/MainTitle.vue";
+
+const props = defineProps({
+  classifications: Array,
+  stock_processes: Array,
+});
 
 const form = reactive({
   name: null,
@@ -19,9 +24,24 @@ const form = reactive({
   quantity_per_org: null,
   classification_id: null,
   deli_location: null,
+  stock_process_id: 0,
 });
 
+const handleClassification = () => {
+  if (form.classification_id == 11) {
+    form.stock_process_id = 29;
+  }
+};
 const createStock = () => {
+  if (
+    !form.name ||
+    !form.price ||
+    !form.classification_id ||
+    !form.stock_process_id
+  ) {
+    return alert('必須項目が入力されていません。')
+  }
+
   // 在庫追加
   axios
     .post(route("stock.store.stocks"), form)
@@ -40,17 +60,15 @@ const createStock = () => {
     });
 };
 
-const props = defineProps({
-  classifications: Array,
-});
-
 onMounted(() => {});
 </script>
 <template>
   <MainLayout :title="'在庫追加'">
     <template #content>
-
-      <MainTitle :top="'在庫追加'" :sub="'在庫を登録を行います。必須項目を入力して、新規登録ボタンを押してください。作成した物品データは在庫一覧より確認できます。'"/>
+      <MainTitle
+        :top="'在庫追加'"
+        :sub="'在庫を登録を行います。必須項目を入力して、新規登録ボタンを押してください。作成した物品データは在庫一覧より確認できます。'"
+      />
       <div class="flex justify-between py-12">
         <div id="right_container" class="w-full">
           <form class="w-1/2 mx-auto">
@@ -245,6 +263,7 @@ onMounted(() => {});
                   name=""
                   id=""
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  @change="handleClassification"
                   v-model="form.classification_id"
                 >
                   <option value="0">未選択</option>
@@ -271,6 +290,34 @@ onMounted(() => {});
                   placeholder=""
                   v-model="form.deli_location"
                 />
+              </div>
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.stock_process_id,
+                  }"
+                  for="grid-city"
+                >
+                  工程 (※発注依頼時工程選択のデフォルト値)
+                </label>
+                <select
+                  name=""
+                  id=""
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  v-model="form.stock_process_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="stock_process in props.stock_processes"
+                    :key="stock_process.id"
+                    :value="stock_process.id"
+                  >
+                    {{ stock_process.name }}
+                  </option>
+                </select>
               </div>
             </div>
 

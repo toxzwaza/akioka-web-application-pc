@@ -154,7 +154,7 @@ watch(
             <p class="tracking-wider text-sm">TEL:086-522-7686</p>
             <p class="tracking-wider text-sm">FAX:086-522-7674</p>
             <p class="tracking-wider text-sm">
-              発注者：{{ orders[0].user_name }}
+              発注者：{{ orders[0].manage_user_name }}
             </p>
           </div>
         </div>
@@ -338,6 +338,7 @@ watch(
   & #bottom_content {
     position: absolute;
     bottom: 2mm;
+    width: 100%;
 
     height: 16%;
     & .textarea {

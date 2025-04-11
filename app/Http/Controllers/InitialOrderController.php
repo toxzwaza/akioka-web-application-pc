@@ -9,6 +9,7 @@ use App\Models\InitialOrder;
 use App\Models\InventoryOperationRecord;
 use App\Models\OrderRequest;
 use App\Models\Stock;
+use App\Models\StockProcess;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\Supplier;
@@ -37,13 +38,14 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax')
+        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax', 'users.name as manage_user_name')
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
                     ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
             })
             ->leftJoin('suppliers', 'suppliers.id', 'initial_orders.supplier_id')
+            ->leftJoin('users', 'users.id', 'initial_orders.user_id')
             ->orderBy('order_date', 'desc')
             ->paginate(50);
 
@@ -56,8 +58,9 @@ class InitialOrderController extends Controller
         $classifications = Classification::select('id', 'name')->get();
         $users = User::select('id', 'name')->get();
         $suppliers = Supplier::select('id', 'name', 'supplier_no')->get();
+        $stock_processes = StockProcess::select('id', 'name')->get();
 
-        return Inertia::render('Stock/Stocks/InitialOrder', ['classifications' => $classifications, 'users' => $users, 'suppliers' => $suppliers]);
+        return Inertia::render('Stock/Stocks/InitialOrder', ['classifications' => $classifications, 'users' => $users, 'admin_users' => $admin_users, 'suppliers' => $suppliers, 'stock_processes' => $stock_processes]);
     }
 
 
@@ -79,6 +82,8 @@ class InitialOrderController extends Controller
         $quantity_per_org = $request->quantity_per_org;
         $classification_id = $request->classification_id;
         $deli_location = $request->deli_location;
+        $base_stock_process_id = $request->base_stock_process_id;
+        $order_stock_process_id = $request->order_stock_process_id;
 
         $order_user = $request->order_user;
         $user_id = $request->user_id;
@@ -94,6 +99,7 @@ class InitialOrderController extends Controller
         try {
 
             if (!$stock_id) {
+                // 在庫追加
                 $stock = new Stock();
                 $stock->name = $name;
                 $stock->s_name = $s_name;
@@ -107,6 +113,7 @@ class InitialOrderController extends Controller
                 $stock->quantity_per_org = $quantity_per_org;
                 $stock->classification_id = $classification_id;
                 $stock->deli_location = $deli_location;
+                $stock->stock_process_id = $base_stock_process_id;
                 $stock->save();
 
                 // 発注依頼データ作成
@@ -121,6 +128,7 @@ class InitialOrderController extends Controller
                 $order_request->calc_price = $calc_price;
                 $order_request->new_stock_flg = 1;
                 $order_request->postage = $postage;
+                $order_request->stock_process_id = $order_stock_process_id;
                 $order_request->save();
 
                 // 稟議書がある場合
@@ -159,6 +167,7 @@ class InitialOrderController extends Controller
                 $order_request->calc_price = $calc_price;
                 $order_request->new_stock_flg = 0;
                 $order_request->postage = $postage;
+                $order_request->stock_process_id = $order_stock_process_id;
                 $order_request->save();
             }
 

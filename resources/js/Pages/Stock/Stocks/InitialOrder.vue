@@ -2,7 +2,6 @@
 import MainLayout from "@/Layouts/MainLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
-import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 
@@ -10,6 +9,7 @@ const props = defineProps({
   classifications: Array,
   users: Array,
   suppliers: Array,
+  stock_processes: Array,
 });
 
 const form = reactive({
@@ -26,6 +26,7 @@ const form = reactive({
   classification_id: null,
   deli_location: null,
   postage: null,
+  base_stock_process_id: 0, //マスタに設定する工程ID
 
   order_user: null,
   user_id: null,
@@ -33,6 +34,7 @@ const form = reactive({
   lead_time: null,
   quantity: null,
   calc_price: null,
+  order_stock_process_id: 0, //実際の工程ID
 
   upload_file: null,
 });
@@ -215,6 +217,35 @@ onMounted(() => {});
                   placeholder=""
                   v-model="form.deli_location"
                 />
+              </div>
+              <div class="w-1/2 px-3 mb-6 md:mb-0">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.base_stock_process_id,
+                  }"
+                  for="grid-city"
+                >
+                  *工程 (※発注依頼時工程選択のデフォルト値)
+                </label>
+                <select
+                  name=""
+                  id=""
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  v-model="form.base_stock_process_id"
+                  @change="form.order_stock_process_id = $event.target.value"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="stock_process in props.stock_processes"
+                    :key="stock_process.id"
+                    :value="stock_process.id"
+                  >
+                    {{ stock_process.name }}
+                  </option>
+                </select>
               </div>
             </div>
 
@@ -494,6 +525,35 @@ onMounted(() => {});
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3 mb-6 md:mb-0">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.order_stock_process_id,
+                  }"
+                  for="grid-city"
+                >
+                  *工程
+                </label>
+
+                <select
+                  name=""
+                  id=""
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  v-model="form.order_stock_process_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="stock_process in props.stock_processes"
+                    :key="stock_process.id"
+                    :value="stock_process.id"
+                  >
+                    {{ stock_process.name }}
+                  </option>
+                </select>
+              </div>
               <div class="w-1/2 px-3">
                 <label
                   :class="{
