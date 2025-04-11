@@ -49,8 +49,9 @@ class InitialOrderController extends Controller
             ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
             ->orderBy('order_date', 'desc')
             ->paginate(50);
+        $admin_users = User::select('id', 'name', 'password')->where('is_admin', 1)->get();
 
-        return Inertia::render('Stock/InitialOrders', ['initial_orders' => $initial_orders, 'current_month_holidays' => $current_month_holidays, 'next_month_holidays' => $next_month_holidays]);
+        return Inertia::render('Stock/InitialOrders', ['initial_orders' => $initial_orders, 'current_month_holidays' => $current_month_holidays, 'next_month_holidays' => $next_month_holidays, 'admin_users' => $admin_users]);
     }
 
     public function create()

@@ -11,7 +11,11 @@ const props = defineProps({
   initial_orders: Object,
   current_month_holidays: Array,
   next_month_holidays: Array,
+  admin_users: Array,
 });
+
+const is_login = ref(false);
+const pwd = ref("");
 
 const modal_status = reactive({
   type: null,
@@ -35,7 +39,7 @@ const openModal = (img_path, order, flg) => {
   } else if (order) {
     // 発注書
     // print_order.value.push(order);
-    purchase_list.value = []
+    purchase_list.value = [];
     handleSelect(order);
   }
 
@@ -254,6 +258,12 @@ const handleSelect = (order) => {
   console.log(purchase_list.value);
 };
 
+const login = () => {
+  if (props.admin_users.some((user) => user.password == pwd.value)) {
+    is_login.value = true;
+    alert('ログインしました')
+  }
+};
 onMounted(() => {
   initial_orders.value = props.initial_orders.data;
   base_initial_orders.value = props.initial_orders.data;
@@ -266,10 +276,35 @@ onMounted(() => {
 <template>
   <MainLayout :title="'発注一覧'">
     <template #content>
-      <MainTitle
-        :top="'発注一覧'"
-        :sub="'発注情報の確認ができます。ログインすることで、品名・品番の修正が可能です。'"
-      />
+      <div class="flex justify-between">
+        <MainTitle
+          :top="'発注一覧'"
+          :sub="'発注情報の確認ができます。ログインすることで、品名・品番の修正が可能です。'"
+        />
+        <form class="w-full max-w-sm">
+          <div class="flex items-center border-b border-blue-500 py-2">
+            <input
+              class="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+              type="text"
+              placeholder="生年月日"
+              v-model="pwd"
+            />
+            <button
+              @click.prevent="login()"
+              class="flex-shrink-0 bg-blue-500 hover:bg-blue-700 border-blue-500 hover:border-blue-700 text-sm border-4 text-white py-1 px-2 rounded"
+              type="button"
+            >
+              Sign Up
+            </button>
+            <button
+              class="flex-shrink-0 border-transparent border-4 text-blue-500 hover:text-blue-800 text-sm py-1 px-2 rounded"
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
 
       <section class="text-gray-600 body-font">
         <div class="py-12 mx-auto">
@@ -571,9 +606,19 @@ onMounted(() => {
                       alt=""
                     />
                   </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-center">{{ order.stock_process_id ? `${order.stock_process_code}:${order.stock_process_name}`  : '-' }}</td>
-                  <td class="px-4 py-3 whitespace-nowrap">{{ order.order_user }}</td>
-                  <td class="px-4 py-3 whitespace-nowrap">{{ order.manage_user_name }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap text-center">
+                    {{
+                      order.stock_process_id
+                        ? `${order.stock_process_code}:${order.stock_process_name}`
+                        : "-"
+                    }}
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap">
+                    {{ order.order_user }}
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap">
+                    {{ order.manage_user_name }}
+                  </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
                   </td>
@@ -582,6 +627,7 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
+                      v-if="is_login"
                       @change="
                         updateNameOrSName(order.id, 'name', $event.target.value)
                       "
@@ -591,9 +637,12 @@ onMounted(() => {
                       id=""
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
+
+                    <span v-else>{{ order.name }}</span>
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
+                      v-if="is_login"
                       @change="
                         updateNameOrSName(
                           order.id,
@@ -607,19 +656,30 @@ onMounted(() => {
                       id=""
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
+
+                    <span v-else>{{ order.s_name }}</span>
                   </td>
 
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
+                      v-if="is_login"
                       type="date"
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.desired_delivery_date"
                     />
+                    <span v-else>{{
+                      order.desired_delivery_date
+                        ? new Date(
+                            order.desired_delivery_date
+                          ).toLocaleDateString("ja-JP")
+                        : "-"
+                    }}</span>
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
+                      v-if="is_login"
                       @change="
                         updateExpectedDeliveryDate(
                           order.id,
@@ -632,9 +692,17 @@ onMounted(() => {
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.expected_delivery_date"
                     />
+                    <span v-else>{{
+                      order.expected_delivery_date
+                        ? new Date(
+                            order.expected_delivery_date
+                          ).toLocaleDateString("ja-JP")
+                        : "-"
+                    }}</span>
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     <input
+                      v-if="is_login"
                       @change="
                         updateDeliveryDate(order.id, $event.target.value)
                       "
@@ -644,6 +712,13 @@ onMounted(() => {
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.delivery_date"
                     />
+                    <span v-else>{{
+                      order.delivery_date
+                        ? new Date(order.delivery_date).toLocaleDateString(
+                            "ja-JP"
+                          )
+                        : "-"
+                    }}</span>
                   </td>
 
                   <td
