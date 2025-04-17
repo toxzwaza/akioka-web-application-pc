@@ -28,22 +28,34 @@ const print_order = ref([]);
 const openModal = (img_path, order, flg) => {
   modal_status.img_path = "";
 
-  // 納品書
-  if (img_path) {
-    modal_status.img_path =
-      img_path && img_path.includes("storage")
-        ? `https://akioka.cloud/${img_path}`
-        : img_path.includes("deli_file")
-        ? `https://akioka.cloud/storage/${img_path}`
-        : img_path;
-  } else if (order) {
-    // 発注書
-    // print_order.value.push(order);
-    purchase_list.value = [];
-    handleSelect(order);
+  switch (flg) {
+    case "img": //画像表示
+      modal_status.type = "img";
+      modal_status.img_path = img_path;
+      break;
+    case "purchase": //発注書表示
+    case "multi":
+      modal_status.type = "purchase";
+      purchase_list.value = [];
+      handleSelect(order);
+      print_order.value = purchase_list.value;
+      break;
+    case "deli_file": //納品書表示
+      modal_status.type = "deli_file";
+      modal_status.img_path =
+        img_path && img_path.includes("storage")
+          ? `https://akioka.cloud/${img_path}`
+          : img_path.includes("deli_file")
+          ? `https://akioka.cloud/storage/${img_path}`
+          : img_path;
+      break;
+    case "approval":
+      modal_status.type = "approval";
+      console.log(img_path);
+      modal_status.img_path = `/pdfjs/web/main_viewer.html?file=https://akioka.cloud/${img_path}`;
+      console.log(modal_status.img_path)
+      break;
   }
-
-  print_order.value = purchase_list.value;
 
   modal_status.status = true;
 };
@@ -190,68 +202,33 @@ const updateDate = (flg, order_id, date) => {
 
 //  単価改定
 const handlePrice = (order, price) => {
-
   // 値上がりした場合
-  if(order.price < price){
-    if(confirm('単価が変更されました。\n値上がりしている為、再承認が必要です。\n発注依頼をおこないますか？')){
-        axios.post(route('stock.update_price'), {
+  if (order.price < price) {
+    if (
+      confirm(
+        "単価が変更されました。\n値上がりしている為、再承認が必要です。\n発注依頼をおこないますか？"
+      )
+    ) {
+      axios
+        .post(route("stock.update_price"), {
           initial_order_id: order.id,
-          price: price
+          price: price,
         })
-        .then(res => {
-          console.log(res.data)
-          if(res.data.status){
-            alert('再度、発注依頼を作成しました。')
-            initial_orders.value = initial_orders.value.filter(o => o.id !== order.id)
+        .then((res) => {
+          console.log(res.data);
+          if (res.data.status) {
+            alert("再度、発注依頼を作成しました。");
+            initial_orders.value = initial_orders.value.filter(
+              (o) => o.id !== order.id
+            );
           }
         })
-        .catch(error => {
-          console.log(error)
-        })
-
+        .catch((error) => {
+          console.log(error);
+        });
     }
   }
-
 };
-// const updateExpectedDeliveryDate = (order_id, expected_delivery_date) => {
-//   console.log(order_id, expected_delivery_date);
-//   axios
-//     .post(route("stock.update_expected_delivery_date"), {
-//       order_id: order_id,
-//       expected_delivery_date: expected_delivery_date,
-//     })
-//     .then((res) => {
-//       console.log(res.data);
-//       alert("納入予定日を更新しました。");
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// };
-
-// const updateDeliveryDate = (order_id, delivery_date) => {
-//   axios
-//     .post(route("stock.update_delivery_date"), {
-//       order_id: order_id,
-//       delivery_date: delivery_date,
-//     })
-//     .then((res) => {
-//       console.log(res.data);
-
-//       if (res.data.status) {
-//         if (res.data.new_lead_time) {
-//           alert(
-//             `納入日を登録しました。\nマスタの平均リードタイムを${res.data.new_lead_time}日に更新しました。`
-//           );
-//         } else {
-//           alert("納入日を登録しました。");
-//         }
-//       }
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// };
 
 // 納入希望日を保存する
 const handleDeliveryDateUpdate = (date) => {
@@ -645,7 +622,7 @@ onMounted(() => {
                           ? order.img_path
                           : 'https://akioka.cloud/' + order.img_path
                       "
-                      @click="openModal(order.img_path)"
+                      @click="openModal(order.img_path, null, 'img')"
                       alt=""
                     />
                   </td>
@@ -804,7 +781,7 @@ onMounted(() => {
                   >
                     <button
                       v-if="!order.url"
-                      @click="openModal(null, order)"
+                      @click="openModal(null, order, 'purchase')"
                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs"
                     >
                       発注書
@@ -824,7 +801,7 @@ onMounted(() => {
                     <button
                       v-if="order.delifile_path"
                       class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="openModal(order.delifile_path)"
+                      @click="openModal(order.delifile_path, null, 'deli_file')"
                     >
                       納品書
                     </button>
@@ -834,8 +811,8 @@ onMounted(() => {
                   >
                     <button
                       v-if="order.file_path"
-                      class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="openModal(order.file_path)"
+                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      @click="openModal(order.file_path, null, 'approval')"
                     >
                       稟議書
                     </button>
@@ -859,17 +836,26 @@ onMounted(() => {
           </button>
         </div>
 
-        <div v-if="modal_status.img_path" id="img_modal">
+        <div
+          v-if="
+            modal_status.type === 'img' || modal_status.type === 'deli_file'
+          "
+          id="img_modal"
+        >
           <img :src="modal_status.img_path" alt="" />
         </div>
 
         <Purchase
-          v-else
+          v-else-if="modal_status.type === 'purchase'"
           :current_month_holidays="props.current_month_holidays"
           :next_month_holidays="props.next_month_holidays"
           :orders="print_order"
           @update-delivery-date="handleDeliveryDateUpdate"
         />
+
+        <div id="pdfviewer" v-else-if="modal_status.type === 'approval'">
+          <iframe ref="pdfViewer" :src="modal_status.img_path"></iframe>
+        </div>
       </div>
     </template>
   </MainLayout>
@@ -913,6 +899,17 @@ onMounted(() => {
       height: 100%;
       object-fit: contain;
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    }
+  }
+
+  & #pdfviewer{
+    height: 100%;
+
+    & iframe{
+      height: 96%;
+      width: 100%;
+
+
     }
   }
 }
