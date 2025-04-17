@@ -52,7 +52,7 @@ const openModal = (img_path, order, flg) => {
     case "approval":
       modal_status.type = "approval";
       console.log(img_path);
-      modal_status.img_path = `/pdfjs/web/main_viewer.html?file=https://akioka.cloud/${img_path}`;
+      modal_status.img_path = `https://akioka.cloud/${img_path}`;
       console.log(modal_status.img_path)
       break;
   }
