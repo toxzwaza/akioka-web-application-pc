@@ -53,6 +53,9 @@ Route::post('/initial-order/update/date', [InitialOrderController::class, 'updat
 // 単価変更に伴う再発注依頼
 Route::post('/initial-order/update/price', [InitialOrderController::class, 'update_price'])->name('stock.update_price');
 
+// 単価もしくは送料を変更
+Route::post('/initial-order/update/data', [InitialOrderController::class, 'update_data'])->name('stock.update_data');
+
 // Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
 // Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
 // Route::post('/initial-orders/update/delivery-date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');

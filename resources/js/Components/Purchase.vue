@@ -1,5 +1,5 @@
 <script setup>
-import { watch, ref } from "vue";
+import { watch, ref, onMounted } from "vue";
 
 const props = defineProps({
   current_month_holidays: Array,
@@ -8,8 +8,8 @@ const props = defineProps({
 });
 
 const shortest = ref(false);
-
 const description = ref("");
+const calc_postage = ref(0); //送料合計
 
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
@@ -78,14 +78,18 @@ const handleDateChange = (value) => {
   emit("update-delivery-date", value);
 };
 
-// orderの変更を監視
-watch(
-  () => props.orders,
-  (newOrder, oldOrder) => {
-    console.log("Order updated:", newOrder);
-  },
-  { deep: true }
-); // オブジェクトのネストされたプロパティの変更も検知
+// 送料を計算
+const calculatePostage = () => {
+  // ordersの中のpostageを合計
+  calc_postage.value = props.orders.reduce(
+    (sum, order) => sum + (order.postage || 0),
+    0
+  );
+};
+
+onMounted(() => {
+  calculatePostage()
+})
 </script>
 <template>
   <div class="mx-auto mb-6" id="description_area">
@@ -214,6 +218,29 @@ watch(
               <td class="order_user text-center border">
                 {{ order.order_user }}
               </td>
+            </tr>
+
+            <tr>
+              <td colspan="7" class="text-right border">送料</td>
+              <td class="text-center border">
+                {{ calc_postage.toLocaleString() }}
+              </td>
+              <td class="border"></td>
+            </tr>
+
+            <tr>
+              <td colspan="7" class="text-right border">合計（税抜）</td>
+              <td class="text-center border">
+                {{
+                  (
+                    props.orders.reduce(
+                      (sum, order) => sum + order.calc_price,
+                      0
+                    ) + calc_postage
+                  ).toLocaleString()
+                }}
+              </td>
+              <td class="border"></td>
             </tr>
           </tbody>
         </table>

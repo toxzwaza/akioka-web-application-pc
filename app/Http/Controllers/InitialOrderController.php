@@ -272,7 +272,6 @@ class InitialOrderController extends Controller
                     $inventory_operation_record->inventory_operation_id = 17;
                     $inventory_operation_record->stock_id = $order_request->stock_id;
                     $inventory_operation_record->save();
-
                 } else {
                     $status = false;
                     $msg = '発注依頼データが見つかりません';
@@ -287,5 +286,33 @@ class InitialOrderController extends Controller
         }
 
         return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
+    public function update_data(Request $request)
+    {
+        $initial_order_id = $request->initial_order_id;
+        $flg = $request->flg;
+        $val = $request->val;
+
+        $status = true;
+
+        $initial_order = InitialOrder::find($initial_order_id);
+        if ($initial_order) {
+            switch ($flg) {
+                case 'price':
+                    $initial_order->price = $val;
+                    // マスタの単価も変更
+                    $stock = Stock::find($initial_order->stock_id);
+                    $stock->price = $val;
+                    $stock->save();
+                    break;
+                case 'postage':
+                    $initial_order->postage = $val;
+                    break;
+            }
+            $initial_order->save();
+        }
+
+        return response()->json(['status' => $status]);
     }
 }

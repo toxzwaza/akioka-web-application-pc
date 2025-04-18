@@ -36,9 +36,9 @@ const openModal = (img_path, order, flg) => {
     case "purchase": //発注書表示
     case "multi":
       modal_status.type = "purchase";
-      purchase_list.value = [];
-      handleSelect(order);
       print_order.value = purchase_list.value;
+      console.log("purchase_list", purchase_list.value);
+      console.log("print_order", print_order.value);
       break;
     case "deli_file": //納品書表示
       modal_status.type = "deli_file";
@@ -53,7 +53,7 @@ const openModal = (img_path, order, flg) => {
       modal_status.type = "approval";
       console.log(img_path);
       modal_status.img_path = `https://akioka.cloud/${img_path}`;
-      console.log(modal_status.img_path)
+      console.log(modal_status.img_path);
       break;
   }
 
@@ -227,7 +227,42 @@ const handlePrice = (order, price) => {
           console.log(error);
         });
     }
+  } else {
+    // 値下げの場合単価をそのまま変更
+    axios
+      .post(route("stock.update_data"), {
+        initial_order_id: order.id,
+        flg: 'price',
+        val: price,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status) {
+          alert("単価を値下げしました。");
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
+};
+
+const handlePostage = (order, postage) => {
+  axios
+    .post(route("stock.update_data"), {
+      initial_order_id: order.id,
+      flg: 'postage',
+      val: postage,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("送料を更新しました。");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 // 納入希望日を保存する
@@ -258,8 +293,8 @@ const handleSelect = (order) => {
     return;
   }
 
-  if (purchase_list.value.length > 5) {
-    alert("同時に一つの注文書に含めることができるのは6件以内です。");
+  if (purchase_list.value.length > 3) {
+    alert("同時に一つの注文書に含めることができるのは4件以内です。");
     order.select_flg = false;
     console.log(purchase_list.value);
     return;
@@ -567,6 +602,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
+                    送料
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
                     数量
                   </th>
                   <th
@@ -768,6 +808,18 @@ onMounted(() => {
                     <span v-else>{{ order.price.toLocaleString() }}</span>
                   </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                    <input
+                      v-if="is_login"
+                      type="number"
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order.postage"
+                      @change="handlePostage(order, $event.target.value)"
+                    />
+                    <span v-else>{{
+                      order.postage ? order.postage.toLocaleString() : "-"
+                    }}</span>
+                  </td>
+                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     {{ order.quantity }}
                   </td>
                   <td
@@ -902,14 +954,12 @@ onMounted(() => {
     }
   }
 
-  & #pdfviewer{
+  & #pdfviewer {
     height: 100%;
 
-    & iframe{
+    & iframe {
       height: 96%;
       width: 100%;
-
-
     }
   }
 }
