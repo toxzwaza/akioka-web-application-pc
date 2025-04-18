@@ -301,6 +301,8 @@ class InitialOrderController extends Controller
             switch ($flg) {
                 case 'price':
                     $initial_order->price = $val;
+                    $initial_order->calc_price = $val * $initial_order->quantity;
+                    
                     // マスタの単価も変更
                     $stock = Stock::find($initial_order->stock_id);
                     $stock->price = $val;
