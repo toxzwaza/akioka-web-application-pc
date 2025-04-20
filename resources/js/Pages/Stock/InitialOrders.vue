@@ -34,6 +34,9 @@ const openModal = (img_path, order, flg) => {
       modal_status.img_path = img_path;
       break;
     case "purchase": //発注書表示
+      modal_status.type = "purchase";
+      print_order.value = [order];
+      break
     case "multi":
       modal_status.type = "purchase";
       print_order.value = purchase_list.value;
@@ -232,7 +235,7 @@ const handlePrice = (order, price) => {
     axios
       .post(route("stock.update_data"), {
         initial_order_id: order.id,
-        flg: 'price',
+        flg: "price",
         val: price,
       })
       .then((res) => {
@@ -251,7 +254,7 @@ const handlePostage = (order, postage) => {
   axios
     .post(route("stock.update_data"), {
       initial_order_id: order.id,
-      flg: 'postage',
+      flg: "postage",
       val: postage,
     })
     .then((res) => {
