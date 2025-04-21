@@ -98,6 +98,23 @@ class AcceptController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
+    public function skipAccept(Request $request){
+        $status = true;
+        $order_request_id = $request->order_request_id;
+
+        try{
+            $order_request = OrderRequest::find($order_request_id);
+            $order_request->accept_flg = 2;
+            $order_request->save();
+
+            
+        }catch(Exception $e){
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+    }
+
     public function store(Request $request)
     {
         $status = true;

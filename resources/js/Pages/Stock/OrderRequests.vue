@@ -257,10 +257,17 @@ const purchaseOrder = (order_request_id) => {
 
 const skipAccept = (order_request_id) => {
   console.log(order_request_id);
-  if (confirm("承認をスキップして発注データを作成します。よろしいですか？（開発中）")) {
-    order_requests.value = order_requests.value.filter(
-      (request) => request.id !== order_request_id
-    );
+  if (confirm("承認をスキップして発注データを作成します。よろしいですか？")) {
+    axios.post(route("stock.accept.order_request.skip"), {
+      order_request_id: order_request_id
+    })
+    .then((res) => {
+      if (res.data.status) 
+      {
+        alert('承認をスキップしました。')
+        window.location.reload()
+      }
+    });
   }
 };
 onMounted(() => {
