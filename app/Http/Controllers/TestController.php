@@ -27,13 +27,45 @@ class TestController extends Controller
     //
     public function test()
     {
-
-        $stocks = Stock::where('classification_id', 11)->get();
-        // dd(count($stocks));
-        foreach ($stocks as $stock) {
-            $stock->stock_process_id = 29;
-            $stock->save();
+        $price = 900000;
+        // 承認フローを作成
+        $user_id = 91; //電気炉一般
+        $user = User::find($user_id);
+        if (!$user->group_id >= 8) {
+            return [];
         }
+
+        $approval_list = [];
+
+
+        // 部署ごとの承認者マッピング
+        $approvalMap = [
+            1 => 94,
+            2 => 16, 
+            3 => 37,
+            4 => 84,
+            5 => 2
+        ];
+
+        // 基本の承認フロー
+        $approval_list[] = $approvalMap[$user->group_id] ?? 63;
+
+        // 10,000円以上の場合の追加承認
+        if ($price >= 10000) {
+            if ($user->group_id == 2) {
+                $approval_list[] = 94;
+            } else if (in_array($user->group_id, [3, 4, 5])) {
+                $approval_list[] = 2;
+            }
+        }
+
+        // 150,000円以上の場合の追加承認
+        if ($price >= 150000 && in_array($user->group_id, [1, 2, 6, 7])) {
+            $approval_list[] = 2;
+        }
+
+        return $approval_list;
+        
     }
 
     public function storage_address_test()

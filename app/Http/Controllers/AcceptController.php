@@ -6,6 +6,7 @@ use App\Models\OrderRequest;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Services\Helper;
+use App\Models\OrderRequestApproval;
 use App\Models\User;
 use Inertia\Inertia;
 
@@ -51,34 +52,43 @@ class AcceptController extends Controller
             $user_id = $request->user_id; //注文者
 
             $order_request = OrderRequest::find($order_request_id);
-            $order_request->accept_flg = 1;
+            $order_request->accept_flg = 1; //承認待ち状態
             $order_request->user_id = $user_id;
 
             // システム自動発注依頼の場合は承認依頼者を発注依頼者とする
-            if($order_request->request_user_id == 117){
+            if ($order_request->request_user_id == 117) {
                 $order_request->request_user_id = $user_id;
             }
             $order_request->save();
 
-            $notify_users = [];
-            $url = "https://akioka.cloud/accept/order-request?user_id=";
+            // 承認フローを作成
+            $approval_list = Helper::createApprovalFlow($order_request->price, $user_id);
+            if (count($approval_list) > 0) {
+                foreach ($approval_list as $key => $approval_user_id) {
 
-            if($order_request->new_stock_flg){
-                // 新規品の場合は常務承認
-                array_push($notify_users, 63);
-                $url .= "63";
-            }else{
-                // 既存品は部長承認
-                array_push($notify_users, 36);
-                $url .= "36";
+                    $order_request_approval = new OrderRequestApproval();
+                    $order_request_approval->user_id = $approval_user_id; //承認者
+                    $order_request_approval->order_request_id = $order_request_id; //承認依頼ID
+                    $order_request_approval->status = ($key === 0) ? 0 : null; //最初のユーザーを承認待ち
+                    $order_request_approval->final_flg = ($key === count($approval_list) - 1) ? 1 : 0; //最後のユーザーを最終承認者
+                    $order_request_approval->save();
+
+                    if ($order_request_approval->status === 0) {
+                        $notify_users = [];
+                        $url = "https://akioka.cloud/accept/order-request?user_id=" . $order_request_approval->user_id;
+
+                        $title = "在庫管理システムからの通知です。";
+                        $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+
+                        Helper::createNotifyQueue($title, $message, $url, [$order_request_approval->user_id]);
+                    }
+                }
+            } else {
+
+                // 承認必要なし
+                $order_request->accept_flg = 2;
+                $order_request->save();
             }
-
-            $title = "在庫管理システムからの通知です。";
-            $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
-            
-
-            Helper::createNotifyQueue($title, $message, $url, $notify_users);
-
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
@@ -97,7 +107,7 @@ class AcceptController extends Controller
 
 
         try {
-            if($accept_flg){
+            if ($accept_flg) {
                 $order_request = OrderRequest::find($order_request_id);
                 $order_request->accept_flg = $accept_flg;
                 $order_request->save();
@@ -108,7 +118,7 @@ class AcceptController extends Controller
                 ->first();
 
             // 通知者リスト
-            $notify_list = ['村上飛羽','三谷優月', '岡堂莉子', '中村仁美'];
+            $notify_list = ['村上飛羽', '三谷優月', '岡堂莉子', '中村仁美'];
 
             if ($accept_flg == 2) {
                 $message = $order_request->stock_name . ' ' . $order_request->stock_s_name . "の発注依頼が承認されました。\n\n以下のURLから発注を行ってください。";

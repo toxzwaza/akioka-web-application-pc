@@ -5,6 +5,7 @@ namespace App\Http\Services;
 use App\Models\InitialOrder;
 use App\Models\NotifyQueue;
 use App\Models\NotifyQueueUser;
+use App\Models\User;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
@@ -72,5 +73,54 @@ class Helper
         $order_no = 'S-' . now()->format('y-m-d-') . ($nextCount + 1);
 
         return $order_no;
+    }
+
+    // 承認フローを作成
+    public static function createApprovalFlow($price, $user_id)
+    {
+
+        $user = User::find($user_id);
+        if (!$user->group_id >= 8) {
+            return [];
+        }
+
+        $approval_list = [];
+
+
+        // 部署ごとの承認者マッピング
+        $approvalMap = [
+            2 => 16, // 梶谷課長
+            3 => 37, // 長谷川課長
+            4 => 84, // 宮原課長
+            6 => 63, //常務
+            7 => 36, //荒川部長
+        ];
+
+        // 基本の承認フロー
+        $approval_list[] = $approvalMap[$user->group_id] ?? 2;
+
+
+        // 10,000円以上の場合の追加承認
+        if ($price >= 10000) {
+            if ($user->group_id == 2) {
+                $approval_list[] = 94;
+            } else if (in_array($user->group_id, [3, 4, 5])) {
+                $approval_list[] = 2;
+            }
+        }
+
+        // 50,000円以上の場合の追加承認
+        if ($price >= 50000) {
+            if ($user->group_id == 7) {
+                $approval_list[] = 63;
+            }
+        }
+
+        // 150,000円以上の場合の追加承認
+        if ($price >= 150000 && in_array($user->group_id, [1, 6, 7])) {
+            $approval_list[] = 2;
+        }
+
+        return $approval_list;
     }
 }
