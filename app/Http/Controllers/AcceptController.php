@@ -62,7 +62,7 @@ class AcceptController extends Controller
             $order_request->save();
 
             // 承認フローを作成
-            $approval_list = Helper::createApprovalFlow($order_request->price, $user_id);
+            $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
             if (count($approval_list) > 0) {
                 foreach ($approval_list as $key => $approval_user_id) {
 
@@ -107,7 +107,7 @@ class AcceptController extends Controller
             $order_request->accept_flg = 2;
             $order_request->save();
 
-            
+
         }catch(Exception $e){
             $status = false;
         }
