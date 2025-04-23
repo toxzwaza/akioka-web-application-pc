@@ -31,56 +31,66 @@ class OrderRequestController extends Controller
 
     public function getOrderRequests()
     {
-        // 未受理の注文依頼のみ取得
-        // 最大のquantityを取得
-        $order_requests = OrderRequest::select(
-            'order_requests.id',
-            'order_requests.stock_id',
-            'order_requests.id as order_request_id',
-            'order_requests.accept_flg',
-            'stocks.img_path',
-            'stocks.name',
-            'stocks.s_name',
-            'stocks.url',
-            'order_requests.quantity',
-            'order_requests.price as stock_price',
-            'order_requests.created_at',
-            'users.name as request_user_name',
-            'order_requests.postage',
-            'order_requests.calc_price',
-            'suppliers.name as supplier_name',
-            'order_requests.supplier_id',
-            'stock_suppliers.lead_time as stock_supplier_lead_time',
-            'max_stock_storages.max_quantity as stock_storage_quantity',
-            'max_stock_storages.reorder_point as reorder_point'
-        )
-            ->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
-            ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
-            ->leftJoin('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')
-            ->leftJoin('stock_suppliers', function ($join) {
-                $join->on('stock_suppliers.stock_id', '=', 'stocks.id')
-                    ->on('stock_suppliers.supplier_id', '=', 'suppliers.id');
-            })
-            ->leftJoin(DB::raw('(SELECT stock_id, MAX(quantity) as max_quantity, MAX(reorder_point) as reorder_point FROM stock_storages GROUP BY stock_id) as max_stock_storages'), 'max_stock_storages.stock_id', '=', 'stocks.id')
-            ->where('order_requests.del_flg', '=', 0)
-            ->where('order_requests.status', '=', 0)
-            ->get();
+        $status = true;
+        $msg = "";
+
+        try {
+            // 未受理の注文依頼のみ取得
+            // 最大のquantityを取得
+            $order_requests = OrderRequest::select(
+                'order_requests.id',
+                'order_requests.stock_id',
+                'order_requests.id as order_request_id',
+                'order_requests.accept_flg',
+                'stocks.img_path',
+                'stocks.name',
+                'stocks.s_name',
+                'stocks.url',
+                'order_requests.quantity',
+                'order_requests.price as stock_price',
+                'order_requests.created_at',
+                'users.name as request_user_name',
+                'order_requests.postage',
+                'order_requests.calc_price',
+                'suppliers.name as supplier_name',
+                'order_requests.supplier_id',
+                'stock_suppliers.lead_time as stock_supplier_lead_time',
+                'max_stock_storages.max_quantity as stock_storage_quantity',
+                'max_stock_storages.reorder_point as reorder_point'
+            )
+                ->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
+                ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
+                ->leftJoin('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')
+                ->leftJoin('stock_suppliers', function ($join) {
+                    $join->on('stock_suppliers.stock_id', '=', 'stocks.id')
+                        ->on('stock_suppliers.supplier_id', '=', 'suppliers.id');
+                })
+                ->leftJoin(DB::raw('(SELECT stock_id, MAX(quantity) as max_quantity, MAX(reorder_point) as reorder_point FROM stock_storages GROUP BY stock_id) as max_stock_storages'), 'max_stock_storages.stock_id', '=', 'stocks.id')
+                ->where('order_requests.del_flg', '=', 0)
+                ->where('order_requests.status', '=', 0)
+                ->get();
 
 
-        foreach ($order_requests as $order_request) {
-            if (!$order_request->supplier_id) {
-                $stock_supplier = StockSupplier::select('suppliers.id','suppliers.name','stock_suppliers.lead_time')->where('stock_id', $order_request->stock_id)
-                ->join('suppliers','suppliers.id','stock_suppliers.supplier_id')->first();
-                if ($stock_supplier) {
-                    $order_request->supplier_id = $stock_supplier->supplier_id;
-                    $order_request->supplier_name = $stock_supplier->supplier_id;
-                    $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
-                    $order_request->save();
+            foreach ($order_requests as $order_request) {
+                if (!$order_request->supplier_id) {
+                    $stock_supplier = StockSupplier::select('suppliers.id', 'suppliers.name', 'stock_suppliers.lead_time')->where('stock_id', $order_request->stock_id)
+                        ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->first();
+                    if ($stock_supplier) {
+                        $order_request->supplier_id = $stock_supplier->supplier_id;
+                        $order_request->supplier_name = $stock_supplier->supplier_id;
+                        // $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
+                        $order_request->save();
+                    }
                 }
             }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
         }
 
-        return response()->json($order_requests);
+
+
+        return response()->json(['status' => $status, 'msg' => $msg, 'order_requests' => $order_requests]);
     }
     public function completeOrderRequest(Request $request)
     {

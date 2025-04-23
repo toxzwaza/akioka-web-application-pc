@@ -24,7 +24,7 @@ const getOrderRequests = () => {
     .get(route("stock.getOrderRequests"))
     .then((res) => {
       console.log(res.data);
-      order_requests.value = res.data;
+      order_requests.value = res.data.order_requests;
     })
     .catch((error) => {
       console.log(error);
