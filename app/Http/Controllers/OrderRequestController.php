@@ -75,13 +75,14 @@ class OrderRequestController extends Controller
                 if (!$order_request->supplier_id) {
                     $stock_supplier = StockSupplier::select('suppliers.id', 'suppliers.name', 'stock_suppliers.lead_time')->where('stock_id', $order_request->stock_id)
                         ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->first();
+                   
+
                     if ($stock_supplier) {
-                        $order_request->supplier_id = $stock_supplier->supplier_id;
-                        $order_request->supplier_name = $stock_supplier->supplier_id;
-                        // $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
+                        $order_request->supplier_id = $stock_supplier->id;
+                        $order_request->supplier_name = $stock_supplier->name;
                         $order_request->save();
                     }
-                }
+                } 
             }
         } catch (Exception $e) {
             $status = false;
