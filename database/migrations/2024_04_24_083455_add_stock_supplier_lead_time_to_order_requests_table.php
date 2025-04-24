@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('order_requests', function (Blueprint $table) {
             $table->integer('stock_supplier_lead_time')->nullable()->after('supplier_id');
+            $table->string('supplier_name')->nullable()->after('supplier_id');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('order_requests', function (Blueprint $table) {
             $table->dropColumn('stock_supplier_lead_time');
+            $table->dropColumn('supplier_name');
         });
     }
 }; 

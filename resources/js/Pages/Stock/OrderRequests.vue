@@ -259,7 +259,8 @@ const skipAccept = (order_request_id) => {
   console.log(order_request_id);
   if (confirm("承認をスキップして発注データを作成します。よろしいですか？")) {
     axios.post(route("stock.accept.order_request.skip"), {
-      order_request_id: order_request_id
+      order_request_id: order_request_id,
+      user_id: order_config.user_id
     })
     .then((res) => {
       if (res.data.status) 

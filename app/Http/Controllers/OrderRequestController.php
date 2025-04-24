@@ -79,8 +79,8 @@ class OrderRequestController extends Controller
 
                     if ($stock_supplier) {
                         $order_request->supplier_id = $stock_supplier->id;
-                        $order_request->supplier_name = $stock_supplier->name;
                         $order_request->save();
+                        $order_request->supplier_name = $stock_supplier->name;
                     }
                 } 
             }
@@ -160,7 +160,7 @@ class OrderRequestController extends Controller
                 $initial_order->stock_id = $order_request->stock_id;
                 $initial_order->order_no = Helper::createOrderNo();
                 $initial_order->order_date = date('Y-m-d');
-                $initial_order->com_no = $supplier->supplier_no;
+                $initial_order->com_no = $supplier->supplier_no ?? '';
                 $initial_order->com_name = $supplier->name;
                 $initial_order->name = $stock->name;
                 $initial_order->s_name = $stock->s_name;
