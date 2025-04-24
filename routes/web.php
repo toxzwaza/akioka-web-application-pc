@@ -77,9 +77,8 @@ Route::get('/lunch/order-users', [LunchController::class, 'order_users'])->name(
 Route::get('/lunch/create-description', [LunchController::class, 'create_description'])->name('lunch.create_description');
 Route::post('/lunch/store-description', [LunchController::class, 'store_description'])->name('lunch.store_description');
 Route::get('/getMonthOrders', [LunchController::class, 'getMonthOrders']);
+Route::get('/lunch/export_csv', [LunchController::class, 'export_csv'])->name('lunch.export_csv');
 Route::get('/lunch/export', [LunchController::class, 'export'])->name('lunch.export');
-
-
 
 
 // ファイル管理システム
