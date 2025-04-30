@@ -23,9 +23,60 @@ use Inertia\Inertia;
 class InitialOrderController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
-        // 今月と来月のカレンダー情報取得
+        $keyword = $request->keyword;
+        $order_by = $request->order_by ?? 'desc';
+        $start_order_date = $request->start_order_date;
+        $end_order_date = $request->end_order_date;
+        $supplier_id = $request->supplier_id;
+        $order_user_id = $request->order_user_id;
+        $user_id = $request->user_id;
+
+        $query = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax', 'users.name as manage_user_name', 'stock_processes.code as stock_process_code', 'stock_processes.name as stock_process_name')
+            ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
+            ->leftJoin('stock_suppliers', function ($join) {
+                $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
+                    ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
+            })
+            ->leftJoin('suppliers', 'suppliers.id', 'initial_orders.supplier_id')
+            ->leftJoin('users', 'users.id', 'initial_orders.user_id')
+            ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id');
+
+        if ($keyword) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('initial_orders.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('initial_orders.s_name', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($start_order_date) {
+            $query->where('initial_orders.order_date', '>=', $start_order_date);
+        }
+
+        if ($end_order_date) {
+            $query->where('initial_orders.order_date', '<=', $end_order_date);
+        }
+
+        if ($supplier_id) {
+            $query->where('initial_orders.supplier_id', $supplier_id);
+        }
+
+        if ($order_user_id) {
+            $query->where('initial_orders.order_user_id', $order_user_id);
+        }
+
+        if ($user_id) {
+            $query->where('initial_orders.user_id', $user_id);
+        }
+
+        if ($order_by) {
+            $query->orderBy('order_date', $order_by);
+        }
+
+        $initial_orders = $query->paginate(30)->withQueryString();
+
+        // 発注書用 今月と来月のカレンダー情報取得
         $current_month_holidays = Holiday::select('date')
             ->where('date', '>=', now()->startOfMonth())
             ->where('date', '<=', now()->endOfMonth())
@@ -38,21 +89,39 @@ class InitialOrderController extends Controller
             ->where('is_holiday', 1)
             ->get();
 
-        $initial_orders = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax', 'users.name as manage_user_name', 'stock_processes.code as stock_process_code', 'stock_processes.name as stock_process_name')
-            ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
-            ->leftJoin('stock_suppliers', function ($join) {
-                $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
-                    ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
-            })
-            ->leftJoin('suppliers', 'suppliers.id', 'initial_orders.supplier_id')
-            ->leftJoin('users', 'users.id', 'initial_orders.user_id')
-            ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
-            ->orderBy('order_date', 'desc')
-            ->paginate(50);
+
         $admin_users = User::select('id', 'name', 'password')->where('is_admin', 1)->get();
 
-        return Inertia::render('Stock/InitialOrders', ['initial_orders' => $initial_orders, 'current_month_holidays' => $current_month_holidays, 'next_month_holidays' => $next_month_holidays, 'admin_users' => $admin_users]);
+
+        // 注文先一覧を取得
+        $suppliers = Supplier::select('suppliers.id', 'suppliers.name')->
+        join('initial_orders', 'suppliers.id', 'initial_orders.supplier_id')
+        ->distinct()
+        ->get();
+
+        // 発注依頼者一覧を取得
+        $users = User::select('users.id', 'users.name')
+            ->join('initial_orders', 'users.id', '=', 'initial_orders.user_id')
+            ->distinct()
+            ->get();
+
+        // 発注担当者一覧を取得
+        $order_users = User::select('users.id', 'users.name')
+            ->join('initial_orders', 'users.id', '=', 'initial_orders.order_user_id')
+            ->distinct()
+            ->get();
+
+        return Inertia::render('Stock/InitialOrders', [
+            'current_month_holidays' => $current_month_holidays,
+            'next_month_holidays' => $next_month_holidays,
+            'admin_users' => $admin_users,
+            'initial_orders' => $initial_orders,
+            'users' => $users,
+            'order_users' => $order_users,
+            'suppliers' => $suppliers,
+        ]);
     }
+
 
     public function create()
     {
@@ -302,7 +371,7 @@ class InitialOrderController extends Controller
                 case 'price':
                     $initial_order->price = $val;
                     $initial_order->calc_price = $val * $initial_order->quantity;
-                    
+
                     // マスタの単価も変更
                     $stock = Stock::find($initial_order->stock_id);
                     $stock->price = $val;

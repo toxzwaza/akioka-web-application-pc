@@ -62,6 +62,7 @@ class AcceptController extends Controller
             $order_request->save();
 
             // 承認フローを作成
+            // 金額と承認依頼者を元に作成
             $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
             if (count($approval_list) > 0) {
                 foreach ($approval_list as $key => $approval_user_id) {
@@ -74,7 +75,6 @@ class AcceptController extends Controller
                     $order_request_approval->save();
 
                     if ($order_request_approval->status === 0) {
-                        $notify_users = [];
                         $url = "https://akioka.cloud/accept/order-request?user_id=" . $order_request_approval->user_id;
 
                         $title = "在庫管理システムからの通知です。";

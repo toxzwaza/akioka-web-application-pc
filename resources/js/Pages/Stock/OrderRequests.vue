@@ -11,6 +11,17 @@ const props = defineProps({
   user_id: Number,
 });
 
+const modal_status = reactive({
+  status: false,
+  order_request: null,
+});
+const openModal = (order_request) => {
+  modal_status.img_path = "";
+  modal_status.order_request = order_request;
+
+  modal_status.status = true;
+};
+
 // 注文者
 const order_config = reactive({
   user_id: null,
@@ -258,17 +269,17 @@ const purchaseOrder = (order_request_id) => {
 const skipAccept = (order_request_id) => {
   console.log(order_request_id);
   if (confirm("承認をスキップして発注データを作成します。よろしいですか？")) {
-    axios.post(route("stock.accept.order_request.skip"), {
-      order_request_id: order_request_id,
-      user_id: order_config.user_id
-    })
-    .then((res) => {
-      if (res.data.status) 
-      {
-        alert('承認をスキップしました。')
-        window.location.reload()
-      }
-    });
+    axios
+      .post(route("stock.accept.order_request.skip"), {
+        order_request_id: order_request_id,
+        user_id: order_config.user_id,
+      })
+      .then((res) => {
+        if (res.data.status) {
+          alert("承認をスキップしました。");
+          window.location.reload();
+        }
+      });
   }
 };
 onMounted(() => {
@@ -357,89 +368,101 @@ onMounted(() => {
             <h2 class="mb-4 text-lg font-bold">
               ログイン中：{{ order_config.user_name }}
             </h2>
-            <table class="table-auto w-full text-left whitespace-no-wrap">
+            <table
+              id="table_container"
+              class="table-auto w-full text-left whitespace-no-wrap"
+            >
               <thead>
                 <tr>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                   >
                     発注依頼ID
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    画像
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    品名
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    品番
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    現在個数
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    発注点
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    発注数量
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    単価
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    金額
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    送料
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    発注先
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    発注依頼日
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    依頼者
-                  </th>
-                  <!-- <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    注文書
-                  </th> -->
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     承認
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                  >
+                    画像
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    品名
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    品番
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    現在個数
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    発注点
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    発注数量
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    単価
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    金額
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    送料
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    発注先
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    発注依頼日
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    依頼者
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    発注者
+                  </th>
+                  <!-- <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    注文書
+                  </th> -->
+
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   ></th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  ></th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   ></th>
                 </tr>
               </thead>
@@ -449,7 +472,7 @@ onMounted(() => {
                   :key="order_request.id"
                   :class="{ 'bg-indigo-50': !order_request.img_path }"
                 >
-                  <td class="px-4 py-3">
+                  <td class="px-4 py-4">
                     <a
                       class="underline text-blue-500"
                       :href="
@@ -460,125 +483,9 @@ onMounted(() => {
                       >{{ order_request.order_request_id }}</a
                     >
                   </td>
-                  <td class="w-24 px-4 py-6">
-                    <img
-                      :src="
-                        order_request.img_path &&
-                        order_request.img_path.includes('storage')
-                          ? 'https://akioka.cloud/' + order_request.img_path
-                          : order_request.img_path
-                      "
-                      alt=""
-                    />
-                  </td>
-                  <td class="px-4 py-3">{{ order_request.name }}</td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order_request.s_name }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order_request.stock_storage_quantity }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order_request.reorder_point }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900 w-32">
-                    <input
-                      type="number"
-                      name=""
-                      id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order_request.quantity"
-                      @change="
-                        updateQuantityPriceCalcPricePostage(
-                          'quantity',
-                          order_request
-                        )
-                      "
-                    />
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      type="number"
-                      name=""
-                      id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order_request.stock_price"
-                      @change="
-                        updateQuantityPriceCalcPricePostage(
-                          'price',
-                          order_request
-                        )
-                      "
-                    />
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      type="number"
-                      name=""
-                      id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order_request.calc_price"
-                      @change="
-                        updateQuantityPriceCalcPricePostage(
-                          'calc_price',
-                          order_request
-                        )
-                      "
-                    />
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      type="number"
-                      name=""
-                      id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order_request.postage"
-                      @change="
-                        updateQuantityPriceCalcPricePostage(
-                          'postage',
-                          order_request
-                        )
-                      "
-                    />
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <span v-if="order_request.supplier_id"
-                      >{{ `${order_request.supplier_name}` }} ({{
-                        order_request.stock_supplier_lead_time
-                          ? `${order_request.stock_supplier_lead_time}日`
-                          : "未"
-                      }})</span
-                    >
-
-                    <span v-else class="text-sm text-red-500 underline"
-                      ><a
-                        :href="
-                          route('stock.show.stocks', {
-                            stock_id: order_request.stock_id,
-                          })
-                        "
-                        >取引先を設定してください。</a
-                      ></span
-                    >
-                  </td>
-
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{
-                      new Date(order_request.created_at).toLocaleDateString(
-                        "ja-JP"
-                      )
-                    }}
-                  </td>
                   <td
                     :class="{
-                      'px-4 py-3 text-lg text-gray-900': true,
-                    }"
-                  >
-                    {{ order_request.request_user_name }}
-                  </td>
-                  <td
-                    :class="{
-                      'px-4 py-3 text-lg text-gray-900 w-24': true,
+                      'px-4 py-4 text-lg text-gray-900 w-32': true,
                     }"
                   >
                     <div v-if="order_config.user_id" class="flex">
@@ -608,17 +515,149 @@ onMounted(() => {
                       >
                     </div>
                   </td>
-                  <td>
+                  <td class="img_container">
+                    <img
+                      :src="
+                        order_request.img_path &&
+                        order_request.img_path.includes('storage')
+                          ? 'https://akioka.cloud/' + order_request.img_path
+                          : order_request.img_path
+                      "
+                      alt=""
+                    />
+                  </td>
+                  <td class="px-4 py-4">{{ order_request.name }}</td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{ order_request.s_name }}
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{ order_request.stock_storage_quantity }}
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{ order_request.reorder_point }}
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900 w-32">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order_request.quantity"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'quantity',
+                          order_request
+                        )
+                      "
+                    />
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900 w-48">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order_request.stock_price"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'price',
+                          order_request
+                        )
+                      "
+                    />
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900 w-48">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order_request.calc_price"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'calc_price',
+                          order_request
+                        )
+                      "
+                    />
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900 w-48">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order_request.postage"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'postage',
+                          order_request
+                        )
+                      "
+                    />
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    <span v-if="order_request.supplier_id"
+                      >{{ `${order_request.supplier_name}` }} ({{
+                        order_request.stock_supplier_lead_time
+                          ? `${order_request.stock_supplier_lead_time}日`
+                          : "未"
+                      }})</span
+                    >
+
+                    <span v-else class="text-sm text-red-500 underline"
+                      ><a
+                        :href="
+                          route('stock.show.stocks', {
+                            stock_id: order_request.stock_id,
+                          })
+                        "
+                        >取引先を設定してください。</a
+                      ></span
+                    >
+                  </td>
+
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{
+                      new Date(order_request.created_at).toLocaleDateString(
+                        "ja-JP"
+                      )
+                    }}
+                  </td>
+                  <td
+                    :class="{
+                      'px-4 py-4 text-lg text-gray-900': true,
+                    }"
+                  >
+                    {{ order_request.request_user_name }}
+                  </td>
+                  <td
+                    :class="{
+                      'px-4 py-4 text-lg text-gray-900': true,
+                    }"
+                  >
+                    {{ order_request.order_user_name }}
+                  </td>
+                  <td class="w-32">
+                    <button
+                      @click="openModal(order_request)"
+                      class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded whitespace-nowrap"
+                    >
+                      承認詳細
+                    </button>
+                  </td>
+
+                  <td class="w-32">
                     <button
                       @click="skipAccept(order_request.id)"
-                      class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded whitespace-nowrap"
+                      class="text-sm bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded whitespace-nowrap"
                     >
                       承認スキップ
                     </button>
                   </td>
                   <td
                     :class="{
-                      'px-4 py-3 text-lg text-gray-900': true,
+                      'px-4 py-4 text-lg text-gray-900': true,
                     }"
                   >
                     <button
@@ -636,6 +675,110 @@ onMounted(() => {
           </div>
         </div>
       </section>
+
+      <!-- モーダルウィンドウ -->
+      <div id="modal" :class="{ active: modal_status.status }">
+        <div id="close_container">
+          <button
+            @click="modal_status.status = !modal_status.status"
+            class="modal__close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
+            aria-label="Close modal"
+          >
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <p class="text-gray-700 mb-2 font-bold text-lg">承認状況確認</p>
+        <div
+          v-if="modal_status.order_request"
+          class="flex items-center justify-start"
+        >
+          <div
+            v-for="approval in modal_status.order_request
+              .order_request_approvals"
+            :key="approval.id"
+            class="max-w-sm rounded overflow-hidden shadow-lg mr-8"
+          >
+            <img
+              class="w-full"
+              :src="
+                approval.status === 1
+                  ? '/img/stock/order_request/approval_icon.png'
+                  : approval.status === 2
+                  ? '/img/stock/order_request/not_approval_icon.png'
+                  : '/img/stock/order_request/none_approval.png'
+              "
+              alt="Sunset in the mountains"
+            />
+            <div class="px-6 py-4">
+              <div class="text-sm mb-2">
+                {{ new Date(approval.updated_at).getFullYear() }}年{{
+                  new Date(approval.updated_at).getMonth() + 1
+                }}月{{ new Date(approval.updated_at).getDate() }}日
+                {{ new Date(approval.updated_at).getHours() }}時{{
+                  new Date(approval.updated_at).getMinutes()
+                }}分
+              </div>
+              <div class="font-bold text-xl mb-2">{{ approval.name }}</div>
+              <p class="text-gray-700 text-base">
+                {{
+                  approval.comment ? approval.comment : "コメントがありません。"
+                }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </template>
   </MainLayout>
 </template>
+<style scoped lang="scss">
+table {
+  &#table_container {
+    width: 130vw;
+  }
+
+  td {
+    white-space: nowrap;
+
+    &.img_container {
+      width: 4vw;
+      padding: 0;
+
+      img {
+        width: 100%;
+        height: auto;
+        width: 200px;
+        object-fit: contain;
+      }
+    }
+  }
+}
+
+// モーダルウインドウ
+#modal {
+  position: fixed;
+  bottom: 0;
+
+  width: 90vw;
+
+  padding: 1rem;
+
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px 10px 0 0;
+  height: 0;
+  transform: translateY(100%);
+  &.active {
+    height: 50vh;
+    transform: translateY(0);
+    transition: all 0.5s;
+  }
+
+  & #close_container {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+  }
+}
+</style>

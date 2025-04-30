@@ -214,7 +214,7 @@ class StockController extends Controller
             $stocks->where('suppliers.name', $supplier_name);
         }
 
-        $stocks = $stocks->paginate(60);
+        $stocks = $stocks->paginate(60)->withQueryString();
 
 
         return Inertia::render('Stock/Stocks/Index', ['stocks' => $stocks, 'suppliers' => $suppliers, 'supplier_name' => $supplier_name, 'keyword' => $keyword]);

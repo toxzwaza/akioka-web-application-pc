@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Services\Helper;
 use App\Models\InitialOrder;
 use App\Models\OrderRequest;
+use App\Models\OrderRequestApproval;
 use App\Models\Stock;
 use App\Models\StockSupplier;
 use App\Models\Supplier;
@@ -50,6 +51,7 @@ class OrderRequestController extends Controller
                 'order_requests.price as stock_price',
                 'order_requests.created_at',
                 'users.name as request_user_name',
+                'order_users.name as order_user_name',
                 'order_requests.postage',
                 'order_requests.calc_price',
                 'suppliers.name as supplier_name',
@@ -60,6 +62,7 @@ class OrderRequestController extends Controller
             )
                 ->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
+                ->leftJoin('users as order_users', 'order_users.id', '=', 'order_requests.user_id')
                 ->leftJoin('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')
                 ->leftJoin('stock_suppliers', function ($join) {
                     $join->on('stock_suppliers.stock_id', '=', 'stocks.id')
@@ -82,7 +85,16 @@ class OrderRequestController extends Controller
                         $order_request->save();
                         $order_request->supplier_name = $stock_supplier->name;
                     }
-                } 
+                }
+
+                // 承認状況を取得
+                $order_request_approvals = OrderRequestApproval::
+                select('users.name', 'ora.status', 'ora.final_flg','ora.comment', 'ora.updated_at')
+                ->where('order_request_id', $order_request->id)
+                ->join('users', 'users.id', '=', 'ora.user_id')
+                ->from('order_request_approvals as ora')
+                ->get();
+                $order_request->order_request_approvals = $order_request_approvals;
             }
         } catch (Exception $e) {
             $status = false;

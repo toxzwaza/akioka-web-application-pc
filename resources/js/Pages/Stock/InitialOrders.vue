@@ -12,6 +12,19 @@ const props = defineProps({
   current_month_holidays: Array,
   next_month_holidays: Array,
   admin_users: Array,
+  users: Array,
+  order_users: Array,
+  suppliers: Array
+});
+
+const form = reactive({
+  order_by: "desc",
+  keyword: null,
+  start_order_date: null,
+  end_order_date: null,
+  supplier_id:null,
+  order_user_id:null,
+  user_id:null
 });
 
 const is_login = ref(false);
@@ -36,7 +49,7 @@ const openModal = (img_path, order, flg) => {
     case "purchase": //発注書表示
       modal_status.type = "purchase";
       print_order.value = [order];
-      break
+      break;
     case "multi":
       modal_status.type = "purchase";
       print_order.value = purchase_list.value;
@@ -64,7 +77,11 @@ const openModal = (img_path, order, flg) => {
 };
 
 const base_initial_orders = ref([]);
-const initial_orders = ref([]);
+const initial_orders = ref({
+  data: [],
+  links: [],
+});
+
 const order_users = ref([]);
 const com_names = ref([]);
 
@@ -322,11 +339,36 @@ const login = () => {
     is_login.value = true;
   }
 };
+
+const getInitialOrders = () => {
+  router.get(route("stock.initialOrders"), {
+    order_by: form.order_by,
+    keyword: form.keyword,
+    start_order_date: form.start_order_date,
+    end_order_date: form.end_order_date,
+    supplier_id: form.supplier_id,
+    order_user_id: form.order_user_id,
+    user_id: form.user_id
+  });
+};
 onMounted(() => {
-  initial_orders.value = props.initial_orders.data;
+  console.log(props.initial_orders);
+
+  initial_orders.value.data = props.initial_orders.data;
+  initial_orders.value.links = props.initial_orders.links;
   base_initial_orders.value = props.initial_orders.data;
-  updateOrderUsers();
-  updateComName();
+
+  // updateOrderUsers();
+  // updateComName();
+
+  const params = new URLSearchParams(window.location.search);
+  form.keyword = params.get("keyword") || "";
+  form.order_by = params.get("order_by") || "desc";
+  form.start_order_date = params.get('start_order_date')
+  form.end_order_date = params.get('end_order_date')
+  form.supplier_id = params.get('supplier_id')
+  form.order_user_id = params.get('order_user_id')
+  form.user_id = params.get('user_id')
 
   console.log(initial_orders.value);
 });
@@ -367,124 +409,223 @@ onMounted(() => {
       <section class="text-gray-600 body-font">
         <div class="py-12 mx-auto">
           <div id="sort_container" class="my-8 flex items-start justify-start">
-            <div class="w-1/4">
-              <p class="mb-2 font-bold">並び替え</p>
+            <div class="w-1/6">
+              <p class="mb-2 font-bold">並び順</p>
               <div class="button_container flex items-center justify-start">
-                <button
+                <!-- <button
                   :class="{
                     'mr-4 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded': true,
                   }"
                   @click="updateFilter('reset')"
                 >
                   リセット
-                </button>
+                </button> -->
 
                 <button
                   :class="{
                     'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                    'opacity-60': sort === 'new_order',
+                    'opacity-60': form.order_by != 'desc',
                   }"
-                  @click="createSort('new_order')"
+                  @click="form.order_by = 'desc'"
                 >
                   新しい順
                 </button>
                 <button
                   :class="{
                     'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                    'opacity-60': sort === 'old_order',
+                    'opacity-60': form.order_by != 'asc',
                   }"
-                  @click="createSort('old_order')"
+                  @click="form.order_by = 'asc'"
                 >
                   古い順
                 </button>
               </div>
             </div>
-            <div class="mr-8">
-              <p class="mb-2 font-bold">検索</p>
-              <div class="button_container flex items-center justify-start">
-                <div class="w-62 mr-2">
-                  <label
-                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                    for="grid-last-name"
-                  >
-                    品名・品番から検索
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    type="text"
-                    name=""
-                    id=""
-                    @change="updateFilter('nameOrSname', $event.target.value)"
-                  />
-                </div>
-              </div>
-            </div>
-            <div>
-              <p class="mb-2 font-bold">フィルタ</p>
-              <div class="button_container flex items-center justify-start">
-                <div class="w-32 mr-2">
-                  <label
-                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                    for="grid-last-name"
-                  >
-                    注文先
-                  </label>
-                  <select
-                    @change="updateFilter('com_name', $event.target.value)"
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="order_user"
-                    id=""
-                  >
-                    <option value="0">未選択</option>
-                    <option
-                      v-for="com_name in com_names"
-                      :key="com_name"
-                      :value="com_name"
+
+            <div class="w-5/6">
+              <div class="mr-8">
+                <p class="mb-2 font-bold">検索</p>
+                <div class="button_container flex items-bottom justify-start">
+                  <div class="w-62 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
                     >
-                      {{ com_name }}
-                    </option>
-                  </select>
-                </div>
-                <div class="w-32 mr-2">
-                  <label
-                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                    for="grid-last-name"
-                  >
-                    注文者
-                  </label>
-                  <select
-                    @change="updateFilter('order_user', $event.target.value)"
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="order_user"
-                    id=""
-                  >
-                    <option value="0">未選択</option>
-                    <option
-                      v-for="user in order_users"
-                      :key="user.id"
-                      :value="user"
+                      品名・品番から検索
+                    </label>
+                    <input
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      type="text"
+                      name=""
+                      id=""
+                      v-model="form.keyword"
+                    />
+                  </div>
+                  <div class="mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
                     >
-                      {{ user }}
-                    </option>
-                  </select>
-                </div>
-                <div class="w-32 mr-2">
-                  <label
-                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                    for="grid-last-name"
+                      注文日
+                    </label>
+                    <div class="flex items-center">
+                      <input
+                        type="date"
+                        name=""
+                        id=""
+                        class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
+                        v-model="form.start_order_date"
+                      />
+                      ～
+                      <input
+                        type="date"
+                        name=""
+                        id=""
+                        class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 ml-2"
+                        v-model="form.end_order_date"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      注文先
+                    </label>
+                    <select
+                      @change="updateFilter('com_name', $event.target.value)"
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.supplier_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="supplier in props.suppliers"
+                        :key="supplier.id"
+                        :value="supplier.id"
+                      >
+                        {{ supplier.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      注文依頼者
+                    </label>
+                    <select
+                      @change="updateFilter('order_user', $event.target.value)"
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.order_user_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="user in props.order_users"
+                        :key="user.id"
+                        :value="user.id"
+                      >
+                        {{ user.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      担当者
+                    </label>
+                    <select
+                      @change="updateFilter('order_user', $event.target.value)"
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.user_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="user in props.users"
+                        :key="user.id"
+                        :value="user.id"
+                      >
+                        {{ user.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <!-- <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      納品書
+                    </label>
+                    <select
+                      @change="
+                        updateFilter('delifile_path', $event.target.value)
+                      "
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                    >
+                      <option value="0">未選択</option>
+                      <option value="1">済</option>
+                      <option value="2">未</option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      稟議書
+                    </label>
+                    <select
+                      @change="
+                        updateFilter('delifile_path', $event.target.value)
+                      "
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                    >
+                      <option value="0">未選択</option>
+                      <option value="1">済</option>
+                      <option value="2">未</option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      ステータス
+                    </label>
+                    <select
+                      @change="
+                        updateFilter('delifile_path', $event.target.value)
+                      "
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                    >
+                      <option value="0">未選択</option>
+                      <option value="1">済</option>
+                      <option value="2">未</option>
+                    </select>
+                  </div> -->
+
+                  <button
+                    @click="getInitialOrders"
+                    class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                   >
-                    ステータス
-                  </label>
-                  <select
-                    @change="updateFilter('delifile_path', $event.target.value)"
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="order_user"
-                    id=""
-                  >
-                    <option value="0">未選択</option>
-                    <option value="1">済</option>
-                    <option value="2">未</option>
-                  </select>
+                    検索
+                  </button>
                 </div>
               </div>
             </div>
@@ -492,7 +633,7 @@ onMounted(() => {
 
           <hr class="my-8" />
           <div class="mb-8 flex justify-end">
-            <Pagination :links="props.initial_orders.links" />
+            <Pagination :links="initial_orders.links" />
           </div>
 
           <div
@@ -508,12 +649,12 @@ onMounted(() => {
           </div>
 
           <div class="w-full mx-auto overflow-x-scroll">
-            <p class="mb-2">
+            <!-- <p class="mb-2">
               <span class="text-green-500 font-bold">緑色</span
               >の注文Noをクリックすると<span class="font-bold text-red-600"
                 >納品書</span
               >を確認できます。
-            </p>
+            </p> -->
             <table
               id="table_container"
               class="table-auto w-full text-left whitespace-no-wrap"
@@ -636,7 +777,7 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr
-                  v-for="order in initial_orders"
+                  v-for="order in initial_orders.data"
                   :key="order.id"
                   :class="{ 'bg-indigo-50': !order.stock_id }"
                 >
@@ -876,6 +1017,10 @@ onMounted(() => {
               </tbody>
             </table>
           </div>
+          <hr class="my-8" />
+          <div class="mb-8 flex justify-end">
+            <Pagination :links="initial_orders.links" />
+          </div>
         </div>
       </section>
 
@@ -928,7 +1073,7 @@ onMounted(() => {
 
   padding: 1rem;
 
-  background-color: rgb(227 226 226 / 96%);
+  background-color: white;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px 10px 0 0;
   height: 0;
