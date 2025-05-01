@@ -39,11 +39,14 @@ const form = reactive({
   stock_process_id: null,
   del_flg: null,
 
+  // 発注依頼用
   order_user: null,
   user_id: null,
   supplier_id: null,
   lead_time: null,
   quantity: null,
+  unit: null,
+  order_price: null,
   calc_price: null,
   postage: null,
   order_stock_process_id: 0,
@@ -117,6 +120,8 @@ const createInitialOrder = () => {
     !form.lead_time ||
     !form.quantity ||
     !form.calc_price ||
+    !form.unit ||
+    !form.order_price ||
     !form.order_stock_process_id
   ) {
     return alert("必須項目が入力されていません。");
@@ -216,7 +221,7 @@ const getInitialOrders = () => {
 };
 
 onMounted(() => {
-  console.log(props.stock_storages);
+  console.log(props.stock);
 
   if (props.initial_order) {
     form.user_id = props.initial_order.user_id;
@@ -224,6 +229,8 @@ onMounted(() => {
     form.quantity = props.initial_order.quantity;
     form.calc_price = props.initial_order.calc_price;
     form.postage = props.initial_order.postage;
+    form.unit = props.initial_order.order_unit;
+    form.order_price = props.initial_order.price;
   }
 
   form.stock_id = props.stock.id;
@@ -396,10 +403,63 @@ onMounted(() => {
                   <input
                     class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     id="name"
-                    type="text"
+                    type="number"
                     placeholder=""
                     v-model="form.quantity"
-                    @change="form.calc_price = form.price * form.quantity"
+                    @change="form.calc_price = form.order_price * form.quantity"
+                  />
+                </div>
+
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.unit,
+                    }"
+                    for="s_name"
+                  >
+                    *単位
+                  </label>
+
+                  <select
+                    name=""
+                    id=""
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    v-model="form.unit"
+                  >
+                    <option
+                      v-if="props.stock.solo_unit"
+                      :value="props.stock.solo_unit"
+                    >
+                      {{ props.stock.solo_unit }}
+                    </option>
+                    <option
+                      v-if="props.stock.org_unit"
+                      :value="props.stock.org_unit"
+                    >
+                      {{ props.stock.org_unit }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex flex-wrap -mx-3 mb-6">
+                <div class="w-1/2 px-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                      'text-red-500': !form.order_price,
+                    }"
+                    for="name"
+                  >
+                    *単価 (変更可)
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    id="s_name"
+                    type="number"
+                    placeholder=""
+                    v-model="form.order_price"
+                    @change="form.calc_price = form.order_price * form.quantity"
                   />
                 </div>
 
@@ -539,11 +599,27 @@ onMounted(() => {
                   </thead>
                   <tbody>
                     <tr v-for="order in initial_orders" :key="order.id">
-                      <td class="px-4 py-4 text-center font-bold" :class="{'text-green-500' : order.receive_flg ,'text-red-500': !order.receive_flg}">{{ order.receive_flg ? '済' : '未' }}</td>
-                      <td class="px-4 py-4 text-gray-500">{{ order.quantity }}</td>
-                      <td class="px-4 py-4 text-gray-500">{{ order.price.toLocaleString() }}</td>
-                      <td class="px-4 py-4 text-gray-500">{{ order.calc_price.toLocaleString() }}</td>
-                      <td class="px-4 py-4 text-gray-500">{{ order.order_user }}</td>
+                      <td
+                        class="px-4 py-4 text-center font-bold"
+                        :class="{
+                          'text-green-500': order.receive_flg,
+                          'text-red-500': !order.receive_flg,
+                        }"
+                      >
+                        {{ order.receive_flg ? "済" : "未" }}
+                      </td>
+                      <td class="px-4 py-4 text-gray-500">
+                        {{ order.quantity }}
+                      </td>
+                      <td class="px-4 py-4 text-gray-500">
+                        {{ order.price.toLocaleString() }}
+                      </td>
+                      <td class="px-4 py-4 text-gray-500">
+                        {{ order.calc_price.toLocaleString() }}
+                      </td>
+                      <td class="px-4 py-4 text-gray-500">
+                        {{ order.order_user }}
+                      </td>
                       <td class="px-4 py-4 text-gray-500">
                         {{
                           new Date(order.order_date).toLocaleDateString("ja-JP")

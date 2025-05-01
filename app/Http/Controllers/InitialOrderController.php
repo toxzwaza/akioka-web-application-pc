@@ -162,6 +162,8 @@ class InitialOrderController extends Controller
         $supplier_id = $request->supplier_id;
         $lead_time = $request->lead_time;
         $quantity = $request->quantity;
+        $order_price = $request->order_price;
+        $unit = $request->unit;
         $calc_price = $request->calc_price;
         $stock_storage_id = $request->stock_storage_id;
         $postage = $request->postage;
@@ -196,7 +198,8 @@ class InitialOrderController extends Controller
                 $order_request->supplier_id = $supplier_id;
                 $order_request->lead_time = $lead_time;
                 $order_request->quantity = $quantity;
-                $order_request->price = $price;
+                $order_request->price = $order_price;
+                $order_request->unit = $unit;
                 $order_request->calc_price = $calc_price;
                 $order_request->new_stock_flg = 1;
                 $order_request->postage = $postage;
@@ -235,7 +238,8 @@ class InitialOrderController extends Controller
                 $order_request->supplier_id = $supplier_id;
                 $order_request->lead_time = $lead_time;
                 $order_request->quantity = $quantity;
-                $order_request->price = $price;
+                $order_request->price = $order_price;
+                $order_request->unit = $unit;
                 $order_request->calc_price = $calc_price;
                 $order_request->new_stock_flg = 0;
                 $order_request->postage = $postage;

@@ -58,7 +58,7 @@ const sendAccept = (order_request_id) => {
     const order_request = getOrderRequestByOrderRequestId(order_request_id);
     if (
       !(
-        order_request.stock_price &&
+        order_request.price &&
         order_request.quantity &&
         order_request.supplier_id
       )
@@ -130,7 +130,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
     case "quantity":
       if (confirm("数量もしくは単価が変更されました。金額を再計算しますか？")) {
         order_request.calc_price =
-          order_request.quantity * order_request.stock_price;
+          order_request.quantity * order_request.price;
       }
       break;
     case "calc_price":
@@ -148,7 +148,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
     .put(route("stock.updateOrderRequest"), {
       order_request_id: order_request.id,
       quantity: order_request.quantity,
-      price: order_request.stock_price,
+      price: order_request.price,
       calc_price: order_request.calc_price,
       postage: order_request.postage,
       is_update_price: master.price,
@@ -171,7 +171,7 @@ const completeOrderRequest = (order_request_id) => {
   const order_request = getOrderRequestByOrderRequestId(order_request_id);
 
   if (
-    order_request.stock_price &&
+    order_request.price &&
     order_request.quantity &&
     order_request.supplier_id
   ) {
@@ -179,16 +179,16 @@ const completeOrderRequest = (order_request_id) => {
       confirm(
         `以下の内容で発注登録してよろしいですか？\n発注先:${
           order_request.supplier_name
-        }\n単価:${order_request.stock_price}\n数量:${
+        }\n単価:${order_request.price}\n数量:${
           order_request.quantity
-        }\n金額:${order_request.stock_price * order_request.quantity}`
+        }\n金額:${order_request.price * order_request.quantity}`
       )
     ) {
       axios
         .put(route("stock.completeOrderRequest"), {
           order_request_id: order_request_id,
           user_id: order_config.user_id,
-          price: order_request.stock_price,
+          price: order_request.price,
           quantity: order_request.quantity,
         })
 
@@ -247,7 +247,7 @@ const purchaseOrder = (order_request_id) => {
   const order_request = getOrderRequestByOrderRequestId(order_request_id);
   if (
     !(
-      order_request.stock_price &&
+      order_request.price &&
       order_request.quantity &&
       order_request.supplier_id
     )
@@ -260,7 +260,7 @@ const purchaseOrder = (order_request_id) => {
     {
       user_id: order_config.user_id,
       supplier_id: order_request.supplier_id,
-      price: order_request.stock_price,
+      price: order_request.price,
       quantity: order_request.quantity,
     }
   );
@@ -417,6 +417,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
+                    発注単位
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
                     単価
                   </th>
                   <th
@@ -551,13 +556,16 @@ onMounted(() => {
                       "
                     />
                   </td>
+                  <td class="px-4 py-4 text-lg text-gray-900 w-32">
+                    {{ order_request.unit }}
+                  </td>
                   <td class="px-4 py-4 text-lg text-gray-900 w-48">
                     <input
                       type="number"
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order_request.stock_price"
+                      v-model="order_request.price"
                       @change="
                         updateQuantityPriceCalcPricePostage(
                           'price',

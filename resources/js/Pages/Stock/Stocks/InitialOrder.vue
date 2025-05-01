@@ -34,6 +34,8 @@ const form = reactive({
   supplier_id: null,
   lead_time: null,
   quantity: null,
+  unit: null,
+  order_price: null,
   calc_price: null,
   order_stock_process_id: 0, //実際の工程ID
 
@@ -59,7 +61,8 @@ const createStockAndInitialOrder = () => {
     !form.lead_time ||
     !form.quantity ||
     !form.calc_price ||
-    !form.upload_file
+    !form.order_price ||
+    !form.unit 
   ) {
     return alert("必須項目が入力されていません。");
   }
@@ -161,7 +164,7 @@ onMounted(() => {});
                   }"
                   for="grid-password"
                 >
-                  *価格
+                  *単価 (基本発注単価)
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
@@ -169,6 +172,7 @@ onMounted(() => {});
                   type="number"
                   placeholder=""
                   v-model="form.price"
+                  @change="form.order_price = form.price"
                 />
               </div>
 
@@ -422,8 +426,19 @@ onMounted(() => {});
                 >
                   *発注者
                 </label>
-                <select name="" id="" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" v-model="form.user_id">
-                  <option v-for="user in props.admin_users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.user_id"
+                >
+                  <option
+                    v-for="user in props.admin_users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
                 </select>
               </div>
             </div>
@@ -496,10 +511,52 @@ onMounted(() => {});
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   id="name"
-                  type="text"
+                  type="number"
                   placeholder=""
                   v-model="form.quantity"
-                  @change="form.calc_price = form.price * form.quantity"
+                  @change="form.calc_price = form.order_price * form.quantity"
+                />
+              </div>
+
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.unit,
+                  }"
+                  for="s_name"
+                >
+                  *単位
+                </label>
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.unit"
+                >
+                  <option v-if="form.solo_unit" :value="form.solo_unit">{{ form.solo_unit }}</option>
+                  <option v-if="form.org_unit" :value="form.org_unit">{{ form.org_unit }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.order_price,
+                  }"
+                  for="name"
+                >
+                  *単価
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  id="name"
+                  type="text"
+                  placeholder=""
+                  v-model="form.order_price"
+                  @change="form.calc_price = form.order_price * form.quantity"
                 />
               </div>
 
