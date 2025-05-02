@@ -51,44 +51,94 @@ class AcceptController extends Controller
             $order_request_id = $request->order_request_id;
             $user_id = $request->user_id; //注文者
 
-            $order_request = OrderRequest::find($order_request_id);
-            $order_request->accept_flg = 1; //承認待ち状態
-            $order_request->user_id = $user_id;
+            $contain_approvals = $request->contain_approvals;
+            $file_path = $request->file_path;
 
-            // システム自動発注依頼の場合は承認依頼者を発注依頼者とする
-            if ($order_request->request_user_id == 117) {
-                $order_request->request_user_id = $user_id;
-            }
-            $order_request->save();
+            // 複数の承認依頼の場合
+            if (count($contain_approvals) > 0 && $file_path) {
+                foreach ($contain_approvals as $contain_approval) {
+                    $order_request = OrderRequest::find($contain_approval);
+                    $order_request->accept_flg = 1; //承認待ち状態
+                    $order_request->user_id = $user_id;
+                    $order_request->file_path = $file_path;
+                    $order_request->save();
 
-            // 承認フローを作成
-            // 金額と承認依頼者を元に作成
-            // 今後は、依頼者を元に承認フローを作成
-            $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
-            if (count($approval_list) > 0) {
-                foreach ($approval_list as $key => $approval_user_id) {
+                    // システム自動発注依頼の場合は承認依頼者を発注依頼者とする
+                    if ($order_request->request_user_id == 117) {
+                        $order_request->request_user_id = $user_id;
+                    }
+                    $order_request->save();
 
-                    $order_request_approval = new OrderRequestApproval();
-                    $order_request_approval->user_id = $approval_user_id; //承認者
-                    $order_request_approval->order_request_id = $order_request_id; //承認依頼ID
-                    $order_request_approval->status = ($key === 0) ? 0 : null; //最初のユーザーを承認待ち
-                    $order_request_approval->final_flg = ($key === count($approval_list) - 1) ? 1 : 0; //最後のユーザーを最終承認者
-                    $order_request_approval->save();
+                    // 承認フローを作成
+                    // 金額と承認依頼者を元に作成
+                    // 今後は、依頼者を元に承認フローを作成
+                    $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
+                    if (count($approval_list) > 0) {
+                        foreach ($approval_list as $key => $approval_user_id) {
 
-                    if ($order_request_approval->status === 0) {
-                        $url = "https://akioka.cloud/accept/order-request?user_id=" . $order_request_approval->user_id;
+                            $order_request_approval = new OrderRequestApproval();
+                            $order_request_approval->user_id = $approval_user_id; //承認者
+                            $order_request_approval->order_request_id = $order_request_id; //承認依頼ID
+                            $order_request_approval->status = ($key === 0) ? 0 : null; //最初のユーザーを承認待ち
+                            $order_request_approval->final_flg = ($key === count($approval_list) - 1) ? 1 : 0; //最後のユーザーを最終承認者
+                            $order_request_approval->save();
 
-                        $title = "在庫管理システムからの通知です。";
-                        $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+                            if ($order_request_approval->status === 0) {
+                                $url = "https://akioka.cloud/accept/order-request?user_id=" . $order_request_approval->user_id;
 
-                        Helper::createNotifyQueue($title, $message, $url, [$order_request_approval->user_id]);
+                                $title = "在庫管理システムからの通知です。";
+                                $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+
+                                Helper::createNotifyQueue($title, $message, $url, [$order_request_approval->user_id]);
+                            }
+                        }
+                    } else {
+
+                        // 承認必要なし
+                        $order_request->accept_flg = 2;
+                        $order_request->save();
                     }
                 }
             } else {
+                $order_request = OrderRequest::find($order_request_id);
+                $order_request->accept_flg = 1; //承認待ち状態
+                $order_request->user_id = $user_id;
 
-                // 承認必要なし
-                $order_request->accept_flg = 2;
+                // システム自動発注依頼の場合は承認依頼者を発注依頼者とする
+                if ($order_request->request_user_id == 117) {
+                    $order_request->request_user_id = $user_id;
+                }
                 $order_request->save();
+
+                // 承認フローを作成
+                // 金額と承認依頼者を元に作成
+                // 今後は、依頼者を元に承認フローを作成
+                $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
+                if (count($approval_list) > 0) {
+                    foreach ($approval_list as $key => $approval_user_id) {
+
+                        $order_request_approval = new OrderRequestApproval();
+                        $order_request_approval->user_id = $approval_user_id; //承認者
+                        $order_request_approval->order_request_id = $order_request_id; //承認依頼ID
+                        $order_request_approval->status = ($key === 0) ? 0 : null; //最初のユーザーを承認待ち
+                        $order_request_approval->final_flg = ($key === count($approval_list) - 1) ? 1 : 0; //最後のユーザーを最終承認者
+                        $order_request_approval->save();
+
+                        if ($order_request_approval->status === 0) {
+                            $url = "https://akioka.cloud/accept/order-request?user_id=" . $order_request_approval->user_id;
+
+                            $title = "在庫管理システムからの通知です。";
+                            $message = "承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+
+                            Helper::createNotifyQueue($title, $message, $url, [$order_request_approval->user_id]);
+                        }
+                    }
+                } else {
+
+                    // 承認必要なし
+                    $order_request->accept_flg = 2;
+                    $order_request->save();
+                }
             }
         } catch (Exception $e) {
             $status = false;
@@ -99,19 +149,18 @@ class AcceptController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
-    public function skipAccept(Request $request){
+    public function skipAccept(Request $request)
+    {
         $status = true;
         $order_request_id = $request->order_request_id;
         $user_id = $request->user_id;
 
-        try{
+        try {
             $order_request = OrderRequest::find($order_request_id);
             $order_request->accept_flg = 2;
             $order_request->user_id = $user_id;
             $order_request->save();
-
-
-        }catch(Exception $e){
+        } catch (Exception $e) {
             $status = false;
         }
 

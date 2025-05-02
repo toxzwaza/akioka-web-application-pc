@@ -51,6 +51,7 @@ class OrderRequestController extends Controller
                 'order_requests.price',
                 'order_requests.unit',
                 'order_requests.created_at',
+                'order_requests.file_path',
                 'users.name as request_user_name',
                 'order_users.name as order_user_name',
                 'order_requests.postage',

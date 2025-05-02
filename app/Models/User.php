@@ -23,5 +23,6 @@ class User extends Model
         'part_flg',
         'always_order_flg',
         'fax_folder_name',
+        'del_flg',
     ];
 }

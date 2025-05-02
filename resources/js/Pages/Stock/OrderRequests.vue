@@ -14,12 +14,51 @@ const props = defineProps({
 const modal_status = reactive({
   status: false,
   order_request: null,
+  approval_path: null,
 });
 const openModal = (order_request) => {
-  modal_status.img_path = "";
+  modal_status.approval_path = "";
   modal_status.order_request = order_request;
-
   modal_status.status = true;
+  if (order_request.file_path) {
+    modal_status.approval_path = `https://akioka.cloud/${order_request.file_path}`;
+  }
+};
+
+const contain_approvals = reactive({
+  list: [],
+  file_path: "",
+}); //同一稟議書で承認依頼
+const toggle_contain_approvals = (order_request) => {
+  // 単価・数量・取引先が登録されているか確認
+  if (
+    !(
+      order_request.price &&
+      order_request.quantity &&
+      order_request.supplier_id
+    )
+  ) {
+    return alert("数量・単価・金額・取引先が入力されていません。");
+  }
+
+  const index = contain_approvals.list.indexOf(order_request.id);
+  if (index === -1) {
+    contain_approvals.list.push(order_request.id);
+    if (order_request.file_path) {
+      if (!contain_approvals.file_path) {
+        contain_approvals.file_path = order_request.file_path;
+      } else {
+        if (confirm("既に稟議書が設定されています。")) {
+          return;
+        }
+      }
+    }
+  } else {
+    contain_approvals.list.splice(index, 1);
+    order_request.select_flg = false;
+  }
+
+  console.log(contain_approvals);
 };
 
 // 注文者
@@ -66,10 +105,18 @@ const sendAccept = (order_request_id) => {
       return alert("数量・単価・金額・取引先が入力されていません。");
     }
 
+    if (contain_approvals.list.length > 0 && !contain_approvals.file_path) {
+      return alert("選択された物品依頼の中に稟議書が含まれていません。");
+    }
+
     axios
       .post(route("stock.accept.order_request"), {
         order_request_id: order_request_id,
         user_id: order_config.user_id,
+
+        // 複数の承認依頼を送信
+        contain_approvals: contain_approvals.list,
+        file_path: contain_approvals.file_path,
       })
       .then((res) => {
         console.log(res.data);
@@ -129,8 +176,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       }
     case "quantity":
       if (confirm("数量もしくは単価が変更されました。金額を再計算しますか？")) {
-        order_request.calc_price =
-          order_request.quantity * order_request.price;
+        order_request.calc_price = order_request.quantity * order_request.price;
       }
       break;
     case "calc_price":
@@ -179,9 +225,9 @@ const completeOrderRequest = (order_request_id) => {
       confirm(
         `以下の内容で発注登録してよろしいですか？\n発注先:${
           order_request.supplier_name
-        }\n単価:${order_request.price}\n数量:${
-          order_request.quantity
-        }\n金額:${order_request.price * order_request.quantity}`
+        }\n単価:${order_request.price}\n数量:${order_request.quantity}\n金額:${
+          order_request.price * order_request.quantity
+        }`
       )
     ) {
       axios
@@ -295,7 +341,7 @@ onMounted(() => {
     <template #content>
       <MainTitle
         :top="'発注依頼一覧'"
-        :sub="'在庫管理システムより取得した発注依頼を完了することができます。'"
+        :sub="'在庫管理システムより取得した発注依頼を完了することができます。複数選択後、依頼をクリックすると添付されている稟議書を共有して承認フローを回します。'"
       />
 
       <section class="text-gray-600 body-font">
@@ -375,9 +421,9 @@ onMounted(() => {
               <thead>
                 <tr>
                   <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
-                    発注依頼ID
+                    選択
                   </th>
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -410,12 +456,12 @@ onMounted(() => {
                     発注点
                   </th>
                   <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     発注数量
                   </th>
                   <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     発注単位
                   </th>
@@ -475,18 +521,18 @@ onMounted(() => {
                 <tr
                   v-for="order_request in order_requests"
                   :key="order_request.id"
-                  :class="{ 'bg-indigo-50': !order_request.img_path }"
+                  :class="{
+                    'transition duration-300': true,
+                    'bg-blue-50': order_request.select_flg,
+                  }"
                 >
-                  <td class="px-4 py-4">
-                    <a
-                      class="underline text-blue-500"
-                      :href="
-                        route('stock.show.stocks', {
-                          stock_id: order_request.stock_id,
-                        })
-                      "
-                      >{{ order_request.order_request_id }}</a
-                    >
+                  <td class="text-center">
+                    <input
+                      v-if="order_request.accept_flg === 0"
+                      v-model="order_request.select_flg"
+                      type="checkbox"
+                      @change="toggle_contain_approvals(order_request)"
+                    />
                   </td>
                   <td
                     :class="{
@@ -531,7 +577,17 @@ onMounted(() => {
                       alt=""
                     />
                   </td>
-                  <td class="px-4 py-4">{{ order_request.name }}</td>
+                  <td class="px-4 py-4">
+                    <a
+                      class="underline text-blue-500"
+                      :href="
+                        route('stock.show.stocks', {
+                          stock_id: order_request.stock_id,
+                        })
+                      "
+                      >{{ order_request.name }}</a
+                    >
+                  </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{ order_request.s_name }}
                   </td>
@@ -651,7 +707,7 @@ onMounted(() => {
                       @click="openModal(order_request)"
                       class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded whitespace-nowrap"
                     >
-                      承認詳細
+                      詳細確認
                     </button>
                   </td>
 
@@ -696,46 +752,67 @@ onMounted(() => {
           </button>
         </div>
 
-        <p class="text-gray-700 mb-2 font-bold text-lg">承認状況確認</p>
-        <div
-          v-if="modal_status.order_request"
-          class="flex items-center justify-start"
-        >
-          <div
-            v-for="approval in modal_status.order_request
-              .order_request_approvals"
-            :key="approval.id"
-            class="max-w-sm rounded overflow-hidden shadow-lg mr-8"
+        <details class="mb-4">
+          <summary
+            class="text-gray-700 mb-2 font-bold text-lg cursor-pointer hover:text-gray-900"
           >
-            <img
-              class="w-full"
-              :src="
-                approval.status === 1
-                  ? '/img/stock/order_request/approval_icon.png'
-                  : approval.status === 2
-                  ? '/img/stock/order_request/not_approval_icon.png'
-                  : '/img/stock/order_request/none_approval.png'
-              "
-              alt="Sunset in the mountains"
-            />
-            <div class="px-6 py-4">
-              <div class="text-sm mb-2">
-                {{ new Date(approval.updated_at).getFullYear() }}年{{
-                  new Date(approval.updated_at).getMonth() + 1
-                }}月{{ new Date(approval.updated_at).getDate() }}日
-                {{ new Date(approval.updated_at).getHours() }}時{{
-                  new Date(approval.updated_at).getMinutes()
-                }}分
+            承認状況確認
+          </summary>
+          <div
+            v-if="modal_status.order_request"
+            class="flex items-center justify-start mt-4"
+            id="approval_container"
+          >
+            <div
+              v-for="approval in modal_status.order_request
+                .order_request_approvals"
+              :key="approval.id"
+              class="rounded overflow-hidden shadow-lg mr-8"
+            >
+              <img
+                class="w-full"
+                :src="
+                  approval.status === 1
+                    ? '/img/stock/order_request/approval_icon.png'
+                    : approval.status === 2
+                    ? '/img/stock/order_request/not_approval_icon.png'
+                    : '/img/stock/order_request/none_approval.png'
+                "
+                alt="承認状態アイコン"
+              />
+              <div class="px-6 py-4">
+                <div class="text-sm mb-2">
+                  {{ new Date(approval.updated_at).getFullYear() }}年{{
+                    new Date(approval.updated_at).getMonth() + 1
+                  }}月{{ new Date(approval.updated_at).getDate() }}日
+                  {{ new Date(approval.updated_at).getHours() }}時{{
+                    new Date(approval.updated_at).getMinutes()
+                  }}分
+                </div>
+                <div class="font-bold text-xl mb-2">{{ approval.name }}</div>
+                <p class="text-gray-700 text-base">
+                  {{
+                    approval.comment
+                      ? approval.comment
+                      : "コメントがありません。"
+                  }}
+                </p>
               </div>
-              <div class="font-bold text-xl mb-2">{{ approval.name }}</div>
-              <p class="text-gray-700 text-base">
-                {{
-                  approval.comment ? approval.comment : "コメントがありません。"
-                }}
-              </p>
             </div>
           </div>
-        </div>
+        </details>
+
+        <details class="mt-8 mb-4">
+          <summary
+            class="text-gray-700 mb-2 font-bold text-lg cursor-pointer hover:text-gray-900"
+          >
+            稟議書確認
+          </summary>
+
+          <div id="pdfviewer">
+            <iframe ref="pdfViewer" :src="modal_status.approval_path"></iframe>
+          </div>
+        </details>
       </div>
     </template>
   </MainLayout>
@@ -767,8 +844,10 @@ table {
 #modal {
   position: fixed;
   bottom: 0;
+  left: 48%;
+  // transform: translateX(-50%);
 
-  width: 90vw;
+  width: 50vw;
 
   padding: 1rem;
 
@@ -777,8 +856,12 @@ table {
   border-radius: 10px 10px 0 0;
   height: 0;
   transform: translateY(100%);
+  overflow-y: scroll;
   &.active {
-    height: 50vh;
+    height: auto;
+    max-height: 80vh;
+    overflow-y: scroll;
+
     transform: translateY(0);
     transition: all 0.5s;
   }
@@ -787,6 +870,14 @@ table {
     width: 100%;
     display: flex;
     justify-content: end;
+  }
+  & #pdfviewer {
+    height: 70vh;
+
+    & iframe {
+      height: 96%;
+      width: 100%;
+    }
   }
 }
 </style>

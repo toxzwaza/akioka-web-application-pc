@@ -73,6 +73,7 @@ class MasterController extends Controller
         $dispatch_flg = $request->dispatch_flg ? 1 : 0;
         $part_flg = $request->part_flg ? 1 : 0;
         $always_order_flg = $request->always_order_flg ? 1 : 0;
+        $del_flg = $request->del_flg ? 1 : 0;
 
         $status = true;
         $msg = "";
@@ -94,6 +95,7 @@ class MasterController extends Controller
                 'part_flg' => $part_flg,
                 'always_order_flg' => $always_order_flg,
                 'fax_folder_name' => $fax_folder_name,
+                'del_flg' => $del_flg,
             ]);
             $user->save();
         } catch (Exception $e) {
