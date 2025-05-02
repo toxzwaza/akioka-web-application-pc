@@ -756,6 +756,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
+                    単位
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
                     金額
                   </th>
                   <th
@@ -965,6 +970,9 @@ onMounted(() => {
                   </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     {{ order.quantity }}
+                  </td>
+                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                    {{ order.order_unit }}
                   </td>
                   <td
                     class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"

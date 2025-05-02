@@ -178,7 +178,7 @@ class OrderRequestController extends Controller
                 $initial_order->com_name = $supplier->name;
                 $initial_order->name = $stock->name;
                 $initial_order->s_name = $stock->s_name;
-                $initial_order->order_unit = $stock->solo_unit;
+                $initial_order->order_unit = $order_request->unit ?? $stock->solo_unit;
                 $initial_order->deli_location = $stock->deli_location;
                 $initial_order->user_id = $order_request->user_id;
                 $initial_order->order_user_id = $order_request->request_user_id;
