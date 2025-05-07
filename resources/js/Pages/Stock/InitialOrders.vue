@@ -14,7 +14,7 @@ const props = defineProps({
   admin_users: Array,
   users: Array,
   order_users: Array,
-  suppliers: Array
+  suppliers: Array,
 });
 
 const form = reactive({
@@ -22,9 +22,9 @@ const form = reactive({
   keyword: null,
   start_order_date: null,
   end_order_date: null,
-  supplier_id:null,
-  order_user_id:null,
-  user_id:null
+  supplier_id: null,
+  order_user_id: null,
+  user_id: null,
 });
 
 const is_login = ref(false);
@@ -348,7 +348,7 @@ const getInitialOrders = () => {
     end_order_date: form.end_order_date,
     supplier_id: form.supplier_id,
     order_user_id: form.order_user_id,
-    user_id: form.user_id
+    user_id: form.user_id,
   });
 };
 onMounted(() => {
@@ -364,11 +364,11 @@ onMounted(() => {
   const params = new URLSearchParams(window.location.search);
   form.keyword = params.get("keyword") || "";
   form.order_by = params.get("order_by") || "desc";
-  form.start_order_date = params.get('start_order_date')
-  form.end_order_date = params.get('end_order_date')
-  form.supplier_id = params.get('supplier_id')
-  form.order_user_id = params.get('order_user_id')
-  form.user_id = params.get('user_id')
+  form.start_order_date = params.get("start_order_date");
+  form.end_order_date = params.get("end_order_date");
+  form.supplier_id = params.get("supplier_id");
+  form.order_user_id = params.get("order_user_id");
+  form.user_id = params.get("user_id");
 
   console.log(initial_orders.value);
 });
@@ -699,6 +699,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
+                    納入場所
+                  </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
                     注文先
                   </th>
                   <th
@@ -830,6 +835,21 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
+                  </td>
+                  <td class="px-4 py-3 text-lg text-gray-900 whitespace-nowrap">
+                    <input
+                      v-if="is_login"
+                      @change="
+                        updateNameOrSName(order.id, 'deli_location', $event.target.value)
+                      "
+                      type="text"
+                      name="name"
+                      v-model="order.deli_location"
+                      id=""
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    />
+
+                    <span v-else>{{ order.deli_location }}</span>
                   </td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{ order.com_name }}
