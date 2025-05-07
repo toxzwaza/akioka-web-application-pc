@@ -27,8 +27,11 @@ class TestController extends Controller
     //
     public function test()
     {
-        $approval_list = Helper::createApprovalFlow(400000, 91);
-        dd($approval_list);
+        $approval_list = Helper::createApprovalFlow(80000, 30);
+        foreach ($approval_list as $approval) {
+            $user = User::find($approval);
+            echo "{$user->name}\n";
+        }
     }
 
     public function storage_address_test()
