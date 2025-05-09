@@ -40,6 +40,8 @@ Route::get('/initial-order', [InitialOrderController::class, 'index'])->name('st
 Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->name('stock.create.initialOrders');
 // 発注登録
 Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
+// 納品書変更
+Route::post('/initial-order/update/deli_file', [InitialOrderController::class, 'update_deli_file'])->name('stock.update_deli_file');
 
 
 

@@ -94,10 +94,9 @@ class InitialOrderController extends Controller
 
 
         // 注文先一覧を取得
-        $suppliers = Supplier::select('suppliers.id', 'suppliers.name')->
-        join('initial_orders', 'suppliers.id', 'initial_orders.supplier_id')
-        ->distinct()
-        ->get();
+        $suppliers = Supplier::select('suppliers.id', 'suppliers.name')->join('initial_orders', 'suppliers.id', 'initial_orders.supplier_id')
+            ->distinct()
+            ->get();
 
         // 発注依頼者一覧を取得
         $users = User::select('users.id', 'users.name')
@@ -389,5 +388,65 @@ class InitialOrderController extends Controller
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function update_deli_file(Request $request)
+    {
+        $status = false;
+        $msg = '';
+        $response = null;
+
+        try {
+            if (!$request->hasFile('file')) {
+                throw new Exception('ファイルがアップロードされていません。');
+            }
+
+            $file = $request->file('file');
+            $initial_order_id = $request->initial_order_id;
+
+            if (!$initial_order_id) {
+                throw new Exception('発注IDが指定されていません。');
+            }
+
+            // ファイルの検証
+            $allowedExtensions = ['jpg', 'jpeg', 'png'];
+            $extension = $file->getClientOriginalExtension();
+            if (!in_array(strtolower($extension), $allowedExtensions)) {
+                throw new Exception('許可されていないファイル形式です。');
+            }
+
+            // ファイルサイズの制限（5MB）
+            if ($file->getSize() > 5 * 1024 * 1024) {
+                throw new Exception('ファイルサイズが大きすぎます。5MB以下にしてください。');
+            }
+
+            $order = InitialOrder::find($initial_order_id);
+            if (!$order) {
+                throw new Exception('指定された発注が見つかりません。');
+            }
+
+            // VPSのLaravel APIのエンドポイントURL
+            $vpsApiUrl = 'https://akioka.cloud/api/file_upload/deli_file';
+
+            // POSTリクエストをマルチパート形式で送信
+            $response = Http::asMultipart()->attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                $file->getClientOriginalName()
+            )->post($vpsApiUrl, [
+                'initial_order_id' => $initial_order_id,
+            ]);
+
+            $status = $response->successful();
+            $msg = $response->body();
+
+        } catch (Exception $e) {
+            $msg = $e->getMessage();
+        }
+        
+        return response()->json([
+            'status' => $status,
+            'msg' => $msg
+        ]);
     }
 }

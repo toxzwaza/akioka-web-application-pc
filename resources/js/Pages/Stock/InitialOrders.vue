@@ -6,7 +6,7 @@ import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
 import MainTitle from "@/Components/Title/MainTitle.vue";
-import { getImgPath } from "@/Helper/Method"
+import { getImgPath } from "@/Helper/Method";
 
 const props = defineProps({
   initial_orders: Object,
@@ -32,6 +32,7 @@ const is_login = ref(false);
 const pwd = ref("");
 
 const modal_status = reactive({
+  initial_order_id: null,
   type: null,
   status: false,
   img_path: "",
@@ -45,7 +46,7 @@ const openModal = (img_path, order, flg) => {
   switch (flg) {
     case "img": //画像表示
       modal_status.type = "img";
-      modal_status.img_path = getImgPath(img_path)
+      modal_status.img_path = getImgPath(img_path);
       break;
     case "purchase": //発注書表示
       modal_status.type = "purchase";
@@ -59,6 +60,7 @@ const openModal = (img_path, order, flg) => {
       break;
     case "deli_file": //納品書表示
       modal_status.type = "deli_file";
+      modal_status.initial_order_id = order.id;
       modal_status.img_path =
         img_path && img_path.includes("storage")
           ? `https://akioka.cloud/${img_path}`
@@ -373,6 +375,38 @@ onMounted(() => {
 
   console.log(initial_orders.value);
 });
+
+// 納品書更新
+
+const fileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("initial_order_id", modal_status.initial_order_id);
+    console.log(formData);
+
+    axios
+      .post(route('stock.update_deli_file'), formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((res) => {
+        console.log(res.data)
+        
+        if(res.data.status){
+          alert('納品書の更新が完了しました。')
+           window.location.reload()
+        }else{
+          alert('納品書更新中に何らかのエラーが発生しました。')
+        }
+      })
+      .catch((error) => {
+        alert(`エラーが発生しました。${error}`)
+      });
+  }
+};
 </script>
 <template>
   <MainLayout :title="'発注一覧'">
@@ -841,7 +875,11 @@ onMounted(() => {
                     <input
                       v-if="is_login"
                       @change="
-                        updateNameOrSName(order.id, 'deli_location', $event.target.value)
+                        updateNameOrSName(
+                          order.id,
+                          'deli_location',
+                          $event.target.value
+                        )
                       "
                       type="text"
                       name="name"
@@ -1026,7 +1064,9 @@ onMounted(() => {
                     <button
                       v-if="order.delifile_path"
                       class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="openModal(order.delifile_path, null, 'deli_file')"
+                      @click="
+                        openModal(order.delifile_path, order, 'deli_file')
+                      "
                     >
                       納品書
                     </button>
@@ -1069,9 +1109,56 @@ onMounted(() => {
           v-if="
             modal_status.type === 'img' || modal_status.type === 'deli_file'
           "
-          id="img_modal"
         >
-          <img :src="modal_status.img_path" alt="" />
+          <div
+            v-if="modal_status.type === 'deli_file'"
+            class="w-1/2 mx-auto mb-8"
+          >
+            <div class="flex items-center justify-center w-full">
+              <label
+                for="dropzone-file"
+                class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+              >
+                <div
+                  class="flex flex-col items-center justify-center pt-5 pb-6"
+                >
+                  <svg
+                    class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 20 16"
+                  >
+                    <path
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                    />
+                  </svg>
+                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span class="font-semibold">Click to upload</span> or drag
+                    and drop
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    稟議書を変更する場合は、こちらから再設定してください。
+                  </p>
+                </div>
+                <input
+                  id="dropzone-file"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="fileUpload($event, modal_status.initial_order_id)"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div id="img_modal">
+            <img :src="modal_status.img_path" alt="" />
+          </div>
         </div>
 
         <Purchase
