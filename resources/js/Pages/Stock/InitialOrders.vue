@@ -6,6 +6,7 @@ import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
 import MainTitle from "@/Components/Title/MainTitle.vue";
+import { getImgPath } from "@/Helper/Method"
 
 const props = defineProps({
   initial_orders: Object,
@@ -44,7 +45,7 @@ const openModal = (img_path, order, flg) => {
   switch (flg) {
     case "img": //画像表示
       modal_status.type = "img";
-      modal_status.img_path = img_path;
+      modal_status.img_path = getImgPath(img_path)
       break;
     case "purchase": //発注書表示
       modal_status.type = "purchase";
