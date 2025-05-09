@@ -187,7 +187,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       ) {
         master.postage = true;
       }
-      break;
+    break;
   }
 
   axios
@@ -211,6 +211,28 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       console.log(error);
     });
 };
+const updateSubDescription = (val) => {
+  
+  if(!modal_status.order_request.id){
+    return alert('エラーが発生しました。')
+  }
+
+  // 発注担当者コメント更新処理
+  axios.post(route('stock.updateSubDescription'), {
+    order_request_id: modal_status.order_request.id,
+    sub_description: val
+  })
+  .then(res => {
+    if(res.data.status){
+      alert('発注担当者コメントを更新しました。')
+      // window.location.reload()
+    }
+  })
+  .catch(error => {
+    console.log(error)
+  })
+
+}
 
 // 完了処理
 const completeOrderRequest = (order_request_id) => {
@@ -431,6 +453,11 @@ onMounted(() => {
                     承認
                   </th>
                   <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    コメント
+                  </th>
+                  <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                   >
                     画像
@@ -565,6 +592,14 @@ onMounted(() => {
                         >却下</span
                       >
                     </div>
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    <button class="bg-blue-600 py-1 px-2.5 rounded">
+                      <i
+                        @click="openModal(order_request)"
+                        class="text-white fas fa-comment"
+                      ></i>
+                    </button>
                   </td>
                   <td class="img_container">
                     <img
@@ -752,7 +787,43 @@ onMounted(() => {
           </button>
         </div>
 
-        <details class="mb-4">
+        <div v-if="modal_status.order_request" class="mb-4">
+          <label
+            for="message"
+            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >依頼者コメント</label
+          >
+          <textarea
+            id="message"
+            rows="4"
+            :class="{
+              'block p-2.5 w-full text-sm text-gray-900 bg-gray-200 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 pointer-events-none': true,
+            }"
+            placeholder="コメントがありません。"
+            :value="modal_status.order_request.description"
+          ></textarea>
+        </div>
+        <div v-if="modal_status.order_request" class="mb-8">
+          <label
+            for="message"
+            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >発注者コメント</label
+          >
+          <textarea
+            id="message"
+            rows="4"
+            :class="{
+              'block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500': true,
+            }"
+            @change="
+              updateSubDescription($event.target.value)
+            "
+            placeholder="コメントがある場合はこちらに記載してください。"
+            :value="modal_status.order_request.sub_description"
+          ></textarea>
+        </div>
+
+        <details class="mb-4" open>
           <summary
             class="text-gray-700 mb-2 font-bold text-lg cursor-pointer hover:text-gray-900"
           >
@@ -802,7 +873,7 @@ onMounted(() => {
           </div>
         </details>
 
-        <details class="mt-8 mb-4">
+        <details class="mt-8 mb-4" open>
           <summary
             class="text-gray-700 mb-2 font-bold text-lg cursor-pointer hover:text-gray-900"
           >

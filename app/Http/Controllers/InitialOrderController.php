@@ -446,7 +446,10 @@ class InitialOrderController extends Controller
         
         return response()->json([
             'status' => $status,
-            'msg' => $msg
+            'msg' => $msg,
+            'details' => [
+                'open' => true
+            ]
         ]);
     }
 }

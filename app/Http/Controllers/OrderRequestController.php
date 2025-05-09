@@ -52,6 +52,8 @@ class OrderRequestController extends Controller
                 'order_requests.unit',
                 'order_requests.created_at',
                 'order_requests.file_path',
+                'order_requests.description',
+                'order_requests.sub_description',
                 'users.name as request_user_name',
                 'order_users.name as order_user_name',
                 'order_requests.postage',
@@ -247,5 +249,23 @@ class OrderRequestController extends Controller
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function updateSubDescription(Request $request)
+    {
+        $status = true;
+        $order_request_id = $request->order_request_id;
+        $sub_description = $request->sub_description;
+
+        try {
+            $order_request = OrderRequest::find($order_request_id);
+            $order_request->sub_description = $sub_description;
+            $order_request->save();
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+        
     }
 }
