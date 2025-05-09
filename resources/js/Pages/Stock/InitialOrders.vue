@@ -381,6 +381,11 @@ onMounted(() => {
 const fileUpload = async (event) => {
   const file = event.target.files[0];
   if (file) {
+    if(!confirm('ファイルが選択されました。納品書を更新しますか？')){
+      alert('納品書更新を中止しました。')
+      return
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("initial_order_id", modal_status.initial_order_id);
@@ -394,7 +399,7 @@ const fileUpload = async (event) => {
       })
       .then((res) => {
         console.log(res.data)
-        
+
         if(res.data.status){
           alert('納品書の更新が完了しました。')
            window.location.reload()
