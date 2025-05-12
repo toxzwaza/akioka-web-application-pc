@@ -439,11 +439,10 @@ class InitialOrderController extends Controller
 
             $status = $response->successful();
             $msg = $response->body();
-
         } catch (Exception $e) {
             $msg = $e->getMessage();
         }
-        
+
         return response()->json([
             'status' => $status,
             'msg' => $msg,
@@ -451,5 +450,24 @@ class InitialOrderController extends Controller
                 'open' => true
             ]
         ]);
+    }
+
+
+    public function updateOrderComplete(Request $request)
+    {
+        $status = true;
+        $initial_order_id = $request->initial_order_id;
+        $order_complete_flg = $request->order_complete_flg;
+
+
+        try {
+            $initial_order = InitialOrder::find($initial_order_id);
+            $initial_order->order_complete_flg = $order_complete_flg;
+            $initial_order->save();
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
     }
 }

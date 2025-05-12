@@ -13,6 +13,7 @@ use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\CameraController;
 use App\Http\Controllers\InitialOrderController;
 use App\Http\Controllers\SupplierController;
+use App\Models\InitialOrder;
 
 // 在庫管理システム
 Route::get('/test', [StockController::class, 'test'])->name('stock.test');
@@ -57,6 +58,8 @@ Route::post('/initial-order/update/price', [InitialOrderController::class, 'upda
 
 // 単価もしくは送料を変更
 Route::post('/initial-order/update/data', [InitialOrderController::class, 'update_data'])->name('stock.update_data');
+// 発注済み登録機能
+Route::post('/initial-order/update/order_complete', [InitialOrderController::class, 'updateOrderComplete'])->name('stock.updateOrderComplete');
 
 // Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
 // Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
@@ -81,6 +84,7 @@ Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.ac
 Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrderRequest'])->name('stock.updateOrderRequest');
 // 発注担当者コメント更新
 Route::post('/order-requests/update/sub_description', [OrderRequestController::class, 'updateSubDescription'])->name('stock.updateSubDescription');
+
 
 // 発注完了
 Route::put('/order-requests/complete', [OrderRequestController::class, 'delete'])->name('stock.completeOrderRequest');

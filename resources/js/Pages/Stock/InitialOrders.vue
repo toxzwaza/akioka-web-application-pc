@@ -354,6 +354,33 @@ const getInitialOrders = () => {
     user_id: form.user_id,
   });
 };
+
+// 発注完了登録
+const orderComplete = (order) => {
+  let flg;
+
+  if (order.order_complete_flg) {
+    flg = 0;
+  } else {
+    flg = 1;
+  }
+
+  axios
+    .post(route("stock.updateOrderComplete"), {
+      initial_order_id: order.id,
+      order_complete_flg: flg,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        order.order_complete_flg = flg;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
 onMounted(() => {
   console.log(props.initial_orders);
 
@@ -381,9 +408,9 @@ onMounted(() => {
 const fileUpload = async (event) => {
   const file = event.target.files[0];
   if (file) {
-    if(!confirm('ファイルが選択されました。納品書を更新しますか？')){
-      alert('納品書更新を中止しました。')
-      return
+    if (!confirm("ファイルが選択されました。納品書を更新しますか？")) {
+      alert("納品書更新を中止しました。");
+      return;
     }
 
     const formData = new FormData();
@@ -392,23 +419,23 @@ const fileUpload = async (event) => {
     console.log(formData);
 
     axios
-      .post(route('stock.update_deli_file'), formData, {
+      .post(route("stock.update_deli_file"), formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
       .then((res) => {
-        console.log(res.data)
+        console.log(res.data);
 
-        if(res.data.status){
-          alert('納品書の更新が完了しました。')
-           window.location.reload()
-        }else{
-          alert('納品書更新中に何らかのエラーが発生しました。')
+        if (res.data.status) {
+          alert("納品書の更新が完了しました。");
+          window.location.reload();
+        } else {
+          alert("納品書更新中に何らかのエラーが発生しました。");
         }
       })
       .catch((error) => {
-        alert(`エラーが発生しました。${error}`)
+        alert(`エラーが発生しました。${error}`);
       });
   }
 };
@@ -808,6 +835,7 @@ const fileUpload = async (event) => {
                   >
                     金額
                   </th>
+
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
@@ -823,13 +851,18 @@ const fileUpload = async (event) => {
                   >
                     稟議書
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    発注済み登録
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr
                   v-for="order in initial_orders.data"
                   :key="order.id"
-                  :class="{ 'bg-indigo-50': !order.stock_id }"
+                  :class="{ 'bg-green-50': order.order_complete_flg }"
                 >
                   <td class="text-center">
                     <input
@@ -1044,20 +1077,21 @@ const fileUpload = async (event) => {
                     {{ order.calc_price.toLocaleString() }}
                     <span class="text-xs text-gray-600">円</span>
                   </td>
+
                   <td
                     class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                   >
                     <button
                       v-if="!order.url"
                       @click="openModal(null, order, 'purchase')"
-                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
                     >
                       発注書
                     </button>
 
                     <a
                       v-else
-                      class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
                       :href="order.url"
                       target="blank"
                       >URL</a
@@ -1068,7 +1102,7 @@ const fileUpload = async (event) => {
                   >
                     <button
                       v-if="order.delifile_path"
-                      class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
                       @click="
                         openModal(order.delifile_path, order, 'deli_file')
                       "
@@ -1085,6 +1119,17 @@ const fileUpload = async (event) => {
                       @click="openModal(order.file_path, null, 'approval')"
                     >
                       稟議書
+                    </button>
+                  </td>
+                  <td
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
+                    <button
+                      @click="orderComplete(order)"
+                      :class="{' text-white font-bold py-2 px-4 rounded text-xs' : true, 'bg-green-500 hover:bg-green-700' : order.order_complete_flg, 'bg-gray-500 hover:bg-gray-700': !order.order_complete_flg}"
+                    >
+                      <span v-if="order.order_complete_flg">完了済<i class="ml-2 fas fa-check"></i></span>
+                      <span v-else>未完了</span>
                     </button>
                   </td>
                 </tr>
