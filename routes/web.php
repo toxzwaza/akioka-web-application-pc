@@ -73,6 +73,7 @@ Route::post('/lunch/reserve/store', [LunchController::class, 'reserve_store'])->
 Route::delete('/lunch/reserve/delete', [LunchController::class, 'reserve_delete'])->name('lunch.reserve.delete');
 Route::get('/lunch/order', [LunchController::class, 'order'])->name('lunch.order');
 Route::get('/lunch/order-archive', [LunchController::class, 'order_archive'])->name('lunch.order-archive');
+Route::delete('/lunch/order/delete', [LunchController::class, 'order_delete'])->name('lunch.order.delete');
 Route::get('/lunch/order-users', [LunchController::class, 'order_users'])->name('lunch.order-users');
 Route::get('/lunch/create-description', [LunchController::class, 'create_description'])->name('lunch.create_description');
 Route::post('/lunch/store-description', [LunchController::class, 'store_description'])->name('lunch.store_description');

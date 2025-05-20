@@ -170,7 +170,7 @@ class NewMovieController extends Controller
 
 
                 // RPAサーバーへリクエスト
-                $url = "http://192.168.0.143:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description) . "&mention_id=" . urlencode($email);
+                $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description) . "&mention_id=" . urlencode($email);
                 $msg = $url;
                 $response = Http::get($url);
             }

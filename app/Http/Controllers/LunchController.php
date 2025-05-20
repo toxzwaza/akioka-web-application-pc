@@ -103,9 +103,32 @@ class LunchController extends Controller
 
     public function order_archive(Request $request)
     {
-        $orders = LunchOrderArchive::select('lunch_order_archives.*', 'users.name as user_name')->join('users', 'users.id', 'lunch_order_archives.user_id')->orderby('id', 'desc')->paginate(20);
+        $order_date = $request->order_date ?? \Carbon\Carbon::today()->format('Y-m-d');
+        $lunch_orders = [];
 
-        return view('lunch.order-archive', compact('orders'));
+        $lunch_orders = LunchOrder::select('lunch_orders.*', 'users.name as user_name')->join('users', 'users.id', 'lunch_orders.user_id')->whereDate('date', $order_date)->where('order_flg', 1)->orderBy('lunch_orders.created_at', 'desc')->get();
+
+        // return view('lunch.order-archive', compact('orders'));
+        return Inertia::render('Lunch/OrderArchive', ['order_date' => $order_date, 'lunch_orders' => $lunch_orders]);
+    }
+
+    public function order_delete(Request $request){
+        $status = true;
+
+        $lunch_order_id = $request->lunch_order_id;
+
+        try{
+            $lunch_order = LunchOrder::find($lunch_order_id);
+            if($lunch_order){
+                $lunch_order->delete();
+            } else {
+                $status = false;
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
     }
 
     public function order_users(Request $request)
@@ -168,8 +191,9 @@ class LunchController extends Controller
 
         return $orders;
     }
-    
-    public function export_csv(){
+
+    public function export_csv()
+    {
 
         return Inertia::render('Lunch/ExportCsv');
     }
@@ -222,17 +246,17 @@ class LunchController extends Controller
         $headers = [
             "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename={$fileName}",
-            "Pragma" => "no-cache", 
+            "Pragma" => "no-cache",
             "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
             "Expires" => "0"
         ];
 
         $columns = ['名前', '社員属性', '弁当個数', '合計金額'];
-        $callback = function() use ($monthOrders, $columns) {
+        $callback = function () use ($monthOrders, $columns) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF"); // BOMを追加
             fputcsv($file, $columns);
-            
+
             foreach ($monthOrders as $monthOrder) {
                 fputcsv($file, [
                     $monthOrder->user_name,
