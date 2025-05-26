@@ -42,25 +42,24 @@ const props = defineProps({
 });
 
 const searchContact = (flg) => {
-
   if (
-    flg === 'search' &&
+    flg === "search" &&
     !form.keyword &&
-      !form.start_contact_date &&
-      !form.end_contact_date &&
-      form.kind === null &&
-      form.progress === null)
-  {
+    !form.start_contact_date &&
+    !form.end_contact_date &&
+    form.kind === null &&
+    form.progress === null
+  ) {
     return alert("検索対象を入力してください。");
   }
 
-  if (flg === 'reset') {
-    form.keyword = null
-    form.start_contact_date = null
-    form.end_contact_date = null
-    form.progress = null
-    form.kind = null
-    form.user_id = null
+  if (flg === "reset") {
+    form.keyword = null;
+    form.start_contact_date = null;
+    form.end_contact_date = null;
+    form.progress = null;
+    form.kind = null;
+    form.user_id = null;
   }
   router.get(route("contact.home"), {
     keyword: form.keyword,
@@ -234,34 +233,8 @@ onMounted(() => {
           </div>
         </div>
       </section>
-      <div class="flex justify-end mb-4">
-        <Pagination :links="props.contacts.links" />
-      </div>
-      <div id="sort_container" class="my-8 flex items-start justify-start">
-        <div class="w-1/6">
-          <p class="mb-2 font-bold">並び順</p>
-          <div class="button_container flex items-center justify-start">
-            <button
-              :class="{
-                'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                'opacity-60': form.order_by != 'desc',
-              }"
-              @click="form.order_by = 'desc'"
-            >
-              新しい順
-            </button>
-            <button
-              :class="{
-                'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                'opacity-60': form.order_by != 'asc',
-              }"
-              @click="form.order_by = 'asc'"
-            >
-              古い順
-            </button>
-          </div>
-        </div>
 
+      <div id="sort_container" class="my-8 flex items-start justify-start">
         <div class="w-5/6">
           <div class="mr-8">
             <p class="mb-2 font-bold">検索</p>
@@ -387,7 +360,11 @@ onMounted(() => {
       </div>
 
       <section class="text-gray-600 body-font">
-        <div class="px-5 mx-auto">
+        <div class="mx-auto">
+          <div class="flex justify-start mb-4">
+            <Pagination :links="props.contacts.links" />
+          </div>
+
           <div id="table_container" class="w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
@@ -459,11 +436,16 @@ onMounted(() => {
                   <td class="px-4 py-5">
                     <span
                       v-if="!contact.progress"
+                      class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-900 dark:text-gray-300"
+                      >未読</span
+                    >
+                    <span
+                      v-else-if="contact.progress === 1"
                       class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300"
                       >進行中</span
                     >
                     <span
-                      v-else
+                      v-else-if="contact.progress === 2"
                       class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-green-900 dark:text-green-300"
                       >完了</span
                     >
@@ -513,6 +495,9 @@ onMounted(() => {
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="flex justify-start mt-4">
+            <Pagination :links="props.contacts.links" />
           </div>
         </div>
       </section>

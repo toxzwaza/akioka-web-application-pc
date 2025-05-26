@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Services\Helper;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -26,11 +27,11 @@ class ContactController extends Controller
         // 検索条件に基づいてクエリを絞り込む
         if ($keyword) {
             $baseQuery->where('contacts.subject', 'like', "%{$keyword}%")
-                      ->orWhere('contacts.name', 'like', "%{$keyword}%")
-                      ->orWhere('contacts.email', 'like', "%{$keyword}%")
-                      ->orWhere('contacts.summary', 'like', "%{$keyword}%")
-                      ->orWhere('contacts.content', 'like', "%{$keyword}%")
-                      ->orWhere('contacts.memo', 'like', "%{$keyword}%");
+                ->orWhere('contacts.name', 'like', "%{$keyword}%")
+                ->orWhere('contacts.email', 'like', "%{$keyword}%")
+                ->orWhere('contacts.summary', 'like', "%{$keyword}%")
+                ->orWhere('contacts.content', 'like', "%{$keyword}%")
+                ->orWhere('contacts.memo', 'like', "%{$keyword}%");
         }
 
         if ($start_contact_date && $end_contact_date) {
@@ -63,7 +64,7 @@ class ContactController extends Controller
             SUM(CASE WHEN progress = 0 THEN 1 ELSE 0 END) as in_progress_count,
             SUM(CASE WHEN progress = 1 THEN 1 ELSE 0 END) as solved_count
         ', [now()->month, now()->year])
-        ->first();
+            ->first();
 
         // 担当者取得
         $users = User::where('del_flg', 0)->get();
@@ -83,6 +84,11 @@ class ContactController extends Controller
     public function show($id)
     {
         $contact = Contact::find($id);
+
+        if ($contact && !$contact->progress) {
+            $contact->progress = 1;
+            $contact->save();
+        }
 
         // 担当者取得
         $users = User::where('del_flg', 0)->get();
@@ -110,6 +116,13 @@ class ContactController extends Controller
                 case 'user_id':
                     $contact->user_id = $val;
                     $contact->save();
+
+                    $url = route('contact.show', ['id' => $contact->id]);
+
+                    $title = "お問い合わせ管理システムからの通知です。";
+                    $message = "問い合わせ回答依頼を受け付けました。\n\n以下のURLから回答を行ってください。";
+
+                    Helper::createNotifyQueue($title, $message, $url, [$contact->user_id]);
                     break;
                 case 'memo':
                     $contact->memo = $val;

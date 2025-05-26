@@ -44,7 +44,7 @@ const changeValue = (flg, val) => {
         console.log(res.data);
         if (res.data.status) {
           alert("更新が完了しました。");
-          window.location.reload();
+          // window.location.reload ();
         }
       })
       .catch((error) => {
@@ -75,13 +75,18 @@ onMounted(() => {
         <div class="mb-6">
           <p class="mb-1">
             <span class="font-bold">状況：</span>
-            <span
+              <span
               v-if="!contact.progress"
+              class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-900 dark:text-gray-300"
+              >未読</span
+            >
+            <span
+              v-else-if="contact.progress === 1"
               class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300"
               >進行中</span
             >
             <span
-              v-else
+              v-else-if="contact.progress === 2"
               class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-green-900 dark:text-green-300"
               >完了</span
             >
@@ -199,9 +204,12 @@ onMounted(() => {
                 @change="changeValue('progress', $event.target.value)"
               >
                 <option :selected="!props.contact.progress" :value="0">
-                  進行中
+                  未読
                 </option>
                 <option :selected="props.contact.progress" :value="1">
+                  進行中
+                </option>
+                <option :selected="props.contact.progress" :value="2">
                   完了
                 </option>
               </select>
