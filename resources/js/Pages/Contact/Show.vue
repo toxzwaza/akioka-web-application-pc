@@ -60,6 +60,12 @@ onMounted(() => {
         :sub="'HPからのお問い合わせの詳細情報を確認することができます。'"
       />
 
+      <div class="mb-4">
+        <Link href="/contact" class="text-blue-500 hover:underline font-bold">
+          <i class="fas fa-arrow-left mr-2"></i> お問い合わせ一覧へ戻る
+        </Link>
+      </div>
+
       <section id="contact_container" class="">
         <div class="mb-6">
           <p class="mb-1">
@@ -130,12 +136,20 @@ onMounted(() => {
           </p>
           <p class="mb-1">
             <i class="mr-2 fas fa-envelope"></i>
-            <span @click="copyToClipboard(props.contact.email)" class="text-blue-500 underline">
-              {{ props.contact.email }} </span>
+            <span
+              @click="copyToClipboard(props.contact.email)"
+              class="text-blue-500 underline"
+            >
+              {{ props.contact.email }}
+            </span>
           </p>
           <p class="mb-1">
             <i class="mr-2 fas fa-phone"></i>
-            <span class="text-blue-500 underline" @click="copyToClipboard(props.contact.tel)">{{ props.contact.tel }}</span>
+            <span
+              class="text-blue-500 underline"
+              @click="copyToClipboard(props.contact.tel)"
+              >{{ props.contact.tel }}</span
+            >
           </p>
         </div>
         <p

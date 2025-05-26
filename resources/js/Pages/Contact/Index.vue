@@ -1,6 +1,6 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
-import { ref, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import Title from "@/Components/Title/MainTitle.vue";
@@ -25,10 +25,52 @@ ChartJS.register(
   BarElement
 );
 
+const form = reactive({
+  order_by: "desc",
+  start_contact_date: "",
+  end_contact_date: "",
+  kind: null,
+  progress: null,
+  keyword: "",
+  user_id: null,
+});
+
 const props = defineProps({
   contacts: Object,
-  stats: Array
+  stats: Array,
+  users: Array,
 });
+
+const searchContact = (flg) => {
+
+  if (
+    flg === 'search' &&
+    !form.keyword &&
+      !form.start_contact_date &&
+      !form.end_contact_date &&
+      form.kind === null &&
+      form.progress === null)
+  {
+    return alert("検索対象を入力してください。");
+  }
+
+  if (flg === 'reset') {
+    form.keyword = null
+    form.start_contact_date = null
+    form.end_contact_date = null
+    form.progress = null
+    form.kind = null
+    form.user_id = null
+  }
+  router.get(route("contact.home"), {
+    keyword: form.keyword,
+    start_contact_date: form.start_contact_date,
+    end_contact_date: form.end_contact_date,
+    progress: form.progress,
+    kind: form.kind,
+    user_id: form.user_id,
+  });
+};
 
 const pieChartData = computed(() => {
   const kindCounts = {
@@ -129,7 +171,14 @@ const redirectShow = (contact_id) => {
 };
 
 onMounted(() => {
-  console.log(props.contacts);
+  const urlParams = new URLSearchParams(window.location.search);
+  form.keyword = urlParams.get("keyword") || "";
+  form.start_contact_date = urlParams.get("start_contact_date") || "";
+  form.end_contact_date = urlParams.get("end_contact_date") || "";
+  form.progress = urlParams.get("progress") || null;
+  form.kind = urlParams.get("kind") || null;
+  form.user_id = urlParams.get("user_id") || null;
+  console.log(form);
 });
 </script>
 <template>
@@ -149,17 +198,23 @@ onMounted(() => {
           <div class="contact_card bg-blue-500">
             <p class="title">問題回答率</p>
             <hr class="my-1" />
-            <p class="value">{{ Math.round((props.stats.solved_count / props.stats.total_count) * 100) }}%</p>
+            <p class="value">
+              {{
+                Math.round(
+                  (props.stats.solved_count / props.stats.total_count) * 100
+                )
+              }}%
+            </p>
           </div>
           <div class="contact_card bg-gray-500">
             <p class="title">未回答</p>
             <hr class="my-1" />
-            <p class="value">{{ props.stats.solved_count }}</p>
+            <p class="value">{{ props.stats.in_progress_count }}</p>
           </div>
           <div class="contact_card bg-green-500">
             <p class="title">回答済み</p>
             <hr class="my-1" />
-            <p class="value">{{ props.stats.in_progress_count}}</p>
+            <p class="value">{{ props.stats.solved_count }}</p>
           </div>
         </div>
 
@@ -179,8 +234,156 @@ onMounted(() => {
           </div>
         </div>
       </section>
-      <div class="flex justify-end   mb-4">
-          <Pagination :links="props.contacts.links" />
+      <div class="flex justify-end mb-4">
+        <Pagination :links="props.contacts.links" />
+      </div>
+      <div id="sort_container" class="my-8 flex items-start justify-start">
+        <div class="w-1/6">
+          <p class="mb-2 font-bold">並び順</p>
+          <div class="button_container flex items-center justify-start">
+            <button
+              :class="{
+                'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
+                'opacity-60': form.order_by != 'desc',
+              }"
+              @click="form.order_by = 'desc'"
+            >
+              新しい順
+            </button>
+            <button
+              :class="{
+                'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
+                'opacity-60': form.order_by != 'asc',
+              }"
+              @click="form.order_by = 'asc'"
+            >
+              古い順
+            </button>
+          </div>
+        </div>
+
+        <div class="w-5/6">
+          <div class="mr-8">
+            <p class="mb-2 font-bold">検索</p>
+            <div class="button_container flex items-bottom justify-start">
+              <div class="w-62 mr-2">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
+                >
+                  キーワードから検索
+                </label>
+                <input
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="text"
+                  name=""
+                  id=""
+                  v-model="form.keyword"
+                />
+              </div>
+              <div class="mr-2">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
+                >
+                  問い合わせ日
+                </label>
+                <div class="flex items-center">
+                  <input
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
+                    v-model="form.start_contact_date"
+                  />
+                  ～
+                  <input
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 bcontactorder border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 ml-2"
+                    v-model="form.end_contact_date"
+                  />
+                </div>
+              </div>
+
+              <div class="w-32 mr-2">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
+                >
+                  状況
+                </label>
+                <select
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="order_user"
+                  id=""
+                  v-model="form.progress"
+                >
+                  <option value="">未選択</option>
+                  <option value="0">未回答</option>
+                  <option value="1">回答済み</option>
+                </select>
+              </div>
+              <div class="w-32 mr-2">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
+                >
+                  種類
+                </label>
+                <select
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="order_user"
+                  id=""
+                  v-model="form.kind"
+                >
+                  <option value="">未選択</option>
+                  <option value="0">製品</option>
+                  <option value="1">新規案件</option>
+                  <option value="2">営業・広告</option>
+                  <option value="3">その他</option>
+                </select>
+              </div>
+              <div class="w-32 mr-2">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
+                >
+                  担当者
+                </label>
+                <select
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="order_user"
+                  id=""
+                  v-model="form.user_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+
+              <button
+                @click="searchContact('search')"
+                class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              >
+                検索
+              </button>
+              <button
+                @click="searchContact('reset')"
+                class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              >
+                リセット
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <section class="text-gray-600 body-font">

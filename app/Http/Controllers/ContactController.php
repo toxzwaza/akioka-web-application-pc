@@ -10,16 +10,51 @@ use Inertia\Inertia;
 class ContactController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
+        $keyword = $request->keyword;
+        $start_contact_date = $request->start_contact_date;
+        $end_contact_date = $request->end_contact_date;
+        $progress = $request->progress;
+        $kind = $request->kind;
+        $user_id = $request->user_id;
+
         // 基本のクエリを構築
         $baseQuery = Contact::select('contacts.*', 'users.name as user_name')
             ->join('users', 'users.id', 'contacts.user_id');
 
+        // 検索条件に基づいてクエリを絞り込む
+        if ($keyword) {
+            $baseQuery->where('contacts.subject', 'like', "%{$keyword}%")
+                      ->orWhere('contacts.name', 'like', "%{$keyword}%")
+                      ->orWhere('contacts.email', 'like', "%{$keyword}%")
+                      ->orWhere('contacts.summary', 'like', "%{$keyword}%")
+                      ->orWhere('contacts.content', 'like', "%{$keyword}%")
+                      ->orWhere('contacts.memo', 'like', "%{$keyword}%");
+        }
+
+        if ($start_contact_date && $end_contact_date) {
+            $baseQuery->whereBetween('contacts.created_at', [$start_contact_date, $end_contact_date]);
+        } elseif ($start_contact_date) {
+            $baseQuery->where('contacts.created_at', '>=', $start_contact_date);
+        } elseif ($end_contact_date) {
+            $baseQuery->where('contacts.created_at', '<=', $end_contact_date);
+        }
+
+        if (!is_null($progress)) {
+            $baseQuery->where('contacts.progress', $progress);
+        }
+
+        if (!is_null($kind)) {
+            $baseQuery->where('contacts.kind', $kind);
+        }
+
+        if ($user_id) {
+            $baseQuery->where('contacts.user_id', $user_id);
+        }
+
         // メインの問い合わせ一覧を取得
-        $contacts = (clone $baseQuery)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $contacts = $baseQuery->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // 集計データを1回のクエリで取得
         $stats = Contact::selectRaw('
@@ -30,6 +65,9 @@ class ContactController extends Controller
         ', [now()->month, now()->year])
         ->first();
 
+        // 担当者取得
+        $users = User::where('del_flg', 0)->get();
+
         return Inertia::render('Contact/Index', [
             'contacts' => $contacts,
             'stats' => [
@@ -37,7 +75,8 @@ class ContactController extends Controller
                 'in_progress_count' => $stats->in_progress_count,
                 'solved_count' => $stats->solved_count,
                 'total_count' => $stats->total_count
-            ]
+            ],
+            'users' => $users
         ]);
     }
 
