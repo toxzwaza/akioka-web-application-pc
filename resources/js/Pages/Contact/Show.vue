@@ -11,7 +11,12 @@ const props = defineProps({
 });
 
 const formatText = (text) => {
-  return text.replace(/\n/g, "<br>");
+  if (!text) return "";
+  // URLをリンクに変換
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const textWithLinks = text.replace(urlRegex, '<a href="$1" target="_blank" class="text-blue-600 hover:underline">$1</a>');
+  // 改行を<br>に変換
+  return textWithLinks.replace(/\n/g, "<br>");
 };
 
 const copyToClipboard = async (text) => {
@@ -153,21 +158,28 @@ onMounted(() => {
           </p>
         </div>
         <p
-          class="font-bold text-lg mb-2 p-2 bg-gray-50 text-gray-700 rounded-sm"
+          class="font-bold text-lg mb-2 p-2 pl-4 bg-gray-700 text-white rounded-sm"
         >
-          件名： {{ props.contact.subject }}
+          {{ props.contact.subject }}
         </p>
 
-        <div class="flex justify-between items-start">
-          <div class="w-1/2 pr-4">
-            <p class="font-bold mb-1">原文</p>
-            <p v-html="formatText(props.contact.content)"></p>
+        <div class="">
+          
+          <div class="w-1/2 pl-4">
+            <p class="font-bold mb-1 bg-gray-50 p-2">
+              <i class="mr-2 fas fa-robot"></i>AI要約生成</p>
+            <p class="pl-4" v-html="formatText(props.contact.summary)"></p>
           </div>
 
-          <div class="w-1/2 pl-4">
-            <p class="font-bold mb-1">AI要約生成</p>
-            <p v-html="formatText(props.contact.summary)"></p>
+          <hr class="my-4"/>
+
+          <div class="w-1/2 pr-4">
+            <p class="font-bold mb-1 bg-gray-50 p-2">
+              <i class="mr-2 fas fa-envelope"></i>メール原文
+            </p>
+            <p class="pl-4" v-html="formatText(props.contact.content)"></p>
           </div>
+
         </div>
 
         <div>
