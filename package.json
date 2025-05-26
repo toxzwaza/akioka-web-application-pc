@@ -25,9 +25,10 @@
         "@fullcalendar/interaction": "^6.1.15",
         "@fullcalendar/timegrid": "^6.1.15",
         "@fullcalendar/vue3": "^6.1.15",
-        "chart.js": "^3.9.1",
+        "chart.js": "^4.4.1",
         "pdfjs-dist": "3.4",
         "qrcode": "^1.5.4",
-        "vue-chart-3": "^3.1.8"
+        "vue-chart-3": "^3.1.8",
+        "vue-chartjs": "^5.3.0"
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\CalcProductController;
 use App\Http\Controllers\CalcProductTabletController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FaxController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\LunchController;
@@ -112,6 +113,11 @@ Route::get('/signage/getData', [SignageController::class, 'getData'])->name('sig
 Route::get('/signage/deleteData/{asset_id}', [SignageController::class, "deleteData"])->name('signage.deleteData');
 // データ更新
 Route::get('/signage/updateData', [SignageController::class, 'updateData'])->name('signage.updateData');
+
+// お問い合わせ
+Route::get('/contact', [ContactController::class, 'index'])->name('contact.home');
+Route::get('/contact/show/{id}', [ContactController::class, 'show'])->name('contact.show');
+Route::post('/contact/update', [ContactController::class, 'update'])->name('contact.update');
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);

@@ -91,6 +91,18 @@ const sub_nav_close = ref(false);
           サイネージ
         </a>
 
+        <!-- 問い合わせ管理システム -->
+        <a
+          :href="route('contact.home')"
+          :class="{
+            'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
+            'bg-blue-600 font-bold': route().current().includes('contact'),
+          }"
+        >
+          <span class="mr-1 material-symbols-outlined"> description </span>
+          問い合わせ
+        </a>
+
         <!-- リモート接続 -->
         <!-- <a
           :href="route('remote')"
