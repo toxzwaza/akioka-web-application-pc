@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Services\Helper;
 use App\Models\Contact;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -134,5 +135,28 @@ class ContactController extends Controller
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function contactCreateNotify(Request $request)
+    {
+        $status = true;
+
+        try {
+            $contact_users = Contact::where('progress', 0)->distinct()->pluck('user_id');
+            // dd($contact_users);
+
+            foreach ($contact_users as $user_id) {
+                $contact_progress_count = Contact::where('user_id', $user_id)->where('progress', 0)->count();
+
+                $title = "お問い合わせ管理システムからの通知です。";
+                $message = $contact_progress_count . "件の未読問い合わせがあります。\n\n以下のURLから回答を行ってください。";
+
+                Helper::createNotifyQueue($title, $message, route('contact.home'), [$user_id]);
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json([$status]);
     }
 }

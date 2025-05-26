@@ -113,6 +113,8 @@ Route::get('/signage/getData', [SignageController::class, 'getData'])->name('sig
 Route::get('/signage/deleteData/{asset_id}', [SignageController::class, "deleteData"])->name('signage.deleteData');
 // データ更新
 Route::get('/signage/updateData', [SignageController::class, 'updateData'])->name('signage.updateData');
+// 未読問い合わせ通知を作成
+Route::get('/contact/createNotify', [ContactController::class, 'contactCreateNotify'])->name('contact.createNotify');
 
 // お問い合わせ
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.home');
