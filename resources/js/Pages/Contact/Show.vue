@@ -8,13 +8,17 @@ import Title from "@/Components/Title/MainTitle.vue";
 const props = defineProps({
   contact: Object,
   users: Array,
+  searchParams: Object
 });
 
 const formatText = (text) => {
   if (!text) return "";
   // URLをリンクに変換
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const textWithLinks = text.replace(urlRegex, '<a href="$1" target="_blank" class="text-blue-600 hover:underline">$1</a>');
+  const textWithLinks = text.replace(
+    urlRegex,
+    '<a href="$1" target="_blank" class="text-blue-600 hover:underline">$1</a>'
+  );
   // 改行を<br>に変換
   return textWithLinks.replace(/\n/g, "<br>");
 };
@@ -53,6 +57,11 @@ const changeValue = (flg, val) => {
   }
 };
 
+// 一覧画面に戻るリンクを生成
+const getBackLink = () => {
+  return route('contact.home', props.searchParams);
+};
+
 onMounted(() => {
   console.log(props.contact);
 });
@@ -66,7 +75,7 @@ onMounted(() => {
       />
 
       <div class="mb-4">
-        <Link href="/contact" class="text-blue-500 hover:underline font-bold">
+        <Link :href="getBackLink()" class="text-blue-500 hover:underline font-bold">
           <i class="fas fa-arrow-left mr-2"></i> お問い合わせ一覧へ戻る
         </Link>
       </div>
@@ -75,7 +84,7 @@ onMounted(() => {
         <div class="mb-6">
           <p class="mb-1">
             <span class="font-bold">状況：</span>
-              <span
+            <span
               v-if="!contact.progress"
               class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-900 dark:text-gray-300"
               >未読</span
@@ -169,14 +178,14 @@ onMounted(() => {
         </p>
 
         <div class="">
-          
           <div class="w-1/2 pl-4">
             <p class="font-bold mb-1 bg-gray-50 p-2">
-              <i class="mr-2 fas fa-robot"></i>AI要約生成</p>
+              <i class="mr-2 fas fa-robot"></i>AI要約生成
+            </p>
             <p class="pl-4" v-html="formatText(props.contact.summary)"></p>
           </div>
 
-          <hr class="my-4"/>
+          <hr class="my-4" />
 
           <div class="w-1/2 pr-4">
             <p class="font-bold mb-1 bg-gray-50 p-2">
@@ -184,7 +193,6 @@ onMounted(() => {
             </p>
             <p class="pl-4" v-html="formatText(props.contact.content)"></p>
           </div>
-
         </div>
 
         <div>
@@ -203,13 +211,13 @@ onMounted(() => {
                 class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 @change="changeValue('progress', $event.target.value)"
               >
-                <option :selected="!props.contact.progress" :value="0">
+                <option :selected="props.contact.progress === 0" :value="0">
                   未読
                 </option>
-                <option :selected="props.contact.progress" :value="1">
+                <option :selected="props.contact.progress === 1" :value="1">
                   進行中
                 </option>
-                <option :selected="props.contact.progress" :value="2">
+                <option :selected="props.contact.progress === 2" :value="2">
                   完了
                 </option>
               </select>

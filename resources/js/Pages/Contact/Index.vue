@@ -16,6 +16,8 @@ import {
   BarElement,
 } from "chart.js";
 
+const leftContainer = ref(false);
+
 ChartJS.register(
   ArcElement,
   Tooltip,
@@ -26,13 +28,13 @@ ChartJS.register(
 );
 
 const form = reactive({
-  order_by: "desc",
-  start_contact_date: "",
-  end_contact_date: "",
+  orderBy: "desc",
+  startContactDate: "",
+  endContactDate: "",
   kind: null,
   progress: null,
   keyword: "",
-  user_id: null,
+  userId: null,
 });
 
 const props = defineProps({
@@ -45,29 +47,30 @@ const searchContact = (flg) => {
   if (
     flg === "search" &&
     !form.keyword &&
-    !form.start_contact_date &&
-    !form.end_contact_date &&
+    !form.startContactDate &&
+    !form.endContactDate &&
     form.kind === null &&
-    form.progress === null
+    form.progress === null &&
+    !form.userId
   ) {
     return alert("検索対象を入力してください。");
   }
 
   if (flg === "reset") {
     form.keyword = null;
-    form.start_contact_date = null;
-    form.end_contact_date = null;
+    form.startContactDate = null;
+    form.endContactDate = null;
     form.progress = null;
     form.kind = null;
-    form.user_id = null;
+    form.userId = null;
   }
   router.get(route("contact.home"), {
     keyword: form.keyword,
-    start_contact_date: form.start_contact_date,
-    end_contact_date: form.end_contact_date,
+    start_contact_date: form.startContactDate,
+    end_contact_date: form.endContactDate,
     progress: form.progress,
     kind: form.kind,
-    user_id: form.user_id,
+    user_id: form.userId,
   });
 };
 
@@ -165,426 +168,521 @@ const barChartOptions = {
   },
 };
 
-const redirectShow = (contact_id) => {
-  router.get(route("contact.show", { id: contact_id }));
+const redirectShow = (contactId) => {
+  router.get(route("contact.show", { 
+    id: contactId,
+    keyword: form.keyword,
+    start_contact_date: form.startContactDate,
+    end_contact_date: form.endContactDate,
+    progress: form.progress,
+    kind: form.kind,
+    user_id: form.userId
+  }));
 };
+
+const isFormIncomplete = () => {
+  return (
+    !form.keyword &&
+    !form.startContactDate &&
+    !form.endContactDate &&
+    form.progress === null &&
+    form.kind === null &&
+    form.userId === null
+  );
+};
+
 
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search);
   form.keyword = urlParams.get("keyword") || "";
-  form.start_contact_date = urlParams.get("start_contact_date") || "";
-  form.end_contact_date = urlParams.get("end_contact_date") || "";
+  form.startContactDate = urlParams.get("start_contact_date") || "";
+  form.endContactDate = urlParams.get("end_contact_date") || "";
   form.progress = urlParams.get("progress") || null;
   form.kind = urlParams.get("kind") || null;
-  form.user_id = urlParams.get("user_id") || null;
+  form.userId = urlParams.get("user_id") || null;
   console.log(form);
+  if(!isFormIncomplete()){
+    leftContainer.value = true
+  }
 });
 </script>
 <template>
-  <MainLayout>
+  <MainLayout :p_none="true">
     <template #content>
-      <Title
-        :top="'お問い合わせ'"
-        :sub="'HPからのお問い合わせ対応が可能です。'"
-      />
-      <section id="top_content" class="">
-        <div id="card_content">
-          <div class="contact_card bg-blue-500">
-            <p class="title">今月の問い合わせ</p>
-            <hr class="my-1" />
-            <p class="value">{{ props.stats.current_month_count }}</p>
-          </div>
-          <div class="contact_card bg-blue-500">
-            <p class="title">問題回答率</p>
-            <hr class="my-1" />
-            <p class="value">
-              {{
-                Math.round(
-                  (props.stats.solved_count / props.stats.total_count) * 100
-                )
-              }}%
-            </p>
-          </div>
-          <div class="contact_card bg-gray-500">
-            <p class="title">未回答</p>
-            <hr class="my-1" />
-            <p class="value">{{ props.stats.in_progress_count }}</p>
-          </div>
-          <div class="contact_card bg-green-500">
-            <p class="title">回答済み</p>
-            <hr class="my-1" />
-            <p class="value">{{ props.stats.solved_count }}</p>
-          </div>
-        </div>
-
-        <div id="graph_content" class="">
-          <div class="w-1/2 p-4">
-            <h3 class="text-lg font-bold mb-4">問い合わせ種類の割合</h3>
-            <div class="">
-              <Pie :data="pieChartData" :options="pieChartOptions" />
-            </div>
-          </div>
-
-          <div class="w-1/2 p-4">
-            <h3 class="text-lg font-bold mb-4">月別問い合わせ数</h3>
-            <div class="">
-              <Bar :data="barChartData" :options="barChartOptions" />
-            </div>
-          </div>
-        </div>
+      <section class="py-16 px-24">
+        <Title
+          :top="'お問い合わせ'"
+          :sub="'HPからのお問い合わせ対応が可能です。'"
+        />
       </section>
+      <div id="mainContent">
+        <div
+          id="leftContainer"
+          :class="{ 'bg-gray-200': true, open: leftContainer }"
+          @click="leftContainer = !leftContainer"
+        >
+          <div class="flex justify-end">
+            <button
+              v-if="!leftContainer"
+              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2"
+            >
+              <i class="fas fa-caret-right"></i>
+            </button>
+            <button
+              v-else
+              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2"
+            >
+              <i class="fas fa-caret-left"></i>
+            </button>
+          </div>
 
-      <div id="sort_container" class="my-8 flex items-start justify-start">
-        <div class="w-5/6">
-          <div class="mr-8">
-            <p class="mb-2 font-bold">検索</p>
-            <div class="button_container flex items-bottom justify-start">
-              <div class="w-62 mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  キーワードから検索
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="text"
-                  name=""
-                  id=""
-                  v-model="form.keyword"
-                />
+          <div id="sortContainer" class="my-8" :class="{'opacity-0': !leftContainer}" @click.stop>
+            <div class="w-5/6 mx-auto">
+              
+                <p class="mb-2 font-bold">検索</p>
+                <div class="buttonContainer ">
+                  <div class="w-62 mb-4">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      キーワードから検索
+                    </label>
+                    <input
+                      class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      type="text"
+                      name=""
+                      id=""
+                      v-model="form.keyword"
+                    />
+                  </div>
+                  <div class="mb-4">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      問い合わせ日(開始)
+                    </label>
+                    <div class="">
+                      <input
+                        type="date"
+                        name=""
+                        id=""
+                        class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
+                        v-model="form.startContactDate"
+                      />
+
+                  </div>
+                  <div class="mb-4">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      問い合わせ日(終了)
+                    </label>
+                    <div class="">
+                      <input
+                        type="date"
+                        name=""
+                        id=""
+                        class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                        v-model="form.endContactDate"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="mb-4">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      状況
+                    </label>
+                    <select
+                      class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.progress"
+                    >
+                      <option value="">未選択</option>
+                      <option value="0">未回答</option>
+                      <option value="1">回答済み</option>
+                    </select>
+                  </div>
+                  <div class="mb-4">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      種類
+                    </label>
+                    <select
+                      class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.kind"
+                    >
+                      <option value="">未選択</option>
+                      <option value="0">製品</option>
+                      <option value="1">新規案件</option>
+                      <option value="2">営業・広告</option>
+                      <option value="3">その他</option>
+                    </select>
+                  </div>
+                  <div class="mb-8">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      担当者
+                    </label>
+                    <select
+                      class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.userId"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="user in props.users"
+                        :key="user.id"
+                        :value="user.id"
+                      >
+                        {{ user.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <button
+                    @click="searchContact('search')"
+                    class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    検索
+                  </button>
+                  <button
+                    @click="searchContact('reset')"
+                    class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    リセット
+                  </button>
+                </div>
               </div>
-              <div class="mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  問い合わせ日
-                </label>
-                <div class="flex items-center">
-                  <input
-                    type="date"
-                    name=""
-                    id=""
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
-                    v-model="form.start_contact_date"
-                  />
-                  ～
-                  <input
-                    type="date"
-                    name=""
-                    id=""
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 bcontactorder border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 ml-2"
-                    v-model="form.end_contact_date"
-                  />
+            </div>
+          </div>
+        </div>
+        <div id="rightContainer" :class="{ open: leftContainer }">
+          <section id="topContent" class="">
+            <div id="cardContent">
+              <div class="contactCard bg-blue-500">
+                <p class="title">今月の問い合わせ</p>
+                <hr class="my-1" />
+                <p class="value">{{ props.stats.current_month_count }}</p>
+              </div>
+              <div class="contactCard bg-blue-500">
+                <p class="title">問題回答率</p>
+                <hr class="my-1" />
+                <p class="value">
+                  {{
+                    Math.round(
+                      (props.stats.solved_count / props.stats.total_count) * 100
+                    )
+                  }}%
+                </p>
+              </div>
+              <div class="contactCard bg-gray-500">
+                <p class="title">未回答</p>
+                <hr class="my-1" />
+                <p class="value">{{ props.stats.in_progress_count }}</p>
+              </div>
+              <div class="contactCard bg-green-500">
+                <p class="title">回答済み</p>
+                <hr class="my-1" />
+                <p class="value">{{ props.stats.solved_count }}</p>
+              </div>
+            </div>
+
+            <div id="graphContent" class="">
+              <div class="w-1/2 p-4">
+                <h3 class="text-lg font-bold mb-4">問い合わせ種類の割合</h3>
+                <div class="">
+                  <Pie :data="pieChartData" :options="pieChartOptions" />
                 </div>
               </div>
 
-              <div class="w-32 mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  状況
-                </label>
-                <select
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="order_user"
-                  id=""
-                  v-model="form.progress"
-                >
-                  <option value="">未選択</option>
-                  <option value="0">未回答</option>
-                  <option value="1">回答済み</option>
-                </select>
+              <div class="w-1/2 p-4">
+                <h3 class="text-lg font-bold mb-4">月別問い合わせ数</h3>
+                <div class="">
+                  <Bar :data="barChartData" :options="barChartOptions" />
+                </div>
               </div>
-              <div class="w-32 mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  種類
-                </label>
-                <select
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="order_user"
-                  id=""
-                  v-model="form.kind"
-                >
-                  <option value="">未選択</option>
-                  <option value="0">製品</option>
-                  <option value="1">新規案件</option>
-                  <option value="2">営業・広告</option>
-                  <option value="3">その他</option>
-                </select>
-              </div>
-              <div class="w-32 mr-2">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-last-name"
-                >
-                  担当者
-                </label>
-                <select
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="order_user"
-                  id=""
-                  v-model="form.user_id"
-                >
-                  <option value="0">未選択</option>
-                  <option
-                    v-for="user in props.users"
-                    :key="user.id"
-                    :value="user.id"
-                  >
-                    {{ user.name }}
-                  </option>
-                </select>
-              </div>
-
-              <button
-                @click="searchContact('search')"
-                class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-              >
-                検索
-              </button>
-              <button
-                @click="searchContact('reset')"
-                class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-              >
-                リセット
-              </button>
             </div>
-          </div>
+          </section>
+
+
+          <section class="text-gray-600 body-font">
+            <div class="mx-auto overflow-auto">
+              <div class="flex justify-start mb-4">
+                <Pagination :links="props.contacts.links" />
+              </div>
+
+              <div id="tableContainer" class="w-full mx-auto">
+                <table class="table-auto w-full text-left whitespace-no-wrap">
+                  <thead>
+                    <tr>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                      >
+                        ID
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                      >
+                        状況
+                      </th>
+
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        種類
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        件名
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        名前
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        フリガナ
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        メール
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        電話
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        問い合わせ日
+                      </th>
+                      <th
+                        class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                      >
+                        担当
+                      </th>
+                      <th
+                        class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
+                      ></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="contact in props.contacts.data"
+                      :key="contact.id"
+                      class="hover:bg-gray-50"
+                      @click="redirectShow(contact.id)"
+                    >
+                      <td class="px-4 py-5">{{ contact.id }}</td>
+                      <td class="px-4 py-5">
+                        <span
+                          v-if="!contact.progress"
+                          class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-900 dark:text-gray-300"
+                          >未読</span
+                        >
+                        <span
+                          v-else-if="contact.progress === 1"
+                          class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300"
+                          >進行中</span
+                        >
+                        <span
+                          v-else-if="contact.progress === 2"
+                          class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-green-900 dark:text-green-300"
+                          >完了</span
+                        >
+                      </td>
+
+                      <td class="px-4 py-5">
+                        <span
+                          v-if="!contact.kind"
+                          class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-indigo-900 dark:text-indigo-300"
+                          >製品</span
+                        >
+                        <span
+                          v-else-if="contact.kind === 1"
+                          class="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-purple-900 dark:text-purple-300"
+                          >新規案件</span
+                        >
+                        <span
+                          v-else-if="contact.kind === 2"
+                          class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300"
+                          >営業・広告</span
+                        >
+                        <span
+                          v-else-if="contact.kind === 3"
+                          class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-700 dark:text-gray-300"
+                          >その他</span
+                        >
+                      </td>
+                      <td class="px-4 py-5">{{ contact.subject }}</td>
+                      <td class="px-4 py-5">{{ contact.name }}</td>
+                      <td class="px-4 py-5">{{ contact.furi_name }}</td>
+                      <td class="px-4 py-5">{{ contact.email }}</td>
+                      <td class="px-4 py-5">{{ contact.tel }}</td>
+                      <td class="px-4 py-5">
+                        {{
+                          new Date(contact.created_at)
+                            .toLocaleString("ja-JP", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            .replace(/\//g, "/")
+                        }}
+                      </td>
+                      <td class="px-4 py-5">{{ contact.user_name }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex justify-start mt-4">
+                <Pagination :links="props.contacts.links" />
+              </div>
+            </div>
+          </section>
         </div>
+      
       </div>
-
-      <section class="text-gray-600 body-font">
-        <div class="mx-auto">
-          <div class="flex justify-start mb-4">
-            <Pagination :links="props.contacts.links" />
-          </div>
-
-          <div id="table_container" class="w-full mx-auto overflow-auto">
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    ID
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    状況
-                  </th>
-
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    種類
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    件名
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    名前
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    フリガナ
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    メール
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    電話
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    問い合わせ日
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    担当
-                  </th>
-                  <th
-                    class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
-                  ></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="contact in props.contacts.data"
-                  :key="contact.id"
-                  class="hover:bg-gray-50"
-                  @click="redirectShow(contact.id)"
-                >
-                  <td class="px-4 py-5">{{ contact.id }}</td>
-                  <td class="px-4 py-5">
-                    <span
-                      v-if="!contact.progress"
-                      class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-900 dark:text-gray-300"
-                      >未読</span
-                    >
-                    <span
-                      v-else-if="contact.progress === 1"
-                      class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300"
-                      >進行中</span
-                    >
-                    <span
-                      v-else-if="contact.progress === 2"
-                      class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-green-900 dark:text-green-300"
-                      >完了</span
-                    >
-                  </td>
-
-                  <td class="px-4 py-5">
-                    <span
-                      v-if="!contact.kind"
-                      class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-indigo-900 dark:text-indigo-300"
-                      >製品</span
-                    >
-                    <span
-                      v-else-if="contact.kind === 1"
-                      class="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-purple-900 dark:text-purple-300"
-                      >新規案件</span
-                    >
-                    <span
-                      v-else-if="contact.kind === 2"
-                      class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300"
-                      >営業・広告</span
-                    >
-                    <span
-                      v-else-if="contact.kind === 3"
-                      class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-700 dark:text-gray-300"
-                      >その他</span
-                    >
-                  </td>
-                  <td class="px-4 py-5">{{ contact.subject }}</td>
-                  <td class="px-4 py-5">{{ contact.name }}</td>
-                  <td class="px-4 py-5">{{ contact.furi_name }}</td>
-                  <td class="px-4 py-5">{{ contact.email }}</td>
-                  <td class="px-4 py-5">{{ contact.tel }}</td>
-                  <td class="px-4 py-5">
-                    {{
-                      new Date(contact.created_at)
-                        .toLocaleString("ja-JP", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                        .replace(/\//g, "/")
-                    }}
-                  </td>
-                  <td class="px-4 py-5">{{ contact.user_name }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="flex justify-start mt-4">
-            <Pagination :links="props.contacts.links" />
-          </div>
-        </div>
-      </section>
     </template>
   </MainLayout>
 </template>
 <style scoped lang="scss">
-#table_container {
-  min-width: 1800px;
-
-  & table {
-    & td,
-    th {
-      white-space: nowrap;
-    }
-  }
-}
-
-#top_content {
-  height: 30vh;
+#mainContent {
+  overflow: hidden;
   display: flex;
-  margin-bottom: 4vh;
   justify-content: space-between;
 
-  & #card_content {
-    width: 42%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    height: 100%;
+  & #leftContainer {
+    width: 1.4%;
+    transition: all 0.3s ease;
 
-    & .contact_card {
-      width: 48%;
-      display: flex;
-      flex-direction: column;
-      text-align: center;
-      justify-content: center;
-      font-weight: bold;
-      color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      &:hover {
-        transform: scale(1.02);
-        transition: transform 0.2s ease;
-      }
+    &:hover {
+      width: 4%;
+    }
 
-      & p {
-        padding: 10px 20px;
+    &.open {
+      width: 16%;
+    }
 
-        &.title {
-          font-size: 1.2rem;
-        }
+    & #sortContainer {
+      width: 96%;
+      margin: 0.4rem  auto 0;
+      position: sticky;
+      top: 20px;
+      left: 0;
+      z-index: 10;
+    }
+  }
+  & #rightContainer {
+    width: 95%;
+    &.open {
+      width: 82%;
+    }
 
-        &.value {
-          font-size: 2.5rem;
+    & #tableContainer {
+      min-width: 1800px;
+      overflow: auto;
+
+      & table {
+        & td,
+        th {
+          white-space: nowrap;
         }
       }
     }
-  }
 
-  & #graph_content {
-    width: 56%;
-    height: 100%;
-    display: flex;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    background-color: white;
-    padding: 1rem;
-
-    & > div {
-      width: 50%;
-      height: 100%;
+    & #topContent {
+      height: 30vh;
       display: flex;
-      flex-direction: column;
-      padding: 0.5rem;
+      margin-bottom: 4vh;
+      justify-content: space-between;
 
-      & h3 {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
+      & #cardContent {
+        width: 42%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        height: 100%;
+
+        & .contactCard {
+          width: 48%;
+          display: flex;
+          flex-direction: column;
+          text-align: center;
+          justify-content: center;
+          font-weight: bold;
+          color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          &:hover {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+          }
+
+          & p {
+            padding: 10px 20px;
+
+            &.title {
+              font-size: 1.2rem;
+            }
+
+            &.value {
+              font-size: 2.5rem;
+            }
+          }
+        }
       }
 
-      & > div {
-        flex: 1;
-        position: relative;
-        min-height: 0;
+      & #graphContent {
+        width: 56%;
+        height: 100%;
+        display: flex;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        background-color: white;
+        padding: 1rem;
+
+        & > div {
+          width: 50%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          padding: 0.5rem;
+
+          & h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+          }
+
+          & > div {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+          }
+        }
       }
     }
   }

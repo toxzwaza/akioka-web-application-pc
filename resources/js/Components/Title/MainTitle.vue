@@ -5,7 +5,7 @@ const props = defineProps({
 });
 </script>
 <template>
-  <div class="flex flex-wrap w-4/5 mb-20">
+  <div :class="{'flex flex-wrap w-4/5 mb-10': true,  }">
     <div class="w-full mb-6 lg:mb-0">
       <h1
         class="sm:text-3xl text-2xl font-medium title-font mb-2 text-gray-900"

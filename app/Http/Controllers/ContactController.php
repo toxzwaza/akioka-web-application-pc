@@ -82,20 +82,29 @@ class ContactController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $contact = Contact::find($id);
+        // 検索パラメータの取得
+        $searchParams = [
+            'keyword' => $request->input('keyword'),
+            'start_contact_date' => $request->input('start_contact_date'),
+            'end_contact_date' => $request->input('end_contact_date'),
+            'progress' => $request->input('progress'),
+            'kind' => $request->input('kind'),
+            'user_id' => $request->input('user_id')
+        ];
 
-        if ($contact && !$contact->progress) {
-            $contact->progress = 1;
-            $contact->save();
-        }
+        // お問い合わせ詳細の取得
+        $contact = Contact::findOrFail($id);
+        
+        // ユーザー一覧の取得
+        $users = User::all();
 
-        // 担当者取得
-        $users = User::where('del_flg', 0)->get();
-
-
-        return Inertia::render('Contact/Show', ['contact' => $contact, 'users' => $users]);
+        return Inertia::render('Contact/Show', [
+            'contact' => $contact,
+            'users' => $users,
+            'searchParams' => $searchParams // 検索パラメータをビューに渡す
+        ]);
     }
 
     public function update(Request $request)
@@ -151,7 +160,7 @@ class ContactController extends Controller
                 $title = "お問い合わせ管理システムからの通知です。";
                 $message = $contact_progress_count . "件の未読問い合わせがあります。\n\n以下のURLから回答を行ってください。";
 
-                Helper::createNotifyQueue($title, $message, route('contact.home'), [$user_id]);
+                Helper::createNotifyQueue($title, $message, route('contact.home', ['user_id' => $user_id]), [$user_id]);
             }
         } catch (Exception $e) {
             $status = false;

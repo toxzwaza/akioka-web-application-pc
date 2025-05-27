@@ -5,6 +5,7 @@ import { ref } from "vue";
 
 const props = defineProps({
   title: String,
+  p_none: Boolean
 });
 
 const sub_nav_close = ref(false);
@@ -533,7 +534,7 @@ const sub_nav_close = ref(false);
     </nav>
   </div>
 
-  <main :class="{ 'py-16 px-24': true }">
+  <main :class="{ 'py-16 px-24': !p_none }">
     <Message />
     <slot name="content" />
   </main>
