@@ -96,6 +96,10 @@ class ContactController extends Controller
 
         // お問い合わせ詳細の取得
         $contact = Contact::findOrFail($id);
+        if($contact && !$contact->progress){
+            $contact->progress = 1;
+            $contact->save();
+        }
         
         // ユーザー一覧の取得
         $users = User::all();

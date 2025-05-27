@@ -169,15 +169,17 @@ const barChartOptions = {
 };
 
 const redirectShow = (contactId) => {
-  router.get(route("contact.show", { 
-    id: contactId,
-    keyword: form.keyword,
-    start_contact_date: form.startContactDate,
-    end_contact_date: form.endContactDate,
-    progress: form.progress,
-    kind: form.kind,
-    user_id: form.userId
-  }));
+  router.get(
+    route("contact.show", {
+      id: contactId,
+      keyword: form.keyword,
+      start_contact_date: form.startContactDate,
+      end_contact_date: form.endContactDate,
+      progress: form.progress,
+      kind: form.kind,
+      user_id: form.userId,
+    })
+  );
 };
 
 const isFormIncomplete = () => {
@@ -191,7 +193,6 @@ const isFormIncomplete = () => {
   );
 };
 
-
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search);
   form.keyword = urlParams.get("keyword") || "";
@@ -201,8 +202,8 @@ onMounted(() => {
   form.kind = urlParams.get("kind") || null;
   form.userId = urlParams.get("user_id") || null;
   console.log(form);
-  if(!isFormIncomplete()){
-    leftContainer.value = true
+  if (!isFormIncomplete()) {
+    leftContainer.value = true;
   }
 });
 </script>
@@ -218,70 +219,74 @@ onMounted(() => {
       <div id="mainContent">
         <div
           id="leftContainer"
-          :class="{ 'bg-gray-200': true, open: leftContainer }"
+          :class="{ 'bg-gray-100': true, open: leftContainer }"
           @click="leftContainer = !leftContainer"
         >
           <div class="flex justify-end">
             <button
               v-if="!leftContainer"
-              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2"
+              class="bg-gray-400 hover:bg-gray-700 text-white font-bold py-1 px-2"
             >
               <i class="fas fa-caret-right"></i>
             </button>
             <button
               v-else
-              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2"
+              class="bg-gray-400 hover:bg-gray-700 text-white font-bold py-1 px-2"
             >
               <i class="fas fa-caret-left"></i>
             </button>
           </div>
 
-          <div id="sortContainer" class="my-8" :class="{'opacity-0': !leftContainer}" @click.stop>
-            <div class="w-5/6 mx-auto">
-              
-                <p class="mb-2 font-bold">検索</p>
-                <div class="buttonContainer ">
-                  <div class="w-62 mb-4">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      キーワードから検索
-                    </label>
+          <div
+            id="sortContainer"
+            class="my-8"
+            v-if="leftContainer"
+          >
+            <div class="w-5/6 mx-auto" @click.stop>
+              <p class="mb-2 font-bold">検索</p>
+              <div class="buttonContainer">
+                <div class="mb-8">
+                  <label
+                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                    for="grid-last-name"
+                  >
+                    キーワードから検索
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="text"
+                    name=""
+                    id=""
+                    v-model="form.keyword"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label
+                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                    for="grid-last-name"
+                  >
+                    問い合わせ日(開始)
+                  </label>
+                  <div class="mb-4">
                     <input
-                      class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      type="text"
+
+                      type="date"
                       name=""
                       id=""
-                      v-model="form.keyword"
+                      class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
+                      v-model="form.startContactDate"
                     />
                   </div>
-                  <div class="mb-4">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      問い合わせ日(開始)
-                    </label>
-                    <div class="">
-                      <input
-                        type="date"
-                        name=""
-                        id=""
-                        class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
-                        v-model="form.startContactDate"
-                      />
-
-                  </div>
-                  <div class="mb-4">
+                  <div class="mb-8">
                     <label
                       class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                       for="grid-last-name"
                     >
                       問い合わせ日(終了)
                     </label>
-                    <div class="">
+                    <div class="mb-4">
                       <input
+  
                         type="date"
                         name=""
                         id=""
@@ -299,6 +304,7 @@ onMounted(() => {
                       状況
                     </label>
                     <select
+
                       class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
@@ -317,6 +323,7 @@ onMounted(() => {
                       種類
                     </label>
                     <select
+
                       class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
@@ -337,6 +344,7 @@ onMounted(() => {
                       担当者
                     </label>
                     <select
+
                       class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
@@ -417,7 +425,6 @@ onMounted(() => {
               </div>
             </div>
           </section>
-
 
           <section class="text-gray-600 body-font">
             <div class="mx-auto overflow-auto">
@@ -562,7 +569,6 @@ onMounted(() => {
             </div>
           </section>
         </div>
-      
       </div>
     </template>
   </MainLayout>
@@ -587,7 +593,7 @@ onMounted(() => {
 
     & #sortContainer {
       width: 96%;
-      margin: 0.4rem  auto 0;
+      margin: 0.4rem auto 0;
       position: sticky;
       top: 20px;
       left: 0;
