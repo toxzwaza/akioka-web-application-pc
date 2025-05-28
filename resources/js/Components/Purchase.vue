@@ -258,9 +258,7 @@ onMounted(() => {
           <div class="text font-bold">
             備考
 
-            <p>
-              {{ description }}
-            </p>
+            <p v-html="description.replace(/\n/g, '<br>')"></p>
           </div>
         </div>
 

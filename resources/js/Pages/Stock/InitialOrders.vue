@@ -16,6 +16,7 @@ const props = defineProps({
   users: Array,
   order_users: Array,
   suppliers: Array,
+  totals: Object
 });
 
 const form = reactive({
@@ -400,7 +401,7 @@ onMounted(() => {
   form.order_user_id = params.get("order_user_id");
   form.user_id = params.get("user_id");
 
-  console.log(initial_orders.value);
+  console.log(props.totals)
 });
 
 // 納品書更新
@@ -699,6 +700,32 @@ const fileUpload = async (event) => {
           </div>
 
           <hr class="my-8" />
+
+          <section id="topContent" class="">
+            <div id="cardContent">
+              <div class="contactCard bg-gray-500">
+                <p class="title">検索合計発注数</p>
+                <hr class="my-1" />
+                <p class="value">{{ props.totals.total_order_count }}件</p>
+              </div>
+              <div class="contactCard bg-gray-500">
+                <p class="title">検索合計金額</p>
+                <hr class="my-1" />
+                <p class="value">{{ Number(props.totals.total_calc_price_sum).toLocaleString() }}円</p>
+              </div>
+              <div class="contactCard bg-blue-500">
+                <p class="title">今月合計発注数</p>
+                <hr class="my-1" />
+                <p class="value">{{ props.totals.current_month_count }}件</p>
+              </div>
+              <div class="contactCard bg-blue-500">
+                <p class="title">今月合計金額</p>
+                <hr class="my-1" />
+                <p class="value">{{ Number(props.totals.current_month_sum).toLocaleString() }}円</p>
+              </div>
+            </div>
+          </section>
+
           <div class="mb-8 flex justify-end">
             <Pagination :links="initial_orders.links" />
           </div>
@@ -1126,9 +1153,17 @@ const fileUpload = async (event) => {
                   >
                     <button
                       @click="orderComplete(order)"
-                      :class="{' text-white font-bold py-2 px-4 rounded text-xs' : true, 'bg-green-500 hover:bg-green-700' : order.order_complete_flg, 'bg-gray-500 hover:bg-gray-700': !order.order_complete_flg}"
+                      :class="{
+                        ' text-white font-bold py-2 px-4 rounded text-xs': true,
+                        'bg-green-500 hover:bg-green-700':
+                          order.order_complete_flg,
+                        'bg-gray-500 hover:bg-gray-700':
+                          !order.order_complete_flg,
+                      }"
                     >
-                      <span v-if="order.order_complete_flg">完了済<i class="ml-2 fas fa-check"></i></span>
+                      <span v-if="order.order_complete_flg"
+                        >完了済<i class="ml-2 fas fa-check"></i
+                      ></span>
                       <span v-else>未完了</span>
                     </button>
                   </td>
@@ -1300,6 +1335,80 @@ const fileUpload = async (event) => {
       height: 100%;
       border: 1px solid rgba(82, 82, 82, 0.555);
       border-radius: 3px;
+    }
+  }
+}
+
+#topContent {
+  height: 30vh;
+  display: flex;
+  margin-bottom: 4vh;
+  justify-content: space-between;
+
+  & #cardContent {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    height: 100%;
+
+    & .contactCard {
+      width: 24%;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      &:hover {
+        transform: scale(1.02);
+        transition: transform 0.2s ease;
+      }
+
+      & p {
+        padding: 10px 20px;
+
+        &.title {
+          font-size: 1.2rem;
+        }
+
+        &.value {
+          font-size: 2rem;
+        }
+      }
+    }
+  }
+
+  & #graphContent {
+    width: 56%;
+    height: 100%;
+    display: flex;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background-color: white;
+    padding: 1rem;
+
+    & > div {
+      width: 50%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem;
+
+      & h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      & > div {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+      }
     }
   }
 }

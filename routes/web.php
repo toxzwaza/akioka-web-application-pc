@@ -12,6 +12,7 @@ use App\Http\Controllers\MasterController;
 use App\Http\Controllers\MovieCategoryAndTagController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\NewMovieController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\SignageContentController;
@@ -120,6 +121,9 @@ Route::get('/contact/createNotify', [ContactController::class, 'contactCreateNot
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.home');
 Route::get('/contact/show/{id}', [ContactController::class, 'show'])->name('contact.show');
 Route::post('/contact/update', [ContactController::class, 'update'])->name('contact.update');
+
+// 通知
+Route::get('/notification', [NotificationController::class, 'index'])->name('notification.home');
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);

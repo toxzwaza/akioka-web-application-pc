@@ -74,7 +74,15 @@ class InitialOrderController extends Controller
             $query->orderBy('order_date', $order_by);
         }
 
-        $initial_orders = $query->paginate(30)->withQueryString();
+        $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(30)->withQueryString();
+
+        // 総合計発注数と金額、今月の発注数と金額を取得
+        $totals = [
+            'total_order_count' => $query->count(),
+            'total_calc_price_sum' => $query->sum('calc_price'),
+            'current_month_count' => InitialOrder::whereBetween('order_date', [now()->startOfMonth(), now()->endOfMonth()])->where('del_flg', 0)->count(),
+            'current_month_sum' => InitialOrder::whereBetween('order_date', [now()->startOfMonth(), now()->endOfMonth()])->where('del_flg', 0)->sum('calc_price')
+        ];
 
         // 発注書用 今月と来月のカレンダー情報取得
         $current_month_holidays = Holiday::select('date')
@@ -110,6 +118,9 @@ class InitialOrderController extends Controller
             ->distinct()
             ->get();
 
+
+
+
         return Inertia::render('Stock/InitialOrders', [
             'current_month_holidays' => $current_month_holidays,
             'next_month_holidays' => $next_month_holidays,
@@ -118,6 +129,7 @@ class InitialOrderController extends Controller
             'users' => $users,
             'order_users' => $order_users,
             'suppliers' => $suppliers,
+            'totals' => $totals
         ]);
     }
 
