@@ -116,6 +116,18 @@ const sub_nav_close = ref(false);
           通知
         </a>
 
+        <!-- ログ管理 -->
+        <a
+          :href="route('log.home')"
+          :class="{
+            'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
+            'bg-blue-600 font-bold': route().current().includes('log'),
+          }"
+        >
+          <span class="mr-1 material-symbols-outlined"> list_alt </span>
+          ログ
+        </a>
+
         <!-- リモート接続 -->
         <!-- <a
           :href="route('remote')"

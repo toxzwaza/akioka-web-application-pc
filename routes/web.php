@@ -127,7 +127,8 @@ Route::post('/contact/update', [ContactController::class, 'update'])->name('cont
 Route::get('/notification', [NotificationController::class, 'index'])->name('notification.home');
 
 //ログ
-Route::get('/log', [LogController::class, 'index'])->name('log.index');
+Route::get('/log', [LogController::class, 'index'])->name('log.home');
+Route::get('/log/getLogs', [LogController::class, 'getLogs'])->name('log.getLogs');
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);

@@ -8,6 +8,7 @@ use App\Models\InitialOrder;
 use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\LastTreatRecord;
+use App\Models\Log;
 use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
@@ -27,6 +28,16 @@ class TestController extends Controller
     //
     public function test()
     {
+        $log = Log::first();
+
+        for ($i = 0; $i < 100; $i++) {
+            $new_log = new Log();
+            $new_log->device_name = $log->device_name;
+            $new_log->service_name = $log->service_name;
+            $new_log->level = $log->level;
+            $new_log->message = $log->message;
+            $new_log->save();
+        }
 
 
 
