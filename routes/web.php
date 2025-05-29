@@ -128,7 +128,6 @@ Route::get('/notification', [NotificationController::class, 'index'])->name('not
 
 //ログ
 Route::get('/log', [LogController::class, 'index'])->name('log.index');
-Route::post('/log/create', [LogController::class, 'createLog'])->name('log.create');
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
