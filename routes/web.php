@@ -6,6 +6,7 @@ use App\Http\Controllers\CalcProductTabletController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FaxController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\LogController;
 use App\Http\Controllers\LunchController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MasterController;
@@ -124,6 +125,10 @@ Route::post('/contact/update', [ContactController::class, 'update'])->name('cont
 
 // 通知
 Route::get('/notification', [NotificationController::class, 'index'])->name('notification.home');
+
+//ログ
+Route::get('/log', [LogController::class, 'index'])->name('log.index');
+Route::post('/log/create', [LogController::class, 'createLog'])->name('log.create');
 
 // API
 Route::get('/api/getAddress', [ApiController::class, 'getAddress']);
