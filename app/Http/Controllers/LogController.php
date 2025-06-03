@@ -43,7 +43,7 @@ class LogController extends Controller
             $query->where('created_at', '<=', $request->input('end_date'));
         }
 
-        $logs = $query->get();
+        $logs = $query->orderBy('created_at', 'desc')->get();
         $device_names = Log::select('device_name')->distinct()->pluck('device_name');
         $service_names = Log::select('service_name')->distinct()->pluck('service_name');
 

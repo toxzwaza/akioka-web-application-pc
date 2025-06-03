@@ -427,7 +427,7 @@ onMounted(() => {
           </section>
 
           <section class="text-gray-600 body-font">
-            <div class="mx-auto overflow-auto">
+            <div class="mx-auto">
               <div class="flex justify-start mb-4">
                 <Pagination :links="props.contacts.links" />
               </div>
