@@ -24,6 +24,8 @@ use App\Http\Controllers\TestController;
 use App\Models\RaspiData;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
+use App\Http\Controllers\PDFController;
+use App\Http\Controllers\OrderRequestController;
 
 Route::get('/test', [TestController::class, 'test'])->name('test');
 Route::get('/storage_address/test', [TestController::class, 'storage_address_test'])->name('storage_address.test');
@@ -142,3 +144,7 @@ Route::get('/getData', [TemperatureAndHumidity::class, "getData"])->name('api.ge
 
 // 温度書き出し用
 Route::get('/export/RaspiData', [TemperatureAndHumidity::class, 'export_data'])->name('raspi.export.data');
+
+
+
+Route::post('/order-request/save-pdf', [OrderRequestController::class, 'savePDF'])->name('order-request.save-pdf');

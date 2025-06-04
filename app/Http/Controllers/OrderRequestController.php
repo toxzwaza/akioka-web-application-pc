@@ -14,6 +14,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class OrderRequestController extends Controller
 {
@@ -84,7 +85,7 @@ class OrderRequestController extends Controller
                 if (!$order_request->supplier_id) {
                     $stock_supplier = StockSupplier::select('suppliers.id', 'suppliers.name', 'stock_suppliers.lead_time')->where('stock_id', $order_request->stock_id)
                         ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->first();
-                   
+
 
                     if ($stock_supplier) {
                         $order_request->supplier_id = $stock_supplier->id;
@@ -94,12 +95,11 @@ class OrderRequestController extends Controller
                 }
 
                 // 承認状況を取得
-                $order_request_approvals = OrderRequestApproval::
-                select('users.name', 'ora.status', 'ora.final_flg','ora.comment', 'ora.updated_at')
-                ->where('order_request_id', $order_request->id)
-                ->join('users', 'users.id', '=', 'ora.user_id')
-                ->from('order_request_approvals as ora')
-                ->get();
+                $order_request_approvals = OrderRequestApproval::select('users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at')
+                    ->where('order_request_id', $order_request->id)
+                    ->join('users', 'users.id', '=', 'ora.user_id')
+                    ->from('order_request_approvals as ora')
+                    ->get();
                 $order_request->order_request_approvals = $order_request_approvals;
             }
         } catch (Exception $e) {
@@ -268,7 +268,42 @@ class OrderRequestController extends Controller
         }
 
         return response()->json(['status' => $status]);
-        
     }
 
+    public function savePDF(Request $request)
+    {
+        try {
+            $imageData = $request->input('pdfData');
+            $filename = $request->input('filename');
+            $orders = $request->input('orders');
+
+            // Base64データから画像データを取得
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
+
+            // public/purchaseディレクトリに保存
+            Storage::disk('public')->put('purchase/' . $filename, $imageData);
+
+            // 発注書を発注データに紐づけ
+            foreach ($orders as $order) {
+                $initial_order = InitialOrder::where('id', $order)->first();
+                if ($initial_order) {
+                    $initial_order->purchase_path = 'purchase/' . $filename;
+                    $initial_order->save();
+                }
+            }
+
+
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Image saved successfully',
+                'path' => 'purchase/' . $filename
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

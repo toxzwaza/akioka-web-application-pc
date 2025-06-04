@@ -16,7 +16,7 @@ const props = defineProps({
   users: Array,
   order_users: Array,
   suppliers: Array,
-  totals: Object
+  totals: Object,
 });
 
 const form = reactive({
@@ -401,7 +401,7 @@ onMounted(() => {
   form.order_user_id = params.get("order_user_id");
   form.user_id = params.get("user_id");
 
-  console.log(props.totals)
+  console.log(props.totals);
 });
 
 // 納品書更新
@@ -711,7 +711,11 @@ const fileUpload = async (event) => {
               <div class="contactCard bg-gray-500">
                 <p class="title">検索合計金額</p>
                 <hr class="my-1" />
-                <p class="value">{{ Number(props.totals.total_calc_price_sum).toLocaleString() }}円</p>
+                <p class="value">
+                  {{
+                    Number(props.totals.total_calc_price_sum).toLocaleString()
+                  }}円
+                </p>
               </div>
               <div class="contactCard bg-blue-500">
                 <p class="title">今月合計発注数</p>
@@ -721,7 +725,11 @@ const fileUpload = async (event) => {
               <div class="contactCard bg-blue-500">
                 <p class="title">今月合計金額</p>
                 <hr class="my-1" />
-                <p class="value">{{ Number(props.totals.current_month_sum).toLocaleString() }}円</p>
+                <p class="value">
+                  {{
+                    Number(props.totals.current_month_sum).toLocaleString()
+                  }}円
+                </p>
               </div>
             </div>
           </section>
@@ -1111,9 +1119,14 @@ const fileUpload = async (event) => {
                     <button
                       v-if="!order.url"
                       @click="openModal(null, order, 'purchase')"
-                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      :class="{
+                        ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
+                        'bg-green-500': order.purchase_path,
+                        'bg-gray-500': !order.purchase_path,
+                      }"
                     >
-                      発注書
+                      {{ order.purchase_path ? '発行済' : '未発行' }}
+                      <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
                     </button>
 
                     <a

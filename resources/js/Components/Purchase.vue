@@ -1,5 +1,7 @@
 <script setup>
 import { watch, ref, onMounted } from "vue";
+import domtoimage from "dom-to-image";
+import axios from "axios";
 
 const props = defineProps({
   current_month_holidays: Array,
@@ -70,6 +72,55 @@ function printElement() {
   }, 500);
 }
 
+async function saveAsImage() {
+  // 納入希望日が入力されていない場合最短とする
+  props.orders.forEach((order) => {
+    if (!order.desired_delivery_date) {
+      order.shortest = true;
+    }
+  });
+
+  const element = document.getElementById("purchase_container");
+  const timestamp = Date.now();
+  const filename = `${timestamp}.png`;
+
+  try {
+    // mx-autoクラスを一時的に削除
+    element.classList.remove("mx-auto");
+
+    // 要素を画像に変換
+    const dataUrl = await domtoimage.toPng(element, {
+      quality: 1.0,
+      bgcolor: "#ffffff",
+      style: {
+        transform: "scale(1)",
+        "transform-origin": "top left",
+      },
+    });
+
+    // mx-autoクラスを元に戻す
+    element.classList.add("mx-auto");
+
+    // 画像データをサーバーに送信
+    const response = await axios.post("/order-request/save-pdf", {
+      pdfData: dataUrl,
+      filename: filename,
+      orders: props.orders.map((order) => order.id),
+    });
+
+    if (response.data.status) {
+      alert("画像が正常に保存されました");
+    } else {
+      throw new Error(response.data.message);
+    }
+  } catch (error) {
+    // エラー時もmx-autoクラスを元に戻す
+    element.classList.add("mx-auto");
+    console.error("Error saving image:", error);
+    alert("画像の保存に失敗しました");
+  }
+}
+
 // emitを定義
 const emit = defineEmits(["update-delivery-date"]);
 
@@ -88,31 +139,47 @@ const calculatePostage = () => {
 };
 
 onMounted(() => {
-  calculatePostage()
-})
+  calculatePostage();
+});
 </script>
 <template>
-  <div class="mx-auto mb-6" id="description_area">
-    <span class="font-bold text-gray-700">備考入力エリア</span>
-    <textarea
-      class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-      name=""
-      id=""
-      cols="30"
-      rows="10"
-      v-model="description"
-    ></textarea>
+  <div v-if="orders.length === 1 && orders[0].purchase_path">
+    <img
+      class="w-2/3 mt-8 mx-auto"
+      :src="`/storage/${orders[0].purchase_path}`"
+      alt="発注書"
+    />
   </div>
 
-  <div v-if="orders.length > 0">
-    <div id="purchase_container" class="p-4">
-      <button
-        id="print_button"
-        @click="printElement"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        印刷 & FAX
-      </button>
+  <div v-else>
+    <div class="mx-auto mb-6" id="description_area">
+      <span class="font-bold text-gray-700">備考入力エリア</span>
+      <textarea
+        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        name=""
+        id=""
+        cols="30"
+        rows="10"
+        v-model="description"
+      ></textarea>
+    </div>
+
+    <div id="purchase_container" class="mx-auto p-4">
+      <div class="flex gap-2">
+        <button
+          id="print_button"
+          @click="printElement"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          印刷 & FAX
+        </button>
+        <button
+          @click="saveAsImage"
+          class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+        >
+          発注書保存
+        </button>
+      </div>
 
       <h1 class="text-center font-bold text-2xl py-4 mb-4">注文書</h1>
 
@@ -281,7 +348,6 @@ onMounted(() => {
 
 #purchase_container {
   background-color: white;
-  margin: 0 auto;
   width: 297mm;
   height: 210mm;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
