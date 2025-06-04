@@ -187,7 +187,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       ) {
         master.postage = true;
       }
-    break;
+      break;
   }
 
   axios
@@ -212,27 +212,26 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
     });
 };
 const updateSubDescription = (val) => {
-  
-  if(!modal_status.order_request.id){
-    return alert('エラーが発生しました。')
+  if (!modal_status.order_request.id) {
+    return alert("エラーが発生しました。");
   }
 
   // 発注担当者コメント更新処理
-  axios.post(route('stock.updateSubDescription'), {
-    order_request_id: modal_status.order_request.id,
-    sub_description: val
-  })
-  .then(res => {
-    if(res.data.status){
-      alert('発注担当者コメントを更新しました。')
-      // window.location.reload()
-    }
-  })
-  .catch(error => {
-    console.log(error)
-  })
-
-}
+  axios
+    .post(route("stock.updateSubDescription"), {
+      order_request_id: modal_status.order_request.id,
+      sub_description: val,
+    })
+    .then((res) => {
+      if (res.data.status) {
+        alert("発注担当者コメントを更新しました。");
+        // window.location.reload()
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
 // 完了処理
 const completeOrderRequest = (order_request_id) => {
@@ -567,8 +566,16 @@ onMounted(() => {
                     }"
                   >
                     <div v-if="order_config.user_id" class="flex">
+                      <Link
+                        v-if="!order_request.stock_id"
+                        :href="route('stock.stocks.create', { order_request_id : order_request.id })"
+                        class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
+                      >
+                        在庫登録
+                      </Link>
+
                       <button
-                        v-if="order_request.accept_flg === 0"
+                        v-else-if="order_request.accept_flg === 0"
                         @click="sendAccept(order_request.id)"
                         class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
                       >
@@ -614,6 +621,7 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-4">
                     <a
+                      v-if="order_request.stock_id"
                       class="underline text-blue-500"
                       :href="
                         route('stock.show.stocks', {
@@ -622,9 +630,16 @@ onMounted(() => {
                       "
                       >{{ order_request.name }}</a
                     >
+                    <span class="text-lg text-gray-900" v-else>{{
+                      order_request.order_request_name
+                    }}</span>
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
-                    {{ order_request.s_name }}
+                    {{
+                      stock_id
+                        ? order_request.s_name
+                        : order_request.order_request_s_name
+                    }}
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{ order_request.stock_storage_quantity }}
@@ -706,6 +721,7 @@ onMounted(() => {
 
                     <span v-else class="text-sm text-red-500 underline"
                       ><a
+                        v-if="order_request.stock_id"
                         :href="
                           route('stock.show.stocks', {
                             stock_id: order_request.stock_id,
@@ -815,9 +831,7 @@ onMounted(() => {
             :class="{
               'block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500': true,
             }"
-            @change="
-              updateSubDescription($event.target.value)
-            "
+            @change="updateSubDescription($event.target.value)"
             placeholder="コメントがある場合はこちらに記載してください。"
             :value="modal_status.order_request.sub_description"
           ></textarea>

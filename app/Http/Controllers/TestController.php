@@ -9,6 +9,7 @@ use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\LastTreatRecord;
 use App\Models\Log;
+use App\Models\Movie;
 use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
@@ -28,16 +29,15 @@ class TestController extends Controller
     //
     public function test()
     {
-        $log = Log::first();
+        $csvFile = fopen(public_path('csv/movies.csv'), 'r');
+        $headers = fgetcsv($csvFile);
 
-        for ($i = 0; $i < 100; $i++) {
-            $new_log = new Log();
-            $new_log->device_name = $log->device_name;
-            $new_log->service_name = $log->service_name;
-            $new_log->level = $log->level;
-            $new_log->message = $log->message;
-            $new_log->save();
-        }
+
+        // $movies = Movie::all();
+        // foreach ($movies as $movie) {
+        //     $movie->file_path = $movie->youtube_id;
+        //     $movie->save();
+        // }
 
 
 

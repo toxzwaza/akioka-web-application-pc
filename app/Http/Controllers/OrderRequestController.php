@@ -46,6 +46,8 @@ class OrderRequestController extends Controller
                 'stocks.img_path',
                 'stocks.name',
                 'stocks.s_name',
+                'order_requests.name as order_request_name',
+                'order_requests.s_name as order_request_s_name',
                 'stocks.url',
                 'order_requests.quantity',
                 'order_requests.price',
@@ -64,7 +66,7 @@ class OrderRequestController extends Controller
                 'max_stock_storages.max_quantity as stock_storage_quantity',
                 'max_stock_storages.reorder_point as reorder_point'
             )
-                ->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
+                ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
                 ->leftJoin('users as order_users', 'order_users.id', '=', 'order_requests.user_id')
                 ->leftJoin('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')

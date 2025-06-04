@@ -39,12 +39,11 @@ class NewMovieController extends Controller
                     $movies = $movies->where('movie_memos.memo', 'like', '%' . $keyword . '%')->where('movie_memos.del_flg', 0);
                 }
 
-                $movies = $movies->select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movies', 'movies.id', '=', 'movie_memos.movie_id')->join('movie_tags', 'movie_tags.id', '=', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tags.movie_tag_category_id', '=', 'movie_tag_categories.id')->where('movies.file_path', '!=', null)->distinct()->orderby('created_at', 'desc')->paginate(20);
+                $movies = $movies->select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movies', 'movies.id', '=', 'movie_memos.movie_id')->join('movie_tags', 'movie_tags.id', '=', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tags.movie_tag_category_id', '=', 'movie_tag_categories.id')->distinct()->orderby('created_at', 'desc')->paginate(20);
             } else {
                 $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')
                 ->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')
                 ->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')
-                ->where('movies.file_path', '!=', null)
                 ->where('movies.del_flg', 0)
                 ->orderby('created_at', 'desc')
                 ->orderby('movie_tag_id', 'asc')
@@ -60,7 +59,7 @@ class NewMovieController extends Controller
             return response()->json(['error' => $e]);
         }
 
-        $base_movies =  Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.file_path', '!=', null)->where('movies.del_flg', 0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->get();
+        $base_movies =  Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')->where('movies.del_flg', 0)->orderby('created_at', 'desc')->orderby('movie_tag_id', 'asc')->get();
         $movie_tags = MovieTag::all();
         $movie_categories = MovieTagCategory::all();
 
@@ -114,7 +113,7 @@ class NewMovieController extends Controller
 
 
         // メモを取得
-        $movie_memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')->where('movie_id', $movie->id)->join('users', 'users.id', 'movie_memos.user_id')->orderby('movie_memos.created_at', 'desc')->get();
+        // $movie_memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')->where('movie_id', $movie->id)->join('users', 'users.id', 'movie_memos.user_id')->orderby('movie_memos.time', 'asc')->get();
 
 
 
@@ -150,7 +149,7 @@ class NewMovieController extends Controller
         $title = $request->title;
         $created_at = $request->created_at;
         $file_path = $request->file_path ?? '';
-        $file = $request->file('file');
+        $youtube_id = $request->youtube_id ?? '';
         $tag_id = $request->tag_id;
         $description = $request->description;
         $email = $request->email ?? '';
@@ -161,6 +160,7 @@ class NewMovieController extends Controller
                 $movie->name = $title;
                 $movie->memo = $description ?? '未設定';
                 $movie->movie_tag_id = $tag_id;
+                $movie->file_path = $youtube_id;
 
                 // 投稿日が記載されている場合
                 if ($created_at != 'null') {
@@ -170,9 +170,9 @@ class NewMovieController extends Controller
 
 
                 // RPAサーバーへリクエスト
-                $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description) . "&mention_id=" . urlencode($email);
-                $msg = $url;
-                $response = Http::get($url);
+                // $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description) . "&mention_id=" . urlencode($email);
+                // $msg = $url;
+                // $response = Http::get($url);
             }
         } catch (Exception $e) {
             $status = false;
@@ -186,9 +186,21 @@ class NewMovieController extends Controller
     {
 
         // メモを取得
-        $memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')->where('movie_id', $movie_id)->join('users', 'users.id', 'movie_memos.user_id')->orderby('movie_memos.created_at', 'desc')->get();
+        $memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')
+            ->where('movie_id', $movie_id)
+            ->whereNull('transcription_flg')
+            ->join('users', 'users.id', '=', 'movie_memos.user_id')
+            ->orderBy('movie_memos.time', 'asc')
+            ->get();
+        
+        $transcription_memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')
+            ->where('movie_id', $movie_id)
+            ->whereNotNull('transcription_flg')
+            ->join('users', 'users.id', '=', 'movie_memos.user_id')
+            ->orderBy('movie_memos.time', 'asc')
+            ->get();
 
-        return response()->json($memos);
+        return response()->json(['memos' => $memos, 'transcription_memos' => $transcription_memos]);
     }
 
     public function addMemo(Request $request)

@@ -12,10 +12,11 @@ const props = defineProps({
   movie_tags: Array,
 });
 
-const video_id = ref(props.movie.file_path);
+const video_id = ref(props.movie.youtube_id);
 const movie_id = ref(props.movie.id);
 
-const movie_memos = ref([]);
+const movie_memos = ref([])
+const movie_transcription_memos = ref([])
 
 const page = ref("watch");
 
@@ -94,7 +95,9 @@ const getMemos = async () => {
   await axios
     .get(route("movie2.getMemos", { movie_id: movie_id.value }))
     .then((res) => {
-      movie_memos.value = res.data;
+      console.log(res.data)
+      movie_memos.value = res.data.memos
+      movie_transcription_memos.value = res.data.transcription_memos
     })
     .catch((error) => {
       console.log(error);
@@ -279,6 +282,7 @@ onMounted(() => {
                 </button>
               </div>
             </form>
+
           </div>
 
           <div :class="{ main_content: true, active: page == 'detail' }">
@@ -359,7 +363,12 @@ onMounted(() => {
             </section>
           </div>
 
-          <hr class="my-16" />
+          <hr class="my-8" />
+
+          <!-- 文字お越し -->
+          <div id="transcription" v-for="transcription_memo in movie_transcription_memos" :key="transcription_memo.id" class="p-2 ">
+            <p class="text-xs "><span @click="seekToTime(transcription_memo.time)">{{ transcription_memo.time }}</span> : {{ transcription_memo.memo }}</p>
+          </div>
         </div>
 
         <div class="memo-container w-1/5 pl-4">
@@ -417,7 +426,7 @@ onMounted(() => {
     </template>
   </MainLayout>
 </template>
-<style scoped>
+<style scoped lang="scss">
 .memo-container {
   max-height: 72vh;
   overflow-y: scroll;
@@ -446,5 +455,14 @@ onMounted(() => {
 }
 .main_content.active {
   height: auto;
+}
+
+#transcription{
+ 
+  background-color: rgb(41, 41, 41);
+  
+  & p{
+     color: white;
+  }
 }
 </style>

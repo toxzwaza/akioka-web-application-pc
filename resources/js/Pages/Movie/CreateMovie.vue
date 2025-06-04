@@ -14,6 +14,7 @@ const form = reactive({
   created_at: null,
   title: null,
   file_path: null,
+  youtube_id: null,
   file: null,
   tag_id: null,
   description: null,
@@ -159,6 +160,21 @@ onMounted(async () => {
                 name="file_path"
                 class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
                 placeholder="C://sample-directory/movie/test_movie.mp4"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label
+                for="file_path"
+                class="font-semibold mb-2 inline-block text-sm text-gray-800 sm:text-base"
+                >Youtube ID</label
+              >
+              <input
+                v-model="form.youtube_id"
+                id="youtube_id"
+                name="youtube_id"
+                class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
+                placeholder=""
               />
             </div>
             <!-- <div class="sm:col-span-2">

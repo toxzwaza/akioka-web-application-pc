@@ -9,9 +9,11 @@ import MainTitle from "@/Components/Title/MainTitle.vue";
 const props = defineProps({
   classifications: Array,
   stock_processes: Array,
+  order_request: Object,
 });
 
 const form = reactive({
+  order_request_id: null,
   name: null,
   s_name: null,
   jan_code: null,
@@ -39,7 +41,7 @@ const createStock = () => {
     !form.classification_id ||
     !form.stock_process_id
   ) {
-    return alert('必須項目が入力されていません。')
+    return alert("必須項目が入力されていません。");
   }
 
   // 在庫追加
@@ -48,7 +50,10 @@ const createStock = () => {
     .then((res) => {
       console.log(res.data);
       if (res.data.status) {
-        if (confirm("登録が完了しました。続けて在庫を追加しますか？")) {
+        if (form.order_request_id) {
+          alert('登録が完了しました。発注依頼一覧へ遷移します。')
+          window.location.href = route('stock.order_requests')
+        } else if (confirm("登録が完了しました。続けて在庫を追加しますか？")) {
           window.location.reload();
         } else {
           window.location.href = route("stock");
@@ -60,7 +65,16 @@ const createStock = () => {
     });
 };
 
-onMounted(() => {});
+onMounted(() => {
+  console.log(props.order_request);
+  if (props.order_request) {
+    const order_request = props.order_request;
+    form.order_request_id = order_request.id;
+    form.name = order_request.name;
+    form.s_name = order_request.s_name;
+    form.solo_unit = order_request.unit;
+  }
+});
 </script>
 <template>
   <MainLayout :title="'在庫追加'">

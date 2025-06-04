@@ -8,6 +8,7 @@ use App\Models\InventoryOperation;
 use App\Models\InventoryOperationRecord;
 use App\Models\LastTreatRecord;
 use App\Models\Location;
+use App\Models\OrderRequest;
 use App\Models\Process;
 use App\Models\RetainedStock;
 use App\Models\Stock;
@@ -459,6 +460,7 @@ class StockController extends Controller
         $status = true;
         $msg = "";
 
+        $order_request_id = $request->order_request_id;
         $stock_id = $request->stock_id;
         $name = $request->name;
         $jan_code = $request->jan_code;
@@ -502,9 +504,12 @@ class StockController extends Controller
             $stock->del_flg = $del_flg;
             $stock->save();
 
-            // 新規追加と編集の記録を残す
-            if ($is_new) {
-            } else {
+            if($order_request_id){
+                $order_request = OrderRequest::find($order_request_id);
+                $order_request->stock_id = $stock->id;
+                $order_request->price = $price;
+                $order_request->calc_price = $price * $order_request->quantity;
+                $order_request->save();
             }
         } catch (Exception $e) {
             $status = false;
@@ -536,12 +541,19 @@ class StockController extends Controller
 
 
     // 在庫作成
-    public function create_stocks()
+    public function create_stocks(Request $request)
     {
+        $order_request_id = $request->order_request_id;
+
+        $order_request = null;
+        if($order_request_id){
+            $order_request = OrderRequest::find($order_request_id);
+        }
+
         $classifications = Classification::all();
         $stock_processes = StockProcess::select('id', 'name')->get();
 
-        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications, 'stock_processes' => $stock_processes]);
+        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications, 'stock_processes' => $stock_processes, 'order_request' => $order_request]);
     }
     // 格納先作成
     public function create_storage_addresses()
