@@ -152,13 +152,13 @@ class NewMovieController extends Controller
         $youtube_id = $request->youtube_id ?? '';
         $tag_id = $request->tag_id;
         $description = $request->description;
-        
+
 
         try {
             if ($file_path) {
                 $movie = new Movie();
                 $movie->name = $title;
-                $movie->memo = $description ?? '';
+                $movie->memo = $description === 'null' ? null : ($description ?? '');
                 $movie->movie_tag_id = $tag_id;
                 $movie->file_path = $file_path;
                 $movie->youtube_id = $youtube_id;
@@ -263,16 +263,44 @@ class NewMovieController extends Controller
     }
 
     // 文字お越し待ち取得
-     public function getWaitingTranscription(){
+    public function getWaitingTranscription()
+    {
 
         // 文字お越し待ち状態で、ファイルパスが格納されているデータを取得
-        $movies = Movie::
-        select('movies.id', 'movies.file_path')
-        ->where('transcription_flg', 1
-        )->where('file_path', '!=', null)
-        ->get();
-        
-        return response()->json($movies);
+        $movies = Movie::select('movies.id', 'movies.file_path')
+            ->where(
+                'transcription_flg',
+                1
+            )->where('file_path', '!=', null)
+            ->get();
 
-     }
+        return response()->json($movies);
+    }
+
+    public function update(Request $request)
+    {
+        $status = true;
+
+        $movie_id = $request->movie_id;
+        $flg = $request->flg;
+        $value = $request->value;
+
+        try {
+            $movie = Movie::find($movie_id);
+            if ($movie) {
+                switch ($flg) {
+                    case 'file_path':
+                        $movie->file_path = $value;
+                        break;
+                    case 'youtube_id':
+                        $movie->youtube_id = $value;
+                        break;
+                }
+                $movie->save();
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+        return response()->json(['status' => $status]);
+    }
 }

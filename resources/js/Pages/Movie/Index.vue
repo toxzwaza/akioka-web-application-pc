@@ -55,6 +55,9 @@ const changeTag = (tag_id) => {
 
 };
 
+const redirectShow = (movie) => {
+  window.location.href = route('movie2.show', { movie_id: movie.id })
+}
 onMounted(() => {
   movies.value = props.movies;
   base_movies.value = props.base_movies;
@@ -73,7 +76,7 @@ onMounted(() => {
       <h1 class="text-center text-xl font-bold text-gray-800">動画一覧</h1>
 
       <section class="text-gray-600 body-font">
-        <div class="container px-5 py-24 mx-auto">
+        <div class=" py-24 mx-auto">
           <div class="flex flex-col text-center w-full mb-8">
             <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
               動画一覧を表示します。<br />
@@ -150,54 +153,65 @@ onMounted(() => {
             <Pagination :links="movies.links"></Pagination>
           </div>
 
-          <div class="lg:w-full w-full mx-auto overflow-auto">
+          <div id="table_container" class="lg:w-full w-full mx-auto overflow-auto">
             <table class="table-auto w-full text-left whitespace-no-wrap">
               <thead>
                 <tr>
                   <th
-                    class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl"
+                    class="w-8 whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl"
                   >
                     日付
                   </th>
                   <th
-                    class="w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl"
+                    class="w-8 whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl"
                   >
                     カテゴリ
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
+                    class="whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
                   >
                     タグ
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
+                    class="whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
                   >
                     ファイル名
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
+                    class="whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
+                  >
+                    ファイルパス
+                  </th>
+                  <th
+                    class="whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
+                  >
+                    YoutubeID
+                  </th>
+                  <th
+                    class="whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
                   >
                     備考
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
+                    class="whitespace-nowrap px-4 py-4 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
                   >
                     コメント数
                   </th>
 
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  ></th>
                 </tr>
               </thead>
 
               <tbody>
                 <tr
+                  @click="redirectShow(movie)"
                   v-for="movie in select_movies"
                   :key="movie.id"
-                  class="border-b border-gray-200 my-4 hover:bg-slate-200 transition"
+                  :class="{'border-b border-gray-200 my-4 hover:bg-slate-200 transition': true,
+                  'bg-green-50': movie.transcription_flg === 2,
+                  'bg-orange-50': movie.transcription_flg === 1
+                  }"
                 >
-                  <td class="w-1/6 px-8 py-8 text-lg text-gray-900">
+                  <td class="w-1/6 whitespace-nowrap px-4 py-3 text-lg text-gray-900">
                     {{
                       new Date(movie.created_at).toLocaleDateString("ja-JP", {
                         year: "numeric",
@@ -207,7 +221,7 @@ onMounted(() => {
                     }}
                   </td>
 
-                  <td class="w-40 px-8 py-8 text-lg text-gray-900">
+                  <td class="w-40 whitespace-nowrap px-4 py-3 text-lg text-gray-900">
                     <Link>
                       <span
                         :class="`bg-${movie.category_color}-100 text-${movie.category_color}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-white dark:text-${movie.category_color}-400 border border-${movie.category_color}-400`"
@@ -217,7 +231,7 @@ onMounted(() => {
                     >
                   </td>
 
-                  <td class="w-40 px-8 py-8 text-lg">
+                  <td class="w-40 whitespace-nowrap px-4 py-3 text-lg">
                     <Link>
                       <span
                         :class="`bg-${movie.tag_color}-100 text-${movie.tag_color}-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-white dark:text-${movie.tag_color}-400 border border-${movie.tag_color}-400`"
@@ -227,23 +241,26 @@ onMounted(() => {
                     </Link>
                   </td>
 
-                  <td class="w-1/5 px-8 py-8 text-lg text-gray-900">
+                  <td class="w-1/5 whitespace-nowrap px-4 py-3 text-lg text-gray-900">
                     {{ movie.name }}
                   </td>
 
-                  <td class="w-1/5 px-8 py-8 text-sm text-gray-900">
+                  <td class="w-1/5 whitespace-nowrap px-4 py-3 text-lg text-gray-900">
+                    {{ movie.file_path }}
+                  </td>
+
+                  <td class="w-1/5 whitespace-nowrap px-4 py-3 text-lg text-gray-900">
+                    {{ movie.youtube_id }}
+                  </td>
+
+                  <td class="w-1/5 whitespace-nowrap px-4 py-3 text-sm text-gray-900">
                     {{ movie.memo }}
                   </td>
 
-                  <td class="w-16 px-8 py-8 text-lg text-gray-900">
+                  <td class="w-16 whitespace-nowrap px-4 py-3 text-lg text-gray-900">
                     {{ movie.memos_count }}
                   </td>
 
-                  <td class="px-8 py-8 text-lg text-gray-900">
-                    <a :href="route('movie2.show', { movie_id: movie.id })">
-                      <i class="text-gray-600 fas fa-video"></i>
-                    </a>
-                  </td>
                 </tr>
               </tbody>
             </table>
@@ -257,3 +274,14 @@ onMounted(() => {
     </template>
   </MainLayout>
 </template>
+<style scoped lang="scss">
+#table_container{
+  // width: 100vw;
+  width: 100%;
+  overflow-x: scroll;
+
+  & table{
+    width: 100vw;
+  }
+}
+</style>

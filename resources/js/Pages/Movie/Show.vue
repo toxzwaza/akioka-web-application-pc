@@ -155,23 +155,59 @@ const sendMemo = () => {
     });
 };
 const deleteMovie = () => {
-  axios
-    .delete(route("movie2.delete"), {
-      params: {
-        movie_id: movie_id.value,
-      },
-    })
-    .then((res) => {
-      if (res.data.status) {
-        alert("削除が完了しました。");
-        window.location.href = route("movie2");
-      }
-    });
+  if (confirm("動画を削除してもよろしいですか？")) {
+    axios
+      .delete(route("movie2.delete"), {
+        params: {
+          movie_id: movie_id.value,
+        },
+      })
+      .then((res) => {
+        if (res.data.status) {
+          alert("削除が完了しました。");
+          window.location.href = route("movie2");
+        }
+      });
+  }else{
+    alert('動画削除を中断しました。')
+  }
 };
 
+const changeMovie = (flg) => {
+  let value = "";
+  switch (flg) {
+    case "file_path":
+      value = props.movie.file_path;
+      break;
+    case "youtube_id":
+      value = props.movie.youtube_id;
+      break;
+  }
+  console.log(flg, value, movie_id.value)
+
+  if (value) {
+    axios
+      .post(route("movie2.update"), {
+        movie_id: movie_id.value,
+        flg: flg,
+        value: value,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if(res.data.status){
+          window.location.reload()
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+};
 onMounted(() => {
   //   メモを取得
   getMemos();
+
+  console.log(props.movie)
 
   const tag = document.createElement("script");
   tag.src = "https://www.youtube.com/player_api";
@@ -323,7 +359,8 @@ onMounted(() => {
                           class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                           id="grid-first-name"
                           type="text"
-                          v-model="movie.file_path"
+                          v-model="props.movie.file_path"
+                          @change="changeMovie('file_path')"
                         />
                       </div>
                       <div class="w-full md:w-1/2 px-3">
@@ -337,19 +374,20 @@ onMounted(() => {
                           class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                           id="grid-last-name"
                           type="text"
-                          v-model="movie.youtube_id"
+                          v-model="props.movie.youtube_id"
+                          @change="changeMovie('youtube_id')"
                         />
                       </div>
                     </div>
 
                     <div
-                      class="flex mt-6 items-center pb-5 border-b-2 border-gray-100 mb-5"
+                      class="flex mt-12 items-center pb-5 border-b-2 border-gray-100 mb-5"
                     >
                       <button
                         @click="deleteMovie"
                         class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                       >
-                        動画削除
+                        動画を削除する<i class="ml-2 fas fa-trash-alt"></i>
                       </button>
                     </div>
                   </div>

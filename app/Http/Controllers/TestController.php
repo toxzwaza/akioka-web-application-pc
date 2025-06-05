@@ -10,6 +10,7 @@ use App\Models\InventoryOperationRecord;
 use App\Models\LastTreatRecord;
 use App\Models\Log;
 use App\Models\Movie;
+use App\Models\MovieMemo;
 use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
@@ -29,9 +30,12 @@ class TestController extends Controller
     //
     public function test()
     {
-        $csvFile = fopen(public_path('csv/movies.csv'), 'r');
-        $headers = fgetcsv($csvFile);
-
+        $movies = Movie::whereNull('transcription_flg')->get();
+        foreach ($movies as $movie) {
+            $movie->transcription_flg = 1;
+            $movie->save();
+        }
+        
 
         // $movies = Movie::all();
         // foreach ($movies as $movie) {

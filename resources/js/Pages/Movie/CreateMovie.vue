@@ -47,7 +47,10 @@ const sendMovie = () => {
       },
     })
     .then((res) => {
-
+      console.log(res.data);
+      if (res.data.status) {
+        setTimeout(() => window.location.reload(), 3000);
+      }
     })
     .catch((error) => {
       console.log(error);
@@ -108,8 +111,10 @@ onMounted(async () => {
             method="post"
           >
             <h4 class="font-bold text-indigo-500">
-              通知先：{{ props.user.name }}({{ props.user.email }}) <br>
-              <span class="text-sm font-normal">※teamsよりログイン者宛てに送信されます。</span>
+              通知先：{{ props.user.name }}({{ props.user.email }}) <br />
+              <span class="text-sm font-normal"
+                >※teamsよりログイン者宛てに送信されます。</span
+              >
             </h4>
 
             <div class="sm:col-span-2">
@@ -290,7 +295,7 @@ onMounted(async () => {
             </span>
           </h2>
           <p class="mb-16 text-lg mx-auto text-red-400">
-            動画をアップロードしています。<br>
+            動画をアップロードしています。<br />
             アップロードが完了するとteamsよりメッセージが送信されます。
           </p>
           <div class="flex justify-center">
