@@ -8,6 +8,7 @@ use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockSupplierController;
+use App\Http\Controllers\StockStorageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\CameraController;
@@ -106,6 +107,11 @@ Route::post('/retained/last/store', [StockController::class, 'store_last_treat_r
 Route::post('/stock-suppliers/store', [StockSupplierController::class, 'store'])->name('stock.stock_supplier.store');
 Route::post('/stock-suppliers/update', [StockSupplierController::class, 'update'])->name('stock.stock_supplier.update');
 Route::delete('/stock-suppliers/delete', [StockSupplierController::class, 'delete'])->name('stock.stock_supplier.delete');
+
+// 格納先
+Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');
+Route::delete('/stock-storage/delete', [StockStorageController::class, 'delete'])->name('stock.stock_storage.delete');
+Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
 // Route::get('/suppliers/add', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 // Route::post('/suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
 // Route::get('/suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
@@ -119,10 +125,6 @@ Route::get('/storage-addresses/print', [StockController::class, 'print'])->name(
 // 監視カメラ録画映像
 Route::get('/camera', [CameraController::class, 'index'])->name('stock.camera');
 Route::get('/camera/movies', [CameraController::class, 'getCameraMovies'])->name('stock.getCameraMovies');
-
-Route::post('/stock-storage/update', [StockController::class, 'update_stock_storage'])->name('stock.stock_storage.update');
-Route::get('/stock-storage/delete', [StockController::class, 'delete_stock_storage'])->name('stock.stock_storage.delete');
-Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
 
 Route::get('/suppliers', [SupplierController::class, 'index'])->name('stock.suppliers');
 Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('stock.suppliers.create');

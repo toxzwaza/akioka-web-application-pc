@@ -267,6 +267,53 @@ const updateStockSupplier = (flg, stock_supplier) => {
       break;
   }
 };
+const updateStockStorage = (flg, stock_storage) => {
+  console.log(flg, stock_storage);
+
+  switch (flg) {
+    case "save":
+      axios
+        .post(route("stock.stock_storage.update"), {
+          stock_storage_id: stock_storage.stock_storage_id,
+          quantity: stock_storage.quantity,
+          reorder_point: stock_storage.reorder_point
+        })
+        .then((res) => {
+          console.log(res.data);
+          if(res.data.status){
+            alert('更新が完了しました')
+            window.location.reload()
+          }else{
+            alert(res.data.msg)
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      break;
+
+    case "delete":
+      axios
+        .delete(route("stock.stock_storage.delete"), {
+          params: {
+            stock_storage_id: stock_storage.stock_storage_id,
+          }
+        })
+        .then((res) => {
+          console.log(res.data);
+          if(res.data.status){
+            alert('削除が完了しました')
+            window.location.reload()
+          }else{
+            alert(res.data.msg)
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+      break;
+  }
+};
 
 onMounted(() => {
   console.log(props.stock);
@@ -927,14 +974,35 @@ onMounted(() => {
                       {{ stock_storage.location_name }}
                     </td>
                     <td class="px-6 py-4">{{ stock_storage.address }}</td>
-                    <td class="px-6 py-4">{{ stock_storage.quantity }}</td>
-                    <td class="px-6 py-4">{{ stock_storage.reorder_point }}</td>
-                    <td class="px-6 py-4">
-                      <a
-                        href="#"
-                        class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                        >Edit</a
+                    <td class="px-6 py-4 w-48">
+                      <input
+                        type="number"
+                        name=""
+                        id=""
+                        v-model="stock_storage.quantity"
+                        class="text-center appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      />
+                    </td>
+                                        <td class="px-6 py-4 w-48">
+                      <input
+                        type="number"
+                        name=""
+                        id=""
+                        v-model="stock_storage.reorder_point"
+                        class="text-center appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      />
+                    </td>
+                    <td class="py-4 flex items-center">
+                      <button
+                        @click="updateStockStorage('save', stock_storage)"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-sm mr-6 whitespace-nowrap"
                       >
+                        保存
+                      </button>
+                      <i
+                        @click="updateStockStorage('delete', stock_storage)"
+                        class="text-red-500 fas fa-trash-alt"
+                      ></i>
                     </td>
                   </tr>
                 </tbody>
