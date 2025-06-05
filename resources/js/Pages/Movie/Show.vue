@@ -121,20 +121,16 @@ const deleteMemo = (memo_id) => {
 };
 const saveMemo = (memo_id, memo) => {
   console.log(memo_id, memo);
-  if (confirm("保存しますか？")) {
-    axios
-      .post(route("movie2.saveMemo"), { memo_id: memo_id, new_memo_text: memo })
-      .then((res) => {
-        console.log(res.data);
-        alert("メモを更新しました。");
-        getMemos();
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  } else {
-    alert("キャンセルされました。");
-  }
+
+  axios
+    .post(route("movie2.saveMemo"), { memo_id: memo_id, new_memo_text: memo })
+    .then((res) => {
+      console.log(res.data);
+      getMemos();
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 const sendMemo = () => {
@@ -168,8 +164,8 @@ const deleteMovie = () => {
           window.location.href = route("movie2");
         }
       });
-  }else{
-    alert('動画削除を中断しました。')
+  } else {
+    alert("動画削除を中断しました。");
   }
 };
 
@@ -183,7 +179,7 @@ const changeMovie = (flg) => {
       value = props.movie.youtube_id;
       break;
   }
-  console.log(flg, value, movie_id.value)
+  console.log(flg, value, movie_id.value);
 
   if (value) {
     axios
@@ -194,8 +190,8 @@ const changeMovie = (flg) => {
       })
       .then((res) => {
         console.log(res.data);
-        if(res.data.status){
-          window.location.reload()
+        if (res.data.status) {
+          window.location.reload();
         }
       })
       .catch((error) => {
@@ -207,7 +203,7 @@ onMounted(() => {
   //   メモを取得
   getMemos();
 
-  console.log(props.movie)
+  console.log(props.movie);
 
   const tag = document.createElement("script");
   tag.src = "https://www.youtube.com/player_api";
@@ -401,7 +397,7 @@ onMounted(() => {
           <!-- 文字お越し -->
           <div id="transcription" class="mb-8 bg-gray-50 p-4">
             <h1 class="font-bold text-lg text-gray-700 mb-4">文字お越し</h1>
-            <p
+            <div
               class="text-sm p-2"
               v-for="transcription_memo in movie_transcription_memos"
               :key="transcription_memo.id"
@@ -411,8 +407,34 @@ onMounted(() => {
                 @click="seekToTime(transcription_memo.time)"
                 >{{ transcription_memo.time }}</span
               >
-              <br />{{ transcription_memo.memo }}
-            </p>
+              <br />
+              <span
+                v-if="!transcription_memo.edit"
+                @click="transcription_memo.edit = 1"
+                >{{ transcription_memo.memo }}
+              </span>
+
+              <div v-else>
+                <textarea name="" id="" cols="30" rows="3" v-model="transcription_memo.memo"></textarea>
+                <div class="flex items-center justify-end">
+                  <button
+                    @click="
+                      saveMemo(transcription_memo.id, transcription_memo.memo)
+                    "
+                    class="mr-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    <i class="fas fa-save"></i>
+                  </button>
+
+                  <button
+                    @click="transcription_memo.edit = 0"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- コメント一覧 -->
