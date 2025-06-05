@@ -104,6 +104,8 @@ Route::post('/retained/last/store', [StockController::class, 'store_last_treat_r
 
 // 得意先
 Route::post('/stock-suppliers/store', [StockSupplierController::class, 'store'])->name('stock.stock_supplier.store');
+Route::post('/stock-suppliers/update', [StockSupplierController::class, 'update'])->name('stock.stock_supplier.update');
+Route::delete('/stock-suppliers/delete', [StockSupplierController::class, 'delete'])->name('stock.stock_supplier.delete');
 // Route::get('/suppliers/add', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 // Route::post('/suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
 // Route::get('/suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');

@@ -40,4 +40,47 @@ class StockSupplierController extends Controller
 
         return response()->json(['status' => $status]);
     }
+
+    public function update(Request $request)
+    {
+        $stock_supplier_id = $request->stock_supplier_id;
+        $lead_time = $request->lead_time;
+        $postage = $request->postage;
+
+        $status = true;
+        $msg = "";
+
+        try {
+
+            $stock_supplier = StockSupplier::find($stock_supplier_id);
+            $stock_supplier->lead_time = $lead_time;
+            $stock_supplier->postage = $postage;
+            $stock_supplier->save();
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+        
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+    public function delete(Request $request)
+    {
+        $status = true;
+        $msg = "";
+
+        $stock_supplier_id = $request->stock_supplier_id;
+        try {
+            if ($stock_supplier_id) {
+                $stock_supplier = StockSupplier::find($stock_supplier_id);
+                $stock_supplier->delete();
+            } else {
+                $status = false;
+                $msg = "データが見つかりません";
+            }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
 }

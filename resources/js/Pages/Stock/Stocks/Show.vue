@@ -220,6 +220,54 @@ const getInitialOrders = () => {
   }
 };
 
+const updateStockSupplier = (flg, stock_supplier) => {
+  console.log(flg, stock_supplier);
+
+  switch (flg) {
+    case "save":
+      axios
+        .post(route("stock.stock_supplier.update"), {
+          stock_supplier_id: stock_supplier.stock_supplier_id,
+          lead_time: stock_supplier.lead_time,
+          postage: stock_supplier.postage
+        })
+        .then((res) => {
+          console.log(res.data);
+          if(res.data.status){
+            alert('更新が完了しました')
+            window.location.reload()
+          }else{
+            alert(res.data.msg)
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      break;
+
+    case "delete":
+      axios
+        .delete(route("stock.stock_supplier.delete"), {
+          params: {
+            stock_supplier_id: stock_supplier.stock_supplier_id,
+          }
+        })
+        .then((res) => {
+          console.log(res.data);
+          if(res.data.status){
+            alert('削除が完了しました')
+            window.location.reload()
+          }else{
+            alert(res.data.msg)
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+      break;
+  }
+};
+
 onMounted(() => {
   console.log(props.stock);
 
@@ -731,14 +779,35 @@ onMounted(() => {
                     >
                       {{ stock_supplier.name }}
                     </td>
-                    <td class="px-6 py-4">{{ stock_supplier.lead_time }}</td>
-                    <td class="px-6 py-4">{{ stock_supplier.postage }}</td>
-                    <td class="px-6 py-4">
-                      <a
-                        href="#"
-                        class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                        >Edit</a
+                    <td class="px-6 py-4 w-48">
+                      <input
+                        type="number"
+                        name=""
+                        id=""
+                        v-model="stock_supplier.lead_time"
+                        class="text-center appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      />
+                    </td>
+                    <td class="px-6 py-4 w-48">
+                      <input
+                        type="number"
+                        name=""
+                        id=""
+                        v-model="stock_supplier.postage"
+                        class="text-center appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      />
+                    </td>
+                    <td class="py-4 flex items-center">
+                      <button
+                        @click="updateStockSupplier('save', stock_supplier)"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-sm mr-6 whitespace-nowrap"
                       >
+                        保存
+                      </button>
+                      <i
+                        @click="updateStockSupplier('delete', stock_supplier)"
+                        class="text-red-500 fas fa-trash-alt"
+                      ></i>
                     </td>
                   </tr>
                 </tbody>

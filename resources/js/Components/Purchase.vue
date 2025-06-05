@@ -247,7 +247,9 @@ onMounted(() => {
           </thead>
           <tbody>
             <tr v-for="order in orders" :key="order.id" class="">
-              <td class="order_no text-center border">{{ order.order_no }}</td>
+              <td class="order_no text-center border">
+                {{ `${order.order_no}-${order.stock_processes_order_request_code ? order.stock_processes_order_request_code : order.stock_processes_base_code ? order.stock_processes_base_code : '未'}` }}
+              </td>
               <td class="name text-center border">{{ order.name }}</td>
               <td class="s_name text-center border">{{ order.s_name }}</td>
               <td class="deli_location text-center border">
@@ -378,7 +380,7 @@ onMounted(() => {
         font-size: 3.6mm;
 
         &.order_no {
-          width: 10%;
+          width: 12%;
         }
         &.name {
           width: 19%;
@@ -390,7 +392,7 @@ onMounted(() => {
           width: 6%;
         }
         &.desired_date {
-          width: 15%;
+          width: 12%;
         }
         &.quantity {
           width: 5%;

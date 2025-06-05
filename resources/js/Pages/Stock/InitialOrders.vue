@@ -930,9 +930,9 @@ const fileUpload = async (event) => {
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-center">
                     {{
-                      order.stock_process_id
-                        ? `${order.stock_process_code}:${order.stock_process_name}`
-                        : "-"
+                      order.stock_processes_order_request_code
+                        ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
+                        : order.stock_processes_base_code ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}` : '-'
                     }}
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap">

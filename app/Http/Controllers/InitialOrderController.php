@@ -33,8 +33,23 @@ class InitialOrderController extends Controller
         $order_user_id = $request->order_user_id;
         $user_id = $request->user_id;
 
-        $query = InitialOrder::select('initial_orders.*', 'stocks.img_path', 'stocks.url', 'stock_suppliers.lead_time as base_lead_time', 'suppliers.tel', 'suppliers.fax', 'users.name as manage_user_name', 'stock_processes.code as stock_process_code', 'stock_processes.name as stock_process_name')
+        $query = InitialOrder::select(
+            'initial_orders.*',
+            'stocks.img_path',
+            'stocks.url',
+            'stock_suppliers.lead_time as base_lead_time',
+            'suppliers.tel',
+            'suppliers.fax',
+            'users.name as manage_user_name',
+            'order_request_stock_processes.code as stock_processes_order_request_code',
+            'order_request_stock_processes.name as stock_processes_order_request_name',
+            'stock_processes_base.code as stock_processes_base_code',
+            'stock_processes_base.name as stock_processes_base_name'
+        )
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
+            ->leftJoin('order_requests', 'order_requests.id', 'initial_orders.order_request_id')
+            ->leftJoin('stock_processes as order_request_stock_processes', 'order_request_stock_processes.id', 'order_requests.stock_process_id')
+            ->leftJoin('stock_processes as stock_processes_base', 'stock_processes_base.id', 'stocks.stock_process_id')
             ->leftJoin('stock_suppliers', function ($join) {
                 $join->on('stock_suppliers.stock_id', '=', 'initial_orders.stock_id')
                     ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
@@ -71,7 +86,7 @@ class InitialOrderController extends Controller
         }
 
         if ($order_by) {
-            $query->orderBy('order_date', $order_by);
+            $query->orderBy('initial_orders.order_date', $order_by);
         }
 
         $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(30)->withQueryString();
@@ -79,9 +94,9 @@ class InitialOrderController extends Controller
         // 総合計発注数と金額、今月の発注数と金額を取得
         $totals = [
             'total_order_count' => $query->count(),
-            'total_calc_price_sum' => $query->sum('calc_price'),
-            'current_month_count' => InitialOrder::whereBetween('order_date', [now()->startOfMonth(), now()->endOfMonth()])->where('del_flg', 0)->count(),
-            'current_month_sum' => InitialOrder::whereBetween('order_date', [now()->startOfMonth(), now()->endOfMonth()])->where('del_flg', 0)->sum('calc_price')
+            'total_calc_price_sum' => $query->sum('initial_orders.calc_price'),
+            'current_month_count' => InitialOrder::whereBetween('initial_orders.order_date', [now()->startOfMonth(), now()->endOfMonth()])->where('del_flg', 0)->count(),
+            'current_month_sum' => InitialOrder::whereBetween('initial_orders.order_date', [now()->startOfMonth(), now()->endOfMonth()])->where('del_flg', 0)->sum('initial_orders.calc_price')
         ];
 
         // 発注書用 今月と来月のカレンダー情報取得
