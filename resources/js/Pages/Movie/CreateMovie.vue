@@ -11,8 +11,8 @@ const props = defineProps({
   user: Object,
 });
 const form = reactive({
-  created_at: null,
   title: null,
+  created_at: null,
   file_path: null,
   youtube_id: null,
   file: null,

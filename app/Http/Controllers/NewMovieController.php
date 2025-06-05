@@ -42,12 +42,12 @@ class NewMovieController extends Controller
                 $movies = $movies->select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')->join('movies', 'movies.id', '=', 'movie_memos.movie_id')->join('movie_tags', 'movie_tags.id', '=', 'movies.movie_tag_id')->join('movie_tag_categories', 'movie_tags.movie_tag_category_id', '=', 'movie_tag_categories.id')->distinct()->orderby('created_at', 'desc')->paginate(20);
             } else {
                 $movies = Movie::select('movies.*', 'movie_tags.name as movie_tag_name', 'movie_tag_categories.name as movie_tag_category_name', 'movie_tag_categories.accent_color as category_color', 'movie_tags.accent_color as tag_color', 'movie_tag_categories.id as category_id', 'movie_tags.id as tag_id')
-                ->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')
-                ->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')
-                ->where('movies.del_flg', 0)
-                ->orderby('created_at', 'desc')
-                ->orderby('movie_tag_id', 'asc')
-                ->paginate(20);
+                    ->join('movie_tags', 'movie_tags.id', 'movies.movie_tag_id')
+                    ->join('movie_tag_categories', 'movie_tag_categories.id', 'movie_tags.movie_tag_category_id')
+                    ->where('movies.del_flg', 0)
+                    ->orderby('created_at', 'desc')
+                    ->orderby('movie_tag_id', 'asc')
+                    ->paginate(20);
             }
 
 
@@ -152,27 +152,23 @@ class NewMovieController extends Controller
         $youtube_id = $request->youtube_id ?? '';
         $tag_id = $request->tag_id;
         $description = $request->description;
-        $email = $request->email ?? '';
+        
 
         try {
             if ($file_path) {
                 $movie = new Movie();
                 $movie->name = $title;
-                $movie->memo = $description ?? '未設定';
+                $movie->memo = $description ?? '';
                 $movie->movie_tag_id = $tag_id;
-                $movie->file_path = $youtube_id;
+                $movie->file_path = $file_path;
+                $movie->youtube_id = $youtube_id;
+                $movie->transcription_flg = 1;
 
                 // 投稿日が記載されている場合
                 if ($created_at != 'null') {
                     $movie->created_at = $created_at;
                 }
                 $movie->save();
-
-
-                // RPAサーバーへリクエスト
-                // $url = "http://192.168.0.142:5000/movie/youtube_upload?id={$movie->id}&file_path=" . urlencode($file_path) . "&title=" . urlencode($title) . "&description=" . urlencode($description) . "&mention_id=" . urlencode($email);
-                // $msg = $url;
-                // $response = Http::get($url);
             }
         } catch (Exception $e) {
             $status = false;
@@ -180,6 +176,22 @@ class NewMovieController extends Controller
         }
 
         return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
+    public function delete(Request $request)
+    {
+        $status = true;
+
+        $movie_id = $request->movie_id;
+        try {
+            $movie = Movie::find($movie_id);
+            if ($movie) {
+                $movie->delete();
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+        return response()->json(['status' => $status]);
     }
 
     public function getMemos($movie_id)
@@ -192,7 +204,7 @@ class NewMovieController extends Controller
             ->join('users', 'users.id', '=', 'movie_memos.user_id')
             ->orderBy('movie_memos.time', 'asc')
             ->get();
-        
+
         $transcription_memos = MovieMemo::select('movie_memos.*', 'users.name as user_name')
             ->where('movie_id', $movie_id)
             ->whereNotNull('transcription_flg')
@@ -249,4 +261,18 @@ class NewMovieController extends Controller
 
         return response()->json(['status' => $status]);
     }
+
+    // 文字お越し待ち取得
+     public function getWaitingTranscription(){
+
+        // 文字お越し待ち状態で、ファイルパスが格納されているデータを取得
+        $movies = Movie::
+        select('movies.id', 'movies.file_path')
+        ->where('transcription_flg', 1
+        )->where('file_path', '!=', null)
+        ->get();
+        
+        return response()->json($movies);
+
+     }
 }

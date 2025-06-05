@@ -16,6 +16,7 @@ Route::get('/searchMovie', [NewMovieController::class, 'searchMovie'])->name('se
 Route::get('/create', [NewMovieController::class, 'create'])->name('movie2.create');
 Route::get('/{movie_id}', [NewMovieController::class, 'show'])->name('movie2.show');
 Route::post('/store', [NewMovieController::class, 'store'])->name('movie2.store');
+Route::delete('/delete', [NewMovieController::class, 'delete'])->name('movie2.delete');
 
 Route::get('/getMemos/{movie_id}', [NewMovieController::class, 'getMemos'])->name('movie2.getMemos');
 Route::post('/addMemo', [NewMovieController::class, 'addMemo'])->name('movie2.addMemo');

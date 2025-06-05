@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\NewMovieController;
 use App\Http\Controllers\SignageController;
 use App\Models\Signage;
 use Illuminate\Http\Request;
@@ -11,3 +12,8 @@ Route::get('/getStorageAddresses', [ApiController::class, 'getStorageAddresses']
 
 // ログ
 Route::post('/log/create', [LogController::class, 'createLog'])->name('log.create');
+
+
+// 文字お越し待ち取得
+Route::get('/getWaitingTranscription', [NewMovieController::class, 'getWaitingTranscription'])->name('movie2.getWaitingTranscription');
+

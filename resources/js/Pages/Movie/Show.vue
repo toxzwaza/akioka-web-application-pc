@@ -15,8 +15,8 @@ const props = defineProps({
 const video_id = ref(props.movie.youtube_id);
 const movie_id = ref(props.movie.id);
 
-const movie_memos = ref([])
-const movie_transcription_memos = ref([])
+const movie_memos = ref([]);
+const movie_transcription_memos = ref([]);
 
 const page = ref("watch");
 
@@ -95,9 +95,9 @@ const getMemos = async () => {
   await axios
     .get(route("movie2.getMemos", { movie_id: movie_id.value }))
     .then((res) => {
-      console.log(res.data)
-      movie_memos.value = res.data.memos
-      movie_transcription_memos.value = res.data.transcription_memos
+      console.log(res.data);
+      movie_memos.value = res.data.memos;
+      movie_transcription_memos.value = res.data.transcription_memos;
     })
     .catch((error) => {
       console.log(error);
@@ -155,13 +155,19 @@ const sendMemo = () => {
     });
 };
 const deleteMovie = () => {
-  axios.get('http://192.168.0.142:5000/movie/youtube_delete?youtube_id=' + video_id.value)
-  .then(res => {
-    if(res.data.status === "ok"){
-      window.location.href = route('movie2')
-    }
-  })
-}
+  axios
+    .delete(route("movie2.delete"), {
+      params: {
+        movie_id: movie_id.value,
+      },
+    })
+    .then((res) => {
+      if (res.data.status) {
+        alert("削除が完了しました。");
+        window.location.href = route("movie2");
+      }
+    });
+};
 
 onMounted(() => {
   //   メモを取得
@@ -282,7 +288,6 @@ onMounted(() => {
                 </button>
               </div>
             </form>
-
           </div>
 
           <div :class="{ main_content: true, active: page == 'detail' }">
@@ -304,83 +309,84 @@ onMounted(() => {
                     </h1>
 
                     <p class="leading-relaxed">
-                      {{ movie.memo }}
+                      {{ movie.memo !== "null" ? movie.memo : "" }}
                     </p>
+                    <div class="flex flex-wrap -mx-3 mb-6 mt-4">
+                      <div class="w-full md:w-1/2 px-3 mb-6 md:mb-0">
+                        <label
+                          class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                          for="grid-first-name"
+                        >
+                          ファイルパス
+                        </label>
+                        <input
+                          class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                          id="grid-first-name"
+                          type="text"
+                          v-model="movie.file_path"
+                        />
+                      </div>
+                      <div class="w-full md:w-1/2 px-3">
+                        <label
+                          class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                          for="grid-last-name"
+                        >
+                          YoutubeID
+                        </label>
+                        <input
+                          class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                          id="grid-last-name"
+                          type="text"
+                          v-model="movie.youtube_id"
+                        />
+                      </div>
+                    </div>
+
                     <div
                       class="flex mt-6 items-center pb-5 border-b-2 border-gray-100 mb-5"
                     >
-
                       <button
-                      @click="deleteMovie"
+                        @click="deleteMovie"
                         class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                       >
                         動画削除
                       </button>
-                      <!-- <div class="flex">
-                        <span class="mr-3">Color</span>
-                        <button
-                          class="border-2 border-gray-300 rounded-full w-6 h-6 focus:outline-none"
-                        ></button>
-                        <button
-                          class="border-2 border-gray-300 ml-1 bg-gray-700 rounded-full w-6 h-6 focus:outline-none"
-                        ></button>
-                        <button
-                          class="border-2 border-gray-300 ml-1 bg-indigo-500 rounded-full w-6 h-6 focus:outline-none"
-                        ></button>
-                      </div>
-                      <div class="flex ml-6 items-center">
-                        <span class="mr-3">Size</span>
-                        <div class="relative">
-                          <select
-                            class="rounded border appearance-none border-gray-300 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-base pl-3 pr-10"
-                          >
-                            <option>SM</option>
-                            <option>M</option>
-                            <option>L</option>
-                            <option>XL</option>
-                          </select>
-                          <span
-                            class="absolute right-0 top-0 h-full w-10 text-center text-gray-600 pointer-events-none flex items-center justify-center"
-                          >
-                            <svg
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              class="w-4 h-4"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M6 9l6 6 6-6"></path>
-                            </svg>
-                          </span>
-                        </div>
-                      </div> -->
                     </div>
                   </div>
                 </div>
               </div>
             </section>
           </div>
-
-          <hr class="my-8" />
-
-          <!-- 文字お越し -->
-          <div id="transcription" v-for="transcription_memo in movie_transcription_memos" :key="transcription_memo.id" class="p-2 ">
-            <p class="text-xs "><span @click="seekToTime(transcription_memo.time)">{{ transcription_memo.time }}</span> : {{ transcription_memo.memo }}</p>
-          </div>
         </div>
 
         <div class="memo-container w-1/5 pl-4">
-          <!-- コメント一覧 -->
+          <!-- 文字お越し -->
+          <div id="transcription" class="mb-8 bg-gray-50 p-4">
+            <h1 class="font-bold text-lg text-gray-700 mb-4">文字お越し</h1>
+            <p
+              class="text-sm p-2"
+              v-for="transcription_memo in movie_transcription_memos"
+              :key="transcription_memo.id"
+            >
+              <span
+                class="italic text-indigo-500"
+                @click="seekToTime(transcription_memo.time)"
+                >{{ transcription_memo.time }}</span
+              >
+              <br />{{ transcription_memo.memo }}
+            </p>
+          </div>
 
+          <!-- コメント一覧 -->
           <form
             @submit.prevent
             v-for="memo in movie_memos"
             :key="memo.id"
-            class="com_container pb-4 border-b border-indigo-100 mb-12"
+            class="com_container border-b border-indigo-100 mb-12 bg-gray-50 p-4"
           >
             <div>
+              <h1 class="font-bold text-lg text-gray-700 mb-4">コメント</h1>
+
               <div class="flex items-center justify-between">
                 <p class="italic hover:text-indigo-500 text-sm">
                   {{ "@" + memo.user_name }}
@@ -428,25 +434,52 @@ onMounted(() => {
 </template>
 <style scoped lang="scss">
 .memo-container {
-  max-height: 72vh;
-  overflow-y: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: #4a5568 #edf2f7;
+  height: 100vh;
+  overflow-y: auto;
   padding-right: 1%;
-}
 
-.memo-container::-webkit-scrollbar {
-  width: 8px;
-}
+  & .com_container {
+    height: 50%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #4a5568 #edf2f7;
 
-.memo-container::-webkit-scrollbar-track {
-  background: #edf2f7;
-}
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
 
-.memo-container::-webkit-scrollbar-thumb {
-  background-color: #4a5568;
-  border-radius: 10px;
-  border: 2px solid #edf2f7;
+    &::-webkit-scrollbar-track {
+      background: #edf2f7;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #4a5568;
+      border-radius: 10px;
+      border: 2px solid #edf2f7;
+    }
+  }
+  & #transcription {
+    height: 50%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #4a5568 #edf2f7;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #edf2f7;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #4a5568;
+      border-radius: 10px;
+      border: 2px solid #edf2f7;
+    }
+  }
 }
 
 .main_content {
@@ -455,14 +488,5 @@ onMounted(() => {
 }
 .main_content.active {
   height: auto;
-}
-
-#transcription{
- 
-  background-color: rgb(41, 41, 41);
-  
-  & p{
-     color: white;
-  }
 }
 </style>
