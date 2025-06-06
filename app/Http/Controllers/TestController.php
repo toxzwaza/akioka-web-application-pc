@@ -30,12 +30,6 @@ class TestController extends Controller
     //
     public function test()
     {
-        $movies = Movie::whereNull('transcription_flg')->get();
-        foreach ($movies as $movie) {
-            $movie->transcription_flg = 1;
-            $movie->save();
-        }
-        
 
         // $movies = Movie::all();
         // foreach ($movies as $movie) {

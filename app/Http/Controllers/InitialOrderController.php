@@ -214,6 +214,7 @@ class InitialOrderController extends Controller
                 $stock->classification_id = $classification_id;
                 $stock->deli_location = $deli_location;
                 $stock->stock_process_id = $base_stock_process_id;
+                $stock->del_flg = 0;
                 $stock->save();
 
                 // 発注依頼データ作成

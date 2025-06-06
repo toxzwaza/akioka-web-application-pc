@@ -27,6 +27,7 @@ const form = reactive({
   classification_id: null,
   deli_location: null,
   stock_process_id: 0,
+  del_flg: 0
 });
 
 const handleClassification = () => {
