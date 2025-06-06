@@ -68,7 +68,10 @@ class ContactController extends Controller
             ->first();
 
         // 担当者取得
-        $users = User::where('del_flg', 0)->get();
+        $users = User::where('del_flg', 0)
+            ->whereNotNull('email')
+            ->orderBy('position_id', 'asc')
+            ->get();
 
         return Inertia::render('Contact/Index', [
             'contacts' => $contacts,
@@ -96,13 +99,17 @@ class ContactController extends Controller
 
         // お問い合わせ詳細の取得
         $contact = Contact::findOrFail($id);
-        if($contact && !$contact->progress){
+        if ($contact && !$contact->progress) {
             $contact->progress = 1;
             $contact->save();
         }
-        
+
         // ユーザー一覧の取得
-        $users = User::all();
+        // 担当者取得
+        $users = User::where('del_flg', 0)
+            ->whereNotNull('email')
+            ->orderBy('position_id', 'asc')
+            ->get();
 
         return Inertia::render('Contact/Show', [
             'contact' => $contact,

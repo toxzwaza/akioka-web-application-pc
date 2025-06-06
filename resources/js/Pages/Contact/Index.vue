@@ -6,6 +6,68 @@ import axios from "axios";
 import Title from "@/Components/Title/MainTitle.vue";
 import { Pie, Bar } from "vue-chartjs";
 import Pagination from "@/Components/Pagination.vue";
+
+const props = defineProps({
+  contacts: Object,
+  stats: Array,
+  users: Array,
+});
+
+const contact_keywords = ref([])
+const keyword_form = reactive({
+  keyword: "",
+  user_id: null,
+});
+
+const methods = {
+  handleUser(val) {
+    const user = props.users.find((user) => user.name === val);
+    if (user) {
+      keyword_form.user_id = user.id;
+    }
+  },
+  getContactKeyword() {
+    axios.get(route('contact.keyword.get'))
+    .then(res => {
+      console.log(res.data);
+      contact_keywords.value = res.data;
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  },
+  addKeyword() {
+    console.log(keyword_form);
+    axios.post(route('contact.keyword.store'), keyword_form)
+    .then(res => {
+      console.log(res.data);
+      if(res.data.status){
+        this.getContactKeyword();
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  },
+  deleteKeyword(contact_keyword_id) {
+    console.log(contact_keyword_id)
+    axios.delete(route('contact.keyword.delete'), {
+      params: {
+        contact_keyword_id: contact_keyword_id
+      }
+    })
+    .then(res => {
+      console.log(res.data)
+      if(res.data.status){
+        this.getContactKeyword()
+      }
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+};
+
 import {
   Chart as ChartJS,
   ArcElement,
@@ -35,12 +97,6 @@ const form = reactive({
   progress: null,
   keyword: "",
   userId: null,
-});
-
-const props = defineProps({
-  contacts: Object,
-  stats: Array,
-  users: Array,
 });
 
 const searchContact = (flg) => {
@@ -205,6 +261,8 @@ onMounted(() => {
   if (!isFormIncomplete()) {
     leftContainer.value = true;
   }
+
+  methods.getContactKeyword()
 });
 </script>
 <template>
@@ -237,11 +295,7 @@ onMounted(() => {
             </button>
           </div>
 
-          <div
-            id="sortContainer"
-            class="my-8"
-            v-if="leftContainer"
-          >
+          <div id="sortContainer" class="my-8" v-if="leftContainer">
             <div class="w-5/6 mx-auto" @click.stop>
               <p class="mb-2 font-bold">検索</p>
               <div class="buttonContainer">
@@ -269,7 +323,6 @@ onMounted(() => {
                   </label>
                   <div class="mb-4">
                     <input
-
                       type="date"
                       name=""
                       id=""
@@ -286,7 +339,6 @@ onMounted(() => {
                     </label>
                     <div class="mb-4">
                       <input
-  
                         type="date"
                         name=""
                         id=""
@@ -304,7 +356,6 @@ onMounted(() => {
                       状況
                     </label>
                     <select
-
                       class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
@@ -323,7 +374,6 @@ onMounted(() => {
                       種類
                     </label>
                     <select
-
                       class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
@@ -344,7 +394,6 @@ onMounted(() => {
                       担当者
                     </label>
                     <select
-
                       class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
@@ -425,6 +474,116 @@ onMounted(() => {
               </div>
             </div>
           </section>
+
+          <!-- キーワード追加 -->
+
+          <details class="w-full mb-8" open>
+            <summary
+              class="pl-2 py-1 bg-gray-200 text-xl font-bold text-gray-800 cursor-pointer"
+            >
+              担当者振り分け用キーワード追加
+            </summary>
+            <section class="w-full mb-12 bg-gray-50 p-4">
+              <form class="w-1/2">
+                <div class="flex flex-wrap items-center gap-4">
+                  <!-- キーワード入力欄 -->
+                  <div class="flex-1 min-w-[200px]">
+                    <label
+                      class="block text-gray-700 text-sm font-bold mb-1"
+                      for="keyword"
+                    >
+                      キーワード
+                    </label>
+                    <input
+                      id="keyword"
+                      type="text"
+                      placeholder="キーワードを入力"
+                      class="w-full bg-gray-100 border border-gray-300 text-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      v-model="keyword_form.keyword"
+                    />
+                  </div>
+
+                  <!-- 名前セレクトボックス -->
+                  <div class="flex-1 min-w-[200px]">
+                    <label
+                      class="block text-gray-700 text-sm font-bold mb-1"
+                      for="name-select"
+                    >
+                      名前を選択
+                    </label>
+                    <input
+                      list="name-options"
+                      id="name-select"
+                      class="w-full bg-gray-100 border border-gray-300 text-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      placeholder="名前を入力または選択"
+                      @change="methods.handleUser($event.target.value)"
+                    />
+                    <datalist id="name-options">
+                      <option
+                        v-for="user in props.users"
+                        :key="user.id"
+                        :value="`${user.name}`"
+                      >
+                        {{ user.name }}
+                      </option>
+                    </datalist>
+                  </div>
+
+                  <!-- 検索ボタン -->
+                  <div class="mt-6">
+                    <button
+                      @click.prevent="methods.addKeyword"
+                      type="submit"
+                      class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      追加
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <!-- 登録済みリストを表示 -->
+              <div>
+                <div class="w-full max-w-4xl mt-12">
+                  <h2 class="text-lg font-bold text-gray-800 mb-4">
+                    登録済みのキーワード一覧
+                  </h2>
+
+                  <div class="overflow-x-auto">
+                    <table
+                      class="min-w-full bg-white border border-gray-200 rounded shadow"
+                    >
+                      <thead>
+                        <tr
+                          class="bg-gray-100 text-gray-700 text-sm uppercase text-left"
+                        >
+                          <th class="py-3 px-4 border-b">キーワード</th>
+                          <th class="py-3 px-4 border-b">担当者</th>
+                          <th class="py-3 px-4 border-b text-center">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- 1行目の例 -->
+                        <tr v-for="contact_keyword in contact_keywords" :key="contact_keyword.name" class="border-t hover:bg-gray-50">
+                          <td class="py-3 px-4">{{ contact_keyword.keyword }}</td>
+                          <td class="py-3 px-4">{{ contact_keyword.name }}</td>
+                          <td class="py-3 px-4 text-center space-x-2">
+                            <button
+                              @click.prevent="methods.deleteKeyword(contact_keyword.id)"
+                              class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded"
+                            >
+                              削除
+                            </button>
+                          </td>
+                        </tr>
+                        <!-- 以下、必要に応じて繰り返し -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </details>
 
           <section class="text-gray-600 body-font">
             <div class="mx-auto">

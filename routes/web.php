@@ -4,6 +4,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Controllers\CalcProductController;
 use App\Http\Controllers\CalcProductTabletController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactKeywordController;
 use App\Http\Controllers\FaxController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\LogController;
@@ -86,6 +87,9 @@ Route::get('/getMonthOrders', [LunchController::class, 'getMonthOrders']);
 Route::get('/lunch/export_csv', [LunchController::class, 'export_csv'])->name('lunch.export_csv');
 Route::get('/lunch/export', [LunchController::class, 'export'])->name('lunch.export');
 
+Route::post('/contact/keyword/store', [ContactKeywordController::class, 'store'])->name('contact.keyword.store');
+Route::get('/contact/keyword/get', [ContactKeywordController::class, 'getContactKeyword'])->name('contact.keyword.get');
+Route::delete('/contact/keyword/delete', [ContactKeywordController::class, 'delete'])->name('contact.keyword.delete');
 
 // ファイル管理システム
 Route::get('file', [FileController::class, 'index'])->name('file');
