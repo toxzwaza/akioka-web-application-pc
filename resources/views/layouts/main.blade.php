@@ -58,11 +58,11 @@
           動画視聴</a>
 
         <!-- 図番棚卸 -->
-        <!-- <a href="{{ route('calc.product') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('calc.product*') ? 'font-bold text-gray-900' : ''}}">
+        <a href="{{ route('calc.product') }}" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('calc.product*') ? 'font-bold text-gray-900' : ''}}">
           <span class="mr-1 material-symbols-outlined">
             list_alt
           </span>
-          製品棚卸</a> -->
+          製品棚卸</a>
 
         <!-- FAX設定 -->
         <a href="{{ route('fax') }}" class="mr-5 hover:text-gray-900 flex justify-center  {{ Route::is('fax*') ? 'font-bold text-gray-900' : ''}}">

@@ -13,6 +13,9 @@ const shortest = ref(false);
 const description = ref("");
 const calc_postage = ref(0); //送料合計
 
+// 社員表示
+const approval_flg = ref(false)
+
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
   props.orders.forEach((order) => {
@@ -79,6 +82,8 @@ async function saveAsImage() {
       order.shortest = true;
     }
   });
+
+  approval_flg.value = true
 
   const element = document.getElementById("purchase_container");
   const timestamp = Date.now();
@@ -180,6 +185,8 @@ onMounted(() => {
           発注書保存
         </button>
       </div>
+
+      <img v-if="approval_flg" id="comp_approval_img" src="/img/base/comp_approval.png" alt="">
 
       <h1 class="text-center font-bold text-2xl py-4 mb-4">注文書</h1>
 
@@ -355,6 +362,13 @@ onMounted(() => {
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
   border: 1px solid rgba(221, 221, 221, 0.705);
   position: relative;
+
+  & #comp_approval_img{
+    position: absolute;
+    top: 14%;
+    right: 16%;
+    width: 10%;
+  }
 
   & #main_content {
     margin-top: 4mm;

@@ -110,7 +110,7 @@ class Helper
         }
 
         // 50,000円以上の場合の追加承認
-        if ($price >= 50000) {
+        if ($price >= 100000) {
             if ($user->group_id == 7) {
                 $approval_list[] = 63;
             }
