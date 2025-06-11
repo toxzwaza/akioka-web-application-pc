@@ -14,7 +14,7 @@ const description = ref("");
 const calc_postage = ref(0); //送料合計
 
 // 社員表示
-const approval_flg = ref(false)
+const approval_flg = ref(false);
 
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
@@ -76,14 +76,14 @@ function printElement() {
 }
 
 async function saveAsImage() {
+  approval_flg.value = true;
+
   // 納入希望日が入力されていない場合最短とする
   props.orders.forEach((order) => {
     if (!order.desired_delivery_date) {
       order.shortest = true;
     }
   });
-
-  approval_flg.value = true
 
   const element = document.getElementById("purchase_container");
   const timestamp = Date.now();
@@ -186,7 +186,12 @@ onMounted(() => {
         </button>
       </div>
 
-      <img v-if="approval_flg" id="comp_approval_img" src="/img/base/comp_approval.png" alt="">
+      <img
+        :class="{ hidden: !approval_flg }"
+        id="comp_approval_img"
+        src="/img/base/comp_approval.png"
+        alt=""
+      />
 
       <h1 class="text-center font-bold text-2xl py-4 mb-4">注文書</h1>
 
@@ -255,7 +260,15 @@ onMounted(() => {
           <tbody>
             <tr v-for="order in orders" :key="order.id" class="">
               <td class="order_no text-center border">
-                {{ `${order.order_no}-${order.stock_processes_order_request_code ? order.stock_processes_order_request_code : order.stock_processes_base_code ? order.stock_processes_base_code : '未'}` }}
+                {{
+                  `${order.order_no}-${
+                    order.stock_processes_order_request_code
+                      ? order.stock_processes_order_request_code
+                      : order.stock_processes_base_code
+                      ? order.stock_processes_base_code
+                      : "未"
+                  }`
+                }}
               </td>
               <td class="name text-center border">{{ order.name }}</td>
               <td class="s_name text-center border">{{ order.s_name }}</td>
@@ -363,7 +376,7 @@ onMounted(() => {
   border: 1px solid rgba(221, 221, 221, 0.705);
   position: relative;
 
-  & #comp_approval_img{
+  & #comp_approval_img {
     position: absolute;
     top: 14%;
     right: 16%;
