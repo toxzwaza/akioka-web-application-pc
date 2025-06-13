@@ -1,11 +1,11 @@
 <script setup>
-import { reactive, onMounted, ref } from "vue";
+import { reactive, onMounted, ref, onUnmounted } from "vue";
 
 const props = defineProps({
   user_tasks: Array,
   task_transactions: Array,
 });
-const current_time = ref('')
+const current_time = ref("");
 
 const user_tasks = ref([]);
 const filteredTasks = ref([]);
@@ -15,22 +15,26 @@ const logs = reactive({
   user_id: 0,
 });
 
-const filter_logs = (user_id) => {
-  if (user_id) {
-    logs.task_transactions = props.task_transactions.filter(
-      (task_transaction) => task_transaction.user_id === user_id
-    );
-    logs.user_id = user_id
-  } else {
-    logs.task_transactions = props.task_transactions;
-    logs.user_id = 0
-  }
-};
 const form = reactive({
   user_id: null,
   user_name: null,
   task_name: null,
 });
+
+const isWindowFocused = ref(true);
+let updateCheckInterval = null;
+
+const filter_logs = (user_id) => {
+  if (user_id) {
+    logs.task_transactions = props.task_transactions.filter(
+      (task_transaction) => task_transaction.user_id === user_id
+    );
+    logs.user_id = user_id;
+  } else {
+    logs.task_transactions = props.task_transactions;
+    logs.user_id = 0;
+  }
+};
 
 const filterTaskList = () => {
   if (!form.task_name) {
@@ -53,19 +57,26 @@ const filterTaskList = () => {
 };
 
 const updateCheck = () => {
-    setInterval(() => {
-        axios.get(route('task.update-check'), {
-            params: {
-                user_id: form.user_id
+  updateCheckInterval = setInterval(() => {
+    axios
+      .get(route("task.update-check"), {
+        params: {
+          user_id: form.user_id,
+        },
+      })
+      .then((res) => {
+        if (res.data.update_flg) {
+          if (isWindowFocused.value) {
+            if (confirm("更新を検知しました。更新しますか？")) {
+              window.location.reload();
             }
-        })
-        .then(res => {
-            if(res.data.update_flg){
-                window.location.reload()
-            }
-        })
-    }, 300000); // 300000ミリ秒 = 5分
-}
+          } else {
+            window.location.reload();
+          }
+        }
+      });
+  }, 300000); // 300000ミリ秒 = 5分
+};
 
 const selectTask = (task) => {
   form.task_name = task;
@@ -190,17 +201,18 @@ const changeTaskName = (status) => {
   return task_name;
 };
 
-setInterval(() => {
-  const now = new Date();
-  const formattedTime = now.toLocaleTimeString("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+const getCurrentTime = () => {
+  setInterval(() => {
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
 
-  current_time.value = formattedTime
-
-}, 1000);
+    current_time.value = formattedTime;
+  }, 1000);
+};
 
 onMounted(() => {
   console.log(props.task_transactions);
@@ -213,7 +225,24 @@ onMounted(() => {
   user_tasks.value = props.user_tasks;
   logs.task_transactions = props.task_transactions;
 
-  updateCheck()
+  updateCheck();
+  getCurrentTime();
+
+  // ウィンドウのフォーカス状態を監視
+  window.addEventListener("focus", () => {
+    console.log("focusされました");
+    isWindowFocused.value = true;
+  });
+  window.addEventListener("blur", () => {
+    console.log("focusが解除されました");
+    isWindowFocused.value = false;
+  });
+});
+
+onUnmounted(() => {
+  if (updateCheckInterval) {
+    clearInterval(updateCheckInterval);
+  }
 });
 </script>
 
@@ -292,7 +321,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 0,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 0,
                 }"
                 @click="filter_logs(0)"
                 >全員</a
@@ -302,7 +332,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 43,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 43,
                 }"
                 @click="filter_logs(43)"
                 >中原</a
@@ -312,7 +343,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 48,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 48,
                 }"
                 @click="filter_logs(48)"
                 >中村</a
@@ -322,7 +354,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 68,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 68,
                 }"
                 @click="filter_logs(68)"
                 >岡堂</a
@@ -332,7 +365,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 81,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 81,
                 }"
                 @click="filter_logs(81)"
                 >三谷</a
@@ -342,7 +376,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 91,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 91,
                 }"
                 @click="filter_logs(91)"
                 >村上</a
@@ -352,7 +387,8 @@ onMounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white': logs.user_id == 120,
+                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                    logs.user_id == 120,
                 }"
                 @click="filter_logs(120)"
                 >風早</a
@@ -432,15 +468,41 @@ onMounted(() => {
     </section>
   </div>
   <div v-else>
-    <select name="" id="" v-model="form.user_id" @change="selectUserName">
-      <option value="0">選択してください</option>
-      <option value="48">中村仁美</option>
-      <option value="68">岡堂莉子</option>
-      <option value="81">三谷優月</option>
-      <option value="120">風早結衣</option>
-      <option value="43">中原清志</option>
-      <option value="91">村上飛羽</option>
-    </select>
+    <div class="w-full max-w-xs mx-auto mt-32">
+      <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div class="mb-4">
+          <label
+            class="block text-gray-700 text-sm font-bold mb-2"
+            for="username"
+          >
+            選択してください。
+          </label>
+          <select name="" id="" v-model="form.user_id" @change="selectUserName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            <option value="0">選択してください</option>
+            <option value="48">中村仁美</option>
+            <option value="68">岡堂莉子</option>
+            <option value="81">三谷優月</option>
+            <option value="120">風早結衣</option>
+            <option value="43">中原清志</option>
+            <option value="91">村上飛羽</option>
+          </select>
+
+        </div>
+
+        <div class="flex items-center justify-between">
+          <button
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="button"
+          >
+            ログイン
+          </button>
+
+        </div>
+      </form>
+      <p class="text-center text-gray-500 text-xs">
+        &copy;2025 Akioka Corp. All rights reserved.
+      </p>
+    </div>
   </div>
 </template>
 <style scoped lang="scss">
