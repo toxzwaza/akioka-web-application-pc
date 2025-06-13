@@ -13,6 +13,11 @@ class TaskController extends Controller
     //
     public function index()
     {
+        return Inertia::render('Task/Index');
+    }
+
+    public function getData()
+    {
         $user_id_list = [48, 68, 81, 120, 43, 91];
 
         $user_tasks = Task::whereIn('user_id', $user_id_list)
@@ -49,14 +54,16 @@ class TaskController extends Controller
             }
         }
 
+
         $task_transactions = TaskTransaction::select('tasks.name', 'task_transactions.status', 'task_transactions.created_at', 'users.name as user_name', 'users.id as user_id')
             ->join('tasks', 'tasks.id', 'task_transactions.task_id')
             ->join('users', 'users.id', 'tasks.user_id')
             ->orderBy('task_transactions.created_at', 'desc')
             ->orderBy('task_transactions.id', 'desc')
             ->get();
+        
 
-        return Inertia::render('Task/Index', ['user_tasks' => $user_tasks, 'task_transactions' => $task_transactions]);
+        return response()->json(['user_tasks' => $user_tasks , 'task_transactions' => $task_transactions]);
     }
 
     public function store(Request $request)
@@ -153,6 +160,10 @@ class TaskController extends Controller
 
             $task->save();
 
+            // 更新チェックをリセット
+            $this->changeUpdateCheck($task->user_id);
+
+
             $msg = 'タスクを更新しました';
         } catch (\Exception $e) {
             $status = false;
@@ -163,7 +174,8 @@ class TaskController extends Controller
 
     public function delete(Request $request) {}
 
-    public function update_check(Request $request){
+    public function update_check(Request $request)
+    {
         $user_id = $request->user_id;
 
         $update_flg = false;
@@ -179,12 +191,12 @@ class TaskController extends Controller
         return response()->json(['update_flg' => $update_flg]);
     }
 
-    public function changeUpdateCheck($user_id){
+    public function changeUpdateCheck($user_id)
+    {
         $updateChecks = TaskUpdateCheck::where('user_id', '!=', $user_id)->get();
-        forEach($updateChecks as $updateCheck){
+        foreach ($updateChecks as $updateCheck) {
             $updateCheck->update_flg = 1;
             $updateCheck->save();
         }
-
     }
 }

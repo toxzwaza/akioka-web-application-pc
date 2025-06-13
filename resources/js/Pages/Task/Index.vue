@@ -2,8 +2,7 @@
 import { reactive, onMounted, ref, onUnmounted } from "vue";
 
 const props = defineProps({
-  user_tasks: Array,
-  task_transactions: Array,
+
 });
 const current_time = ref("");
 
@@ -11,6 +10,7 @@ const user_tasks = ref([]);
 const filteredTasks = ref([]);
 
 const logs = reactive({
+  base_task_transactions: [],
   task_transactions: [],
   user_id: 0,
 });
@@ -24,14 +24,23 @@ const form = reactive({
 const isWindowFocused = ref(true);
 let updateCheckInterval = null;
 
+const getData = () => {
+  axios.get(route("task.getData")).then((res) => {
+    console.log(res.data);
+    user_tasks.value = res.data.user_tasks;
+    logs.base_task_transactions = res.data.task_transactions;
+    logs.task_transactions = res.data.task_transactions;
+  });
+};
+
 const filter_logs = (user_id) => {
   if (user_id) {
-    logs.task_transactions = props.task_transactions.filter(
+    logs.task_transactions = logs.base_task_transactions.filter(
       (task_transaction) => task_transaction.user_id === user_id
     );
     logs.user_id = user_id;
   } else {
-    logs.task_transactions = props.task_transactions;
+    logs.task_transactions = logs.base_task_transactions;
     logs.user_id = 0;
   }
 };
@@ -68,10 +77,10 @@ const updateCheck = () => {
         if (res.data.update_flg) {
           if (isWindowFocused.value) {
             if (confirm("更新を検知しました。更新しますか？")) {
-              window.location.reload();
+              getData();
             }
           } else {
-            window.location.reload();
+            getData();
           }
         }
       });
@@ -94,7 +103,8 @@ const createTask = () => {
       .then((res) => {
         console.log(res.data);
         if (res.data.status) {
-          window.location.reload();
+          getData();
+          form.task_name = ''
         }
       });
   }
@@ -108,11 +118,11 @@ const saveUserIdToLocalStorage = () => {
 
 const removeUserIdFromLocalStorage = () => {
   localStorage.removeItem("user_id");
-  window.location.reload();
+  window.location.reload()
 };
 
 const reloadPage = () => {
-  window.location.reload();
+  getData();
 };
 
 const getUserNameByUserId = () => {
@@ -179,7 +189,7 @@ const updateTaskStatus = (task_id) => {
       console.log(res.data);
 
       if (res.data.status) {
-        window.location.reload();
+        getData();
       }
     })
     .catch((error) => {
@@ -215,15 +225,12 @@ const getCurrentTime = () => {
 };
 
 onMounted(() => {
-  console.log(props.task_transactions);
+  getData();
 
   form.user_id = localStorage.getItem("user_id");
   if (form.user_id) {
     getUserNameByUserId();
   }
-
-  user_tasks.value = props.user_tasks;
-  logs.task_transactions = props.task_transactions;
 
   updateCheck();
   getCurrentTime();
@@ -423,7 +430,7 @@ onUnmounted(() => {
       </div>
       <div id="right_container">
         <div v-for="(user_task, user_id) in user_tasks" :key="user_id">
-          <p class="font-bold">{{ getUserName(user_id) }}</p>
+          <p class="font-bold text-grey-600">{{ getUserName(user_id) }}</p>
 
           <div v-for="task in user_task" :key="task.id" class="task_content">
             <div
@@ -477,7 +484,13 @@ onUnmounted(() => {
           >
             選択してください。
           </label>
-          <select name="" id="" v-model="form.user_id" @change="selectUserName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+          <select
+            name=""
+            id=""
+            v-model="form.user_id"
+            @change="selectUserName"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          >
             <option value="0">選択してください</option>
             <option value="48">中村仁美</option>
             <option value="68">岡堂莉子</option>
@@ -486,7 +499,6 @@ onUnmounted(() => {
             <option value="43">中原清志</option>
             <option value="91">村上飛羽</option>
           </select>
-
         </div>
 
         <div class="flex items-center justify-between">
@@ -496,7 +508,6 @@ onUnmounted(() => {
           >
             ログイン
           </button>
-
         </div>
       </form>
       <p class="text-center text-gray-500 text-xs">
@@ -508,7 +519,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 #content {
   //   height: 100vh;
-  background-color: #f8f8f8;
+  //   background-color: #f8f8f8;
   overflow: hidden;
 
   & #main_section {

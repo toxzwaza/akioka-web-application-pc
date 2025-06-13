@@ -160,3 +160,4 @@ Route::post('task/store', [TaskController::class, 'store'])->name('task.store');
 Route::post('task/update', [TaskController::class, 'update'])->name('task.update');
 Route::delete('task/delete', [TaskController::class, 'delete'])->name('task.delete');
 Route::get('task/update-check', [TaskController::class, 'update_check'])->name('task.update-check');
+Route::get('/task/getData', [TaskController::class, 'getData'])->name('task.getData');
