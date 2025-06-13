@@ -2,10 +2,9 @@
 import { reactive, onMounted, ref, onUnmounted } from "vue";
 import { Link } from "@inertiajs/vue3";
 
-const props = defineProps({
-});
-const current_time = ref("")
-const search_keywords = ref([])
+const props = defineProps({});
+const current_time = ref("");
+const search_keywords = ref([]);
 
 const user_tasks = ref([]);
 const filteredTasks = ref([]);
@@ -20,6 +19,7 @@ const form = reactive({
   user_id: null,
   user_name: null,
   task_name: null,
+  task_description: null,
 });
 
 const completeTasks = ref([]);
@@ -30,15 +30,16 @@ let updateCheckInterval = null;
 const isLoading = ref(false);
 
 const getData = () => {
-isLoading.value = true
+  isLoading.value = true;
   axios.get(route("task.getData")).then((res) => {
     console.log(res.data);
     user_tasks.value = res.data.user_tasks;
     logs.base_task_transactions = res.data.task_transactions;
-    logs.task_transactions = res.data.task_transactions
-    search_keywords.value = res.data.search_keywords    
+    logs.task_transactions = res.data.task_transactions;
+    search_keywords.value = res.data.search_keywords;
 
-    isLoading.value = false
+    isLoading.value = false;
+    getCompleteData();
   });
 };
 
@@ -54,15 +55,33 @@ const filter_logs = (user_id) => {
   }
 };
 
-const filterTaskList = async () => {
+const filterTaskList = () => {
+  if (!form.task_name) {
+    filteredTasks.value = [];
+    return;
+  }
 
-    if (!form.task_name) {
-      filteredTasks.value = [];
-      return;
+  filteredTasks.value = [];
+  search_keywords.value.forEach((search_keyword) => {
+    if (
+      search_keyword.user_id == form.user_id &&
+      search_keyword.task_name.includes(form.task_name)
+    ) {
+      console.log("タスク発見：", search_keyword.task_name);
+      filteredTasks.value.push(search_keyword.task_name);
     }
+  });
+};
 
-    filteredTasks.value = search_keywords.value.filter( search_keyword => search_keyword.user_id === form.user_id)
-
+const openDescription = (task) => {
+  if (task.description) {
+    if (task.description_open) {
+      task.description_open = false;
+    } else {
+      task.description_open = true;
+    }
+  }
+  console.log(task);
 };
 
 const updateCheck = () => {
@@ -93,18 +112,19 @@ const selectTask = (task) => {
 };
 
 const createTask = () => {
-  console.log(form.task_name);
   if (form.user_id && form.task_name) {
     axios
       .post(route("task.store"), {
         user_id: form.user_id,
         task_name: form.task_name,
+        task_description: form.task_description,
       })
       .then((res) => {
         console.log(res.data);
         if (res.data.status) {
           getData();
-          form.task_name = "";
+          form.task_name = null;
+          form.task_description = null;
         }
       });
   }
@@ -232,7 +252,6 @@ const getCompleteData = () => {
 };
 
 onMounted(() => {
-
   getData();
 
   form.user_id = localStorage.getItem("user_id");
@@ -298,40 +317,57 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
-    <div class="flex items-center justify-center pt-12 pb-10 bg-gray-50">
-      <div class="relative w-2/3 mr-2">
-        <input
-          v-model="form.task_name"
-          class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-          type="text"
-          name=""
-          id=""
-          placeholder="タスクを追加してください"
-          @input="filterTaskList"
-        />
-        <ul
-          v-if="filteredTasks.length"
-          class="absolute bg-white border border-gray-200 rounded mt-1 w-full z-10"
-        >
-          <li
-            v-for="task in filteredTasks"
-            :key="task"
-            @click="selectTask(task)"
-            class="px-4 py-2 cursor-pointer hover:bg-gray-200"
+
+    <div class="pt-12 pb-10 bg-gray-50">
+      <div class="relative w-2/3 mx-auto">
+        <div class="w-full mr-2 flex items-center justify-center">
+          <input
+            v-model="form.task_name"
+            class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="text"
+            name=""
+            id=""
+            placeholder="タスクを追加してください"
+            @input="filterTaskList"
+          />
+
+          <ul
+            v-if="filteredTasks.length"
+            class="absolute top-14 bg-white border border-gray-200 rounded w-full z-10"
           >
-            {{ task }}
-          </li>
-        </ul>
+            <li
+              v-for="task in filteredTasks"
+              :key="task"
+              @click="selectTask(task)"
+              class="px-4 py-2 cursor-pointer hover:bg-gray-200"
+            >
+              {{ task }}
+            </li>
+          </ul>
+          <button
+            @click.prevent="createTask"
+            class="ml-2 bg_base_color hover:bg-blue-700 text-white font-bold py-3 px-4 rounded whitespace-nowrap"
+          >
+            追加
+          </button>
+        </div>
+
+        <details class="mt-4">
+          <summary class="tracking-wide text-gray-700 text-xs font-bold mb-2">
+            メモを追加
+          </summary>
+          <textarea
+            cols="30"
+            rows="10"
+            placeholder="メモを記載"
+            v-model="form.task_description"
+            class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          ></textarea>
+        </details>
       </div>
-      <button
-        @click.prevent="createTask"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded"
-      >
-        追加
-      </button>
     </div>
 
-    <section id="main_section" class="flex">
+    <section id="main_section" class="flex justify-between">
       <div id="left_container">
         <div class="log_container">
           <ul class="flex border-b mb-6">
@@ -339,8 +375,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 0,
+                  'bg-white': logs.user_id !== 0,
                 }"
                 @click="filter_logs(0)"
                 >全員</a
@@ -350,8 +387,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 43,
+                  'bg-white': logs.user_id !== 43,
                 }"
                 @click="filter_logs(43)"
                 >中原</a
@@ -361,8 +399,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 48,
+                  'bg-white': logs.user_id !== 48,
                 }"
                 @click="filter_logs(48)"
                 >中村</a
@@ -372,8 +411,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 68,
+                  'bg-white': logs.user_id !== 68,
                 }"
                 @click="filter_logs(68)"
                 >岡堂</a
@@ -383,8 +423,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 81,
+                  'bg-white': logs.user_id !== 81,
                 }"
                 @click="filter_logs(81)"
                 >三谷</a
@@ -394,8 +435,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 91,
+                  'bg-white': logs.user_id !== 91,
                 }"
                 @click="filter_logs(91)"
                 >村上</a
@@ -405,8 +447,9 @@ onUnmounted(() => {
               <a
                 :class="{
                   'inline-block  py-2 px-4 text-grey-100 font-semibold': true,
-                  'border-l border-t border-r rounded-t bg-gray-700 text-white':
+                  'border-l border-t border-r rounded-t bg_base_color text-white':
                     logs.user_id == 120,
+                  'bg-white': logs.user_id !== 120,
                 }"
                 @click="filter_logs(120)"
                 >風早</a
@@ -446,8 +489,11 @@ onUnmounted(() => {
 
           <div v-for="task in user_task" :key="task.id" class="task_content">
             <div
-              class="p-2 flex justify-between rounded-lg"
-              :class="{ 'bg-gray-100 cursor-pointer': true }"
+              :class="{
+                'p-2 flex justify-between rounded-lg bg-gray-100': true,
+                'cursor-pointer': task.description,
+              }"
+              @click.stop="openDescription(task)"
             >
               <div class="w-4/5 flex items-center font-bold text-gray-700">
                 <span
@@ -457,27 +503,37 @@ onUnmounted(() => {
                     'bg-gray-500': task.status == 1,
                   }"
                 ></span>
+
                 <span class="ml-2"
-                  ><span class="mr-2 font-normal text-gray-500 text-sm"
+                  ><span class="mr-3 font-normal text-gray-500 text-sm"
                     >{{ task.total_minutes }}分</span
-                  >{{ task.name }}</span
-                >
+                  >
+                  <i
+                    v-if="task.description"
+                    class="text-gray-500 fas fa-sticky-note"
+                  ></i>
+                  {{ task.name }}
+                </span>
               </div>
 
               <button
                 v-if="task.user_id == form.user_id && task.status == 1"
-                @click="updateTaskStatus(task.id)"
-                class="w-16 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                @click.stop="updateTaskStatus(task.id)"
+                class="w-16 bg_base_color hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               >
                 開始
               </button>
               <button
                 v-else-if="task.user_id == form.user_id && task.status == 0"
-                @click="updateTaskStatus(task.id)"
+                @click.stop="updateTaskStatus(task.id)"
                 class="w-16 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
               >
                 完了
               </button>
+            </div>
+
+            <div v-if="task.description_open" v-html="task.description.replace(/\n/g, '<br>')" class="description_container">    
+
             </div>
           </div>
 
@@ -511,10 +567,10 @@ onUnmounted(() => {
 
     <a :href="route('task.export')" class="export_link">エクスポート</a>
 
-  <div v-if="isLoading" class="loading-overlay">
-    <div class="spinner"></div>
-    <p>更新中...</p>
-  </div>
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>更新中...</p>
+    </div>
   </div>
   <div v-else>
     <div class="w-full max-w-xs mx-auto mt-32">
@@ -559,12 +615,15 @@ onUnmounted(() => {
   </div>
 </template>
 <style scoped lang="scss">
+.bg_base_color {
+  background-color: #3498db;
+}
 #content {
   //   height: 100vh;
   //   background-color: #f8f8f8;
   & #top_container {
-    border-bottom: 4px solid rgb(62, 62, 255);
-    background-color: rgb(96, 96, 255);
+    border-bottom: 4px solid #1381ca;
+    background-color: #3498db;
     color: white;
   }
 
@@ -583,12 +642,15 @@ onUnmounted(() => {
     padding: 2rem 3rem;
 
     & #left_container {
-      width: 50%;
+      padding: 1rem 0.6rem;
+      width: 48%;
+      background-color: rgba(216, 216, 216, 0.24);
+      box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 
       & .log_container {
+        min-height: 80vh;
         max-height: 80vh;
         overflow-y: scroll;
-        padding: 1rem 1rem 0 0;
 
         & p {
           padding: 0.3rem 0.3rem 0.3rem 1rem;
@@ -596,14 +658,30 @@ onUnmounted(() => {
             content: "・";
             margin-right: 0.4rem;
             font-weight: bold;
+
           }
         }
       }
     }
 
     & #right_container {
+      padding: 1rem 0.6rem;
       width: 50%;
-      padding-left: 2rem;
+      box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+      //   padding-left: 2rem;
+
+      & .description_container{
+        font-size: 0.9rem;
+        margin-top: 0.4rem;
+        margin-left: 1rem;
+        margin-bottom: 1.2rem;
+        &::before{
+            content: '>';
+            margin-right: 0.2rem;
+            font-weight: bold;
+            color: #4753ff;
+        }
+      }
 
       & > div {
         padding: 0.4rem 1rem;
@@ -671,7 +749,11 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

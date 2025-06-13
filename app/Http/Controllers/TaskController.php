@@ -66,7 +66,7 @@ class TaskController extends Controller
             ->get();
 
         // 検索補助用キーワード
-        $search_keywords = Task::select('name', 'user_id')->distinct('name')->get();
+        $search_keywords = Task::select('name as task_name', 'user_id')->distinct('name')->get();
 
 
         return response()->json(['user_tasks' => $user_tasks, 'task_transactions' => $task_transactions, 'search_keywords' => $search_keywords]);
@@ -76,6 +76,7 @@ class TaskController extends Controller
     {
         $user_id = $request->user_id;
         $task_name = $request->task_name;
+        $task_description = $request->task_description;
 
         $status = true;
         $msg = '';
@@ -100,6 +101,7 @@ class TaskController extends Controller
             $task = new Task();
             $task->user_id = $user_id;
             $task->name = $task_name;
+            $task->description = $task_description;
             $task->save();
 
             // タスクトランザクションデータ作成
