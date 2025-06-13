@@ -8,7 +8,7 @@ import Title from "@/Components/Title/MainTitle.vue";
 const props = defineProps({
   contact: Object,
   users: Array,
-  searchParams: Object
+  searchParams: Object,
 });
 
 const formatText = (text) => {
@@ -59,7 +59,7 @@ const changeValue = (flg, val) => {
 
 // 一覧画面に戻るリンクを生成
 const getBackLink = () => {
-  return route('contact.home', props.searchParams);
+  return route("contact.home", props.searchParams);
 };
 
 onMounted(() => {
@@ -75,7 +75,10 @@ onMounted(() => {
       />
 
       <div class="mb-4">
-        <Link :href="getBackLink()" class="text-blue-500 hover:underline font-bold">
+        <Link
+          :href="getBackLink()"
+          class="text-blue-500 hover:underline font-bold"
+        >
           <i class="fas fa-arrow-left mr-2"></i> お問い合わせ一覧へ戻る
         </Link>
       </div>
@@ -171,96 +174,146 @@ onMounted(() => {
             >
           </p>
         </div>
-        <p
-          class="font-bold text-lg mb-2 p-2 pl-4 bg-gray-700 text-white rounded-sm"
-        >
-          {{ props.contact.subject }}
-        </p>
 
-        <div class="">
-          <div class="w-1/2 pl-4">
-            <p class="font-bold mb-1 bg-gray-50 p-2">
-              <i class="mr-2 fas fa-robot"></i>AI要約生成
+        <div class="flex items-start justify-between">
+          <div class="w-1/2 pr-8">
+            <p
+              class="font-bold text-lg mb-2 p-2 pl-4 bg-gray-700 text-white rounded-sm"
+            >
+              {{ props.contact.subject }}
             </p>
-            <p class="pl-4" v-html="formatText(props.contact.summary)"></p>
-          </div>
 
-          <hr class="my-4" />
+            <div class="">
+              <div class="pl-4">
+                <p class="font-bold mb-1 bg-gray-50 p-2">
+                  <i class="mr-2 fas fa-robot"></i>AI要約生成
+                </p>
+                <p class="pl-4" v-html="formatText(props.contact.summary)"></p>
+              </div>
 
-          <div class="w-1/2 pr-4">
-            <p class="font-bold mb-1 bg-gray-50 p-2">
-              <i class="mr-2 fas fa-envelope"></i>メール原文
-            </p>
-            <p class="pl-4" v-html="formatText(props.contact.content)"></p>
-          </div>
-        </div>
+              <hr class="my-4" />
 
-        <div>
-          <hr class="my-4" />
-          <div class="flex items-center justify-start">
-            <div class="w-1/3 mb-4 mr-8">
-              <label
-                class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                for="grid-last-name"
-              >
-                進行状況
-              </label>
-              <select
-                name=""
-                id=""
-                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                @change="changeValue('progress', $event.target.value)"
-              >
-                <option :selected="props.contact.progress === 0" :value="0">
-                  未読
-                </option>
-                <option :selected="props.contact.progress === 1" :value="1">
-                  進行中
-                </option>
-                <option :selected="props.contact.progress === 2" :value="2">
-                  完了
-                </option>
-              </select>
+              <div class="pr-4">
+                <p class="font-bold mb-1 bg-gray-50 p-2">
+                  <i class="mr-2 fas fa-envelope"></i>メール原文
+                </p>
+                <p class="pl-4" v-html="formatText(props.contact.content)"></p>
+              </div>
             </div>
+          </div>
 
-            <div class="w-1/3 mb-4">
-              <label
-                class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                for="grid-last-name"
-              >
-                担当者
-              </label>
-              <select
-                name=""
-                id=""
-                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                @change="changeValue('user_id', $event.target.value)"
-              >
-                <option
-                  v-for="user in props.users"
-                  :key="user.id"
-                  :value="user.id"
-                  :selected="props.contact.user_id === user.id"
+          <div class="max-w-xl">
+            <div class="flex items-center justify-start mt-4">
+              <div class="mb-4 w-full">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
                 >
-                  {{ user.name }}
-                </option>
-              </select>
+                  進行状況
+                </label>
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  @change="changeValue('progress', $event.target.value)"
+                >
+                  <option :selected="props.contact.progress === 0" :value="0">
+                    未読
+                  </option>
+                  <option :selected="props.contact.progress === 1" :value="1">
+                    進行中
+                  </option>
+                  <option :selected="props.contact.progress === 2" :value="2">
+                    完了
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center justify-start mt-4">
+              <div class="mb-4 w-full">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-last-name"
+                >
+                  担当者追加
+                </label>
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  @change="changeValue('user_id', $event.target.value)"
+                >
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
+                    :selected="props.contact.user_id === user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-4">
+
+              <label
+                for="message"
+                class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                >コメント者</label
+              >
+                              <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  @change="changeValue('user_id', $event.target.value)"
+                >
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
+                    :selected="props.contact.user_id === user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              <textarea
+                id="message"
+                rows="8"
+                class="mt-4 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                @change="changeValue('memo', $event.target.value)"
+                placeholder="コメント記載"
+              ></textarea>
+            </div>
+
+            <!-- コメントリスト -->
+            <div class="my-8">
+              <div class="flex items-start gap-2.5">
+                <div class="flex flex-col w-full">
+                  <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                    <span
+                      class="text-sm font-semibold text-gray-900 dark:text-white"
+                      >???</span
+                    >
+                    <span
+                      class="text-sm font-normal text-gray-500 dark:text-gray-400"
+                      >11:46</span
+                    >
+                  </div>
+                  <div
+                    class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700"
+                  >
+                    <p
+                      class="text-sm font-normal text-gray-900 dark:text-white"
+                      v-html="formatText(props.contact.memo)"
+                    ></p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          <label
-            for="message"
-            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >コメント・メモ</label
-          >
-          <textarea
-            id="message"
-            rows="4"
-            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            @change="changeValue('memo', $event.target.value)"
-            >{{ contact.memo }}</textarea
-          >
         </div>
+
+        <hr class="my-4" />
       </section>
     </template>
   </MainLayout>

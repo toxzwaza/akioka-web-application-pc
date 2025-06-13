@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\PDFController;
 use App\Http\Controllers\OrderRequestController;
+use App\Http\Controllers\TaskController;
 
 Route::get('/test', [TestController::class, 'test'])->name('test');
 Route::get('/storage_address/test', [TestController::class, 'storage_address_test'])->name('storage_address.test');
@@ -152,3 +153,10 @@ Route::get('/export/RaspiData', [TemperatureAndHumidity::class, 'export_data'])-
 
 
 Route::post('/order-request/save-pdf', [OrderRequestController::class, 'savePDF'])->name('order-request.save-pdf');
+
+// 一時アプリ
+Route::get('/task', [TaskController::class, 'index'])->name('task.home');
+Route::post('task/store', [TaskController::class, 'store'])->name('task.store');
+Route::post('task/update', [TaskController::class, 'update'])->name('task.update');
+Route::delete('task/delete', [TaskController::class, 'delete'])->name('task.delete');
+Route::get('task/update-check', [TaskController::class, 'update_check'])->name('task.update-check');
