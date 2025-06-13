@@ -161,3 +161,6 @@ Route::post('task/update', [TaskController::class, 'update'])->name('task.update
 Route::delete('task/delete', [TaskController::class, 'delete'])->name('task.delete');
 Route::get('task/update-check', [TaskController::class, 'update_check'])->name('task.update-check');
 Route::get('/task/getData', [TaskController::class, 'getData'])->name('task.getData');
+
+Route::get('/task/getCompleteTasks', [TaskController::class, 'getCompleteTasks'])->name('task.getCompleteTasks');
+Route::get('/task/export', [TaskController::class, 'export'])->name('task.export');

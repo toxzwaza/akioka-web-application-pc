@@ -13,6 +13,9 @@ class TaskController extends Controller
     //
     public function index()
     {
+
+
+
         return Inertia::render('Task/Index');
     }
 
@@ -61,9 +64,12 @@ class TaskController extends Controller
             ->orderBy('task_transactions.created_at', 'desc')
             ->orderBy('task_transactions.id', 'desc')
             ->get();
-        
 
-        return response()->json(['user_tasks' => $user_tasks , 'task_transactions' => $task_transactions]);
+        // 検索補助用キーワード
+        $search_keywords = Task::select('name', 'user_id')->distinct('name')->get();
+
+
+        return response()->json(['user_tasks' => $user_tasks, 'task_transactions' => $task_transactions, 'search_keywords' => $search_keywords]);
     }
 
     public function store(Request $request)
@@ -198,5 +204,74 @@ class TaskController extends Controller
             $updateCheck->update_flg = 1;
             $updateCheck->save();
         }
+    }
+
+    public function getCompleteTasks()
+    {
+        $user_id_list = [48, 68, 81, 120, 43, 91];
+
+        $complete_tasks = Task::select('tasks.id as task_id', 'tasks.name as task_name', 'users.name as user_name', 'tasks.created_at', 'tasks.updated_at')
+            ->join('users', 'users.id', '=', 'tasks.user_id')
+            ->whereIn('user_id', $user_id_list)
+            ->where('tasks.status', 2)
+            ->orderBy('tasks.created_at', 'desc')
+            ->get()
+            ->groupBy('user_id');
+
+        $csvData = [];
+
+        foreach ($complete_tasks as $user_id => $tasks) {
+            foreach ($tasks as $task) {
+                $task_transaction_times = TaskTransaction::where('task_id', $task->task_id)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                $total_minutes = 0;
+                $start_time = null;
+
+                foreach ($task_transaction_times as $transaction) {
+                    if ($transaction->status == 0) {
+                        $start_time = $transaction->created_at;
+                    } elseif (($transaction->status == 1 || $transaction->status == 2) && $start_time) {
+                        $total_minutes += $transaction->created_at->diffInMinutes($start_time);
+                        $start_time = null;
+                    }
+                }
+
+                if ($start_time) {
+                    $total_minutes += now()->diffInMinutes($start_time);
+                }
+
+                $csvData[] = [
+                    'task_id' => $task->task_id,
+                    'task_name' => $task->task_name,
+                    'user_name' => $task->user_name,
+                    'created_at' => $task->created_at->format('Y/m/d H:i:s'),
+                    'updated_at' => $task->updated_at->format('Y/m/d H:i:s'),
+                    'total_minutes' => $total_minutes,
+                ];
+            }
+        }
+
+        return response()->json($csvData);
+    }
+
+    public function export()
+    {
+        $csvData = $this->getCompleteTasks()->getData();
+
+        $filename = "tasks_export_" . date('Ymd_His') . ".csv";
+        $handle = fopen($filename, 'w');
+
+        // Shift-JISで保存するためにmb_convert_encodingを使用
+        fputcsv($handle, mb_convert_encoding(['タスクID', 'タスク名', '実行者', '作成日時', '完了日時', '合計作業時間'], 'SJIS-win', 'UTF-8'));
+
+        foreach ($csvData as $row) {
+            fputcsv($handle, mb_convert_encoding((array) $row, 'SJIS-win', 'UTF-8'));
+        }
+
+        fclose($handle);
+
+        return response()->download($filename)->deleteFileAfterSend(true);
     }
 }

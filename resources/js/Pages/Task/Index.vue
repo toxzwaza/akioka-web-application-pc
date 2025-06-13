@@ -1,10 +1,11 @@
 <script setup>
 import { reactive, onMounted, ref, onUnmounted } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
-
 });
-const current_time = ref("");
+const current_time = ref("")
+const search_keywords = ref([])
 
 const user_tasks = ref([]);
 const filteredTasks = ref([]);
@@ -21,15 +22,23 @@ const form = reactive({
   task_name: null,
 });
 
+const completeTasks = ref([]);
+
 const isWindowFocused = ref(true);
 let updateCheckInterval = null;
 
+const isLoading = ref(false);
+
 const getData = () => {
+isLoading.value = true
   axios.get(route("task.getData")).then((res) => {
     console.log(res.data);
     user_tasks.value = res.data.user_tasks;
     logs.base_task_transactions = res.data.task_transactions;
-    logs.task_transactions = res.data.task_transactions;
+    logs.task_transactions = res.data.task_transactions
+    search_keywords.value = res.data.search_keywords    
+
+    isLoading.value = false
   });
 };
 
@@ -45,24 +54,15 @@ const filter_logs = (user_id) => {
   }
 };
 
-const filterTaskList = () => {
-  if (!form.task_name) {
-    filteredTasks.value = [];
-    return;
-  }
+const filterTaskList = async () => {
 
-  const allTasks = [];
-  Object.values(user_tasks.value).forEach((tasks) => {
-    tasks.forEach((task) => {
-      if (!allTasks.includes(task.name)) {
-        allTasks.push(task.name);
-      }
-    });
-  });
+    if (!form.task_name) {
+      filteredTasks.value = [];
+      return;
+    }
 
-  filteredTasks.value = allTasks.filter((task) =>
-    task.toLowerCase().includes(form.task_name.toLowerCase())
-  );
+    filteredTasks.value = search_keywords.value.filter( search_keyword => search_keyword.user_id === form.user_id)
+
 };
 
 const updateCheck = () => {
@@ -84,7 +84,7 @@ const updateCheck = () => {
           }
         }
       });
-  }, 300000); // 300000ミリ秒 = 5分
+  }, 60000);
 };
 
 const selectTask = (task) => {
@@ -104,7 +104,7 @@ const createTask = () => {
         console.log(res.data);
         if (res.data.status) {
           getData();
-          form.task_name = ''
+          form.task_name = "";
         }
       });
   }
@@ -118,7 +118,7 @@ const saveUserIdToLocalStorage = () => {
 
 const removeUserIdFromLocalStorage = () => {
   localStorage.removeItem("user_id");
-  window.location.reload()
+  window.location.reload();
 };
 
 const reloadPage = () => {
@@ -224,7 +224,15 @@ const getCurrentTime = () => {
   }, 1000);
 };
 
+const getCompleteData = () => {
+  axios.get(route("task.getCompleteTasks")).then((res) => {
+    completeTasks.value = res.data;
+    console.log(res.data);
+  });
+};
+
 onMounted(() => {
+
   getData();
 
   form.user_id = localStorage.getItem("user_id");
@@ -234,6 +242,8 @@ onMounted(() => {
 
   updateCheck();
   getCurrentTime();
+
+  getCompleteData();
 
   // ウィンドウのフォーカス状態を監視
   window.addEventListener("focus", () => {
@@ -263,12 +273,12 @@ onUnmounted(() => {
 
       <div class="flex items-center">
         <h2 @click="removeUserIdFromLocalStorage" class="">
-          総務部 ： {{ form.user_name }}
+          <i class="fas fa-user mr-1"></i> {{ form.user_name }}
         </h2>
 
         <button
           @click="reloadPage"
-          class="ml-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
+          class="ml-8 bg-white hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
         >
           <svg
             class="w-4 h-4 mr-2"
@@ -288,40 +298,41 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
+    <div class="flex items-center justify-center pt-12 pb-10 bg-gray-50">
+      <div class="relative w-2/3 mr-2">
+        <input
+          v-model="form.task_name"
+          class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          type="text"
+          name=""
+          id=""
+          placeholder="タスクを追加してください"
+          @input="filterTaskList"
+        />
+        <ul
+          v-if="filteredTasks.length"
+          class="absolute bg-white border border-gray-200 rounded mt-1 w-full z-10"
+        >
+          <li
+            v-for="task in filteredTasks"
+            :key="task"
+            @click="selectTask(task)"
+            class="px-4 py-2 cursor-pointer hover:bg-gray-200"
+          >
+            {{ task }}
+          </li>
+        </ul>
+      </div>
+      <button
+        @click.prevent="createTask"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded"
+      >
+        追加
+      </button>
+    </div>
 
     <section id="main_section" class="flex">
       <div id="left_container">
-        <div class="flex items-center justify-start">
-          <div class="relative w-2/3 mr-2">
-            <input
-              v-model="form.task_name"
-              class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              type="text"
-              name=""
-              id=""
-              @input="filterTaskList"
-            />
-            <ul
-              v-if="filteredTasks.length"
-              class="absolute bg-white border border-gray-200 rounded mt-1 w-full z-10"
-            >
-              <li
-                v-for="task in filteredTasks"
-                :key="task"
-                @click="selectTask(task)"
-                class="px-4 py-2 cursor-pointer hover:bg-gray-200"
-              >
-                {{ task }}
-              </li>
-            </ul>
-          </div>
-          <button
-            @click.prevent="createTask"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded"
-          >
-            追加
-          </button>
-        </div>
         <div class="log_container">
           <ul class="flex border-b mb-6">
             <li class="-mb-px mr-1">
@@ -402,6 +413,7 @@ onUnmounted(() => {
               >
             </li>
           </ul>
+
           <p
             v-for="task_transaction in logs.task_transactions"
             :key="task_transaction.id"
@@ -473,6 +485,36 @@ onUnmounted(() => {
         </div>
       </div>
     </section>
+
+    <div id="completeDataTable">
+      <table>
+        <tbody>
+          <tr>
+            <th>タスクID</th>
+            <th>タスク名</th>
+            <th>実行者</th>
+            <th>作成日時</th>
+            <th>完了日時</th>
+            <th>合計作業時間</th>
+          </tr>
+          <tr v-for="complete_task in completeTasks" :key="complete_task.id">
+            <td>{{ complete_task.task_id }}</td>
+            <td>{{ complete_task.task_name }}</td>
+            <td>{{ complete_task.user_name }}</td>
+            <td>{{ complete_task.created_at }}</td>
+            <td>{{ complete_task.updated_at }}</td>
+            <td>{{ complete_task.total_minutes }}分</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <a :href="route('task.export')" class="export_link">エクスポート</a>
+
+  <div v-if="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>更新中...</p>
+  </div>
   </div>
   <div v-else>
     <div class="w-full max-w-xs mx-auto mt-32">
@@ -520,16 +562,33 @@ onUnmounted(() => {
 #content {
   //   height: 100vh;
   //   background-color: #f8f8f8;
+  & #top_container {
+    border-bottom: 4px solid rgb(62, 62, 255);
+    background-color: rgb(96, 96, 255);
+    color: white;
+  }
+
+  min-height: 100vh;
   overflow: hidden;
+  position: relative;
+  & .export_link {
+    position: absolute;
+    right: 2%;
+    bottom: 2%;
+    text-decoration: underline;
+    color: #4753ff;
+  }
 
   & #main_section {
-    padding: 1rem;
+    padding: 2rem 3rem;
 
     & #left_container {
       width: 50%;
 
       & .log_container {
-        padding: 1rem 3rem 0 0;
+        max-height: 80vh;
+        overflow-y: scroll;
+        padding: 1rem 1rem 0 0;
 
         & p {
           padding: 0.3rem 0.3rem 0.3rem 1rem;
@@ -544,6 +603,7 @@ onUnmounted(() => {
 
     & #right_container {
       width: 50%;
+      padding-left: 2rem;
 
       & > div {
         padding: 0.4rem 1rem;
@@ -557,5 +617,61 @@ onUnmounted(() => {
       }
     }
   }
+
+  & #completeDataTable {
+    width: 100%;
+    padding: 0 3rem;
+    margin: 1.4rem auto 4rem;
+
+    & table {
+      width: 100%;
+    }
+
+    & table,
+    td,
+    th {
+      border: 1px solid #595959;
+      border-collapse: collapse;
+      white-space: nowrap;
+      text-align: center;
+    }
+    & td,
+    th {
+      padding: 3px;
+      width: 30px;
+      height: 25px;
+    }
+    & th {
+      background: #ececec;
+    }
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
