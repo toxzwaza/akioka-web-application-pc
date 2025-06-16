@@ -62,7 +62,7 @@ class TaskController extends Controller
             ->join('tasks', 'tasks.id', 'task_transactions.task_id')
             ->join('users', 'users.id', 'tasks.user_id')
             ->orderBy('task_transactions.created_at', 'desc')
-            ->orderBy('task_transactions.id', 'desc')
+            ->whereDate('task_transactions.created_at', now()->toDateString())
             ->get();
 
         // 検索補助用キーワード
@@ -212,10 +212,11 @@ class TaskController extends Controller
     {
         $user_id_list = [48, 68, 81, 120, 43, 91];
 
-        $complete_tasks = Task::select('tasks.id as task_id', 'tasks.name as task_name', 'users.name as user_name', 'tasks.created_at', 'tasks.updated_at')
+        $complete_tasks = Task::select('tasks.id as task_id', 'tasks.name as task_name', 'users.name as user_name', 'tasks.created_at', 'tasks.updated_at', 'tasks.user_id as user_id')
             ->join('users', 'users.id', '=', 'tasks.user_id')
             ->whereIn('user_id', $user_id_list)
             ->where('tasks.status', 2)
+            ->whereDate('tasks.updated_at', now()->toDateString())
             ->orderBy('tasks.created_at', 'desc')
             ->get()
             ->groupBy('user_id');
@@ -248,6 +249,7 @@ class TaskController extends Controller
                     'task_id' => $task->task_id,
                     'task_name' => $task->task_name,
                     'user_name' => $task->user_name,
+                    'user_id' => $task->user_id,
                     'created_at' => $task->created_at->format('Y/m/d H:i:s'),
                     'updated_at' => $task->updated_at->format('Y/m/d H:i:s'),
                     'total_minutes' => $total_minutes,

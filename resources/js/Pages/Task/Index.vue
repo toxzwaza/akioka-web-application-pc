@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, onMounted, ref, onUnmounted } from "vue";
 import { Link } from "@inertiajs/vue3";
+// import ContributionsGrid from "@/components/ContributionsGrid.vue";
 
 const props = defineProps({});
 const current_time = ref("");
@@ -247,7 +248,7 @@ const getCurrentTime = () => {
 const getCompleteData = () => {
   axios.get(route("task.getCompleteTasks")).then((res) => {
     completeTasks.value = res.data;
-    console.log(res.data);
+    console.log('completeTasks,', res.data);
   });
 };
 
@@ -532,15 +533,23 @@ onUnmounted(() => {
               </button>
             </div>
 
-            <div v-if="task.description_open" v-html="task.description.replace(/\n/g, '<br>')" class="description_container">    
-
-            </div>
+            <div
+              v-if="task.description_open"
+              v-html="task.description.replace(/\n/g, '<br>')"
+              class="description_container"
+            ></div>
           </div>
 
           <hr class="mt-4" />
         </div>
       </div>
     </section>
+
+    <div class="mx-auto w-1/2">
+      <div class="w-full">
+        <!-- <ContributionsGrid /> -->
+      </div>
+    </div>
 
     <div id="completeDataTable">
       <table>
@@ -553,7 +562,18 @@ onUnmounted(() => {
             <th>完了日時</th>
             <th>合計作業時間</th>
           </tr>
-          <tr v-for="complete_task in completeTasks" :key="complete_task.id">
+          <tr
+            v-for="complete_task in completeTasks"
+            :key="complete_task.id"
+            :class="{
+              'bg-yellow-100': complete_task.user_id === 48,
+              'bg-blue-100': complete_task.user_id === 68,
+              'bg-green-100': complete_task.user_id === 81,
+              'bg-pink-100': complete_task.user_id === 120,
+              'bg-orange-100': complete_task.user_id === 43,
+              'bg-purple-100': complete_task.user_id === 91,
+            }"
+          >
             <td>{{ complete_task.task_id }}</td>
             <td>{{ complete_task.task_name }}</td>
             <td>{{ complete_task.user_name }}</td>
@@ -658,7 +678,6 @@ onUnmounted(() => {
             content: "・";
             margin-right: 0.4rem;
             font-weight: bold;
-
           }
         }
       }
@@ -670,16 +689,16 @@ onUnmounted(() => {
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
       //   padding-left: 2rem;
 
-      & .description_container{
+      & .description_container {
         font-size: 0.9rem;
         margin-top: 0.4rem;
         margin-left: 1rem;
         margin-bottom: 1.2rem;
-        &::before{
-            content: '>';
-            margin-right: 0.2rem;
-            font-weight: bold;
-            color: #4753ff;
+        &::before {
+          content: ">";
+          margin-right: 0.2rem;
+          font-weight: bold;
+          color: #4753ff;
         }
       }
 
