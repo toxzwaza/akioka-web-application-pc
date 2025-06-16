@@ -12,6 +12,7 @@ use App\Models\OrderRequest;
 use App\Models\Process;
 use App\Models\RetainedStock;
 use App\Models\Stock;
+use App\Models\StockPriceArchive;
 use App\Models\StockProcess;
 use App\Models\StockRequest;
 use App\Models\StockStorage;
@@ -317,6 +318,12 @@ class StockController extends Controller
         // 在庫使用工程
         $stock_processes = StockProcess::select('id', 'name')->get();
 
+        // 価格改定リスト
+        $stock_price_archive = StockPriceArchive::
+        select('price', 'created_at', 'system_check_flg')->
+        where('stock_id', $stock_id)->orderBy('created_at', 'desc')->get();
+
+
         return Inertia::render(
             'Stock/Stocks/Show',
             [
@@ -331,7 +338,8 @@ class StockController extends Controller
                 'admin_users' => $admin_users,
                 'suppliers' => $suppliers,
                 'initial_order' => $initial_order,
-                'stock_processes' => $stock_processes
+                'stock_processes' => $stock_processes,
+                'stock_price_archive' => $stock_price_archive
             ]
         );
     }
@@ -493,7 +501,6 @@ class StockController extends Controller
             $stock->jan_code = $jan_code;
             $stock->url = $url;
             $stock->img_path = $img_path ?? 'storage/stock/not-image-sample2.png';
-            $stock->price = $price;
             $stock->purchase_identification_number = $purchase_identification_number;
             $stock->solo_unit = $solo_unit;
             $stock->org_unit = $org_unit;
@@ -502,6 +509,15 @@ class StockController extends Controller
             $stock->deli_location = $deli_location;
             $stock->stock_process_id = $stock_process_id;
             $stock->del_flg = $del_flg;
+
+            if($stock->price != $price){
+                $stock->price = $price;
+                $stock_price_archive = new StockPriceArchive();
+                $stock_price_archive->stock_id = $stock->id;
+                $stock_price_archive->price = $price;
+                $stock_price_archive->save();
+            }
+            
             $stock->save();
 
             if($order_request_id){
@@ -929,5 +945,12 @@ class StockController extends Controller
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function urlStocks(Request $request){
+        
+        $stocks  = Stock::select('id', 'name', 's_name', 'url', 'price')->whereNotNull('url')->where('url', '!=', '')->where('del_flg', 0)->get();
+
+        return response()->json($stocks);
     }
 }

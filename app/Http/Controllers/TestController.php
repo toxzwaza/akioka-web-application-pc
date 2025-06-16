@@ -12,6 +12,7 @@ use App\Models\Log;
 use App\Models\Movie;
 use App\Models\MovieMemo;
 use App\Models\Stock;
+use App\Models\StockPriceArchive;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
 use App\Models\StorageAddress;
@@ -31,19 +32,19 @@ class TestController extends Controller
     public function test()
     {
 
-        // $movies = Movie::all();
-        // foreach ($movies as $movie) {
-        //     $movie->file_path = $movie->youtube_id;
-        //     $movie->save();
-        // }
+        $stocks = Stock::where('del_flg', 0)->get();
 
+        foreach ($stocks as $stock) {
+            $stock_price_archive = StockPriceArchive::where('stock_id', $stock->id)->orderBy('created_at', 'desc')->first();
 
-
-        // $approval_list = Helper::createApprovalFlow(80000, 30);
-        // foreach ($approval_list as $approval) {
-        //     $user = User::find($approval);
-        //     echo "{$user->name}\n";
-        // }
+            if (!$stock_price_archive && $stock->price != 0 || $stock->price != null) {
+                $stock_price_archive = new StockPriceArchive();
+                $stock_price_archive->stock_id = $stock->id;
+                $stock_price_archive->price = $stock->price;
+                $stock_price_archive->save();
+            }
+        }
+        dd('完了');
     }
 
     public function storage_address_test()

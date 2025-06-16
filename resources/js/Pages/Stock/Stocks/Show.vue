@@ -4,6 +4,9 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
+import { Chart, registerables } from "chart.js";
+Chart.register(...registerables);
+
 const props = defineProps({
   classifications: Array,
   stock: Object,
@@ -17,6 +20,7 @@ const props = defineProps({
   suppliers: Array,
   initial_order: Object,
   stock_processes: Array,
+  stock_price_archive: Array,
 });
 
 const initial_orders = ref([]);
@@ -229,15 +233,15 @@ const updateStockSupplier = (flg, stock_supplier) => {
         .post(route("stock.stock_supplier.update"), {
           stock_supplier_id: stock_supplier.stock_supplier_id,
           lead_time: stock_supplier.lead_time,
-          postage: stock_supplier.postage
+          postage: stock_supplier.postage,
         })
         .then((res) => {
           console.log(res.data);
-          if(res.data.status){
-            alert('更新が完了しました')
-            window.location.reload()
-          }else{
-            alert(res.data.msg)
+          if (res.data.status) {
+            alert("更新が完了しました");
+            window.location.reload();
+          } else {
+            alert(res.data.msg);
           }
         })
         .catch((error) => {
@@ -250,20 +254,20 @@ const updateStockSupplier = (flg, stock_supplier) => {
         .delete(route("stock.stock_supplier.delete"), {
           params: {
             stock_supplier_id: stock_supplier.stock_supplier_id,
-          }
+          },
         })
         .then((res) => {
           console.log(res.data);
-          if(res.data.status){
-            alert('削除が完了しました')
-            window.location.reload()
-          }else{
-            alert(res.data.msg)
+          if (res.data.status) {
+            alert("削除が完了しました");
+            window.location.reload();
+          } else {
+            alert(res.data.msg);
           }
         })
         .catch((error) => {
           console.log(error);
-        })
+        });
       break;
   }
 };
@@ -276,15 +280,15 @@ const updateStockStorage = (flg, stock_storage) => {
         .post(route("stock.stock_storage.update"), {
           stock_storage_id: stock_storage.stock_storage_id,
           quantity: stock_storage.quantity,
-          reorder_point: stock_storage.reorder_point
+          reorder_point: stock_storage.reorder_point,
         })
         .then((res) => {
           console.log(res.data);
-          if(res.data.status){
-            alert('更新が完了しました')
-            window.location.reload()
-          }else{
-            alert(res.data.msg)
+          if (res.data.status) {
+            alert("更新が完了しました");
+            window.location.reload();
+          } else {
+            alert(res.data.msg);
           }
         })
         .catch((error) => {
@@ -297,22 +301,84 @@ const updateStockStorage = (flg, stock_storage) => {
         .delete(route("stock.stock_storage.delete"), {
           params: {
             stock_storage_id: stock_storage.stock_storage_id,
-          }
+          },
         })
         .then((res) => {
           console.log(res.data);
-          if(res.data.status){
-            alert('削除が完了しました')
-            window.location.reload()
-          }else{
-            alert(res.data.msg)
+          if (res.data.status) {
+            alert("削除が完了しました");
+            window.location.reload();
+          } else {
+            alert(res.data.msg);
           }
         })
         .catch((error) => {
           console.log(error);
-        })
+        });
       break;
   }
+};
+
+const chartRef = ref(null);
+let priceChart = null;
+
+const initPriceChart = () => {
+  if (priceChart) {
+    priceChart.destroy();
+  }
+
+  const ctx = chartRef.value.getContext("2d");
+  const labels = props.stock_price_archive.map((item) => {
+    const date = new Date(item.created_at);
+    return date.toLocaleDateString("ja-JP");
+  });
+  const prices = props.stock_price_archive.map((item) => item.price);
+
+  priceChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "価格推移",
+          data: prices,
+          borderColor: "#3498db",
+          backgroundColor: "rgba(52, 152, 219, 0.2)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "価格推移グラフ",
+          font: {
+            size: 16,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `価格: ${context.raw.toLocaleString()}円`;
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            callback: function (value) {
+              return value.toLocaleString() + "円";
+            },
+          },
+        },
+      },
+    },
+  });
 };
 
 onMounted(() => {
@@ -362,6 +428,10 @@ onMounted(() => {
   form.order_stock_process_id = form.stock_process_id
     ? form.stock_process_id
     : 0;
+
+  if (props.stock_price_archive && props.stock_price_archive.length > 0) {
+    initPriceChart();
+  }
 });
 </script>
 <template>
@@ -733,6 +803,7 @@ onMounted(() => {
               </div>
             </details>
           </div>
+
           <!-- 手配先設定 -->
           <div class="mt-8 bg-gray-100 p-4">
             <h3 class="text-lg font-bold dark:text-white mb-2">手配先設定</h3>
@@ -983,7 +1054,7 @@ onMounted(() => {
                         class="text-center appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       />
                     </td>
-                                        <td class="px-6 py-4 w-48">
+                    <td class="px-6 py-4 w-48">
                       <input
                         type="number"
                         name=""
@@ -1225,6 +1296,17 @@ onMounted(() => {
                 />
               </div>
             </div>
+            <!-- 価格推移グラフ -->
+            <div
+              v-if="
+                props.stock_price_archive &&
+                props.stock_price_archive.length > 0
+              "
+              class="bg-white p-4 rounded-lg shadow mb-12"
+            >
+              <canvas ref="chartRef"></canvas>
+            </div>
+            <!-- ------------------------------- -->
 
             <div class="flex flex-wrap -mx-3 mb-6">
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
