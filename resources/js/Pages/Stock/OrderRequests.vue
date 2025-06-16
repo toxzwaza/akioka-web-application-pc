@@ -334,20 +334,28 @@ const purchaseOrder = (order_request_id) => {
 };
 
 const skipAccept = (order_request_id) => {
-  console.log(order_request_id);
-  if (confirm("承認をスキップして発注データを作成します。よろしいですか？")) {
-    axios
-      .post(route("stock.accept.order_request.skip"), {
-        order_request_id: order_request_id,
-        user_id: order_config.user_id,
-      })
-      .then((res) => {
-        if (res.data.status) {
-          alert("承認をスキップしました。");
-          window.location.reload();
-        }
-      });
+  const order_request = order_requests.value.find(
+    (order_request) => order_request.order_request_id === order_request_id
+  );
+
+  if (order_request) {
+    if (confirm("承認をスキップして発注データを作成します。よろしいですか？")) {
+      axios
+        .post(route("stock.accept.order_request.skip"), {
+          order_request_id: order_request_id,
+          user_id: order_config.user_id,
+        })
+        .then((res) => {
+          if (res.data.status) {
+            alert("承認をスキップしました。");
+            order_request.accept_flg = 2;
+          }
+        });
+    }
+  }else{
+    alert('発注依頼データが見つかりませんでした。')
   }
+  console.log(order_request_id);
 };
 onMounted(() => {
   getOrderRequests();
@@ -568,7 +576,11 @@ onMounted(() => {
                     <div v-if="order_config.user_id" class="flex">
                       <Link
                         v-if="!order_request.stock_id"
-                        :href="route('stock.stocks.create', { order_request_id : order_request.id })"
+                        :href="
+                          route('stock.stocks.create', {
+                            order_request_id: order_request.id,
+                          })
+                        "
                         class="text-sm bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-full"
                       >
                         在庫登録
