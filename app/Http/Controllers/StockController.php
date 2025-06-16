@@ -321,7 +321,7 @@ class StockController extends Controller
         // 価格改定リスト
         $stock_price_archive = StockPriceArchive::
         select('price', 'created_at', 'system_check_flg')->
-        where('stock_id', $stock_id)->orderBy('created_at', 'desc')->get();
+        where('stock_id', $stock_id)->orderBy('created_at', 'asc')->get();
 
 
         return Inertia::render(

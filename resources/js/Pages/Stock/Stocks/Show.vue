@@ -5,6 +5,8 @@ import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import { Chart, registerables } from "chart.js";
+import MainTitle from "@/Components/Title/MainTitle.vue";
+
 Chart.register(...registerables);
 
 const props = defineProps({
@@ -437,7 +439,12 @@ onMounted(() => {
 <template>
   <MainLayout :title="'在庫詳細'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800">在庫詳細</h1>
+      <MainTitle
+        :top="'在庫詳細'"
+        :sub="'物品データ閲覧・変更及び手配先や格納先の紐づけを行います。'"
+      />
+      <iframe v-if="props.stock.url && props.stock.url.includes('askul')" id="stock_iframe" class="" :src="props.stock.url" frameborder="0"></iframe>
+
       <div class="flex justify-center py-12">
         <div id="left_container" class="w-2/5">
           <!-- 発注登録 -->
@@ -1249,6 +1256,7 @@ onMounted(() => {
                   for="grid-last-name"
                 >
                   購買用URL
+                  
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
@@ -1460,7 +1468,9 @@ onMounted(() => {
             </div>
           </form>
         </div>
+
       </div>
+        
     </template>
   </MainLayout>
 </template>
@@ -1491,5 +1501,21 @@ onMounted(() => {
   //     object-fit: contain;
   //   }
   // }
+}
+
+#stock_iframe{
+  height: 60vh;
+  width: 100%;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  padding: 1rem;
+  margin: 3rem 2rem;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+
+  & iframe{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 </style>
