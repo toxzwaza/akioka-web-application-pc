@@ -517,7 +517,7 @@ class StockController extends Controller
                 $stock_price_archive->price = $price;
                 $stock_price_archive->save();
             }
-            
+
             $stock->save();
 
             if($order_request_id){
@@ -952,5 +952,31 @@ class StockController extends Controller
         $stocks  = Stock::select('id', 'name', 's_name', 'url', 'price')->whereNotNull('url')->where('url', '!=', '')->where('del_flg', 0)->get();
 
         return response()->json($stocks);
+    }
+
+    public function priceStore(Request $request){
+        $status = true;
+
+
+        $stock_id = $request->stock_id;
+        $price = $request->price;
+
+        try{
+            $stock = Stock::find($stock_id);
+            if($stock){
+                $stock->price = $price;
+                $stock->save();
+    
+                $stock_price_archive = new StockPriceArchive();
+                $stock_price_archive->stock_id = $stock_id;
+                $stock_price_archive->price = $price;
+                $stock_price_archive->system_check_flg = 1;
+                $stock_price_archive->save();
+            }
+
+        }catch(Exception $e){
+            $status = false; 
+        }
+        return  response()->json($status);
     }
 }

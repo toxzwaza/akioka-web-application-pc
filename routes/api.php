@@ -19,4 +19,6 @@ Route::post('/log/create', [LogController::class, 'createLog'])->name('log.creat
 Route::get('/getWaitingTranscription', [NewMovieController::class, 'getWaitingTranscription'])->name('movie2.getWaitingTranscription');
 
 // 物品発注可能状況確認待ち取得
-Route::get('/stock/urlStocks', [ StockController::class, 'urlStocks']);
+Route::get('/stock/urlStocks', [StockController::class, 'urlStocks']);
+// 価格変更を行う
+Route::post('/stock/price/store', [StockController::class, 'priceStore']);
