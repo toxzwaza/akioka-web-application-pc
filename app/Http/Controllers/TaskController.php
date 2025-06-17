@@ -25,8 +25,6 @@ class TaskController extends Controller
 
         $user_tasks = Task::whereIn('user_id', $user_id_list)
             ->whereIn('status', [0, 1])
-            ->orderBy('status', 'asc')
-            ->orderBy('created_at', 'desc')
             ->get()
             ->groupBy('user_id');
 
@@ -55,7 +53,17 @@ class TaskController extends Controller
 
                 $task->total_minutes = $total_minutes;
             }
+
+            // total_minutesで降順に並べ替え、同じ場合はcreated_atで新しい順に並べ替え
+            $user_tasks[$user_id] = $tasks->sortByDesc(function ($task) {
+                return [$task->total_minutes, $task->created_at];
+            })->values();
         }
+
+        // statusで昇順に並べ替え
+        $user_tasks = $user_tasks->map(function ($tasks) {
+            return $tasks->sortBy('status')->values();
+        });
 
 
         $task_transactions = TaskTransaction::select('tasks.name', 'task_transactions.status', 'task_transactions.created_at', 'users.name as user_name', 'users.id as user_id')
@@ -124,6 +132,7 @@ class TaskController extends Controller
     public function update(Request $request)
     {
         $task_id = $request->task_id;
+        $flg = $request->flg;
 
         $status = true;
 
@@ -132,13 +141,23 @@ class TaskController extends Controller
             $task = Task::find($task_id);
 
             if ($task->status === 0) { // 進行中の場合完了
-                $task->status = 2;
 
-                // タスクトランザクションデータ作成
-                $task_transaction = new TaskTransaction();
-                $task_transaction->task_id = $task_id;
-                $task_transaction->status = 2; //完了
-                $task_transaction->save();
+                if ($flg == 'stop') {
+                    $task->status = 1;
+
+                    $task_transaction = new TaskTransaction();
+                    $task_transaction->task_id = $task_id;
+                    $task_transaction->status = 1; //未着手
+                    $task_transaction->save();
+                } else {
+                    $task->status = 2;
+
+                    // タスクトランザクションデータ作成
+                    $task_transaction = new TaskTransaction();
+                    $task_transaction->task_id = $task_id;
+                    $task_transaction->status = 2; //完了
+                    $task_transaction->save();
+                }
             } else if ($task->status === 1) { // 未着手の場合進行中
 
 
@@ -173,6 +192,30 @@ class TaskController extends Controller
 
 
             $msg = 'タスクを更新しました';
+        } catch (\Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+    }
+
+    public function update_value(Request $request)
+    {
+        $task_id = $request->task_id;
+        $value = $request->value;
+        $flg = $request->flg;
+
+        $status = true;
+
+        try {
+            $task = Task::find($task_id);
+
+            if ($flg == "task_name") {
+                $task->name = $value;
+            } else if ($flg == "description") {
+                $task->description = $value;
+            }
+            $task->save();
         } catch (\Exception $e) {
             $status = false;
         }

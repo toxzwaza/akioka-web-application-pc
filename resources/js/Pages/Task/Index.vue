@@ -201,11 +201,14 @@ const selectUserName = () => {
   getUserNameByUserId();
 };
 
-const updateTaskStatus = (task_id) => {
+const updateTaskStatus = (task_id, flg = null) => {
   //   ログインユーザーが作成したタスクのみ編集可能
   console.log(task_id);
   axios
-    .post(route("task.update"), { task_id: task_id })
+    .post(route("task.update"), {
+      task_id: task_id,
+      flg: flg,
+    })
     .then((res) => {
       console.log(res.data);
 
@@ -248,8 +251,38 @@ const getCurrentTime = () => {
 const getCompleteData = () => {
   axios.get(route("task.getCompleteTasks")).then((res) => {
     completeTasks.value = res.data;
-    console.log('completeTasks,', res.data);
+    console.log("completeTasks,", res.data);
   });
+};
+
+const updateValue = (task, flg) => {
+  console.log(task);
+
+  let value = ""
+
+  if (flg == "task_name") {
+    value = task.name;
+
+    task.task_name_edit = 0;
+  } else if (flg == "description") {
+    value = task.description;
+
+    task.description_edit = 0;
+    task.description_open = 1;
+  }
+
+  axios
+    .post(route("task.update-value"), {
+      task_id: task.id,
+      flg: flg,
+      value: value,
+    })
+    .then((res) => {
+      console.log(res.data);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 onMounted(() => {
@@ -355,7 +388,7 @@ onUnmounted(() => {
 
         <details class="mt-4">
           <summary class="tracking-wide text-gray-700 text-xs font-bold mb-2">
-            メモを追加
+            詳細登録
           </summary>
           <textarea
             cols="30"
@@ -491,7 +524,7 @@ onUnmounted(() => {
           <div v-for="task in user_task" :key="task.id" class="task_content">
             <div
               :class="{
-                'p-2 flex justify-between rounded-lg bg-gray-100': true,
+                'p-2 flex justify-between rounded-lg bg-gray-100 items-center': true,
                 'cursor-pointer': task.description,
               }"
               @click.stop="openDescription(task)"
@@ -499,45 +532,105 @@ onUnmounted(() => {
               <div class="w-4/5 flex items-center font-bold text-gray-700">
                 <span
                   :class="{
-                    'inline-block w-5 h-5 rounded-full': true,
+                    'inline-block w-5 h-5 rounded-full ml-2': true,
                     'bg-green-500 animate-pulse': task.status == 0,
                     'bg-gray-500': task.status == 1,
                   }"
                 ></span>
 
-                <span class="ml-2"
-                  ><span class="mr-3 font-normal text-gray-500 text-sm"
+                <span class="ml-4 block w-full"
+                  ><span
+                    class="font-bold inline-block mr-3 text-gray-500 text-sm mb-1"
                     >{{ task.total_minutes }}分</span
                   >
+
                   <i
                     v-if="task.description"
                     class="text-gray-500 fas fa-sticky-note"
                   ></i>
-                  {{ task.name }}
+
+                  <div id="task_name" class="flex items-center justify-start">
+                    <i
+                      v-if="
+                        task.user_id == form.user_id && !task.task_name_edit
+                      "
+                      class="fas fa-edit text-gray-500 cursor-pointer"
+                      @click.stop="task.task_name_edit = 1"
+                    ></i>
+                    <i
+                      v-if="task.user_id == form.user_id && task.task_name_edit"
+                      class="transition fas fa-check block bg-green-500 hover:text-green-500 hover:bg-white p-2 text-white rounded-full cursor-pointer"
+                      @click.stop="updateValue(task, 'task_name')"
+                    ></i>
+
+                    <p
+                      v-if="!task.task_name_edit"
+                      :class="{ 'ml-4': task.user_id == form.user_id }"
+                    >
+                      {{ task.name }}
+                    </p>
+                    <input
+                      v-else
+                      type="text"
+                      class="ml-2 bg-white appearance-none border-2 border-gray-200 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+                      v-model="task.name"
+                      @input="task.name = $event.target.value"
+                    />
+                  </div>
                 </span>
               </div>
 
-              <button
-                v-if="task.user_id == form.user_id && task.status == 1"
-                @click.stop="updateTaskStatus(task.id)"
-                class="w-16 bg_base_color hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                開始
-              </button>
-              <button
-                v-else-if="task.user_id == form.user_id && task.status == 0"
-                @click.stop="updateTaskStatus(task.id)"
-                class="w-16 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-              >
-                完了
-              </button>
+              <div class="button_container">
+                <button
+                  v-if="task.user_id == form.user_id && task.status == 1"
+                  @click.stop="updateTaskStatus(task.id)"
+                  class="w-16 bg_base_color hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  開始
+                </button>
+
+                <button
+                  v-if="task.user_id == form.user_id && task.status == 0"
+                  @click.stop="updateTaskStatus(task.id, 'stop')"
+                  class="w-16 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded mr-2"
+                >
+                  停止
+                </button>
+                <button
+                  v-if="task.user_id == form.user_id && task.status == 0"
+                  @click.stop="updateTaskStatus(task.id)"
+                  class="w-16 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  完了
+                </button>
+              </div>
             </div>
 
             <div
-              v-if="task.description_open"
+              @click="task.description_edit = 1"
+              v-if="task.description_open && !task.description_edit"
               v-html="task.description.replace(/\n/g, '<br>')"
               class="description_container"
             ></div>
+            <div
+              v-else-if="task.description_edit"
+              class="flex items-start justify-start mt-2 mb-4"
+            >
+              <i
+                @click="updateValue(task, 'description')"
+                class="transition fas fa-check inline-block bg-green-500 hover:text-green-500 hover:bg-white p-2 text-white rounded-full cursor-pointer"
+              ></i>
+
+              <textarea
+                name=""
+                id=""
+                cols="30"
+                rows="4"
+                v-model="task.description"
+                @input="task.description = $event.target.value"
+                class="ml-2 bg-white appearance-none border-2 border-gray-200 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+              ></textarea>
+            </div>
           </div>
 
           <hr class="mt-4" />
@@ -660,6 +753,7 @@ onUnmounted(() => {
 
   & #main_section {
     padding: 2rem 3rem;
+    max-height: 100vh;
 
     & #left_container {
       padding: 1rem 0.6rem;
@@ -668,9 +762,28 @@ onUnmounted(() => {
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 
       & .log_container {
-        min-height: 80vh;
-        max-height: 80vh;
+        // min-height: 80vh;
+        // max-height: 80vh;
+        height: 100%;
         overflow-y: scroll;
+        &::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #8d8d8d;
+          border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #3498db;
+          border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
 
         & p {
           padding: 0.3rem 0.3rem 0.3rem 1rem;
@@ -687,6 +800,25 @@ onUnmounted(() => {
       padding: 1rem 0.6rem;
       width: 50%;
       box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+      overflow-y: scroll;
+      &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: #8d8d8d;
+        border-radius: 10px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #3498db;
+        border-radius: 10px;
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
       //   padding-left: 2rem;
 
       & .description_container {
