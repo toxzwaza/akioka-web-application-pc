@@ -8,6 +8,7 @@ use App\Models\Holiday;
 use App\Models\InitialOrder;
 use App\Models\InventoryOperationRecord;
 use App\Models\OrderRequest;
+use App\Models\OrderRequestApproval;
 use App\Models\Stock;
 use App\Models\StockProcess;
 use App\Models\StockStorage;
@@ -41,10 +42,17 @@ class InitialOrderController extends Controller
             'suppliers.tel',
             'suppliers.fax',
             'users.name as manage_user_name',
+            'order_requests.id as order_request_id',
             'order_request_stock_processes.code as stock_processes_order_request_code',
             'order_request_stock_processes.name as stock_processes_order_request_name',
             'stock_processes_base.code as stock_processes_base_code',
-            'stock_processes_base.name as stock_processes_base_name'
+            'stock_processes_base.name as stock_processes_base_name',
+            'documents.id as document_id',
+            'documents.title as document_title',
+            'documents.content as document_content',
+            'documents.main_reason as document_main_reason',
+            'documents.sub_reason as document_sub_reason',
+            'documents.evalution_date as document_evalution_date',
         )
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('order_requests', 'order_requests.id', 'initial_orders.order_request_id')
@@ -56,7 +64,9 @@ class InitialOrderController extends Controller
             })
             ->leftJoin('suppliers', 'suppliers.id', 'initial_orders.supplier_id')
             ->leftJoin('users', 'users.id', 'initial_orders.user_id')
-            ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id');
+            ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
+            ->leftJoin('documents', 'documents.id', 'order_requests.document_id');
+    
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -89,7 +99,20 @@ class InitialOrderController extends Controller
             $query->orderBy('initial_orders.order_date', $order_by);
         }
 
-        $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(30)->withQueryString();
+        $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(20)->withQueryString();
+
+        // 承認者を取得
+        forEach($initial_orders as $initial_order){
+            $order_request_approvals = OrderRequestApproval::select(
+                'order_request_approvals.created_at',
+                'users.name as user_name',
+            )
+            ->join('users', 'users.id', 'order_request_approvals.user_id')
+            ->where('order_request_id', $initial_order->order_request_id)->get();
+            
+            $initial_order->order_request_approvals = $order_request_approvals;
+        }
+
 
         // 総合計発注数と金額、今月の発注数と金額を取得
         $totals = [

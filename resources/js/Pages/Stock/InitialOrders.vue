@@ -7,6 +7,7 @@ import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 import { getImgPath } from "@/Helper/Method";
+import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue"
 
 const props = defineProps({
   initial_orders: Object,
@@ -27,6 +28,26 @@ const form = reactive({
   supplier_id: null,
   order_user_id: null,
   user_id: null,
+});
+
+// 稟議書OBJ
+const approval_document = reactive({
+  document_id: null,
+  user_name: null,
+  evalution_date: null, //評価日
+  desire_delivery_date: null, //希望日
+  supplier_name: null,
+  price: null,
+  quantity: null,
+  calc_price: null,
+  name: null,
+  s_name: null,
+  document_id: null,
+  title: null,
+  content: null,
+  main_reason: null,
+  sub_reason: null,
+  approvals: [],
 });
 
 const is_login = ref(false);
@@ -71,8 +92,28 @@ const openModal = (img_path, order, flg) => {
       break;
     case "approval":
       modal_status.type = "approval";
-      console.log(img_path);
-      modal_status.img_path = `https://akioka.cloud/${img_path}`;
+
+      if (order.document_id) {
+        console.log('稟議書を表示--->' ,order)
+        approval_document.document_id = order.document_id
+        approval_document.user_name = order.order_user
+        approval_document.evalution_date = order.document_evalution_date //評価日
+        approval_document.desire_delivery_date = order.desire_delivery_date //希望日
+        approval_document.supplier_name = order.com_name
+        approval_document.price = order.price
+        approval_document.quantity = order.quantity
+        approval_document.calc_price = order.calc_price
+        approval_document.name = order.name
+        approval_document.s_name = order.s_name
+        approval_document.title = order.document_title
+        approval_document.content = order.document_content
+        approval_document.main_reason = order.document_main_reason
+        approval_document.sub_reason = order.document_sub_reason
+        approval_document.approvals = order.order_request_approvals
+      } else {
+        modal_status.img_path = `https://akioka.cloud/${order.file_path}`;
+      }
+
       console.log(modal_status.img_path);
       break;
   }
@@ -932,7 +973,9 @@ const fileUpload = async (event) => {
                     {{
                       order.stock_processes_order_request_code
                         ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
-                        : order.stock_processes_base_code ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}` : '-'
+                        : order.stock_processes_base_code
+                        ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
+                        : "-"
                     }}
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap">
@@ -1125,8 +1168,11 @@ const fileUpload = async (event) => {
                         'bg-gray-500': !order.purchase_path,
                       }"
                     >
-                      {{ order.purchase_path ? '発行済' : '未発行' }}
-                      <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
+                      {{ order.purchase_path ? "発行済" : "未発行" }}
+                      <i
+                        v-if="order.purchase_path"
+                        class="ml-2 fas fa-check"
+                      ></i>
                     </button>
 
                     <a
@@ -1154,9 +1200,9 @@ const fileUpload = async (event) => {
                     class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                   >
                     <button
-                      v-if="order.file_path"
+                      v-if="order.file_path || order.document_id"
                       class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="openModal(order.file_path, null, 'approval')"
+                      @click="openModal(null, order, 'approval')"
                     >
                       稟議書
                     </button>
@@ -1268,7 +1314,16 @@ const fileUpload = async (event) => {
         />
 
         <div id="pdfviewer" v-else-if="modal_status.type === 'approval'">
-          <iframe ref="pdfViewer" :src="modal_status.img_path"></iframe>
+          <iframe
+            v-if="modal_status.img_path"
+            ref="pdfViewer"
+            :src="modal_status.img_path"
+          ></iframe>
+
+          <!-- 画像ファイルがない場合稟議書要素を表示 -->
+          <div v-else>
+            <ApprovalDocument :approval_document="approval_document"/>
+          </div>
         </div>
       </div>
     </template>
