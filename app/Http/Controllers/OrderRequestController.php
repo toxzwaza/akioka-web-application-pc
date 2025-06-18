@@ -195,6 +195,7 @@ class OrderRequestController extends Controller
                 $initial_order->postage = $order_request->postage;
                 $initial_order->stock_process_id = $order_request->stock_process_id;
                 $initial_order->file_path = $order_request->file_path;
+                $initial_order->desire_delivery_date = $order_request->desire_delivery_date;
                 $initial_order->expected_delivery_date = date('Y-m-d', strtotime('+' . $order_request->lead_time . ' days'));
                 $initial_order->save();
 

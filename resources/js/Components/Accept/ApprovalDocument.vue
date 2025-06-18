@@ -262,8 +262,10 @@ onMounted(() => {
 </template>
 <style scoped lang="scss">
 #approval_document {
-  width: 210mm;
-  height: 297mm;
+  width: 40%;
+  max-width: 50vw;
+  height: 90vh;
+  overflow-y: scroll;
   padding: 1.2%;
   margin-top: 1rem;
 
