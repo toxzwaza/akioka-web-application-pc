@@ -21,6 +21,7 @@ const form = reactive({
   url: null,
   purchase_identification_number: null,
   price: null,
+  tax_included: 0,
   solo_unit: null,
   org_unit: null,
   quantity_per_org: null,
@@ -114,6 +115,9 @@ onMounted(() => {});
         :top="'新規品発注依頼'"
         :sub="'在庫を登録・手配先登録・発注依頼登録を同時に行います。既存品で発注したい場合は、在庫追加より在庫データを登録した後、在庫一覧より発注依頼を行ってください。'"
       />
+
+      <h2 class="text-red-500 text-xl font-bold">2025年7月1日より使わなくなる予定。</h2>
+
       <div class="flex justify-between py-12">
         <div id="right_container" class="w-full">
           <form class="w-1/2 mx-auto">

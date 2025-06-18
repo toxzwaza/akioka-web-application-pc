@@ -1309,7 +1309,6 @@ onMounted(() => {
                 <label
                   :class="{
                     'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    'text-red-500': !form.price,
                   }"
                   for="grid-password"
                 >
