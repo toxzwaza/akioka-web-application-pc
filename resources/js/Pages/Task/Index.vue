@@ -765,7 +765,7 @@ onUnmounted(() => {
         // min-height: 80vh;
         // max-height: 80vh;
         height: 100%;
-        overflow-y: scroll;
+        overflow-y: hidden;
         &::-webkit-scrollbar {
           width: 6px;
           height: 6px;

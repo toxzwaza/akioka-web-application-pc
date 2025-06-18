@@ -648,7 +648,7 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{
-                      stock_id
+                      order_request.s_name
                         ? order_request.s_name
                         : order_request.order_request_s_name
                     }}

@@ -44,6 +44,7 @@ const form = reactive({
   deli_location: null,
   stock_process_id: null,
   del_flg: null,
+  tax_included: null,
 
   // 発注依頼用
   order_user: null,
@@ -414,6 +415,7 @@ onMounted(() => {
     ? props.stock.stock_process_id
     : 0;
   form.del_flg = props.stock.del_flg;
+  form.tax_included = props.stock.tax_included
 
   if (props.stock_suppliers && props.stock_suppliers.length > 0) {
     form.supplier_id = props.stock_suppliers[0].id;
@@ -1285,7 +1287,7 @@ onMounted(() => {
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-full px-3">
+              <div class="w-full md:w-1/2 px-3">
                 <label
                   :class="{
                     'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
@@ -1302,6 +1304,21 @@ onMounted(() => {
                   placeholder=""
                   v-model="form.price"
                 />
+              </div>
+              <div class="w-full md:w-1/2 px-3">
+                <label
+                  :class="{
+                    'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    'text-red-500': !form.price,
+                  }"
+                  for="grid-password"
+                >
+                  *税区分
+                </label>
+                <select name="" id="" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" v-model="form.tax_included">
+                  <option value="0">税抜き</option>
+                  <option value="1">税込み</option>
+                </select>
               </div>
             </div>
             <!-- 価格推移グラフ -->

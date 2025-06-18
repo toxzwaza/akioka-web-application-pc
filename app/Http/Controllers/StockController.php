@@ -319,9 +319,7 @@ class StockController extends Controller
         $stock_processes = StockProcess::select('id', 'name')->get();
 
         // 価格改定リスト
-        $stock_price_archive = StockPriceArchive::
-        select('price', 'created_at', 'system_check_flg')->
-        where('stock_id', $stock_id)->orderBy('created_at', 'asc')->get();
+        $stock_price_archive = StockPriceArchive::select('price', 'created_at', 'system_check_flg')->where('stock_id', $stock_id)->orderBy('created_at', 'asc')->get();
 
 
         return Inertia::render(
@@ -347,10 +345,9 @@ class StockController extends Controller
     {
         $stock_id = $request->stock_id;
 
-        $initial_orders = InitialOrder::
-        select('order_user','order_date','quantity','price', 'calc_price', 'com_name', 'delivery_date', 'receive_flg')
-        ->where('stock_id', $stock_id)
-        ->orderBy('order_date', 'desc')->get();
+        $initial_orders = InitialOrder::select('order_user', 'order_date', 'quantity', 'price', 'calc_price', 'com_name', 'delivery_date', 'receive_flg')
+            ->where('stock_id', $stock_id)
+            ->orderBy('order_date', 'desc')->get();
 
         return response()->json($initial_orders);
     }
@@ -441,7 +438,7 @@ class StockController extends Controller
                 break;
             case 'deli_location':
                 $initial_order->deli_location = $value;
-            break;
+                break;
                 $msg = 'フィールドの値が違います。';
             default:
         }
@@ -484,6 +481,7 @@ class StockController extends Controller
         $deli_location = $request->deli_location;
         $stock_process_id = $request->stock_process_id;
         $del_flg = $request->del_flg;
+        $tax_included = $request->tax_included;
 
         try {
             $stock = null;
@@ -509,18 +507,28 @@ class StockController extends Controller
             $stock->deli_location = $deli_location;
             $stock->stock_process_id = $stock_process_id;
             $stock->del_flg = $del_flg;
+            $stock->tax_included = $tax_included ?? 0;
 
-            if($stock->price != $price){
-                $stock->price = $price;
+
+            if (!$is_new && $stock->price != $price) {
+                $stock_price_archive = new StockPriceArchive();
+                $stock_price_archive->stock_id = $stock->id;
+                $stock_price_archive->price = $price;
+                $stock_price_archive->save();
+            }
+            $stock->price = $price;
+
+            $stock->save();
+
+            // 新規の場合、確定で追加
+            if ($is_new) {
                 $stock_price_archive = new StockPriceArchive();
                 $stock_price_archive->stock_id = $stock->id;
                 $stock_price_archive->price = $price;
                 $stock_price_archive->save();
             }
 
-            $stock->save();
-
-            if($order_request_id){
+            if ($order_request_id) {
                 $order_request = OrderRequest::find($order_request_id);
                 $order_request->stock_id = $stock->id;
                 $order_request->price = $price;
@@ -562,7 +570,7 @@ class StockController extends Controller
         $order_request_id = $request->order_request_id;
 
         $order_request = null;
-        if($order_request_id){
+        if ($order_request_id) {
             $order_request = OrderRequest::find($order_request_id);
         }
 
@@ -947,35 +955,36 @@ class StockController extends Controller
         return response()->json(['status' => $status]);
     }
 
-    public function urlStocks(Request $request){
-        
+    public function urlStocks(Request $request)
+    {
+
         $stocks  = Stock::select('id', 'name', 's_name', 'url', 'price')->whereNotNull('url')->where('url', '!=', '')->where('del_flg', 0)->get();
 
         return response()->json($stocks);
     }
 
-    public function priceStore(Request $request){
+    public function priceStore(Request $request)
+    {
         $status = true;
 
 
         $stock_id = $request->stock_id;
         $price = $request->price;
 
-        try{
+        try {
             $stock = Stock::find($stock_id);
-            if($stock){
+            if ($stock) {
                 $stock->price = $price;
                 $stock->save();
-    
+
                 $stock_price_archive = new StockPriceArchive();
                 $stock_price_archive->stock_id = $stock_id;
                 $stock_price_archive->price = $price;
                 $stock_price_archive->system_check_flg = 1;
                 $stock_price_archive->save();
             }
-
-        }catch(Exception $e){
-            $status = false; 
+        } catch (Exception $e) {
+            $status = false;
         }
         return  response()->json($status);
     }

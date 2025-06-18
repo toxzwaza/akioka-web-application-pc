@@ -53,6 +53,7 @@ class InitialOrderController extends Controller
             'documents.main_reason as document_main_reason',
             'documents.sub_reason as document_sub_reason',
             'documents.evalution_date as document_evalution_date',
+            'stocks.tax_included as stock_tax_included', //税区分
         )
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('order_requests', 'order_requests.id', 'initial_orders.order_request_id')

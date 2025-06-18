@@ -32,19 +32,16 @@ class TestController extends Controller
     public function test()
     {
 
-        $stocks = Stock::where('del_flg', 0)->get();
+        $stocks = Stock::where('del_flg', 0)->whereNotNull('url')->orWhere('url', '!=', '')->get();
 
-        foreach ($stocks as $stock) {
-            $stock_price_archive = StockPriceArchive::where('stock_id', $stock->id)->orderBy('created_at', 'desc')->first();
-
-            if (!$stock_price_archive && $stock->price != 0 || $stock->price != null) {
-                $stock_price_archive = new StockPriceArchive();
-                $stock_price_archive->stock_id = $stock->id;
-                $stock_price_archive->price = $stock->price;
-                $stock_price_archive->save();
+        forEach($stocks as $stock){
+            if(strpos($stock->url, 'askul') !== false || strpos($stock->url, 'amazon') !== false || strpos($stock->url, 'rakuten') !== false || strpos($stock->url, 'amzn') !== false){
+                $stock->tax_included = 1;
+                $stock->save();
             }
         }
-        dd('完了');
+
+        echo 'done';
     }
 
     public function storage_address_test()
