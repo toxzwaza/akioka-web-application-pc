@@ -1121,7 +1121,7 @@ const fileUpload = async (event) => {
                     }}
                   </td>
 
-                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                  <td class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap">
                     <input
                       v-if="is_login"
                       type="number"
@@ -1129,7 +1129,7 @@ const fileUpload = async (event) => {
                       :value="order.price"
                       @change="handlePrice(order, $event.target.value)"
                     />
-                    <span v-else>{{ order.price.toLocaleString() }}</span>
+                    <span v-else>{{ order.price.toLocaleString() }}{{ order.stock_tax_included ? ' (税込)' : ' (税抜)' }}</span>
                   </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     <input
