@@ -10,6 +10,19 @@ const search_keywords = ref([]);
 const user_tasks = ref([]);
 const filteredTasks = ref([]);
 
+const vars = {
+  filter_log: ref(0)
+}
+const filter_logs = () => {
+  if (logs.user_id) {
+    logs.task_transactions = logs.base_task_transactions.filter(
+      (task_transaction) => task_transaction.user_id === logs.user_id
+    );
+  } else {
+    logs.task_transactions = logs.base_task_transactions;
+  }
+};
+
 const logs = reactive({
   base_task_transactions: [],
   task_transactions: [],
@@ -40,21 +53,12 @@ const getData = () => {
     search_keywords.value = res.data.search_keywords;
 
     isLoading.value = false;
-    getCompleteData();
+    filter_logs()
+    getCompleteData()
   });
 };
 
-const filter_logs = (user_id) => {
-  if (user_id) {
-    logs.task_transactions = logs.base_task_transactions.filter(
-      (task_transaction) => task_transaction.user_id === user_id
-    );
-    logs.user_id = user_id;
-  } else {
-    logs.task_transactions = logs.base_task_transactions;
-    logs.user_id = 0;
-  }
-};
+
 
 const filterTaskList = () => {
   if (!form.task_name) {
@@ -413,7 +417,7 @@ onUnmounted(() => {
                     logs.user_id == 0,
                   'bg-white': logs.user_id !== 0,
                 }"
-                @click="filter_logs(0)"
+                @click="logs.user_id = 0; filter_logs();"
                 >全員</a
               >
             </li>
@@ -425,7 +429,7 @@ onUnmounted(() => {
                     logs.user_id == 43,
                   'bg-white': logs.user_id !== 43,
                 }"
-                @click="filter_logs(43)"
+                @click="logs.user_id = 43; filter_logs();"
                 >中原</a
               >
             </li>
@@ -437,7 +441,7 @@ onUnmounted(() => {
                     logs.user_id == 48,
                   'bg-white': logs.user_id !== 48,
                 }"
-                @click="filter_logs(48)"
+                @click="logs.user_id = 48; filter_logs();"
                 >中村</a
               >
             </li>
@@ -449,7 +453,7 @@ onUnmounted(() => {
                     logs.user_id == 68,
                   'bg-white': logs.user_id !== 68,
                 }"
-                @click="filter_logs(68)"
+                @click="logs.user_id = 68; filter_logs();"
                 >岡堂</a
               >
             </li>
@@ -461,7 +465,7 @@ onUnmounted(() => {
                     logs.user_id == 81,
                   'bg-white': logs.user_id !== 81,
                 }"
-                @click="filter_logs(81)"
+                @click="logs.user_id = 81; filter_logs();"
                 >三谷</a
               >
             </li>
@@ -473,7 +477,7 @@ onUnmounted(() => {
                     logs.user_id == 91,
                   'bg-white': logs.user_id !== 91,
                 }"
-                @click="filter_logs(91)"
+                @click="logs.user_id = 91; filter_logs();"
                 >村上</a
               >
             </li>
@@ -485,7 +489,7 @@ onUnmounted(() => {
                     logs.user_id == 120,
                   'bg-white': logs.user_id !== 120,
                 }"
-                @click="filter_logs(120)"
+                @click="logs.user_id = 120; filter_logs();"
                 >風早</a
               >
             </li>
