@@ -18,6 +18,8 @@ const props = defineProps({
   order_users: Array,
   suppliers: Array,
   totals: Object,
+  groups: Array,
+  processes: Array
 });
 
 const form = reactive({
@@ -28,6 +30,8 @@ const form = reactive({
   supplier_id: null,
   order_user_id: null,
   user_id: null,
+  group_id: null,
+  process_id: null,
 });
 
 // 稟議書OBJ
@@ -385,7 +389,22 @@ const login = () => {
   }
 };
 
-const getInitialOrders = () => {
+const getInitialOrders = (reset) => {
+
+  if(reset === 'reset'){
+    form.order_by = null
+    form.keyword = null
+    form.start_order_date = null
+    form.end_order_date = null
+    form.supplier_id = null
+    form.order_user_id = null
+    form.user_id = null
+    form.group_id = null
+    form.process_id = null
+
+    console.log('検索条件リセット')
+  }
+
   router.get(route("stock.initialOrders"), {
     order_by: form.order_by,
     keyword: form.keyword,
@@ -394,6 +413,8 @@ const getInitialOrders = () => {
     supplier_id: form.supplier_id,
     order_user_id: form.order_user_id,
     user_id: form.user_id,
+    group_id: form.group_id,
+    process_id: form.process_id
   });
 };
 
@@ -441,6 +462,8 @@ onMounted(() => {
   form.supplier_id = params.get("supplier_id");
   form.order_user_id = params.get("order_user_id");
   form.user_id = params.get("user_id");
+  form.group_id = params.get("group_id");
+  form.process_id = params.get("process_id");
 
   console.log(props.totals);
 });
@@ -596,7 +619,7 @@ const fileUpload = async (event) => {
                     </div>
                   </div>
 
-                  <div class="w-32 mr-2">
+                  <div class="w-32 mr-6">
                     <label
                       class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                       for="grid-last-name"
@@ -625,7 +648,55 @@ const fileUpload = async (event) => {
                       class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                       for="grid-last-name"
                     >
-                      注文依頼者
+                      依頼部門（大区分）
+                    </label>
+                    <select
+                      @change="updateFilter('group', $event.target.value)"
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.group_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="group in props.groups"
+                        :key="group.id"
+                        :value="group.id"
+                      >
+                        {{ group.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      依頼部門（中区分）
+                    </label>
+                    <select
+                      @change="updateFilter('process', $event.target.value)"
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.process_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="process in props.processes"
+                        :key="process.id"
+                        :value="process.id"
+                      >
+                        {{ process.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      依頼者
                     </label>
                     <select
                       @change="updateFilter('order_user', $event.target.value)"
@@ -644,7 +715,7 @@ const fileUpload = async (event) => {
                       </option>
                     </select>
                   </div>
-                  <div class="w-32 mr-2">
+                  <div class="w-32 mr-2 ml-4">
                     <label
                       class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
                       for="grid-last-name"
@@ -730,10 +801,16 @@ const fileUpload = async (event) => {
                   </div> -->
 
                   <button
-                    @click="getInitialOrders"
+                    @click="getInitialOrders()"
                     class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                   >
                     検索
+                  </button>
+                  <button
+                    @click="getInitialOrders('reset')"
+                    class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    リセット
                   </button>
                 </div>
               </div>
@@ -1121,7 +1198,9 @@ const fileUpload = async (event) => {
                     }}
                   </td>
 
-                  <td class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap">
+                  <td
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
                     <input
                       v-if="is_login"
                       type="number"
@@ -1129,7 +1208,12 @@ const fileUpload = async (event) => {
                       :value="order.price"
                       @change="handlePrice(order, $event.target.value)"
                     />
-                    <span v-else>{{ order.price.toLocaleString() }}{{ order.stock_tax_included ? ' (税込)' : ' (税抜)' }}</span>
+                    <span v-else
+                      >{{ order.price.toLocaleString()
+                      }}{{
+                        order.stock_tax_included ? " (税込)" : " (税抜)"
+                      }}</span
+                    >
                   </td>
                   <td class="ml-2 px-4 py-3 text-lg text-gray-900">
                     <input
@@ -1322,7 +1406,7 @@ const fileUpload = async (event) => {
 
           <!-- 画像ファイルがない場合稟議書要素を表示 -->
           <div v-else>
-            <ApprovalDocument :approval_document="approval_document"/>
+            <ApprovalDocument :approval_document="approval_document" />
           </div>
         </div>
       </div>

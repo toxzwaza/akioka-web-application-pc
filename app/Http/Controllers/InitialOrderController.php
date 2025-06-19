@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\Helper;
 use App\Models\Classification;
+use App\Models\Group;
 use App\Models\Holiday;
 use App\Models\InitialOrder;
 use App\Models\InventoryOperationRecord;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestApproval;
+use App\Models\Process;
 use App\Models\Stock;
 use App\Models\StockProcess;
 use App\Models\StockStorage;
@@ -33,6 +35,8 @@ class InitialOrderController extends Controller
         $supplier_id = $request->supplier_id;
         $order_user_id = $request->order_user_id;
         $user_id = $request->user_id;
+        $group_id = $request->group_id;
+        $process_id = $request->process_id;
 
         $query = InitialOrder::select(
             'initial_orders.*',
@@ -54,6 +58,7 @@ class InitialOrderController extends Controller
             'documents.sub_reason as document_sub_reason',
             'documents.evalution_date as document_evalution_date',
             'stocks.tax_included as stock_tax_included', //税区分
+            
         )
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('order_requests', 'order_requests.id', 'initial_orders.order_request_id')
@@ -64,7 +69,8 @@ class InitialOrderController extends Controller
                     ->on('stock_suppliers.supplier_id', '=', 'initial_orders.supplier_id');
             })
             ->leftJoin('suppliers', 'suppliers.id', 'initial_orders.supplier_id')
-            ->leftJoin('users', 'users.id', 'initial_orders.user_id')
+            ->leftJoin('users', 'users.id', 'initial_orders.user_id') //発注者
+            ->leftJoin('users as order_users', 'order_users.id', 'initial_orders.order_user_id') //依頼者
             ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
             ->leftJoin('documents', 'documents.id', 'order_requests.document_id');
     
@@ -98,6 +104,13 @@ class InitialOrderController extends Controller
 
         if ($order_by) {
             $query->orderBy('initial_orders.order_date', $order_by);
+        }
+
+        if($group_id){
+            $query->where('order_users.group_id', $group_id);
+        }
+        if($process_id){
+            $query->where('order_users.process_id', $process_id);
         }
 
         $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(20)->withQueryString();
@@ -156,6 +169,10 @@ class InitialOrderController extends Controller
             ->join('initial_orders', 'users.id', '=', 'initial_orders.order_user_id')
             ->distinct()
             ->get();
+        
+        $groups = Group::select('id', 'name')
+            ->get();
+        $processes = Process::select('id', 'name')->get();
 
 
 
@@ -168,7 +185,9 @@ class InitialOrderController extends Controller
             'users' => $users,
             'order_users' => $order_users,
             'suppliers' => $suppliers,
-            'totals' => $totals
+            'totals' => $totals,
+            'groups' => $groups,
+            'processes' => $processes
         ]);
     }
 
