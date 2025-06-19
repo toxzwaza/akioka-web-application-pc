@@ -11,8 +11,8 @@ const user_tasks = ref([]);
 const filteredTasks = ref([]);
 
 const vars = {
-  filter_log: ref(0)
-}
+  filter_log: ref(0),
+};
 const filter_logs = () => {
   if (logs.user_id) {
     logs.task_transactions = logs.base_task_transactions.filter(
@@ -53,12 +53,10 @@ const getData = () => {
     search_keywords.value = res.data.search_keywords;
 
     isLoading.value = false;
-    filter_logs()
-    getCompleteData()
+    filter_logs();
+    getCompleteData();
   });
 };
-
-
 
 const filterTaskList = () => {
   if (!form.task_name) {
@@ -79,13 +77,12 @@ const filterTaskList = () => {
 };
 
 const openDescription = (task) => {
-  if (task.description) {
-    if (task.description_open) {
-      task.description_open = false;
-    } else {
-      task.description_open = true;
-    }
+  if (task.description_open) {
+    task.description_open = false;
+  } else {
+    task.description_open = true;
   }
+
   console.log(task);
 };
 
@@ -262,7 +259,7 @@ const getCompleteData = () => {
 const updateValue = (task, flg) => {
   console.log(task);
 
-  let value = ""
+  let value = "";
 
   if (flg == "task_name") {
     value = task.name;
@@ -417,7 +414,10 @@ onUnmounted(() => {
                     logs.user_id == 0,
                   'bg-white': logs.user_id !== 0,
                 }"
-                @click="logs.user_id = 0; filter_logs();"
+                @click="
+                  logs.user_id = 0;
+                  filter_logs();
+                "
                 >全員</a
               >
             </li>
@@ -429,7 +429,10 @@ onUnmounted(() => {
                     logs.user_id == 43,
                   'bg-white': logs.user_id !== 43,
                 }"
-                @click="logs.user_id = 43; filter_logs();"
+                @click="
+                  logs.user_id = 43;
+                  filter_logs();
+                "
                 >中原</a
               >
             </li>
@@ -441,7 +444,10 @@ onUnmounted(() => {
                     logs.user_id == 48,
                   'bg-white': logs.user_id !== 48,
                 }"
-                @click="logs.user_id = 48; filter_logs();"
+                @click="
+                  logs.user_id = 48;
+                  filter_logs();
+                "
                 >中村</a
               >
             </li>
@@ -453,7 +459,10 @@ onUnmounted(() => {
                     logs.user_id == 68,
                   'bg-white': logs.user_id !== 68,
                 }"
-                @click="logs.user_id = 68; filter_logs();"
+                @click="
+                  logs.user_id = 68;
+                  filter_logs();
+                "
                 >岡堂</a
               >
             </li>
@@ -465,7 +474,10 @@ onUnmounted(() => {
                     logs.user_id == 81,
                   'bg-white': logs.user_id !== 81,
                 }"
-                @click="logs.user_id = 81; filter_logs();"
+                @click="
+                  logs.user_id = 81;
+                  filter_logs();
+                "
                 >三谷</a
               >
             </li>
@@ -477,7 +489,10 @@ onUnmounted(() => {
                     logs.user_id == 91,
                   'bg-white': logs.user_id !== 91,
                 }"
-                @click="logs.user_id = 91; filter_logs();"
+                @click="
+                  logs.user_id = 91;
+                  filter_logs();
+                "
                 >村上</a
               >
             </li>
@@ -489,7 +504,10 @@ onUnmounted(() => {
                     logs.user_id == 120,
                   'bg-white': logs.user_id !== 120,
                 }"
-                @click="logs.user_id = 120; filter_logs();"
+                @click="
+                  logs.user_id = 120;
+                  filter_logs();
+                "
                 >風早</a
               >
             </li>
@@ -612,12 +630,12 @@ onUnmounted(() => {
 
             <div
               @click="task.description_edit = 1"
-              v-if="task.description_open && !task.description_edit"
+              v-if="task.description_open && !task.description_edit && task.description"
               v-html="task.description.replace(/\n/g, '<br>')"
               class="description_container"
             ></div>
             <div
-              v-else-if="task.description_edit"
+              v-else-if="task.description_edit || (task.description_open && !task.description)"
               class="flex items-start justify-start mt-2 mb-4"
             >
               <i
