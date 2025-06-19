@@ -16,6 +16,10 @@ const calc_postage = ref(0); //送料合計
 // 社員表示
 const approval_flg = ref(false);
 
+const reCreatePurchasePath = (order) => {
+  order.purchase_path = false
+}
+
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
   props.orders.forEach((order) => {
@@ -149,6 +153,15 @@ onMounted(() => {
 </script>
 <template>
   <div v-if="orders.length === 1 && orders[0].purchase_path">
+    <div>
+      <button
+        @click="reCreatePurchasePath(orders[0])"
+        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+      >
+        発注書再発行
+      </button>
+    </div>
+
     <img
       class="w-2/3 mt-8 mx-auto"
       :src="`/storage/${orders[0].purchase_path}`"
