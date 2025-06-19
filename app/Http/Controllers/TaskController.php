@@ -250,14 +250,14 @@ class TaskController extends Controller
 
             $task = Task::find($task_id);
 
-            if ($task->status === '0') { // 進行中の場合完了
+            if ($task->status == 0) { // 進行中の場合完了
 
                 if ($flg == 'stop') {
-                    $task->status = '1';
+                    $task->status = 1;
 
                     $task_transaction = new TaskTransaction();
                     $task_transaction->task_id = $task_id;
-                    $task_transaction->status = '1'; //未着手
+                    $task_transaction->status = 1; //未着手
                     $task_transaction->save();
                 } else {
                     $task->status = '2';
@@ -265,33 +265,33 @@ class TaskController extends Controller
                     // タスクトランザクションデータ作成
                     $task_transaction = new TaskTransaction();
                     $task_transaction->task_id = $task_id;
-                    $task_transaction->status = '2'; //完了
+                    $task_transaction->status = 2; //完了
                     $task_transaction->save();
                 }
-            } else if ($task->status === '1') { // 未着手の場合進行中
+            } else if ($task->status == 1) { // 未着手の場合進行中
 
 
                 // 現在進行中のタスクを未着手に変更
                 $now_task = Task::where('user_id', $task->user_id)
-                    ->where('status', '0')
+                    ->where('status', 0)
                     ->first();
                 if ($now_task) {
-                    $now_task->status = '1';
+                    $now_task->status = 1;
                     $now_task->save();
 
                     // タスクトランザクションデータ作成
                     $task_transaction = new TaskTransaction();
                     $task_transaction->task_id = $now_task->id;
-                    $task_transaction->status = '1'; //未着手
+                    $task_transaction->status = 1; //未着手
                     $task_transaction->save();
                 }
 
                 // 未着手タスクを再開
-                $task->status = '0';
+                $task->status = 0;
                 // タスクトランザクションデータ作成
                 $task_transaction = new TaskTransaction();
                 $task_transaction->task_id = $task_id;
-                $task_transaction->status = '0'; //進行中
+                $task_transaction->status = 0; //進行中
                 $task_transaction->save();
             }
 
@@ -306,7 +306,7 @@ class TaskController extends Controller
             $status = false;
         }
 
-        return response()->json(['status' => $status]);
+        return response()->json(['status' => $status, 'msg' => $msg ]);
     }
 
     public function update_value(Request $request)

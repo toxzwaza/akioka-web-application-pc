@@ -217,24 +217,22 @@ const selectUserName = () => {
   getUserNameByUserId();
 };
 
-const updateTaskStatus = (task_id, flg = null) => {
-  //   ログインユーザーが作成したタスクのみ編集可能
-  console.log(task_id);
-  axios
-    .post(route("task.update"), {
+const updateTaskStatus = async (task_id, flg = null) => {
+  // ログインユーザーが作成したタスクのみ編集可能
+  console.log(task_id, flg);
+  try {
+    const res = await axios.post(route("task.update"), {
       task_id: task_id,
       flg: flg,
-    })
-    .then((res) => {
-      console.log(res.data);
-
-      if (res.data.status) {
-        getData();
-      }
-    })
-    .catch((error) => {
-      console.log(error);
     });
+    console.log(res.data);
+
+    if (res.data.status) {
+      await getData();
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const changeTaskName = (status) => {
