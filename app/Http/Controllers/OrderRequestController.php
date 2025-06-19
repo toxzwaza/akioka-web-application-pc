@@ -95,7 +95,7 @@ class OrderRequestController extends Controller
                 }
 
                 // 承認状況を取得
-                $order_request_approvals = OrderRequestApproval::select('users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at')
+                $order_request_approvals = OrderRequestApproval::select('users.id as user_id','users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at')
                     ->where('order_request_id', $order_request->id)
                     ->join('users', 'users.id', '=', 'ora.user_id')
                     ->from('order_request_approvals as ora')

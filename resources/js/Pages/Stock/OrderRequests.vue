@@ -24,7 +24,22 @@ const openModal = (order_request) => {
     modal_status.approval_path = `https://akioka.cloud/${order_request.file_path}`;
   }
 };
-
+const reNotify = (order_request_id, user_id) => {
+  console.log(order_request_id, user_id);
+  axios.post(route('stock.accept.order_request.re-notify'),{
+    order_request_id: order_request_id,
+    user_id: user_id
+  })
+  .then(res =>{
+    console.log(res.data)
+    if(res.data.status){
+      alert('再通知が完了しました。')
+    }
+  })
+  .catch(error => {
+    console.log(error)
+  })
+};
 const contain_approvals = reactive({
   list: [],
   file_path: "",
@@ -352,8 +367,8 @@ const skipAccept = (order_request_id) => {
           }
         });
     }
-  }else{
-    alert('発注依頼データが見つかりませんでした。')
+  } else {
+    alert("発注依頼データが見つかりませんでした。");
   }
   console.log(order_request_id);
 };
@@ -459,6 +474,7 @@ onMounted(() => {
                   >
                     承認
                   </th>
+
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
@@ -612,6 +628,7 @@ onMounted(() => {
                       >
                     </div>
                   </td>
+
                   <td class="px-4 py-4 text-lg text-gray-900">
                     <button class="bg-blue-600 py-1 px-2.5 rounded">
                       <i
@@ -864,7 +881,7 @@ onMounted(() => {
               v-for="approval in modal_status.order_request
                 .order_request_approvals"
               :key="approval.id"
-              class="rounded overflow-hidden shadow-lg mr-8"
+              class="card rounded overflow-hidden shadow-lg mr-8"
             >
               <img
                 class="w-full"
@@ -894,6 +911,18 @@ onMounted(() => {
                       : "コメントがありません。"
                   }}
                 </p>
+                <button
+                  @click="
+                    reNotify(
+                      modal_status.order_request.order_request_id,
+                      approval.user_id
+                    )
+                  "
+                  v-if="approval.status == 0"
+                  class="notify_button bg-blue-600 py-1 px-2.5 rounded"
+                >
+                  <i class="text-white fas fa-bell"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -975,6 +1004,16 @@ table {
       height: 96%;
       width: 100%;
     }
+  }
+}
+
+.card {
+  position: relative;
+
+  & .notify_button {
+    position: absolute;
+    right: 2%;
+    top: 2%;
   }
 }
 </style>

@@ -152,6 +152,28 @@ class AcceptController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
+    public function reNotify(Request $request)
+    {
+        $status = true;
+        $order_request_id = $request->order_request_id;
+        $user_id = $request->user_id;
+
+        try {
+            $url = "https://akioka.cloud/accept/order-request?user_id=" . $user_id;
+
+            $order_request = OrderRequest::select('stocks.name as stock_name', 'stocks.s_name as stock_s_name')->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')->find($order_request_id);
+            $message = $order_request->stock_name . ' ' . $order_request->stock_s_name . "の承認依頼を受け付けました。\n\n以下のURLから承認を行ってください。";
+
+            $title = "在庫管理システムからの通知です。";
+
+            Helper::createNotifyQueue($title, $message, $url, [$user_id]);
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+    }
+
     public function skipAccept(Request $request)
     {
         $status = true;

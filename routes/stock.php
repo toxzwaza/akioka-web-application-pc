@@ -85,6 +85,7 @@ Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.ac
 Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrderRequest'])->name('stock.updateOrderRequest');
 // 発注担当者コメント更新
 Route::post('/order-requests/update/sub_description', [OrderRequestController::class, 'updateSubDescription'])->name('stock.updateSubDescription');
+Route::post('/accept/order-request/re-notify', [AcceptController::class, 'reNotify'])->name('stock.accept.order_request.re-notify');
 
 
 // 発注完了
