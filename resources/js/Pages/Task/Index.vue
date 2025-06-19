@@ -2,10 +2,13 @@
 import { reactive, onMounted, ref, onUnmounted } from "vue";
 import { Link } from "@inertiajs/vue3";
 // import ContributionsGrid from "@/components/ContributionsGrid.vue";
+import TaskGantt from "@/Components/TaskGantt.vue";
 
 const props = defineProps({});
 const current_time = ref("");
 const search_keywords = ref([]);
+
+const gantt_update = ref(false);
 
 const user_tasks = ref([]);
 const filteredTasks = ref([]);
@@ -55,6 +58,10 @@ const getData = () => {
     isLoading.value = false;
     filter_logs();
     getCompleteData();
+    gantt_update.value = true;
+    setTimeout(() => {
+      gantt_update.value = false;
+    }, 0);
   });
 };
 
@@ -233,11 +240,11 @@ const updateTaskStatus = (task_id, flg = null) => {
 const changeTaskName = (status) => {
   let task_name = "";
 
-  if (status === 0) {
+  if (status === "0") {
     task_name = "開始";
-  } else if (status === 1) {
+  } else if (status === "1") {
     task_name = "一時停止";
-  } else if (status === 2) {
+  } else if (status === "2") {
     task_name = "完了";
   }
 
@@ -295,6 +302,8 @@ const updateValue = (task, flg) => {
 };
 
 onMounted(() => {
+  console.log("gantt_data", props.gantt_data);
+
   getData();
 
   form.user_id = localStorage.getItem("user_id");
@@ -304,8 +313,6 @@ onMounted(() => {
 
   updateCheck();
   getCurrentTime();
-
-  getCompleteData();
 
   // ウィンドウのフォーカス状態を監視
   window.addEventListener("focus", () => {
@@ -563,8 +570,8 @@ onUnmounted(() => {
                 <span
                   :class="{
                     'inline-block w-5 h-5 rounded-full ml-2': true,
-                    'bg-green-500 animate-pulse': task.status == 0,
-                    'bg-gray-500': task.status == 1,
+                    'bg-green-500 animate-pulse': task.status == '0',
+                    'bg-gray-500': task.status == '1',
                   }"
                 ></span>
 
@@ -610,9 +617,9 @@ onUnmounted(() => {
                 </span>
               </div>
 
-              <div class="button_container">
+              <div class="button_container flex">
                 <button
-                  v-if="task.user_id == form.user_id && task.status == 1"
+                  v-if="task.user_id == form.user_id && task.status == '1'"
                   @click.stop="updateTaskStatus(task.id)"
                   class="w-16 bg_base_color hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                 >
@@ -620,14 +627,14 @@ onUnmounted(() => {
                 </button>
 
                 <button
-                  v-if="task.user_id == form.user_id && task.status == 0"
+                  v-if="task.user_id == form.user_id && task.status == '0'"
                   @click.stop="updateTaskStatus(task.id, 'stop')"
                   class="w-16 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded mr-2"
                 >
                   停止
                 </button>
                 <button
-                  v-if="task.user_id == form.user_id && task.status == 0"
+                  v-if="task.user_id == form.user_id && task.status == '0'"
                   @click.stop="updateTaskStatus(task.id)"
                   class="w-16 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                 >
@@ -677,9 +684,10 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <div class="mx-auto w-1/2">
+    <div class="gantt_container">
       <div class="w-full">
         <!-- <ContributionsGrid /> -->
+        <TaskGantt :gantt_update="gantt_update" />
       </div>
     </div>
 
@@ -884,6 +892,10 @@ onUnmounted(() => {
         }
       }
     }
+  }
+
+  .gantt_container {
+    padding: 2rem 3rem;
   }
 
   & #completeDataTable {
