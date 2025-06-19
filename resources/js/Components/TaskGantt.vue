@@ -8,33 +8,26 @@ const props = defineProps({
 
 const tasks = ref([]);
 const timeSlots = ref([]);
-const isMounted = ref(true); // 追加
 
-watch(
-  () => props.gantt_update,
-  (newVal) => {
-    if (newVal) {
-      console.log("ガントチャートを更新します。");
-      generateTimeSlots();
-      getGantData();
-    }
-  }
-);
+// watch(
+//   () => props.gantt_update,
+//   (newVal) => {
+//     if (newVal) {
+//       console.log("ガントチャートを更新します。");
+//       generateTimeSlots();
+//       getGantData();
+//     }
+//   }
+// );
 
 const getGantData = () => {
   axios
     .get(route("task.getGanttData"))
     .then((res) => {
-      if (isMounted.value) {
-        // アンマウント済みなら何もしない
-        console.log("Gantt API Response:", res.data);
-        tasks.value = res.data;
-      }
+      console.log("Gantt API Response:", res.data);
+      tasks.value = res.data;
     })
     .catch((error) => {
-      if (isMounted.value) {
-        console.error("Gantt API Error:", error);
-      }
     });
 };
 
@@ -67,19 +60,22 @@ const generateTimeSlots = () => {
   }
   timeSlots.value = slots;
 };
-
-onMounted(() => {
-  isMounted.value = true;
+const updateGantt = () => {
   generateTimeSlots();
   getGantData();
-});
-
-onUnmounted(() => {
-  isMounted.value = false;
+};
+onMounted(() => {
+  updateGantt();
 });
 </script>
 
 <template>
+  <button
+    @click.stop="updateGantt"
+    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4"
+  >
+    チャート更新
+  </button>
   <div
     style="box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px"
     class="overflow-x-auto"

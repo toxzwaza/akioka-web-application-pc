@@ -7,9 +7,6 @@ import TaskGantt from "@/Components/TaskGantt.vue";
 const props = defineProps({});
 const current_time = ref("");
 const search_keywords = ref([]);
-
-const gantt_update = ref(false);
-
 const user_tasks = ref([]);
 const filteredTasks = ref([]);
 
@@ -58,10 +55,6 @@ const getData = () => {
     isLoading.value = false;
     filter_logs();
     getCompleteData();
-    gantt_update.value = true;
-    setTimeout(() => {
-      gantt_update.value = false;
-    }, 0);
   });
 };
 
@@ -219,6 +212,7 @@ const selectUserName = () => {
 
 const updateTaskStatus = async (task_id, flg = null) => {
   // ログインユーザーが作成したタスクのみ編集可能
+  isLoading.value = true;
   console.log(task_id, flg);
   try {
     const res = await axios.post(route("task.update"), {
