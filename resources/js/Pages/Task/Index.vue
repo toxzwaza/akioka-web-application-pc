@@ -77,10 +77,18 @@ const filterTaskList = () => {
 };
 
 const openDescription = (task) => {
-  if (task.description_open) {
-    task.description_open = false;
-  } else {
-    task.description_open = true;
+  if (task.user_id == form.user_id) {
+    if (task.description_open) {
+      task.description_open = false;
+      if (!task.description) {
+        task.description_edit = false;
+      }
+    } else {
+      task.description_open = true;
+      if (!task.description) {
+        task.description_edit = true;
+      }
+    }
   }
 
   console.log(task);
@@ -630,12 +638,21 @@ onUnmounted(() => {
 
             <div
               @click="task.description_edit = 1"
-              v-if="task.description_open && !task.description_edit && task.description"
+              v-if="
+                task.description_open &&
+                !task.description_edit &&
+                task.description
+              "
               v-html="task.description.replace(/\n/g, '<br>')"
               class="description_container"
             ></div>
             <div
-              v-else-if="task.description_edit || (task.description_open && !task.description)"
+              v-else-if="
+                task.description_edit ||
+                (task.user_id == form.user_id &&
+                  task.description_open &&
+                  !task.description)
+              "
               class="flex items-start justify-start mt-2 mb-4"
             >
               <i
