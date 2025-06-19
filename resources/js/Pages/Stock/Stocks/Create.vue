@@ -10,10 +10,12 @@ const props = defineProps({
   classifications: Array,
   stock_processes: Array,
   order_request: Object,
+  stock: Object
 });
 
 const form = reactive({
   order_request_id: null,
+  dup_stock_id: null, //複製元stock_id
   name: null,
   s_name: null,
   jan_code: null,
@@ -75,6 +77,23 @@ onMounted(() => {
     form.name = order_request.name;
     form.s_name = order_request.s_name;
     form.solo_unit = order_request.unit;
+  }
+
+  if(props.stock){
+    const stock = props.stock
+    form.dup_stock_id = stock.id
+    form.name = stock.name
+    form.s_name = stock.s_name
+    form.price = stock.price
+    form.img_path = stock.img_path
+    form.tax_included = stock.tax_included
+    form.solo_unit = stock.solo_unit
+    form.org_unit = stock.org_unit
+    form.quantity_per_org = stock.quantity_per_org
+    form.classification_id = stock.classification_id
+    form.deli_location = stock.deli_location
+    form.stock_process_id = stock.stock_process_id
+    form.purchase_identification_number = stock.purchase_identification_number
   }
 });
 </script>

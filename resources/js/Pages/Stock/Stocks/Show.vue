@@ -415,7 +415,7 @@ onMounted(() => {
     ? props.stock.stock_process_id
     : 0;
   form.del_flg = props.stock.del_flg;
-  form.tax_included = props.stock.tax_included
+  form.tax_included = props.stock.tax_included;
 
   if (props.stock_suppliers && props.stock_suppliers.length > 0) {
     form.supplier_id = props.stock_suppliers[0].id;
@@ -445,7 +445,22 @@ onMounted(() => {
         :top="'在庫詳細'"
         :sub="'物品データ閲覧・変更及び手配先や格納先の紐づけを行います。'"
       />
-      <iframe v-if="props.stock.url && props.stock.url.includes('askul')" id="stock_iframe" class="" :src="props.stock.url" frameborder="0"></iframe>
+      <iframe
+        v-if="props.stock.url && props.stock.url.includes('askul')"
+        id="stock_iframe"
+        class=""
+        :src="props.stock.url"
+        frameborder="0"
+      ></iframe>
+
+      <div>
+        <Link
+          :href="route('stock.stocks.create', { stock_id: props.stock.id })"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          複製して在庫追加
+        </Link>
+      </div>
 
       <div class="flex justify-center py-12">
         <div id="left_container" class="w-2/5">
@@ -1258,7 +1273,6 @@ onMounted(() => {
                   for="grid-last-name"
                 >
                   購買用URL
-                  
                 </label>
                 <input
                   class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
@@ -1314,7 +1328,12 @@ onMounted(() => {
                 >
                   *税区分
                 </label>
-                <select name="" id="" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" v-model="form.tax_included">
+                <select
+                  name=""
+                  id=""
+                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  v-model="form.tax_included"
+                >
                   <option value="0">税抜き</option>
                   <option value="1">税込み</option>
                 </select>
@@ -1484,9 +1503,7 @@ onMounted(() => {
             </div>
           </form>
         </div>
-
       </div>
-        
     </template>
   </MainLayout>
 </template>
@@ -1519,7 +1536,7 @@ onMounted(() => {
   // }
 }
 
-#stock_iframe{
+#stock_iframe {
   height: 60vh;
   width: 100%;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
@@ -1528,7 +1545,7 @@ onMounted(() => {
   background-color: #f0f0f0;
   border-radius: 5px;
 
-  & iframe{
+  & iframe {
     width: 100%;
     height: 100%;
     object-fit: cover;

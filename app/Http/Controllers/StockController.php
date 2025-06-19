@@ -466,6 +466,7 @@ class StockController extends Controller
         $msg = "";
 
         $order_request_id = $request->order_request_id;
+        $dup_stock_id = $request->dup_stock_id;
         $stock_id = $request->stock_id;
         $name = $request->name;
         $jan_code = $request->jan_code;
@@ -528,6 +529,22 @@ class StockController extends Controller
                 $stock_price_archive->save();
             }
 
+            // 既存在庫に紐づいている取引先を付与
+            if($dup_stock_id){
+                $dup_stock_supplier = StockSupplier::where('stock_id', $dup_stock_id)->first();
+                if($dup_stock_supplier){
+                    $stock_supplier = new StockSupplier();
+                    $stock_supplier->stock_id = $stock->id;
+                    $stock_supplier->supplier_id = $dup_stock_supplier->supplier_id;
+                    $stock_supplier->lead_time = $dup_stock_supplier->lead_time;
+                    $stock_supplier->postage = $dup_stock_supplier->postage;
+                    $stock_supplier->act_flg = $dup_stock_supplier->act_flg;
+                    $stock_supplier->memo = $dup_stock_supplier->memo;
+                    $stock_supplier->save();
+                }
+
+            }
+
             if ($order_request_id) {
                 $order_request = OrderRequest::find($order_request_id);
                 $order_request->stock_id = $stock->id;
@@ -568,16 +585,24 @@ class StockController extends Controller
     public function create_stocks(Request $request)
     {
         $order_request_id = $request->order_request_id;
-
+        $stock_id = $request->stock_id;
+ 
+        // 物品依頼から基本データ入力済み
         $order_request = null;
         if ($order_request_id) {
             $order_request = OrderRequest::find($order_request_id);
         }
 
+        // 既存在庫から基本データ入力済み
+        $stock = null;
+        if($stock_id){
+            $stock = Stock::find($stock_id);
+        }
+
         $classifications = Classification::all();
         $stock_processes = StockProcess::select('id', 'name')->get();
 
-        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications, 'stock_processes' => $stock_processes, 'order_request' => $order_request]);
+        return Inertia::render('Stock/Stocks/Create', ['classifications' => $classifications, 'stock_processes' => $stock_processes, 'order_request' => $order_request, 'stock' => $stock]);
     }
     // 格納先作成
     public function create_storage_addresses()
