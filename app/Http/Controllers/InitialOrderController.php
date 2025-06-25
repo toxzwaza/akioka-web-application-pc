@@ -535,6 +535,16 @@ class InitialOrderController extends Controller
             $initial_order = InitialOrder::find($initial_order_id);
             $initial_order->order_complete_flg = $order_complete_flg;
             $initial_order->save();
+
+            $user = User::find($initial_order->order_user_id);
+            if($user->email){ //メールアドレスが登録されている場合、メールを送信
+                $title = '発注が完了しました。';
+                $message = "{$initial_order->name} {$initial_order->s_name}の発注依頼が完了しました。";
+
+                Helper::createNotifyQueue($title, $message, '', [$user->id]);
+            }
+
+            
         } catch (Exception $e) {
             $status = false;
         }

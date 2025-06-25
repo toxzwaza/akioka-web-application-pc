@@ -69,6 +69,7 @@ const form = reactive({
 
   orderNumber: null,
   alias: null,
+  orderUnit: null,
 });
 const updateStockRequest = (flg) => {
   const update_data = {
@@ -79,6 +80,8 @@ const updateStockRequest = (flg) => {
     update_data.alias = form.alias;
   } else if (flg === "orderNumber") {
     update_data.orderNumber = form.orderNumber;
+  } else if(flg === 'unit'){
+    update_data.orderUnit = form.orderUnit
   }
 
   axios
@@ -428,6 +431,8 @@ onMounted(() => {
 
   form.alias = props.stock.alias;
   form.orderNumber = props.stock.orderNumber;
+  form.orderUnit = props.stock.orderUnit
+
 
   form.order_stock_process_id = form.stock_process_id
     ? form.stock_process_id
@@ -1114,7 +1119,7 @@ onMounted(() => {
             <div v-if="stock.stock_request_id">
               <!-- 番号・名前も表示 -->
               <div class="flex justify-between">
-                <div class="w-1/2 pr-3">
+                <div class="w-1/3 pr-3">
                   <label
                     :class="{
                       'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
@@ -1129,7 +1134,7 @@ onMounted(() => {
                     @change="updateStockRequest('alias')"
                   />
                 </div>
-                <div class="w-1/2 pl-3">
+                <div class="w-1/3 pl-3">
                   <label
                     :class="{
                       'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
@@ -1142,6 +1147,21 @@ onMounted(() => {
                     type="number"
                     v-model="form.orderNumber"
                     @change="updateStockRequest('orderNumber')"
+                  />
+                </div>
+                <div class="w-1/3 pl-3">
+                  <label
+                    :class="{
+                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
+                    }"
+                  >
+                    単位
+                  </label>
+                  <input
+                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="text"
+                    v-model="form.orderUnit"
+                    @change="updateStockRequest('unit')"
                   />
                 </div>
               </div>

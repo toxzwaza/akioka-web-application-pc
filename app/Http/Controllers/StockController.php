@@ -286,7 +286,7 @@ class StockController extends Controller
     // 在庫編集
     public function stock_show($stock_id)
     {
-        $stock = Stock::select('stocks.*', 'stock_requests.id as stock_request_id', 'stock_requests.orderNumber', 'stock_requests.alias')
+        $stock = Stock::select('stocks.*', 'stock_requests.id as stock_request_id', 'stock_requests.orderNumber', 'stock_requests.alias', 'stock_requests.unit as orderUnit')
             ->leftJoin('stock_requests', 'stock_requests.stock_id', 'stocks.id')->where('stocks.id', $stock_id)
             ->first();
 
@@ -962,6 +962,7 @@ class StockController extends Controller
         $stock_id = $request->stock_id;
         $alias = $request->alias;
         $orderNumber = $request->orderNumber;
+        $orderUnit = $request->orderUnit;
 
         try {
             $stock_request = StockRequest::where('stock_id', $stock_id)->first();
@@ -971,6 +972,9 @@ class StockController extends Controller
             }
             if ($orderNumber) {
                 $stock_request->orderNumber = $orderNumber;
+            }
+            if($orderUnit){
+                $stock_request->unit = $orderUnit;
             }
             $stock_request->save();
         } catch (Exception $e) {
