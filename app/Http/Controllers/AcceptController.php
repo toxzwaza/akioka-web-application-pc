@@ -46,6 +46,7 @@ class AcceptController extends Controller
     {
         $status = true;
         $msg = "";
+        $accept_flg = 0;
 
         try {
             $order_request_id = $request->order_request_id;
@@ -72,8 +73,8 @@ class AcceptController extends Controller
                     // 承認フローを作成
                     // 金額と承認依頼者を元に作成
                     // 今後は、依頼者を元に承認フローを作成
-                    // $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id);
-                    $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
+                    $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id, $order_request->new_flg);
+                    // $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
 
                     if (count($approval_list) > 0) {
                         foreach ($approval_list as $key => $approval_user_id) {
@@ -115,8 +116,8 @@ class AcceptController extends Controller
                 // 承認フローを作成
                 // 金額と承認依頼者を元に作成
                 // 今後は、依頼者を元に承認フローを作成
-                // $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id);
-                $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
+                $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id, $order_request->new_flg);
+                // $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
                 if (count($approval_list) > 0) {
                     foreach ($approval_list as $key => $approval_user_id) {
 
@@ -136,11 +137,13 @@ class AcceptController extends Controller
                             Helper::createNotifyQueue($title, $message, $url, [$order_request_approval->user_id]);
                         }
                     }
+                    // 承認送信
+                    $accept_flg = 1;
                 } else {
 
-                    // 承認必要なし
                     $order_request->accept_flg = 2;
                     $order_request->save();
+                    $accept_flg = 2; //承認必要なし
                 }
             }
         } catch (Exception $e) {
@@ -149,7 +152,7 @@ class AcceptController extends Controller
         }
 
 
-        return response()->json(['status' => $status, 'msg' => $msg]);
+        return response()->json(['status' => $status, 'msg' => $msg , 'accept_flg' => $accept_flg]);
     }
 
     public function reNotify(Request $request)

@@ -26,19 +26,20 @@ const openModal = (order_request) => {
 };
 const reNotify = (order_request_id, user_id) => {
   console.log(order_request_id, user_id);
-  axios.post(route('stock.accept.order_request.re-notify'),{
-    order_request_id: order_request_id,
-    user_id: user_id
-  })
-  .then(res =>{
-    console.log(res.data)
-    if(res.data.status){
-      alert('再通知が完了しました。')
-    }
-  })
-  .catch(error => {
-    console.log(error)
-  })
+  axios
+    .post(route("stock.accept.order_request.re-notify"), {
+      order_request_id: order_request_id,
+      user_id: user_id,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("再通知が完了しました。");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 const contain_approvals = reactive({
   list: [],
@@ -136,12 +137,19 @@ const sendAccept = (order_request_id) => {
       .then((res) => {
         console.log(res.data);
         if (res.data.status) {
-          alert("承認依頼を送信しました。");
           const order_request = order_requests.value.find(
             (request) => request.id === order_request_id
           );
-          if (order_request) {
-            order_request.accept_flg = 1;
+          if (res.data.accept_flg == 1) {
+            alert("承認依頼を送信しました。");
+            if (order_request) {
+              order_request.accept_flg = 1;
+            }
+          } else if (res.data.accept_flg == 2) {
+            alert("承認はありませんでした。");
+            if (order_request) {
+              order_request.accept_flg = 2;
+            }
           }
         }
       })

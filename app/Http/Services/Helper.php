@@ -76,49 +76,71 @@ class Helper
     }
 
     // 承認フローを作成
-    public static function createApprovalFlow($price, $user_id)
+    public static function createApprovalFlow($price, $user_id, $new_flg = 0)
     {
 
         $user = User::find($user_id);
-        if (!$user->group_id >= 8) {
+        if (in_array($user->group_id, [8, 10, 11]) ||
+        !$new_flg && !in_array($user->group_id, [3, 4]) ||
+        !$new_flg && in_array($user->group_id, [3,4]) && $user->position_id == 6
+        ) { //役員・統括部（役員）・顧問 または 既存品の製造1,2以外、既存品製造１２でも課長は承認なし
             return [];
         }
 
         $approval_list = [];
 
 
-        // 部署ごとの承認者マッピング
-        $approvalMap = [
-            2 => 16, // 梶谷課長
-            3 => 37, // 長谷川課長
-            4 => 84, // 宮原課長
-            6 => 63, //常務
-            7 => 36, //荒川部長
-        ];
+        if ($user->position_id >= 7) {  //係長・GL・一般 からの依頼の場合
+            // 部署ごとの承認者マッピング
+            $approvalMap = [
+                1 => 63, // 技術 常務
+                2 => 16, // 品証 梶谷課長
+                3 => 37, // 製造一課 長谷川課長
+                4 => 84, // 製造二課 宮原課長
+                5 => 2,  // 保全 社長
+                6 => 63, // 業務 常務
+                7 => 36, // 総務 荒川部長
+            ];
 
-        // 基本の承認フロー
-        $approval_list[] = $approvalMap[$user->group_id] ?? 2;
-
-
-        // 10,000円以上の場合の追加承認
-        if ($price >= 10000) {
-            if ($user->group_id == 2) {
-                $approval_list[] = 94;
-            } else if (in_array($user->group_id, [3, 4, 5])) {
-                $approval_list[] = 2;
+            // ユーザーの部署に対応する承認者を追加
+            if (isset($approvalMap[$user->group_id])) {
+                $approval_list[] = $approvalMap[$user->group_id];
             }
-        }
 
-        // 50,000円以上の場合の追加承認
-        if ($price >= 100000) {
-            if ($user->group_id == 7) {
-                $approval_list[] = 63;
+            // 10,000円以上の場合の追加承認
+            if ($price >= 10000) {
+                if (in_array($user->group_id, [2])) {
+                    $approval_list[] = 94; //品証 => 細矢本部長
+                } else if (in_array($user->group_id, [3, 4])) {
+                    $approval_list[] = 2; //製造1,2 => 社長
+                }
             }
-        }
 
-        // 150,000円以上の場合の追加承認
-        if ($price >= 150000 && in_array($user->group_id, [1, 6, 7])) {
-            $approval_list[] = 2;
+            // 150,000円以上の場合の追加承認
+            if ($price >= 150000) {
+                if (in_array($user->group_id, [1, 2, 6, 7])) {
+                    $approval_list[] = 2;
+                }
+            }
+        } else if ($user->position_id == 6) { //課長からの依頼
+            // 部署ごとの承認者マッピング
+            $approvalMap = [
+                2 => 94, // 品証 梶谷課長
+                3 => 2,  // 製造一課 長谷川課長
+                4 => 2,  // 製造二課 宮原課長
+            ];
+
+            // ユーザーの部署に対応する承認者を追加
+            if (isset($approvalMap[$user->group_id])) {
+                $approval_list[] = $approvalMap[$user->group_id];
+            }
+
+            // 150,000円以上の場合の追加承認
+            if ($price >= 150000) {
+                if (in_array($user->group_id, [2])) {
+                    $approval_list[] = 2;
+                }
+            }
         }
 
         return $approval_list;

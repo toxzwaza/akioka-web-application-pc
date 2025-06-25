@@ -31,17 +31,12 @@ class TestController extends Controller
     //
     public function test()
     {
-
-        $stocks = Stock::where('del_flg', 0)->whereNotNull('url')->orWhere('url', '!=', '')->get();
-
-        forEach($stocks as $stock){
-            if(strpos($stock->url, 'askul') !== false || strpos($stock->url, 'amazon') !== false || strpos($stock->url, 'rakuten') !== false || strpos($stock->url, 'amzn') !== false){
-                $stock->tax_included = 1;
-                $stock->save();
-            }
+        $approval_users = Helper::createApprovalFlow(150000, 37, 0);
+        foreach($approval_users as $approval_user){
+            $user = User::find($approval_user);
+            echo($user->name);
         }
 
-        echo 'done';
     }
 
     public function storage_address_test()
