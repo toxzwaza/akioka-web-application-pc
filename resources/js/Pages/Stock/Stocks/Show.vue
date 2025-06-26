@@ -45,6 +45,7 @@ const form = reactive({
   stock_process_id: null,
   del_flg: null,
   tax_included: null,
+  approval_supplier_name: null,
 
   // 発注依頼用
   order_user: null,
@@ -80,8 +81,8 @@ const updateStockRequest = (flg) => {
     update_data.alias = form.alias;
   } else if (flg === "orderNumber") {
     update_data.orderNumber = form.orderNumber;
-  } else if(flg === 'unit'){
-    update_data.orderUnit = form.orderUnit
+  } else if (flg === "unit") {
+    update_data.orderUnit = form.orderUnit;
   }
 
   axios
@@ -419,6 +420,7 @@ onMounted(() => {
     : 0;
   form.del_flg = props.stock.del_flg;
   form.tax_included = props.stock.tax_included;
+  form.approval_supplier_name = props.stock.approval_supplier_name
 
   if (props.stock_suppliers && props.stock_suppliers.length > 0) {
     form.supplier_id = props.stock_suppliers[0].id;
@@ -431,8 +433,7 @@ onMounted(() => {
 
   form.alias = props.stock.alias;
   form.orderNumber = props.stock.orderNumber;
-  form.orderUnit = props.stock.orderUnit
-
+  form.orderUnit = props.stock.orderUnit;
 
   form.order_stock_process_id = form.stock_process_id
     ? form.stock_process_id
@@ -1490,6 +1491,21 @@ onMounted(() => {
               </div>
             </div>
             <div class="flex flex-wrap -mx-3 mb-6">
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-city"
+                >
+                  稟議申請時発注先名
+                </label>
+                <input
+                  type="text"
+                  :class="{
+                    'pointer-events-none appearance-none block w-full bg-gray-300 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  v-model="form.approval_supplier_name"
+                />
+              </div>
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
                 <label
                   class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"

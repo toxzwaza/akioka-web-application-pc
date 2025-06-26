@@ -31,12 +31,43 @@ class TestController extends Controller
     //
     public function test()
     {
-        $approval_users = Helper::createApprovalFlow(150000, 37, 0);
-        foreach($approval_users as $approval_user){
-            $user = User::find($approval_user);
-            echo($user->name);
-        }
+        $users = User::select(
+            'users.name',
+            'groups.name as group_name',
+            'positions.name as position_name',
+            'users.id',
+            'users.group_id'
+        )
+            ->where('del_flg', 0)
+            ->where('position_id', 6)
+            ->join('groups', 'users.group_id', 'groups.id')
+            ->join('positions', 'positions.id', 'users.position_id')
+            ->orderBy('group_id', 'asc')->orderBy('position_id', 'desc')->get();
+        $prices = [10000, 10001, 100000, 100001, 150000, 150001];
+        $new_flgs = [0, 1];
 
+
+        foreach ($users as $user) {
+            echo ("$user->group_name : $user->position_name : {$user->name}");
+            echo ("<br />");
+            foreach ($prices as $price) {
+                echo ("金額: $price");
+                echo ("<br />");
+                foreach ($new_flgs as $new_flg) {
+                    echo ($new_flg ? '・新規品' : '・既存品');
+                    echo ("<br />");
+
+                    $approval_users = Helper::createApprovalFlow($price, $user->id, $new_flg);
+                    if (count($approval_users) > 0) {
+                        echo (implode('->', $approval_users));
+                        echo ("<br />");
+                    } else {
+                        echo ("承認者なし");
+                        echo ("<br />");
+                    }
+                }
+            }
+        }
     }
 
     public function storage_address_test()
