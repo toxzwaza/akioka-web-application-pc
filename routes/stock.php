@@ -44,6 +44,7 @@ Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->
 Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
 // 納品書変更
 Route::post('/initial-order/update/deli_file', [InitialOrderController::class, 'update_deli_file'])->name('stock.update_deli_file');
+Route::post('/order-requests/store/approval_document', [OrderRequestController::class, 'storeApprovalDocument'])->name('stock.store.approval_document');
 
 
 

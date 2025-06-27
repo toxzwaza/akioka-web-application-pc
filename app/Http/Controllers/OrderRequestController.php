@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class OrderRequestController extends Controller
 {
@@ -95,7 +96,7 @@ class OrderRequestController extends Controller
                 }
 
                 // 承認状況を取得
-                $order_request_approvals = OrderRequestApproval::select('users.id as user_id','users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at')
+                $order_request_approvals = OrderRequestApproval::select('users.id as user_id', 'users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at')
                     ->where('order_request_id', $order_request->id)
                     ->join('users', 'users.id', '=', 'ora.user_id')
                     ->from('order_request_approvals as ora')
@@ -306,5 +307,38 @@ class OrderRequestController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    // 発注依頼一覧から
+    public function storeApprovalDocument(Request $request)
+    {
+        $status = true;
+
+        $upload_file = $request->file('upload_file');
+        $order_request_id = $request->order_request_id;
+
+        try {
+            // 稟議書がある場合
+            if ($upload_file) {
+                // VPSのLaravel APIのエンドポイントURL（例）
+                $vpsApiUrl = 'https://akioka.cloud/api/order_request/upload_file';
+
+                // POSTリクエストをマルチパート形式で送信
+                $response = Http::asMultipart()->attach(
+                    'upload_file', // 相手側のAPIが期待するinput名
+                    file_get_contents($upload_file->getRealPath()),
+                    $upload_file->getClientOriginalName()
+                )->post($vpsApiUrl, [
+                    // 他に送信したいデータがあればここに追加
+                    'order_request_id' => $order_request_id,
+                ]);
+            }
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+
+
+        return response()->json(['status' => $status]);
     }
 }

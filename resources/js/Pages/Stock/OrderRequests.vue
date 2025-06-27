@@ -10,6 +10,55 @@ const props = defineProps({
   order_users: Array,
   user_id: Number,
 });
+const form = reactive({
+  upload_file: null,
+});
+const uploadFile = (event) => {
+  const file = event.target.files[0];
+  form.upload_file = file;
+
+  const formData = new FormData();
+  
+  // upload_fileを追加
+  if (form.upload_file instanceof File) {
+    formData.append('upload_file', form.upload_file);
+  }
+  
+  // modal_status.order_request.idを追加
+  if (modal_status.order_request && modal_status.order_request.id) {
+    formData.append('order_request_id', modal_status.order_request.id);
+  }
+
+  // formオブジェクトをFormDataに変換
+  Object.keys(form).forEach((key) => {
+    // nullでない値のみを追加（upload_fileは既に追加済みなので除外）
+    if (form[key] !== null && key !== 'upload_file') {
+      formData.append(key, form[key]);
+    }
+  });
+
+  axios
+    .post(route("stock.store.approval_document"), formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        if (confirm("稟議書を登録しました。")) {
+          window.location.reload();
+        } else {
+          // window.location.href = route("stock");
+        }
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+  console.log(form.upload_file);
+};
 
 const modal_status = reactive({
   status: false,
@@ -943,8 +992,55 @@ onMounted(() => {
             稟議書確認
           </summary>
 
-          <div id="pdfviewer">
+          <div v-if="modal_status.approval_path" id="pdfviewer">
             <iframe ref="pdfViewer" :src="modal_status.approval_path"></iframe>
+          </div>
+          <div v-else class="flex items-center justify-center w-full mb-8">
+            <label
+              for="dropzone-file"
+              :class="{
+                'flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-green-600 dark:hover:border-green-500 dark:hover:bg-gray-600': true,
+              }"
+            >
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <svg
+                  class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 16"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                  />
+                </svg>
+                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span class="font-semibold text-lg">稟議書</span
+                  >をアップロードしてください。
+                </p>
+                <p
+                  class="text-xs text-green-500 dark:text-green-400 text-center"
+                >
+                  {{
+                    form.upload_file
+                      ? `${form.upload_file.name} が選択されています。`
+                      : ""
+                  }}
+                  <br />
+                </p>
+              </div>
+              <input
+                id="dropzone-file"
+                type="file"
+                class="hidden"
+                @change="uploadFile"
+                accept="application/pdf"
+              />
+            </label>
           </div>
         </details>
       </div>

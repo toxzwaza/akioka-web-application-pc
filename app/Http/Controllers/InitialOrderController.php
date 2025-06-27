@@ -367,7 +367,7 @@ class InitialOrderController extends Controller
             switch ($flg) {
                 case 'desired':
                     // 納入希望日
-                    $initial_order->desired_delivery_date = $date;
+                    $initial_order->desire_delivery_date = $date;
                     break;
                 case 'expected':
                     // 納入予定日

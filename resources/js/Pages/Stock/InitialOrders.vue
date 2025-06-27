@@ -252,6 +252,7 @@ const updateFilter = (filter, value) => {
 
 const updateDate = (flg, order_id, date) => {
   console.log(flg, order_id, date);
+  // return;
   if (flg) {
     axios
       .post(route("stock.update_date"), {
@@ -261,7 +262,7 @@ const updateDate = (flg, order_id, date) => {
       })
       .then((res) => {
         console.log(res.data);
-        alert("納入予定日を更新しました。");
+        alert("日付を更新しました。");
       })
       .catch((error) => {
         console.log(error);
@@ -1128,15 +1129,15 @@ const fileUpload = async (event) => {
                       name=""
                       id=""
                       class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order.desired_delivery_date"
+                      :value="order.desire_delivery_date"
                       @change="
                         updateDate('desired', order.id, $event.target.value)
                       "
                     />
                     <span v-else>{{
-                      order.desired_delivery_date
+                      order.desire_delivery_date
                         ? new Date(
-                            order.desired_delivery_date
+                            order.desire_delivery_date
                           ).toLocaleDateString("ja-JP")
                         : "-"
                     }}</span>
