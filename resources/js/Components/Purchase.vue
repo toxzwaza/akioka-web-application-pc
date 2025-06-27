@@ -23,7 +23,7 @@ const reCreatePurchasePath = (order) => {
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
   props.orders.forEach((order) => {
-    if (!order.desired_delivery_date) {
+    if (!order.desire_delivery_date) {
       order.shortest = true;
     }
   });
@@ -84,7 +84,7 @@ async function saveAsImage() {
 
   // 納入希望日が入力されていない場合最短とする
   props.orders.forEach((order) => {
-    if (!order.desired_delivery_date) {
+    if (!order.desire_delivery_date) {
       order.shortest = true;
     }
   });
@@ -298,16 +298,16 @@ onMounted(() => {
                 </p>
 
                 <input
-                  v-else-if="order.desired_delivery_date"
+                  v-else-if="order.desire_delivery_date"
                   class="p-0 border-transparent"
                   type="date"
-                  :value="order.desired_delivery_date"
+                  :value="order.desire_delivery_date"
                 />
                 <input
-                  v-else-if="!order.desired_delivery_date"
+                  v-else-if="!order.desire_delivery_date"
                   class="p-0 border-transparent"
                   type="date"
-                  :value="order.desired_delivery_date"
+                  :value="order.desire_delivery_date"
                 />
               </td>
               <td class="quantity text-center border">{{ order.quantity }}</td>
