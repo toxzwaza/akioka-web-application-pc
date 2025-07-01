@@ -607,7 +607,17 @@ onMounted(() => {
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
-                    発注依頼日
+                    発注依頼日時
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    消化予定日
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    希望納期
                   </th>
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -741,7 +751,7 @@ onMounted(() => {
                     }}
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
-                    {{ order_request.stock_storage_quantity }}
+                    {{ order_request.now_quantity }}
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{ order_request.reorder_point }}
@@ -833,7 +843,22 @@ onMounted(() => {
 
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{
-                      new Date(order_request.created_at).toLocaleDateString(
+                      new Date(order_request.created_at).toLocaleString(
+                        "ja-JP",
+                        { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }
+                      )
+                    }}
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{
+                      new Date(order_request.digest_date).toLocaleDateString(
+                        "ja-JP"
+                      )
+                    }}
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{
+                      new Date(order_request.desire_delivery_date).toLocaleDateString(
                         "ja-JP"
                       )
                     }}

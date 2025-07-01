@@ -53,10 +53,13 @@ class OrderRequestController extends Controller
                 'order_requests.name as order_request_name',
                 'order_requests.s_name as order_request_s_name',
                 'stocks.url',
+                'order_requests.now_quantity', //現在個数
                 'order_requests.quantity',
                 'order_requests.price',
                 'order_requests.unit',
-                'order_requests.created_at',
+                'order_requests.created_at', //依頼日
+                'order_requests.digest_date', //消化予定日
+                'order_requests.desire_delivery_date', //希望納期
                 'order_requests.file_path',
                 'order_requests.description',
                 'order_requests.sub_description',
