@@ -27,15 +27,17 @@ class OrderRequestController extends Controller
         $user_id = $request->user_id ?? null;
 
         // 発注可能ユーザー（総務部）
-        $order_users = User::select('users.id', 'users.name')->join('groups', 'users.group_id', 'groups.id')->where('groups.id', 7)->get();
+        $order_users = User::select('users.id', 'users.name')->where('is_admin', 1)->get();
 
         return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id]);
     }
 
-    public function getOrderRequests()
+    public function getOrderRequests(Request $request)
     {
         $status = true;
         $msg = "";
+
+        $user_id = $request->user_id ?? null;
 
         try {
             // 未受理の注文依頼のみ取得
@@ -59,7 +61,9 @@ class OrderRequestController extends Controller
                 'order_requests.description',
                 'order_requests.sub_description',
                 'users.name as request_user_name',
+                'users.id as request_user_id',
                 'order_users.name as order_user_name',
+                'order_users.id as order_user_id',
                 'order_requests.postage',
                 'order_requests.calc_price',
                 'suppliers.name as supplier_name',
@@ -79,6 +83,12 @@ class OrderRequestController extends Controller
                 ->leftJoin(DB::raw('(SELECT stock_id, MAX(quantity) as max_quantity, MAX(reorder_point) as reorder_point FROM stock_storages GROUP BY stock_id) as max_stock_storages'), 'max_stock_storages.stock_id', '=', 'stocks.id')
                 ->where('order_requests.del_flg', '=', 0)
                 ->where('order_requests.status', '=', 0)
+                ->where(function($query) use ($user_id) {
+                    $query->where('order_requests.user_id', '=', $user_id)
+                          ->orWhereNull('order_requests.user_id');
+                })
+                ->orderBy('order_requests.user_id', 'desc')
+                ->orderBy('order_requests.created_at', 'desc')
                 ->get();
 
 

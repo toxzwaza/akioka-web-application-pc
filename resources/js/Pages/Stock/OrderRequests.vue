@@ -133,10 +133,26 @@ const order_config = reactive({
 });
 
 const order_requests = ref([]);
+const handleUserId = (user_id) => {
+  order_config.user_id = user_id;
+  const selectedUser = props.order_users.find((user) => user.id == user_id);
+  if (selectedUser) {
+    order_config.user_name = selectedUser.name;
+    console.log(selectedUser.name);
+    getOrderRequests()
+  } else {
+    order_config.user_id = null;
+    order_config.user_name = null;
+  }
+};
 
 const getOrderRequests = () => {
   axios
-    .get(route("stock.getOrderRequests"))
+    .get(route("stock.getOrderRequests"), {
+      params: {
+        user_id: order_config.user_id
+      }
+    })
     .then((res) => {
       console.log(res.data);
       order_requests.value = res.data.order_requests;
@@ -370,17 +386,7 @@ const deleteOrderRequest = (order_request_id) => {
   }
 };
 
-const handleUserId = (user_id) => {
-  order_config.user_id = user_id;
-  const selectedUser = props.order_users.find((user) => user.id == user_id);
-  if (selectedUser) {
-    order_config.user_name = selectedUser.name;
-    console.log(selectedUser.name);
-  } else {
-    order_config.user_id = null;
-    order_config.user_name = null;
-  }
-};
+
 
 const purchaseOrder = (order_request_id) => {
   const order_request = getOrderRequestByOrderRequestId(order_request_id);
@@ -430,7 +436,7 @@ const skipAccept = (order_request_id) => {
   console.log(order_request_id);
 };
 onMounted(() => {
-  getOrderRequests();
+  // getOrderRequests();
 
   if (props.user_id) {
     handleUserId(props.user_id);
@@ -514,6 +520,12 @@ onMounted(() => {
           <div v-else class="w-full mx-auto overflow-auto">
             <h2 class="mb-4 text-lg font-bold">
               ログイン中：{{ order_config.user_name }}
+            <button
+              @click="order_config.user_id = null; order_config.user_name =null;"
+              class="ml-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
+            >
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
             </h2>
             <table
               id="table_container"
@@ -629,8 +641,9 @@ onMounted(() => {
                   v-for="order_request in order_requests"
                   :key="order_request.id"
                   :class="{
-                    'transition duration-300': true,
+                    'transition duration-300 border': true,
                     'bg-blue-50': order_request.select_flg,
+                    'bg-gray-100 ': order_request.order_user_id != order_config.user_id,
                   }"
                 >
                   <td class="text-center">

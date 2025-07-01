@@ -31,42 +31,138 @@ class TestController extends Controller
     //
     public function test()
     {
-        $users = User::select(
-            'users.name',
-            'groups.name as group_name',
-            'positions.name as position_name',
-            'users.id',
-            'users.group_id'
-        )
-            ->where('del_flg', 0)
-            ->where('position_id', 6)
-            ->join('groups', 'users.group_id', 'groups.id')
-            ->join('positions', 'positions.id', 'users.position_id')
-            ->orderBy('group_id', 'asc')->orderBy('position_id', 'desc')->get();
-        $prices = [10000, 10001, 100000, 100001, 150000, 150001];
-        $new_flgs = [0, 1];
+        try {
 
 
-        foreach ($users as $user) {
-            echo ("$user->group_name : $user->position_name : {$user->name}");
-            echo ("<br />");
-            foreach ($prices as $price) {
-                echo ("金額: $price");
-                echo ("<br />");
-                foreach ($new_flgs as $new_flg) {
-                    echo ($new_flg ? '・新規品' : '・既存品');
-                    echo ("<br />");
+            // $stocks = Stock::where('classification_id', 34)->get();
+            // foreach ($stocks as $stock) {
+            //     $stock_price_archive = new StockPriceArchive();
+            //     if ($stock->price) {
+            //         $stock_price_archive->stock_id = $stock->id;
+            //         $stock_price_archive->price = $stock->price;
+            //         $stock_price_archive->save();
+            //     }
+            // }
+            // return;
+            $filePath = public_path('csv/原材料.csv');
+            if (File::exists($filePath)) {
+                $fileContent = File::get($filePath);
 
-                    $approval_users = Helper::createApprovalFlow($price, $user->id, $new_flg);
-                    if (count($approval_users) > 0) {
-                        echo (implode('->', $approval_users));
-                        echo ("<br />");
-                    } else {
-                        echo ("承認者なし");
-                        echo ("<br />");
+                // CSVを配列に変換（改行で分割）
+                $lines = explode("\n", $fileContent);
+
+                // 最初の20行を処理
+                for ($i = 265; $i < 300 && $i < count($lines); $i++) {
+                    $line = trim($lines[$i]);
+                    if (empty($line)) continue; // 空行をスキップ
+
+                    // CSVの各列を配列に分割
+                    $columns = str_getcsv($line);
+
+                    if (count($columns) >= 10) {
+                        // 各列を変数に格納
+                        $final_order_date = $columns[0]; // 最終注文日
+                        $orderer = $columns[1];           // 注文者
+                        $product_name = $columns[2];      // 品名
+                        $product_code = $columns[3];      // 品番
+                        $supplier_name = $columns[4];          // 注文先
+                        $unit_price = $columns[5];        // 単価
+                        $order_quantity = $columns[6];    // 発注数
+                        $unit_1 = $columns[7];              // 単位1
+                        $unit_2 = $columns[8];      // 単位2
+                        $price = $columns[9];      // 金額
+                        $process_code = $columns[10];      // 工程コード
+
+                        if ($product_code == '0') {
+                            $product_code = '';
+                        }
                     }
+
+                    $user = User::where('name', "like", "%" . $orderer . "%")->first();
+                    // if (!$user) {
+                    //     echo "ユーザーを取得できませんでした。<br>";
+                    //     echo "ユーザー名: " . $orderer . "<br>";
+                    //     echo "<hr>";
+
+                    // }else{
+                    //     // echo "ユーザーを取得できました。<br>";
+                    //     // echo "ユーザー名: " . $user->name . "<br>";
+                    //     // echo "ユーザーID: " . $user->id . "<br>";
+                    //     // echo "<hr>";
+                    // }
+                    if ($user) {
+                        $stock = Stock::select('stocks.id', 'stock_suppliers.id as stock_supplier_id')
+                            ->where('name', $product_name)
+                            ->where('s_name', $product_code)
+                            ->leftJoin('stock_suppliers', 'stock_suppliers.stock_id', 'stocks.id')
+                            ->first();
+
+                        $initial_order = new InitialOrder();
+                        $initial_order->stock_id = $stock->id;
+                        $initial_order->calc_price = $stock->price ?? 0;
+                        $initial_order->order_user_id = $user->id;
+                        $initial_order->save();
+                    }
+
+                        ///////////////////////////////////
+                    ;
+                    ///////////////////////////////////
+
+                    // if (!$stock->stock_supplier_id) {
+                    //     $supplier = Supplier::where('name', $supplier_name)->first();
+                    //     if (!$supplier) {
+                    //         echo "発注先が登録されていません。<br>";
+                    //         $supplier = new Supplier();
+                    //         $supplier->name = $supplier_name;
+                    //         $supplier->save();
+                    //     }
+
+                    //     echo "発注先を紐づけます。<br>";
+                    //     $stock_supplier = new StockSupplier();
+                    //     $stock_supplier->stock_id = $stock->id;
+                    //     $stock_supplier->supplier_id = $supplier->id;
+                    //     $stock_supplier->lead_time = 999; //とりあえず
+                    //     $stock_supplier->act_flg = 1;
+                    //     $stock_supplier->save();
+
+                    //     // デバッグ用：各変数の値を表示
+                    //     echo "行 " . $i . ":<br>";
+                    //     echo "最終注文日: " . $final_order_date . "<br>";
+                    //     echo "注文者: " . $orderer . "<br>";
+                    //     echo "品名: " . $product_name . "<br>";
+                    //     echo "品番: " . $product_code . "<br>";
+                    //     echo "<hr>";
+                    // } else {
+                    //     echo "発注先が登録されています。<br>";
+                    //     echo "品名: " . $product_name . "<br>";
+                    //     echo "品番: " . $product_code . "<br>";
+                    //     echo "<hr>";
+                    // }
+
+                    // if ($stock) {
+                    //     echo "存在します。<br>";
+                    //     $stock->classification_id = 34;
+                    //     $stock->solo_unit = $unit_1 != '0' ? $unit_1 : $unit_2;
+                    //     $stock->price = $unit_price;
+                    //     $stock->save();
+
+                    // } else {
+                    //     echo "存在しません。<br>";
+                    //     $stock = new Stock();
+                    //     $stock->name = $product_name;
+                    //     $stock->s_name = $product_code;
+                    //     $stock->price = $unit_price;
+                    //     $stock->classification_id = 34;
+                    //     $stock->solo_unit = $unit_1 != '0' ? $unit_1 : $unit_2;
+                    //     $stock->save();
+                    // }
+
                 }
+            } else {
+                echo "ファイルが見つかりません。";
             }
+        } catch (Exception $e) {
+            echo "エラーが発生しました: " . $e->getMessage();
         }
     }
 
