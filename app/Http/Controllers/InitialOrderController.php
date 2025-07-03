@@ -71,7 +71,8 @@ class InitialOrderController extends Controller
             ->leftJoin('users', 'users.id', 'initial_orders.user_id') //発注者
             ->leftJoin('users as order_users', 'order_users.id', 'initial_orders.order_user_id') //依頼者
             ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
-            ->leftJoin('documents', 'documents.id', 'order_requests.document_id');
+            ->leftJoin('documents', 'documents.id', 'order_requests.document_id')
+            ->orderBy('initial_orders.created_at', 'desc');
 
 
         if ($keyword) {
@@ -112,7 +113,7 @@ class InitialOrderController extends Controller
             $query->where('order_users.process_id', $process_id);
         }
 
-        $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(20)->withQueryString();
+        $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(14)->withQueryString();
 
         // 承認者を取得
         foreach ($initial_orders as $initial_order) {
