@@ -152,7 +152,7 @@ class AcceptController extends Controller
         }
 
 
-        return response()->json(['status' => $status, 'msg' => $msg , 'accept_flg' => $accept_flg]);
+        return response()->json(['status' => $status, 'msg' => $msg, 'accept_flg' => $accept_flg]);
     }
 
     public function reNotify(Request $request)
@@ -232,5 +232,62 @@ class AcceptController extends Controller
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    public function sendReject(Request $request)
+    {
+        $status = true;
+        $order_request_id = $request->order_request_id;
+
+
+        try {
+            $order_request = OrderRequest::select('order_requests.*', 'stocks.name as stock_name', 'stocks.s_name as stock_s_name', 'users.name as request_user_name')
+                ->join('stocks', 'stocks.id', '=', 'order_requests.stock_id')
+                ->join('users', 'users.id', '=', 'order_requests.request_user_id')
+                ->find($order_request_id);
+
+            // 再依頼待ち
+            $order_request->accept_flg = 4;
+            $order_request->save();
+
+            // 承認フローを取得
+            $reject_order_request_approval = OrderRequestApproval::select('order_request_approvals.*', 'users.name as user_name')
+                ->where('order_request_id', $order_request_id)
+                ->where('status', 2)
+                ->join('users', 'users.id', 'order_request_approvals.user_id')
+                ->first();
+
+            $accept_order_request_approvals = OrderRequestApproval::where('order_request_id', $order_request_id)
+                ->where('status', 1)
+                ->get();
+
+            $title = "承認が却下されました。";
+            $message = "以下の物品依頼が却下されました。依頼内容を改め、再依頼してください。\n\n品名: $order_request->stock_name\n品番: $order_request->stock_s_name\n依頼者: $order_request->request_user_name\n\n拒否者: $reject_order_request_approval->user_name\n拒否理由: $reject_order_request_approval->comment";
+
+            if (count($accept_order_request_approvals) > 0) {
+                foreach ($accept_order_request_approvals as $accept_order_request_approval) {
+                    // 承認者にTEAMSで通知
+                    Helper::createNotifyQueue($title, $message, '', [$accept_order_request_approval->user_id]);
+                }
+                $msg = "Teamsメッセージ送信完了";
+            } else {
+                            // 依頼者にデバイスメッセージで通知
+            if (Helper::createDeviceMessage(
+                2,
+                $order_request->device_id, //to:依頼端末
+                null,
+                $order_request->request_user_id, //to:依頼者
+                $reject_order_request_approval->user_id, //from:拒否者
+                $message
+            )) {
+                $msg = "デバイスメッセージ送信完了";
+            }
+            }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 }

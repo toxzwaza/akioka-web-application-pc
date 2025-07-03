@@ -42,6 +42,23 @@ const sendDeviceMessage = () => {
       console.log(error);
     });
 };
+
+const sendRejectInitialOrder = (order_request_id) => {
+  axios.post(route('stock.accept.order_request.reject'), {
+    order_request_id: order_request_id
+  })
+  .then(res => {
+    console.log(res.data)
+    if(res.data.status){
+      alert('拒否通知が完了しました。')
+      const order_request = order_requests.value.find(order_request => order_request.id === order_request_id);
+      if (order_request) {
+        order_request.accept_flg = 4;
+      }
+    }
+  })
+}
+
 const uploadFile = (event) => {
   const file = event.target.files[0];
   form.upload_file = file;
@@ -728,9 +745,15 @@ onMounted(() => {
                         承認
                       </button>
                       <span
+                        @click="sendRejectInitialOrder(order_request.id)"
                         class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-full"
                         v-else-if="order_request.accept_flg === 3"
                         >却下</span
+                      >
+                      <span
+                        class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-full"
+                        v-else-if="order_request.accept_flg === 4"
+                        >却下再依頼待ち</span
                       >
                     </div>
                   </td>

@@ -90,7 +90,8 @@ Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrde
 // 発注担当者コメント更新
 Route::post('/order-requests/update/sub_description', [OrderRequestController::class, 'updateSubDescription'])->name('stock.updateSubDescription');
 Route::post('/accept/order-request/re-notify', [AcceptController::class, 'reNotify'])->name('stock.accept.order_request.re-notify');
-
+//非承認
+Route::post('/accept/order-request/reject', [AcceptController::class, 'sendReject'])->name('stock.accept.order_request.reject');
 
 // 発注完了
 Route::put('/order-requests/complete', [OrderRequestController::class, 'delete'])->name('stock.completeOrderRequest');
