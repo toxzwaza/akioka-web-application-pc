@@ -105,9 +105,7 @@ const updateCheck = () => {
       .then((res) => {
         if (res.data.update_flg) {
           if (isWindowFocused.value) {
-            if (confirm("更新を検知しました。更新しますか？")) {
-              getData();
-            }
+            // getData();
           } else {
             getData();
           }
