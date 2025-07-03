@@ -13,26 +13,55 @@ const props = defineProps({
 const form = reactive({
   upload_file: null,
 });
+const modal_status = reactive({
+  status: false,
+  order_request: null,
+  approval_path: null,
+});
+
+const sendDeviceMessage = () => {
+  if (!modal_status.order_request.message) {
+    alert("メッセージを入力してください。");
+    return;
+  }
+  console.log(modal_status.order_request);
+  // return
+  axios
+    .post(route("stock.sendDeviceMessage"), {
+      order_request_id: modal_status.order_request.id,
+      message: modal_status.order_request.message,
+      user_id: order_config.user_id,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("メッセージを送信しました。");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 const uploadFile = (event) => {
   const file = event.target.files[0];
   form.upload_file = file;
 
   const formData = new FormData();
-  
+
   // upload_fileを追加
   if (form.upload_file instanceof File) {
-    formData.append('upload_file', form.upload_file);
+    formData.append("upload_file", form.upload_file);
   }
-  
+
   // modal_status.order_request.idを追加
   if (modal_status.order_request && modal_status.order_request.id) {
-    formData.append('order_request_id', modal_status.order_request.id);
+    formData.append("order_request_id", modal_status.order_request.id);
   }
 
   // formオブジェクトをFormDataに変換
   Object.keys(form).forEach((key) => {
     // nullでない値のみを追加（upload_fileは既に追加済みなので除外）
-    if (form[key] !== null && key !== 'upload_file') {
+    if (form[key] !== null && key !== "upload_file") {
       formData.append(key, form[key]);
     }
   });
@@ -60,11 +89,6 @@ const uploadFile = (event) => {
   console.log(form.upload_file);
 };
 
-const modal_status = reactive({
-  status: false,
-  order_request: null,
-  approval_path: null,
-});
 const openModal = (order_request) => {
   modal_status.approval_path = "";
   modal_status.order_request = order_request;
@@ -139,7 +163,7 @@ const handleUserId = (user_id) => {
   if (selectedUser) {
     order_config.user_name = selectedUser.name;
     console.log(selectedUser.name);
-    getOrderRequests()
+    getOrderRequests();
   } else {
     order_config.user_id = null;
     order_config.user_name = null;
@@ -150,8 +174,8 @@ const getOrderRequests = () => {
   axios
     .get(route("stock.getOrderRequests"), {
       params: {
-        user_id: order_config.user_id
-      }
+        user_id: order_config.user_id,
+      },
     })
     .then((res) => {
       console.log(res.data);
@@ -386,8 +410,6 @@ const deleteOrderRequest = (order_request_id) => {
   }
 };
 
-
-
 const purchaseOrder = (order_request_id) => {
   const order_request = getOrderRequestByOrderRequestId(order_request_id);
   if (
@@ -520,12 +542,15 @@ onMounted(() => {
           <div v-else class="w-full mx-auto overflow-auto">
             <h2 class="mb-4 text-lg font-bold">
               ログイン中：{{ order_config.user_name }}
-            <button
-              @click="order_config.user_id = null; order_config.user_name =null;"
-              class="ml-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
-            >
-              <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+              <button
+                @click="
+                  order_config.user_id = null;
+                  order_config.user_name = null;
+                "
+                class="ml-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
+              >
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
             </h2>
             <table
               id="table_container"
@@ -653,7 +678,8 @@ onMounted(() => {
                   :class="{
                     'transition duration-300 border': true,
                     'bg-blue-50': order_request.select_flg,
-                    'bg-gray-100 ': order_request.order_user_id != order_config.user_id,
+                    'bg-gray-100 ':
+                      order_request.order_user_id != order_config.user_id,
                   }"
                 >
                   <td class="text-center">
@@ -845,7 +871,14 @@ onMounted(() => {
                     {{
                       new Date(order_request.created_at).toLocaleString(
                         "ja-JP",
-                        { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }
+                        {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        }
                       )
                     }}
                   </td>
@@ -858,9 +891,9 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{
-                      new Date(order_request.desire_delivery_date).toLocaleDateString(
-                        "ja-JP"
-                      )
+                      new Date(
+                        order_request.desire_delivery_date
+                      ).toLocaleDateString("ja-JP")
                     }}
                   </td>
                   <td
@@ -928,6 +961,65 @@ onMounted(() => {
         </div>
 
         <div v-if="modal_status.order_request" class="mb-4">
+          <p class="font-bold w-full text-sm text-gray-700">
+            品名: {{ modal_status.order_request.name }}
+          </p>
+          <p class="font-bold w-full text-sm text-gray-700">
+            品番: {{ modal_status.order_request.s_name }}
+          </p>
+          <p class="font-bold w-full text-sm text-gray-700">
+            依頼者: {{ modal_status.order_request.request_user_name }}
+          </p>
+          <hr class="my-4" />
+          <h3
+            class="block mb-2 text-medium font-medium text-gray-700 dark:text-white"
+          >
+            依頼者へ確認メッセージ
+            <span class="text-sm text-red-500"
+              >(※依頼元端末のTOP画面に送信されます)</span
+            >
+          </h3>
+          <textarea
+            id="message"
+            rows="4"
+            :class="{
+              'block p-2.5 w-full text-sm text-gray-900 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500': true,
+            }"
+            placeholder="メッセージを入力してください。"
+            v-model="modal_status.order_request.message"
+          ></textarea>
+          <div class="flex justify-end">
+            <button
+              @click.prevent="sendDeviceMessage"
+              class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              <i class="fas fa-paper-plane"></i> 送信
+            </button>
+          </div>
+          <div class="pl-4">
+            <label
+              for="message"
+              class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+              <i class="fas fa-user"></i> 回答メッセージ</label
+            >
+            <textarea
+              id="message"
+              rows="4"
+              :class="{
+                'block p-2.5 w-full text-sm text-gray-900 bg-gray-200 rounded-lg border border-gray-300 h-auto': true,
+              }"
+              placeholder="コメントがありません。"
+              :value="modal_status.order_request.answer"
+            ></textarea>
+          </div>
+
+          <hr class="my-4" />
+          <h3
+            class="block mb-2 text-medium font-medium text-gray-700 dark:text-white"
+          >
+            承認用コメント
+          </h3>
           <label
             for="message"
             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -937,7 +1029,7 @@ onMounted(() => {
             id="message"
             rows="4"
             :class="{
-              'block p-2.5 w-full text-sm text-gray-900 bg-gray-200 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 pointer-events-none': true,
+              'block p-2.5 w-full text-sm text-gray-900 bg-gray-200 rounded-lg border border-gray-300 h-auto': true,
             }"
             placeholder="コメントがありません。"
             :value="modal_status.order_request.description"

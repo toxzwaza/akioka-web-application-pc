@@ -73,7 +73,9 @@ class OrderRequestController extends Controller
                 'order_requests.supplier_id',
                 'stock_suppliers.lead_time as stock_supplier_lead_time',
                 'max_stock_storages.max_quantity as stock_storage_quantity',
-                'max_stock_storages.reorder_point as reorder_point'
+                'max_stock_storages.reorder_point as reorder_point',
+                'device_messages.message as message',
+                'device_messages.answer as answer',
             )
                 ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
@@ -84,11 +86,12 @@ class OrderRequestController extends Controller
                         ->on('stock_suppliers.supplier_id', '=', 'suppliers.id');
                 })
                 ->leftJoin(DB::raw('(SELECT stock_id, MAX(quantity) as max_quantity, MAX(reorder_point) as reorder_point FROM stock_storages GROUP BY stock_id) as max_stock_storages'), 'max_stock_storages.stock_id', '=', 'stocks.id')
+                ->leftJoin('device_messages', 'device_messages.id', '=', 'order_requests.device_message_id')
                 ->where('order_requests.del_flg', '=', 0)
                 ->where('order_requests.status', '=', 0)
-                ->where(function($query) use ($user_id) {
+                ->where(function ($query) use ($user_id) {
                     $query->where('order_requests.user_id', '=', $user_id)
-                          ->orWhereNull('order_requests.user_id');
+                        ->orWhereNull('order_requests.user_id');
                 })
                 ->orderBy('order_requests.user_id', 'desc')
                 ->orderBy('order_requests.created_at', 'desc')
@@ -353,5 +356,39 @@ class OrderRequestController extends Controller
 
 
         return response()->json(['status' => $status]);
+    }
+
+
+    // デバイスメッセージを取得
+    public function sendDeviceMessage(Request $request)
+    {
+        $status = true;
+        $msg = '';
+
+        $order_request_id = $request->order_request_id;
+        $message = $request->message;
+        $user_id = $request->user_id;
+
+
+        try {
+
+            $order_request = OrderRequest::find($order_request_id);
+            $device_message_id = Helper::createDeviceMessage(
+                2,
+                $order_request->device_id,
+                null,
+                $order_request->request_user_id,
+                $order_request->user_id ?? $user_id,
+                $message
+            );
+
+            $order_request->device_message_id = $device_message_id;
+            $order_request->save();
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 }

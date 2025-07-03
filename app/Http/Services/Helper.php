@@ -2,6 +2,8 @@
 
 namespace App\Http\Services;
 
+use App\Models\Device;
+use App\Models\DeviceMessage;
 use App\Models\InitialOrder;
 use App\Models\NotifyQueue;
 use App\Models\NotifyQueueUser;
@@ -11,6 +13,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Google\Auth\Credentials\ServiceAccountCredentials;
 
 class Helper
 {
@@ -84,7 +87,7 @@ class Helper
             in_array($user->group_id, [8, 10, 11]) || //役員・統括部（役員）・顧問
             !$new_flg && in_array($user->group_id, [1, 2]) || //既存品の品証・技術
             !$new_flg && in_array($user->group_id, [3, 4]) && $user->position_id == 6 //既存品製造部課長
-        ) {  
+        ) {
             return [];
         }
 
@@ -116,7 +119,7 @@ class Helper
             }
 
             // 総務・業務の既存品は100000円を超えた場合常務承認
-            if(in_array($user->group_id, [6, 7]) && !$new_flg && $price > 100000){
+            if (in_array($user->group_id, [6, 7]) && !$new_flg && $price > 100000) {
                 $approval_list[] = 63;
             }
 
@@ -153,5 +156,24 @@ class Helper
         }
 
         return $approval_list;
+    }
+
+
+    public static function createDeviceMessage($priority, $to_device_id, $from_device_id = null, $to_user_id, $from_user_id, $msg)
+    {
+
+
+        $message = new DeviceMessage();
+        $message->priority = $priority;
+        $message->to_device_id = $to_device_id;
+        $message->from_device_id = $from_device_id;
+        $message->to_user_id = $to_user_id;
+        $message->from_user_id = $from_user_id;
+        $message->del_flg = 0;
+        $message->message = $msg;
+        $message->save();
+
+        return $message->id;
+
     }
 }

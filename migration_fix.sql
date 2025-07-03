@@ -1,0 +1,1 @@
+ALTER TABLE `order_requests` ADD COLUMN `device_message_id` INT UNSIGNED NULL; 

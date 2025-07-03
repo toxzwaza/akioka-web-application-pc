@@ -45,6 +45,7 @@ Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->n
 // 納品書変更
 Route::post('/initial-order/update/deli_file', [InitialOrderController::class, 'update_deli_file'])->name('stock.update_deli_file');
 Route::post('/order-requests/store/approval_document', [OrderRequestController::class, 'storeApprovalDocument'])->name('stock.store.approval_document');
+Route::post('/order-requests/send-device-message', [OrderRequestController::class, 'sendDeviceMessage'])->name('stock.sendDeviceMessage');
 
 
 
@@ -62,6 +63,8 @@ Route::post('/initial-order/update/price', [InitialOrderController::class, 'upda
 Route::post('/initial-order/update/data', [InitialOrderController::class, 'update_data'])->name('stock.update_data');
 // 発注済み登録機能
 Route::post('/initial-order/update/order_complete', [InitialOrderController::class, 'updateOrderComplete'])->name('stock.updateOrderComplete');
+// デバイスメッセージ送信
+Route::post('/initial-order/send-device-message', [InitialOrderController::class, 'sendDeviceMessage'])->name('stock.initialOrder.sendDeviceMessage');
 
 // Route::post('/initial-order/update/desired_delivery-date', [InitialOrderController::class, 'update_desired_delivery_date'])->name('stock.update_desired_delivery_date');
 // Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');

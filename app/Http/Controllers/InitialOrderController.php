@@ -58,7 +58,6 @@ class InitialOrderController extends Controller
             'documents.sub_reason as document_sub_reason',
             'documents.evalution_date as document_evalution_date',
             'stocks.tax_included as stock_tax_included', //税区分
-            
         )
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('order_requests', 'order_requests.id', 'initial_orders.order_request_id')
@@ -73,7 +72,7 @@ class InitialOrderController extends Controller
             ->leftJoin('users as order_users', 'order_users.id', 'initial_orders.order_user_id') //依頼者
             ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
             ->leftJoin('documents', 'documents.id', 'order_requests.document_id');
-    
+
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -106,24 +105,24 @@ class InitialOrderController extends Controller
             $query->orderBy('initial_orders.order_date', $order_by);
         }
 
-        if($group_id){
+        if ($group_id) {
             $query->where('order_users.group_id', $group_id);
         }
-        if($process_id){
+        if ($process_id) {
             $query->where('order_users.process_id', $process_id);
         }
 
         $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(20)->withQueryString();
 
         // 承認者を取得
-        forEach($initial_orders as $initial_order){
+        foreach ($initial_orders as $initial_order) {
             $order_request_approvals = OrderRequestApproval::select(
                 'order_request_approvals.created_at',
                 'users.name as user_name',
             )
-            ->join('users', 'users.id', 'order_request_approvals.user_id')
-            ->where('order_request_id', $initial_order->order_request_id)->get();
-            
+                ->join('users', 'users.id', 'order_request_approvals.user_id')
+                ->where('order_request_id', $initial_order->order_request_id)->get();
+
             $initial_order->order_request_approvals = $order_request_approvals;
         }
 
@@ -169,7 +168,7 @@ class InitialOrderController extends Controller
             ->join('initial_orders', 'users.id', '=', 'initial_orders.order_user_id')
             ->distinct()
             ->get();
-        
+
         $groups = Group::select('id', 'name')
             ->get();
         $processes = Process::select('id', 'name')->get();
@@ -532,23 +531,79 @@ class InitialOrderController extends Controller
 
 
         try {
-            $initial_order = InitialOrder::find($initial_order_id);
+            $initial_order = InitialOrder::select('initial_orders.*', 'order_requests.device_id as to_device_id')
+                ->join('order_requests', 'order_requests.id', '=', 'initial_orders.order_request_id')
+                ->where('initial_orders.id', $initial_order_id)
+                ->first();
+
             $initial_order->order_complete_flg = $order_complete_flg;
             $initial_order->save();
 
-            $user = User::find($initial_order->order_user_id);
-            if($user->email){ //メールアドレスが登録されている場合、メールを送信
-                $title = '発注が完了しました。';
-                $message = "{$initial_order->name} {$initial_order->s_name}の発注依頼が完了しました。";
+            if ($order_complete_flg) {
+                if ($initial_order->to_device_id) {
+                    $msg = "以下の物品が発注されました。\n依頼者: $initial_order->order_user\n品名: $initial_order->name\n品番: $initial_order->s_name\n\n納品完了までもうしばらくお待ちください。";
 
-                Helper::createNotifyQueue($title, $message, '', [$user->id]);
+                    Helper::createDeviceMessage(
+                        0,
+                        $initial_order->to_device_id, //依頼元端末
+                        null,
+                        $initial_order->order_user_id, //発注依頼者
+                        $initial_order->user_id, //発注担当者
+                        $msg
+                    );
+                }
+
+                $user = User::find($initial_order->order_user_id);
+                if ($user->email) { //メールアドレスが登録されている場合、メールを送信
+                    $title = '発注が完了しました。';
+                    $message = "{$initial_order->name} {$initial_order->s_name}の発注依頼が完了しました。";
+
+                    Helper::createNotifyQueue($title, $message, '', [$user->id]);
+                }
             }
-
-            
         } catch (Exception $e) {
             $status = false;
         }
 
         return response()->json(['status' => $status]);
+    }
+
+    // デバイスメッセージを取得
+    public function sendDeviceMessage(Request $request)
+    {
+        $status = true;
+        $msg = '';
+
+        $device_notify_flg = $request->device_notify_flg;
+        $initial_order_id = $request->initial_order_id;
+        $message = $request->message;
+
+
+        try {
+
+            $initial_order = InitialOrder::select('initial_orders.*', 'order_requests.device_id as to_device_id')
+                ->join('order_requests', 'order_requests.id', '=', 'initial_orders.order_request_id')
+                ->where('initial_orders.id', $initial_order_id)
+                ->first();
+            $initial_order->description = $message;
+
+            if ($device_notify_flg) {
+                $device_message_id = Helper::createDeviceMessage(
+                    1,
+                    $initial_order->to_device_id,
+                    null,
+                    $initial_order->order_user_id, //発注依頼者
+                    $initial_order->user_id, //発注担当者
+                    $initial_order->description
+                );
+                $initial_order->device_message_id = $device_message_id;
+            }
+            $initial_order->save();
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
     }
 }

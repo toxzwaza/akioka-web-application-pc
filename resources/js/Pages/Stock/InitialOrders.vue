@@ -7,7 +7,7 @@ import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 import { getImgPath } from "@/Helper/Method";
-import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue"
+import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
 
 const props = defineProps({
   initial_orders: Object,
@@ -19,7 +19,7 @@ const props = defineProps({
   suppliers: Array,
   totals: Object,
   groups: Array,
-  processes: Array
+  processes: Array,
 });
 
 const form = reactive({
@@ -66,6 +66,32 @@ const modal_status = reactive({
 const purchase_list = ref([]);
 const print_order = ref([]);
 
+const changeMessage = (order) => {
+  console.log(order);
+
+  if (order.description) {
+    let device_notify_flg = false;
+    if (confirm("備考が変更されました。依頼者に通知しますか？")) {
+      device_notify_flg = true;
+    }
+
+    axios
+      .post(route('stock.initialOrder.sendDeviceMessage'), {
+        device_notify_flg: device_notify_flg,
+        initial_order_id: order.id,
+        message: order.description,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if(res.data.status){
+          alert('成功しました。')
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+};
 const openModal = (img_path, order, flg) => {
   modal_status.img_path = "";
 
@@ -98,22 +124,22 @@ const openModal = (img_path, order, flg) => {
       modal_status.type = "approval";
 
       if (order.document_id) {
-        console.log('稟議書を表示--->' ,order)
-        approval_document.document_id = order.document_id
-        approval_document.user_name = order.order_user
-        approval_document.evalution_date = order.document_evalution_date //評価日
-        approval_document.desire_delivery_date = order.desire_delivery_date //希望日
-        approval_document.supplier_name = order.com_name
-        approval_document.price = order.price
-        approval_document.quantity = order.quantity
-        approval_document.calc_price = order.calc_price
-        approval_document.name = order.name
-        approval_document.s_name = order.s_name
-        approval_document.title = order.document_title
-        approval_document.content = order.document_content
-        approval_document.main_reason = order.document_main_reason
-        approval_document.sub_reason = order.document_sub_reason
-        approval_document.approvals = order.order_request_approvals
+        console.log("稟議書を表示--->", order);
+        approval_document.document_id = order.document_id;
+        approval_document.user_name = order.order_user;
+        approval_document.evalution_date = order.document_evalution_date; //評価日
+        approval_document.desire_delivery_date = order.desire_delivery_date; //希望日
+        approval_document.supplier_name = order.com_name;
+        approval_document.price = order.price;
+        approval_document.quantity = order.quantity;
+        approval_document.calc_price = order.calc_price;
+        approval_document.name = order.name;
+        approval_document.s_name = order.s_name;
+        approval_document.title = order.document_title;
+        approval_document.content = order.document_content;
+        approval_document.main_reason = order.document_main_reason;
+        approval_document.sub_reason = order.document_sub_reason;
+        approval_document.approvals = order.order_request_approvals;
       } else {
         modal_status.img_path = `https://akioka.cloud/${order.file_path}`;
       }
@@ -391,19 +417,18 @@ const login = () => {
 };
 
 const getInitialOrders = (reset) => {
+  if (reset === "reset") {
+    form.order_by = null;
+    form.keyword = null;
+    form.start_order_date = null;
+    form.end_order_date = null;
+    form.supplier_id = null;
+    form.order_user_id = null;
+    form.user_id = null;
+    form.group_id = null;
+    form.process_id = null;
 
-  if(reset === 'reset'){
-    form.order_by = null
-    form.keyword = null
-    form.start_order_date = null
-    form.end_order_date = null
-    form.supplier_id = null
-    form.order_user_id = null
-    form.user_id = null
-    form.group_id = null
-    form.process_id = null
-
-    console.log('検索条件リセット')
+    console.log("検索条件リセット");
   }
 
   router.get(route("stock.initialOrders"), {
@@ -415,7 +440,7 @@ const getInitialOrders = (reset) => {
     order_user_id: form.order_user_id,
     user_id: form.user_id,
     group_id: form.group_id,
-    process_id: form.process_id
+    process_id: form.process_id,
   });
 };
 
@@ -989,6 +1014,11 @@ const fileUpload = async (event) => {
                   >
                     金額
                   </th>
+                  <th
+                    class="w-1/5 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    備考
+                  </th>
 
                   <th
                     class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1239,6 +1269,16 @@ const fileUpload = async (event) => {
                   >
                     {{ order.calc_price.toLocaleString() }}
                     <span class="text-xs text-gray-600">円</span>
+                  </td>
+                  <td class="min-w-md ml-2 px-4 py-3 text-lg text-gray-900">
+                    <input
+                      v-if="is_login"
+                      type="text"
+                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order.description"
+                      @change="changeMessage(order)"
+                    />
+                    <span v-else>{{ order.description }}</span>
                   </td>
 
                   <td
