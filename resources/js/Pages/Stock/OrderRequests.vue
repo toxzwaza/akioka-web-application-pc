@@ -5,6 +5,7 @@ import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue";
+import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
 
 const props = defineProps({
   order_users: Array,
@@ -1180,7 +1181,11 @@ onMounted(() => {
           <div v-if="modal_status.approval_path" id="pdfviewer">
             <iframe ref="pdfViewer" :src="modal_status.approval_path"></iframe>
           </div>
-          <div v-else class="flex items-center justify-center w-full mb-8">
+          <div v-else class="w-full mb-8">
+            <div v-if="modal_status.order_request?.document_data">
+              <ApprovalDocument :approval_document="modal_status.order_request.document_data" />
+            </div>
+
             <label
               for="dropzone-file"
               :class="{

@@ -5,8 +5,6 @@ const props = defineProps({
   approval_document: Object,
 });
 
-
-
 onMounted(() => {
   console.log(props.approval_document);
 });
@@ -18,10 +16,10 @@ onMounted(() => {
       印刷<i class="ml-1 text-white fas fa-print w-6 h-6"></i>
     </button>
   </div>
-  <div id="approval_document" class="mx-auto w-2/3">
+  <div id="approval_document" class="mx-auto ">
     <h1 class="text-center text-3xl mb-6 text-gray-700 font-bold">稟議書</h1>
 
-    <div class="flex flex-wrap -mx-3 ">
+    <div class="flex flex-wrap -mx-3">
       <div class="w-full md:w-1/2 px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -95,7 +93,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="flex flex-wrap -mx-3 ">
+    <div class="flex flex-wrap -mx-3">
       <div class="w-1/3 px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -140,7 +138,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <div class="flex flex-wrap -mx-3 ">
+    <!-- <div class="flex flex-wrap -mx-3">
       <div class="w-1/2 px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -169,8 +167,8 @@ onMounted(() => {
           </p>
         </div>
       </div>
-    </div>
-    <div class="flex flex-wrap -mx-3 ">
+    </div> -->
+    <div class="flex flex-wrap -mx-3">
       <div class="w-full px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -185,7 +183,7 @@ onMounted(() => {
         </p>
       </div>
     </div>
-    <div class="flex flex-wrap -mx-3 ">
+    <div class="flex flex-wrap -mx-3">
       <div class="w-full px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -194,13 +192,14 @@ onMounted(() => {
           発注内容
         </label>
         <p
+          v-if="props.approval_document"
           v-html="props.approval_document.content.replace(/\n/g, '<br>')"
           class="appearance-none block w-full bg-gray-200 text-gray-700 border border-transparent rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
         ></p>
       </div>
     </div>
 
-    <div class="flex flex-wrap -mx-3 ">
+    <div class="flex flex-wrap -mx-3">
       <div class="w-full px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -209,6 +208,7 @@ onMounted(() => {
           申請理由
         </label>
         <p
+          v-if="props.approval_document"
           v-html="props.approval_document.main_reason.replace(/\n/g, '<br>')"
           class="appearance-none block w-full bg-gray-200 text-gray-700 border border-transparent rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
         ></p>
@@ -224,6 +224,7 @@ onMounted(() => {
           選定理由
         </label>
         <p
+          v-if="props.approval_document"
           v-html="props.approval_document.sub_reason.replace(/\n/g, '<br>')"
           class="appearance-none block w-full bg-gray-200 text-gray-700 border border-transparent rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
         ></p>
@@ -262,7 +263,7 @@ onMounted(() => {
 </template>
 <style scoped lang="scss">
 #approval_document {
-  width: 40%;
+  // width: 40%;
   max-width: 50vw;
   height: 90vh;
   overflow-y: scroll;
