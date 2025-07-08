@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Services\Helper;
+use App\Models\Document;
 use App\Models\InitialOrder;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestApproval;
@@ -63,12 +64,14 @@ class OrderRequestController extends Controller
                 'order_requests.file_path',
                 'order_requests.description',
                 'order_requests.sub_description',
+                'order_requests.document_id',  //稟議書
                 'users.name as request_user_name',
                 'users.id as request_user_id',
                 'order_users.name as order_user_name',
                 'order_users.id as order_user_id',
                 'order_requests.postage',
                 'order_requests.calc_price',
+                'order_requests.new_stock_flg',
                 'suppliers.name as supplier_name',
                 'order_requests.supplier_id',
                 'stock_suppliers.lead_time as stock_supplier_lead_time',
@@ -118,6 +121,13 @@ class OrderRequestController extends Controller
                     ->from('order_request_approvals as ora')
                     ->get();
                 $order_request->order_request_approvals = $order_request_approvals;
+
+                if($order_request->document_id){
+                    $document = Document::find($order_request->document_id);
+                    $order_request->document_data = $document;
+                }
+
+
             }
         } catch (Exception $e) {
             $status = false;

@@ -603,6 +603,11 @@ onMounted(() => {
                   >
                     承認
                   </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    依頼品
+                  </th>
 
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -776,6 +781,10 @@ onMounted(() => {
                     </div>
                   </td>
 
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    <span v-if="order_request.new_stock_flg" class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300">新規品</span>
+                    <span v-else class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300">既存品</span>
+                  </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     <button class="bg-blue-600 py-1 px-2.5 rounded">
                       <i
