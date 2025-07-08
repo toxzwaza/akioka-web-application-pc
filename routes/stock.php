@@ -46,6 +46,8 @@ Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->n
 Route::post('/initial-order/update/deli_file', [InitialOrderController::class, 'update_deli_file'])->name('stock.update_deli_file');
 Route::post('/order-requests/store/approval_document', [OrderRequestController::class, 'storeApprovalDocument'])->name('stock.store.approval_document');
 Route::post('/order-requests/send-device-message', [OrderRequestController::class, 'sendDeviceMessage'])->name('stock.sendDeviceMessage');
+// 発注先再ロード
+Route::post('/order-requests/reload/supplier', [OrderRequestController::class, 'reloadSupplier'])->name('stock.reloadSupplier');
 
 
 
@@ -113,6 +115,8 @@ Route::post('/retained/last/store', [StockController::class, 'store_last_treat_r
 Route::post('/stock-suppliers/store', [StockSupplierController::class, 'store'])->name('stock.stock_supplier.store');
 Route::post('/stock-suppliers/update', [StockSupplierController::class, 'update'])->name('stock.stock_supplier.update');
 Route::delete('/stock-suppliers/delete', [StockSupplierController::class, 'delete'])->name('stock.stock_supplier.delete');
+Route::post('/stock-suppliers/change/main-flg', [StockSupplierController::class, 'changeMainFlg'])->name('stock.stock_supplier.change.main_flg');
+
 
 // 格納先
 Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');

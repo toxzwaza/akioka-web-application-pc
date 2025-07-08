@@ -391,4 +391,26 @@ class OrderRequestController extends Controller
 
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
+
+    public function reloadSupplier(Request $request){
+        $status = true;
+        $msg = "";
+
+        $order_request_id = $request->order_request_id;
+
+        try{
+            $order_request = OrderRequest::find($order_request_id);
+            $stock_supplier = StockSupplier::where('stock_id', $order_request->stock_id)->where('main_flg', 1)->first();
+
+            if($stock_supplier){
+                $order_request->supplier_id = $stock_supplier->supplier_id;
+                $order_request->save();
+            }
+        }catch(Exception $e){
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
 }

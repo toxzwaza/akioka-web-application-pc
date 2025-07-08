@@ -101,6 +101,24 @@ const updateStockRequest = (flg) => {
     });
 };
 
+
+const changeStockSupplierMainFlg = (stock_supplier_id) => {
+  console.log(stock_supplier_id)
+
+  axios.post(route('stock.stock_supplier.change.main_flg'), {
+    stock_supplier_id: stock_supplier_id
+  })
+  .then(res => {
+    console.log(res.data)
+    if(res.data.status){
+      alert('メイン発注先を変更しました。')
+      window.location.reload()
+    }
+  })
+  .catch(error => {
+    console.log(error)
+  })
+}
 const toggleStockRequest = () => {
   if (confirm("表示設定を変更してもよろしいですか？")) {
     axios
@@ -420,7 +438,7 @@ onMounted(() => {
     : 0;
   form.del_flg = props.stock.del_flg;
   form.tax_included = props.stock.tax_included;
-  form.approval_supplier_name = props.stock.approval_supplier_name
+  form.approval_supplier_name = props.stock.approval_supplier_name;
 
   if (props.stock_suppliers && props.stock_suppliers.length > 0) {
     form.supplier_id = props.stock_suppliers[0].id;
@@ -917,15 +935,28 @@ onMounted(() => {
                 </thead>
                 <tbody>
                   <tr
-                    class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200"
+                    :class="{
+                      'odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200': true,
+                    }"
                     v-for="stock_supplier in props.stock_suppliers"
                     :key="stock_supplier.id"
                   >
                     <td
                       scope="row"
-                      class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                      class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center"
                     >
-                      {{ stock_supplier.name }}
+                      <i
+                        @click="updateStockSupplier('delete', stock_supplier)"
+                        class="text-red-500 fas fa-trash-alt mr-6"
+                      ></i>
+                      <p>
+                        <span
+                          v-if="stock_supplier.main_flg"
+                          class="block text-xs text-green-500"
+                          >適用中</span
+                        >
+                        {{ stock_supplier.name }}
+                      </p>
                     </td>
                     <td class="px-6 py-4 w-48">
                       <input
@@ -952,10 +983,14 @@ onMounted(() => {
                       >
                         保存
                       </button>
-                      <i
-                        @click="updateStockSupplier('delete', stock_supplier)"
-                        class="text-red-500 fas fa-trash-alt"
-                      ></i>
+
+                      <button
+                        v-if="!stock_supplier.main_flg"
+                        @click="changeStockSupplierMainFlg(stock_supplier.stock_supplier_id)"
+                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-4 rounded text-sm whitespace-nowrap"
+                      >
+                        適用変更
+                      </button>
                     </td>
                   </tr>
                 </tbody>

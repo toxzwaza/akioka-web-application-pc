@@ -60,7 +60,7 @@ class StockSupplierController extends Controller
             $status = false;
             $msg = $e->getMessage();
         }
-        
+
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
     public function delete(Request $request)
@@ -81,6 +81,35 @@ class StockSupplierController extends Controller
             $status = false;
             $msg = $e->getMessage();
         }
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
+    public function changeMainFlg(Request $request)
+    {
+        $status = true;
+        $msg = "";
+
+        
+        $stock_supplier_id = $request->stock_supplier_id;
+
+        try {
+            $stock_supplier = StockSupplier::find($stock_supplier_id);
+            $stock_suppliers = StockSupplier::where('stock_id', $stock_supplier->stock_id)->get();
+
+            foreach ($stock_suppliers as $stock_supplier) {
+                if ($stock_supplier->id == $stock_supplier_id) {
+                    $stock_supplier->main_flg = 1;
+                    $stock_supplier->save();
+                } else {
+                    $stock_supplier->main_flg = 0;
+                    $stock_supplier->save();
+                }
+            }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 }

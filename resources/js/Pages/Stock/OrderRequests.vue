@@ -43,21 +43,39 @@ const sendDeviceMessage = () => {
     });
 };
 
-const sendRejectInitialOrder = (order_request_id) => {
-  axios.post(route('stock.accept.order_request.reject'), {
-    order_request_id: order_request_id
-  })
-  .then(res => {
-    console.log(res.data)
-    if(res.data.status){
-      alert('拒否通知が完了しました。')
-      const order_request = order_requests.value.find(order_request => order_request.id === order_request_id);
-      if (order_request) {
-        order_request.accept_flg = 4;
+const editSupplier = (order_request) => {
+  if (confirm("発注先を再読み込みしますか？")) {
+    axios.post(route("stock.reloadSupplier"), {
+      order_request_id: order_request.order_request_id
+    })
+    .then(res => {
+      if(res.data.status){
+        alert('発注先を再ロードしました。')
+        window.location.reload()
       }
-    }
-  })
-}
+    })
+  }
+  console.log(order_request);
+};
+
+const sendRejectInitialOrder = (order_request_id) => {
+  axios
+    .post(route("stock.accept.order_request.reject"), {
+      order_request_id: order_request_id,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("拒否通知が完了しました。");
+        const order_request = order_requests.value.find(
+          (order_request) => order_request.id === order_request_id
+        );
+        if (order_request) {
+          order_request.accept_flg = 4;
+        }
+      }
+    });
+};
 
 const uploadFile = (event) => {
   const file = event.target.files[0];
@@ -869,8 +887,13 @@ onMounted(() => {
                     />
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
-                    <span v-if="order_request.supplier_id"
-                      >{{ `${order_request.supplier_name}` }} ({{
+                    <span v-if="order_request.supplier_id">
+                      <i
+                        class="fas fa-sync-alt cursor-pointer"
+                        @click="editSupplier(order_request)"
+                      ></i>
+
+                      {{ `${order_request.supplier_name}` }} ({{
                         order_request.stock_supplier_lead_time
                           ? `${order_request.stock_supplier_lead_time}日`
                           : "未"
@@ -1023,7 +1046,7 @@ onMounted(() => {
             <label
               for="message"
               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
+            >
               <i class="fas fa-user"></i> 回答メッセージ</label
             >
             <textarea

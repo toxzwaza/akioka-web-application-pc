@@ -199,10 +199,7 @@ class StockController extends Controller
 
 
 
-        $stocks = Stock::select('stocks.*', 'classifications.name as classification_name', 'suppliers.id as supplier_id', 'suppliers.name as supplier_name', 'suppliers.supplier_no')
-            ->leftJoin('classifications', 'classifications.id', 'stocks.classification_id')
-            ->leftJoin('stock_suppliers', 'stock_suppliers.stock_id', 'stocks.id')
-            ->leftJoin('suppliers', 'stock_suppliers.supplier_id', 'suppliers.id')
+        $stocks = Stock::with(['stockSuppliers.supplier', 'classification'])
             ->orderBy('updated_at', 'desc');
 
         if ($keyword) {
@@ -213,10 +210,20 @@ class StockController extends Controller
         }
 
         if ($supplier_name) {
-            $stocks->where('suppliers.name', $supplier_name);
+            $stocks->whereHas('stockSuppliers.supplier', function ($query) use ($supplier_name) {
+                $query->where('suppliers.name', $supplier_name);
+            });
         }
 
         $stocks = $stocks->paginate(60)->withQueryString();
+
+        // メインの取引先情報を追加
+        $stocks->getCollection()->transform(function ($stock) {
+            $stock->supplier_name = $stock->main_supplier_name;
+            $stock->supplier_id = $stock->main_supplier_id;
+            $stock->supplier_no = $stock->main_supplier_no;
+            return $stock;
+        });
 
 
         return Inertia::render('Stock/Stocks/Index', ['stocks' => $stocks, 'suppliers' => $suppliers, 'supplier_name' => $supplier_name, 'keyword' => $keyword]);
@@ -294,7 +301,7 @@ class StockController extends Controller
         $processes = Process::all();
         $locations = Location::all();
 
-        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg', 'stock_suppliers.postage')->where('stock_id', $stock_id)
+        $stock_suppliers = StockSupplier::select('stock_suppliers.id as stock_supplier_id', 'stock_suppliers.memo as stock_supplier_memo', 'suppliers.*', 'stock_suppliers.lead_time', 'stock_suppliers.act_flg', 'stock_suppliers.postage', 'stock_suppliers.main_flg')->where('stock_id', $stock_id)
             ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
             ->get();
 
