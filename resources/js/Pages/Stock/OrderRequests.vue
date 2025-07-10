@@ -289,7 +289,7 @@ const sendAccept = (order_request_id) => {
 const changeEstimate = (order_request_id) => {
   if (order_request_id) {
     axios
-      .post(route('stock.accept.order_request.change-estimate'), {
+      .post(route("stock.accept.order_request.change-estimate"), {
         order_request_id: order_request_id,
         user_id: order_config.user_id,
       })
@@ -1051,9 +1051,7 @@ onMounted(() => {
                       v-if="
                         order_request.stock_id && order_request.accept_flg == 0
                       "
-                      @click="
-                        changeEstimate(order_request.order_request_id)
-                      "
+                      @click="changeEstimate(order_request.order_request_id)"
                       class="text-sm bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded whitespace-nowrap"
                     >
                       確認中
@@ -1130,6 +1128,20 @@ onMounted(() => {
               placeholder="コメントがありません。"
               :value="modal_status.order_request.answer"
             ></textarea>
+            <label
+              v-if="modal_status.order_request.read_flg"
+              for="visibility"
+              class="text-right block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
+              <i class="fas fa-eye"></i> 確認済
+            </label>
+            <label
+              v-else
+              for="visibility"
+              class="text-right block mb-2 text-sm font-medium text-gray-500 dark:text-white"
+            >
+              未確認
+            </label>
           </div>
 
           <hr class="my-4" />
@@ -1241,15 +1253,15 @@ onMounted(() => {
           </summary>
 
           <div v-if="modal_status.approval_path" id="pdfviewer">
-            <iframe ref="pdfViewer" :src="modal_status.approval_path"></iframe>
-          </div>
-          <div v-else class="w-full mb-8">
             <div v-if="modal_status.order_request?.document_data">
               <ApprovalDocument
                 :approval_document="modal_status.order_request.document_data"
               />
             </div>
 
+            <iframe ref="pdfViewer" :src="modal_status.approval_path"></iframe>
+          </div>
+          <div v-else class="w-full mb-8">
             <label
               for="dropzone-file"
               :class="{

@@ -79,6 +79,7 @@ class OrderRequestController extends Controller
                 'max_stock_storages.reorder_point as reorder_point',
                 'device_messages.message as message',
                 'device_messages.answer as answer',
+                'device_messages.read_flg',
             )
                 ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
@@ -97,6 +98,7 @@ class OrderRequestController extends Controller
                         ->orWhereNull('order_requests.user_id');
                 })
                 ->orderBy('order_requests.user_id', 'desc')
+                ->orderBy('order_requests.desire_delivery_date', 'asc')
                 ->orderBy('order_requests.created_at', 'desc')
                 ->get();
 

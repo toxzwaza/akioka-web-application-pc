@@ -19,7 +19,7 @@ onMounted(() => {
   <div id="approval_document" class="mx-auto ">
     <h1 class="text-center text-3xl mb-6 text-gray-700 font-bold">稟議書</h1>
 
-    <div class="flex flex-wrap -mx-3">
+    <!-- <div class="flex flex-wrap -mx-3">
       <div class="w-full md:w-1/2 px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -91,9 +91,9 @@ onMounted(() => {
           </p>
         </div>
       </div>
-    </div>
+    </div> -->
 
-    <div class="flex flex-wrap -mx-3">
+    <!-- <div class="flex flex-wrap -mx-3">
       <div class="w-1/3 px-3 mb-6 md:mb-0">
         <label
           class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
@@ -137,7 +137,7 @@ onMounted(() => {
           </p>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- <div class="flex flex-wrap -mx-3">
       <div class="w-1/2 px-3 mb-6 md:mb-0">
         <label
