@@ -81,6 +81,8 @@ Route::get('/purchase-order/{order_request_id}', [PurchaseOrder::class, 'index']
 Route::get('/order-requests/get', [OrderRequestController::class, 'getOrderRequests'])->name('stock.getOrderRequests');
 // 承認依頼
 Route::post('/accept/order-request', [AcceptController::class, 'sendAccept'])->name('stock.accept.order_request');
+// 見積確認中
+Route::post('/accept/order-request/change-estimate', [AcceptController::class, 'changeEstimate'])->name('stock.accept.order_request.change-estimate');
 // 承認スキップ
 Route::post('/accept/order-request/skip', [AcceptController::class, 'skipAccept'])->name('stock.accept.order_request.skip');
 // 承認用画面

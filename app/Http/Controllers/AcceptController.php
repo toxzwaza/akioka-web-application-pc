@@ -290,4 +290,22 @@ class AcceptController extends Controller
 
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
+
+    public function changeEstimate(Request $request)
+    {
+        $status = true;
+        $order_request_id = $request->order_request_id;
+        $user_id = $request->user_id;
+
+        try {
+            $order_request = OrderRequest::find($order_request_id);
+            $order_request->accept_flg = 5;
+            $order_request->user_id = $user_id;
+            $order_request->save();
+        } catch (Exception $e) {
+            $status = false;
+        }
+
+        return response()->json(['status' => $status]);
+    }
 }

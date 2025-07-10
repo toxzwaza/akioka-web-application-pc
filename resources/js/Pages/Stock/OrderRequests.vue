@@ -46,15 +46,16 @@ const sendDeviceMessage = () => {
 
 const editSupplier = (order_request) => {
   if (confirm("発注先を再読み込みしますか？")) {
-    axios.post(route("stock.reloadSupplier"), {
-      order_request_id: order_request.order_request_id
-    })
-    .then(res => {
-      if(res.data.status){
-        alert('発注先を再ロードしました。')
-        window.location.reload()
-      }
-    })
+    axios
+      .post(route("stock.reloadSupplier"), {
+        order_request_id: order_request.order_request_id,
+      })
+      .then((res) => {
+        if (res.data.status) {
+          alert("発注先を再ロードしました。");
+          window.location.reload();
+        }
+      });
   }
   console.log(order_request);
 };
@@ -283,6 +284,34 @@ const sendAccept = (order_request_id) => {
       });
   }
 };
+
+// 見積もり確認中変更
+const changeEstimate = (order_request_id) => {
+  if (order_request_id) {
+    axios
+      .post(route('stock.accept.order_request.change-estimate'), {
+        order_request_id: order_request_id,
+        user_id: order_config.user_id,
+      })
+      .then((res) => {
+        console.log(res.data);
+        alert("確認中状態へ変更しました。");
+        if (res.data.status) {
+          const order_request = order_requests.value.find(
+            (request) => request.id === order_request_id
+          );
+
+          if (order_request) {
+            order_request.accept_flg = 5;
+          }
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+};
+
 // 発注依頼から発注作成
 const sendInitialOrder = (order_request_id) => {
   console.log(order_request_id);
@@ -611,11 +640,6 @@ onMounted(() => {
                   </th>
 
                   <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    コメント
-                  </th>
-                  <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                   >
                     画像
@@ -630,6 +654,12 @@ onMounted(() => {
                   >
                     品番
                   </th>
+
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    希望納期
+                  </th>
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
@@ -641,6 +671,11 @@ onMounted(() => {
                     発注点
                   </th>
                   <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    単価
+                  </th>
+                  <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     発注数量
@@ -650,11 +685,7 @@ onMounted(() => {
                   >
                     発注単位
                   </th>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    単価
-                  </th>
+
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
@@ -680,18 +711,14 @@ onMounted(() => {
                   >
                     消化予定日
                   </th>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    希望納期
-                  </th>
+
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   >
                     依頼者
                   </th>
                   <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     発注者
                   </th>
@@ -703,6 +730,9 @@ onMounted(() => {
 
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  ></th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   ></th>
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -733,10 +763,13 @@ onMounted(() => {
                   </td>
                   <td
                     :class="{
-                      'px-4 py-4 text-lg text-gray-900 w-32': true,
+                      'px-4 py-4 text-lg text-gray-900': true,
                     }"
                   >
-                    <div v-if="order_config.user_id" class="flex">
+                    <div
+                      v-if="order_config.user_id"
+                      class="flex items-center justify-center"
+                    >
                       <Link
                         v-if="!order_request.stock_id"
                         :href="
@@ -779,21 +812,29 @@ onMounted(() => {
                         v-else-if="order_request.accept_flg === 4"
                         >却下再依頼待ち</span
                       >
+                      <button
+                        v-else-if="order_request.accept_flg === 5"
+                        @click="sendAccept(order_request.id)"
+                        class="text-sm bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded-full"
+                      >
+                        確認中
+                      </button>
                     </div>
                   </td>
 
                   <td class="px-4 py-4 text-lg text-gray-900">
-                    <span v-if="order_request.new_stock_flg" class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300">新規品</span>
-                    <span v-else class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300">既存品</span>
+                    <span
+                      v-if="order_request.new_stock_flg"
+                      class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300"
+                      >新規品</span
+                    >
+                    <span
+                      v-else
+                      class="bg-orange-100 text-orange-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-orange-900 dark:text-orange-300"
+                      >既存品</span
+                    >
                   </td>
-                  <td class="px-4 py-4 text-lg text-gray-900">
-                    <button class="bg-blue-600 py-1 px-2.5 rounded">
-                      <i
-                        @click="openModal(order_request)"
-                        class="text-white fas fa-comment"
-                      ></i>
-                    </button>
-                  </td>
+
                   <td class="img_container">
                     <img
                       :src="
@@ -805,7 +846,7 @@ onMounted(() => {
                       alt=""
                     />
                   </td>
-                  <td class="px-4 py-4">
+                  <td class="name px-4 py-4">
                     <a
                       v-if="order_request.stock_id"
                       class="underline text-blue-500"
@@ -820,11 +861,18 @@ onMounted(() => {
                       order_request.order_request_name
                     }}</span>
                   </td>
-                  <td class="px-4 py-4 text-lg text-gray-900">
+                  <td class="s_name px-4 py-4 text-lg text-gray-900">
                     {{
                       order_request.s_name
                         ? order_request.s_name
                         : order_request.order_request_s_name
+                    }}
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    {{
+                      new Date(
+                        order_request.desire_delivery_date
+                      ).toLocaleDateString("ja-JP")
                     }}
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
@@ -833,12 +881,27 @@ onMounted(() => {
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{ order_request.reorder_point }}
                   </td>
-                  <td class="px-4 py-4 text-lg text-gray-900 w-32">
+                  <td class="px-4 py-4 text-lg text-gray-900">
                     <input
                       type="number"
                       name=""
                       id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="font-bold appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      v-model="order_request.price"
+                      @change="
+                        updateQuantityPriceCalcPricePostage(
+                          'price',
+                          order_request
+                        )
+                      "
+                    />
+                  </td>
+                  <td class="px-4 py-4 text-lg text-gray-900">
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      class="appearance-none block w-32 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       v-model="order_request.quantity"
                       @change="
                         updateQuantityPriceCalcPricePostage(
@@ -851,27 +914,13 @@ onMounted(() => {
                   <td class="px-4 py-4 text-lg text-gray-900 w-32">
                     {{ order_request.unit }}
                   </td>
-                  <td class="px-4 py-4 text-lg text-gray-900 w-48">
+
+                  <td class="px-4 py-4 text-lg text-gray-900">
                     <input
                       type="number"
                       name=""
                       id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order_request.price"
-                      @change="
-                        updateQuantityPriceCalcPricePostage(
-                          'price',
-                          order_request
-                        )
-                      "
-                    />
-                  </td>
-                  <td class="px-4 py-4 text-lg text-gray-900 w-48">
-                    <input
-                      type="number"
-                      name=""
-                      id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="font-bold appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       v-model="order_request.calc_price"
                       @change="
                         updateQuantityPriceCalcPricePostage(
@@ -881,12 +930,12 @@ onMounted(() => {
                       "
                     />
                   </td>
-                  <td class="px-4 py-4 text-lg text-gray-900 w-48">
+                  <td class="px-4 py-4 text-lg text-gray-900">
                     <input
                       type="number"
                       name=""
                       id=""
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-32 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       v-model="order_request.postage"
                       @change="
                         updateQuantityPriceCalcPricePostage(
@@ -945,13 +994,7 @@ onMounted(() => {
                       )
                     }}
                   </td>
-                  <td class="px-4 py-4 text-lg text-gray-900">
-                    {{
-                      new Date(
-                        order_request.desire_delivery_date
-                      ).toLocaleDateString("ja-JP")
-                    }}
-                  </td>
+
                   <td
                     :class="{
                       'px-4 py-4 text-lg text-gray-900': true,
@@ -983,6 +1026,7 @@ onMounted(() => {
                       承認スキップ
                     </button>
                   </td>
+
                   <td
                     :class="{
                       'px-4 py-4 text-lg text-gray-900': true,
@@ -995,6 +1039,24 @@ onMounted(() => {
                       class="text-sm bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded whitespace-nowrap"
                     >
                       削除
+                    </button>
+                  </td>
+
+                  <td
+                    :class="{
+                      'px-4 py-4 text-lg text-gray-900': true,
+                    }"
+                  >
+                    <button
+                      v-if="
+                        order_request.stock_id && order_request.accept_flg == 0
+                      "
+                      @click="
+                        changeEstimate(order_request.order_request_id)
+                      "
+                      class="text-sm bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded whitespace-nowrap"
+                    >
+                      確認中
                     </button>
                   </td>
                 </tr>
@@ -1183,7 +1245,9 @@ onMounted(() => {
           </div>
           <div v-else class="w-full mb-8">
             <div v-if="modal_status.order_request?.document_data">
-              <ApprovalDocument :approval_document="modal_status.order_request.document_data" />
+              <ApprovalDocument
+                :approval_document="modal_status.order_request.document_data"
+              />
             </div>
 
             <label
@@ -1247,15 +1311,24 @@ table {
     white-space: nowrap;
 
     &.img_container {
-      width: 4vw;
+      width: 2vw;
       padding: 0;
 
       img {
         width: 100%;
         height: auto;
-        width: 200px;
+        width: 80px;
         object-fit: contain;
       }
+    }
+    &.name {
+      max-width: 300px;
+      overflow-x: auto;
+    }
+
+    &.s_name {
+      max-width: 220px;
+      overflow-x: auto;
     }
   }
 }
