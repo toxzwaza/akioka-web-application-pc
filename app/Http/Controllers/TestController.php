@@ -31,15 +31,28 @@ class TestController extends Controller
     //
     public function test()
     {
-        // サンプルメッセージを作成
-        Helper::createDeviceMessage(
-            0,
-            33,
-            21,
-            81,
-            91,
-            "改行をテスト\n物品依頼の件ですが、○○は間違いではありませんか？\n確認をお願いします。"
+        //    サンプル承認フロー作成
+
+        $approval_flows = Helper::createApprovalFlow(
+            10000,
+            18,
+            1
         );
+
+        if (!empty($approval_flows)) {
+            foreach ($approval_flows as $approval_flow) {
+                $user = User::where('id', $approval_flow)->first();
+                if ($user) {
+                    echo $user->name;
+                    echo "<br>";
+                } else {
+                    echo "ユーザーが見つかりません";
+                    echo "<br>";
+                }
+            }
+        } else {
+            echo "承認フローが作成されていません";
+        }
     }
 
     public function storage_address_test()

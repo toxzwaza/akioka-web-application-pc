@@ -73,7 +73,7 @@ class AcceptController extends Controller
                     // 承認フローを作成
                     // 金額と承認依頼者を元に作成
                     // 今後は、依頼者を元に承認フローを作成
-                    $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id, $order_request->new_flg);
+                    $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id, $order_request->new_stock_flg);
                     // $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
 
                     if (count($approval_list) > 0) {
@@ -116,7 +116,7 @@ class AcceptController extends Controller
                 // 承認フローを作成
                 // 金額と承認依頼者を元に作成
                 // 今後は、依頼者を元に承認フローを作成
-                $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id, $order_request->new_flg);
+                $approval_list = Helper::createApprovalFlow($order_request->calc_price, $order_request->request_user_id, $order_request->new_stock_flg);
                 // $approval_list = Helper::createApprovalFlow($order_request->calc_price, $user_id);
                 if (count($approval_list) > 0) {
                     foreach ($approval_list as $key => $approval_user_id) {
