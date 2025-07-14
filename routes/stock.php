@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\CameraController;
 use App\Http\Controllers\InitialOrderController;
+use App\Http\Controllers\StockCountController;
 use App\Http\Controllers\SupplierController;
 use App\Models\InitialOrder;
 
@@ -145,3 +146,6 @@ Route::get('/suppliers/edit/{supplier_id}', [SupplierController::class, 'edit'])
 
 // Location追加
 Route::get('/locations/create', [StockController::class, 'store_location'])->name('stock.locations.create');
+
+// 棚卸用
+Route::get('/stock-count/export', [StockCountController::class, 'export_data'])->name('stock.stock_count.export');
