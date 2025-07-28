@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\CameraController;
 use App\Http\Controllers\InitialOrderController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\StockCountController;
 use App\Http\Controllers\SupplierController;
 use App\Models\InitialOrder;
@@ -122,18 +123,26 @@ Route::post('/stock-suppliers/change/main-flg', [StockSupplierController::class,
 
 
 // 格納先
-Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');
-Route::delete('/stock-storage/delete', [StockStorageController::class, 'delete'])->name('stock.stock_storage.delete');
-Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
+Route::get('/locations', [LocationController::class, 'index'])->name('stock.locations');
+Route::post('/locations/store', [LocationController::class, 'store'])->name('stock.locations.store');
+Route::get('/locations/show/{location_id}', [LocationController::class, 'show'])->name('stock.locations.show');
+
+Route::post('/storage-addresses/store', [StockStorageController::class, 'store'])->name('stock.storage_addresses.store');
+Route::get('/storage-addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
+
+// Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');
+// Route::delete('/stock-storage/delete', [StockStorageController::class, 'delete'])->name('stock.stock_storage.delete');
+// Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
+
 // Route::get('/suppliers/add', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 // Route::post('/suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');
 // Route::get('/suppliers/delete', [StockController::class, 'delete_stock_suppliers'])->name('stock.delete.stock_suppliers');
 
 // 格納先
-Route::get('/storage-addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
-Route::get('/storage-addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
-Route::post('/storage-addresses/store', [StockController::class, 'store_storage_address'])->name('stock.storage_address.store');
-Route::get('/storage-addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
+// Route::get('/storage-addresses', [StockController::class, 'storage_address'])->name('stock.storage_addresses');
+// Route::get('/storage-addresses/create', [StockController::class, 'create_storage_addresses'])->name('stock.storage_addresses.create');
+// Route::post('/storage-addresses/store', [StockController::class, 'store_storage_address'])->name('stock.storage_address.store');
+
 
 // 監視カメラ録画映像
 Route::get('/camera', [CameraController::class, 'index'])->name('stock.camera');

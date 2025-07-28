@@ -248,13 +248,13 @@ const sub_nav_close = ref(false);
             >取引先追加</a
           >
           <a
-            :href="route('stock.storage_addresses.create')"
+            :href="route('stock.locations')"
             :class="{
               '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
               'bg-white text-gray-900':
-                route().current() != 'stock.storage_addresses.create',
+                route().current() != 'stock.locations',
               'bg-blue-500 text-white':
-                route().current() == 'stock.storage_addresses.create',
+                route().current() == 'stock.locations',
             }"
           >
             <span class="text-gray-100 mr-1 material-symbols-outlined">

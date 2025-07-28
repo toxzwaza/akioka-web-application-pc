@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\Helper;
 use App\Models\Document;
+use App\Models\DocumentImage;
 use App\Models\InitialOrder;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestApproval;
@@ -91,6 +92,7 @@ class OrderRequestController extends Controller
                 })
                 ->leftJoin(DB::raw('(SELECT stock_id, MAX(quantity) as max_quantity, MAX(reorder_point) as reorder_point FROM stock_storages GROUP BY stock_id) as max_stock_storages'), 'max_stock_storages.stock_id', '=', 'stocks.id')
                 ->leftJoin('device_messages', 'device_messages.id', '=', 'order_requests.device_message_id')
+                ->leftJoin('document_images', 'document_images.document_id', 'order_requests.document_id')
                 ->where('order_requests.del_flg', '=', 0)
                 ->where('order_requests.status', '=', 0)
                 ->where(function ($query) use ($user_id) {
@@ -104,7 +106,7 @@ class OrderRequestController extends Controller
 
 
             foreach ($order_requests as $order_request) {
-                if (!$order_request->supplier_id) {
+                if (!$order_request->supplier_id) { //取引先を初期化
                     $stock_supplier = StockSupplier::select('suppliers.id', 'suppliers.name', 'stock_suppliers.lead_time')->where('stock_id', $order_request->stock_id)
                         ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->first();
 
@@ -126,7 +128,14 @@ class OrderRequestController extends Controller
 
                 if($order_request->document_id){
                     $document = Document::find($order_request->document_id);
-                    $order_request->document_data = $document;
+                    if ($document) {
+                        $order_request->document_data = $document;
+                        $document_images = DocumentImage::select('image_path')
+                            ->where('document_id', $order_request->document_id)
+                            ->where('extension', '!=', 'pdf')
+                            ->get();
+                        $order_request->document_data->document_images = $document_images;
+                    }
                 }
 
 

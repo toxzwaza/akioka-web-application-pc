@@ -1252,16 +1252,22 @@ onMounted(() => {
             稟議書確認
           </summary>
 
-          <div v-if="modal_status.approval_path" id="pdfviewer">
+          <div id="pdfviewer">
             <div v-if="modal_status.order_request?.document_data">
               <ApprovalDocument
                 :approval_document="modal_status.order_request.document_data"
               />
             </div>
-
-            <iframe ref="pdfViewer" :src="modal_status.approval_path"></iframe>
+            <div v-if="modal_status.approval_path" class="mt-12 mb-8 bg-gray-100 p-4">
+              <!-- <h2 class="text-lg text-gray-700 font-bold mb-2">添付資料</h2> -->
+              <iframe
+                ref="pdfViewer"
+                :src="modal_status.approval_path"
+                style="height:100vh; width: 96%; margin:0 auto;"
+              ></iframe>
+            </div>
           </div>
-          <div v-else class="w-full mb-8">
+          <div v-if="!modal_status.approval_path" class="w-full mb-8">
             <label
               for="dropzone-file"
               :class="{
@@ -1377,7 +1383,8 @@ table {
     justify-content: end;
   }
   & #pdfviewer {
-    height: 70vh;
+    // height: 70vh;
+    margin-bottom: 2vh;
 
     & iframe {
       height: 96%;

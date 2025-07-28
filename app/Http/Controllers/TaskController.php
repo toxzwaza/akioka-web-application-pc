@@ -369,7 +369,7 @@ class TaskController extends Controller
             ->join('users', 'users.id', '=', 'tasks.user_id')
             ->whereIn('user_id', $user_id_list)
             ->where('tasks.status', '2')
-            ->whereDate('tasks.updated_at', now()->toDateString())
+            // ->whereDate('tasks.updated_at', now()->toDateString())
             ->orderBy('tasks.created_at', 'desc')
             ->get()
             ->groupBy('user_id');
