@@ -1066,7 +1066,7 @@ const fileUpload = async (event) => {
                   >
                     {{ order.order_no }}
                   </td>
-                  <td class="w-60">
+                  <td class="w-28">
                     <img
                       :src="
                         order.img_path && order.img_path.includes('https://')
