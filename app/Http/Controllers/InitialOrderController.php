@@ -541,7 +541,7 @@ class InitialOrderController extends Controller
             $initial_order->save();
 
             if ($order_complete_flg) {
-                if ($initial_order->to_device_id) {
+                if ($initial_order->to_device_id && $initial_order->order_user_id != $initial_order->user_id ) {
                     $msg = "以下の物品が発注されました。\n依頼者: $initial_order->order_user\n品名: $initial_order->name\n品番: $initial_order->s_name\n\n納品完了までもうしばらくお待ちください。";
 
                     Helper::createDeviceMessage(
