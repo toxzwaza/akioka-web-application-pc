@@ -85,8 +85,8 @@ class Helper
         $user = User::find($user_id);
         if (
             in_array($user->group_id, [8, 10, 11]) || //役員・統括部（役員）・顧問
-            !$new_flg && in_array($user->group_id, [1, 2]) || //既存品の品証・技術
-            !$new_flg && in_array($user->group_id, [3, 4]) && $user->position_id == 6 //既存品製造部課長
+            !$new_flg && in_array($user->group_id, [1, 2])  //既存品の品証・技術
+            // || !$new_flg && in_array($user->group_id, [3, 4]) && $user->position_id == 6 //既存品製造部課長
         ) {
             return [];
         }
@@ -95,7 +95,7 @@ class Helper
 
 
         if ($user->position_id >= 7) {  //係長・GL・一般 からの依頼の場合
-            // 部署ごとの承認者マッピング
+            // 係長・GL・一般からの承認者マッピング
             $approvalMap = [
                 1 => 63, // 技術 常務
                 2 => 16, // 品証 梶谷課長
@@ -145,8 +145,10 @@ class Helper
                 $approval_list[] = 2;
             }
         } else if ($user->position_id == 3) { //本部長からの依頼
+
             $approval_list[] = 2; //社長のみ
         } else if ($user->position_id == 5) { //荒川部長からの依頼
+
             $approval_list[] = 63; // 常務
 
             // 150,000円以上の場合の追加承認

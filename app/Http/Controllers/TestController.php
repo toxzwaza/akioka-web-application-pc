@@ -32,45 +32,45 @@ class TestController extends Controller
     public function test()
     {
         //    サンプル承認フロー作成
-        $stock_storage_data = StockStorage::select('stock_id', 'stocks.name', 'stocks.s_name', 'stocks.img_path', 'stock_storages.id as stock_storage_id', 'quantity', 'storage_address_id')
-            ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
-            ->orderBy('storage_address_id', 'asc')
-            ->get()
-            ->groupBy('storage_address_id')
-            ->mapWithKeys(function ($items, $key) {
-                return [$key => array_map(function ($item) {
-                    if (strpos($item['img_path'], 'http') === false) {
-                        $item['img_path'] = 'https://akioka.cloud/' . $item['img_path'];
-                    }
-                    return $item;
-                }, $items->toArray())];
-            })
-            ->where('stocks.del_flg', 0)
-            ->toArray();
+        // $stock_storage_data = StockStorage::select('stock_id', 'stocks.name', 'stocks.s_name', 'stocks.img_path', 'stock_storages.id as stock_storage_id', 'quantity', 'storage_address_id')
+        //     ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
+        //     ->orderBy('storage_address_id', 'asc')
+        //     ->get()
+        //     ->groupBy('storage_address_id')
+        //     ->mapWithKeys(function ($items, $key) {
+        //         return [$key => array_map(function ($item) {
+        //             if (strpos($item['img_path'], 'http') === false) {
+        //                 $item['img_path'] = 'https://akioka.cloud/' . $item['img_path'];
+        //             }
+        //             return $item;
+        //         }, $items->toArray())];
+        //     })
+        //     ->where('stocks.del_flg', 0)
+        //     ->toArray();
 
 
-        return response()->json($stock_storage_data);
+        // return response()->json($stock_storage_data);
 
-        // $approval_flows = Helper::createApprovalFlow(
-        //     10000,
-        //     18,
-        //     1
-        // );
+        $approval_flows = Helper::createApprovalFlow(
+            39200,
+            84,
+            0
+        );
 
-        // if (!empty($approval_flows)) {
-        //     foreach ($approval_flows as $approval_flow) {
-        //         $user = User::where('id', $approval_flow)->first();
-        //         if ($user) {
-        //             echo $user->name;
-        //             echo "<br>";
-        //         } else {
-        //             echo "ユーザーが見つかりません";
-        //             echo "<br>";
-        //         }
-        //     }
-        // } else {
-        //     echo "承認フローが作成されていません";
-        // }
+        if (!empty($approval_flows)) {
+            foreach ($approval_flows as $approval_flow) {
+                $user = User::where('id', $approval_flow)->first();
+                if ($user) {
+                    echo $user->name;
+                    echo "<br>";
+                } else {
+                    echo "ユーザーが見つかりません";
+                    echo "<br>";
+                }
+            }
+        } else {
+            echo "承認フローが作成されていません";
+        }
     }
 
     public function storage_address_test()
