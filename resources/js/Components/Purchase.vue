@@ -210,6 +210,7 @@ onMounted(() => {
 
       <div id="top_content" class="flex justify-around items-center">
         <div class="left_container">
+          <p class="mb-2 ">注文日: {{ new Date().toISOString().slice(0, 10).replace(/-/g, '/') }}</p>
           <h2 class="font-bold text-xl">{{ orders[0].com_name }} 御中</h2>
           <div class="number">
             <p>TEL: {{ orders[0].tel }}</p>

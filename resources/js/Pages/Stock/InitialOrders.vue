@@ -918,7 +918,7 @@ const fileUpload = async (event) => {
                     注文No
                   </th>
                   <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
                   >
                     画像
                   </th>
@@ -1066,7 +1066,7 @@ const fileUpload = async (event) => {
                   >
                     {{ order.order_no }}
                   </td>
-                  <td class="w-24 px-4 py-6">
+                  <td class="w-60">
                     <img
                       :src="
                         order.img_path && order.img_path.includes('https://')
