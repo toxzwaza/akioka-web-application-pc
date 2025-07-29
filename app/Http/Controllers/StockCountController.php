@@ -11,6 +11,7 @@ class StockCountController extends Controller
     public function export_data()
     {
         $stock_storage_data = StockStorage::select('stock_id', 'stocks.name', 'stocks.s_name', 'stocks.img_path', 'stock_storages.id as stock_storage_id', 'quantity', 'storage_address_id')
+            ->where('stocks.del_flg', 0)
             ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
             ->orderBy('storage_address_id', 'asc')
             ->get()
