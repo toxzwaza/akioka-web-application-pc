@@ -31,6 +31,19 @@ class TestController extends Controller
     //
     public function test()
     {
+
+        $stock_storages = StockStorage::leftJoin('stocks', 'stocks.id', '=', 'stock_storages.stock_id')
+            ->whereNull('stocks.id')
+            ->get();
+
+        foreach ($stock_storages as $stock_storage) {
+
+            $stock_storage->delete();
+            echo "削除しました";
+            echo "<br>";
+        }
+        dd("完了");
+        return;
         //    サンプル承認フロー作成
         // $stock_storage_data = StockStorage::select('stock_id', 'stocks.name', 'stocks.s_name', 'stocks.img_path', 'stock_storages.id as stock_storage_id', 'quantity', 'storage_address_id')
         //     ->join('stocks', 'stocks.id', 'stock_storages.stock_id')

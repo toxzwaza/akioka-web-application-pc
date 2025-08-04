@@ -97,6 +97,7 @@ onMounted(() => {
   form.location.location_id = props.location.id;
   form.location.location_name = props.location.name;
   checkProcess();
+  console.log(props.storage_addresses)
 });
 </script>
 <template>
@@ -256,6 +257,11 @@ onMounted(() => {
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
+                    格納済み在庫数
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
                     最終更新日
                   </th>
                   <th
@@ -272,6 +278,7 @@ onMounted(() => {
                 >
                   <td class="px-4 py-3">{{ storage_address.id }}</td>
                   <td class="px-4 py-3">{{ storage_address.address }}</td>
+                  <td class="px-4 py-3"><Link class="underline text-blue-500" :href="route('stock.stocks', {storage_address_id : storage_address.id })">{{ storage_address.stock_count }}</Link></td>
 
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{

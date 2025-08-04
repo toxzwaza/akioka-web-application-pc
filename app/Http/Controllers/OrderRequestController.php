@@ -102,6 +102,7 @@ class OrderRequestController extends Controller
                 ->orderBy('order_requests.user_id', 'desc')
                 ->orderBy('order_requests.desire_delivery_date', 'asc')
                 ->orderBy('order_requests.created_at', 'desc')
+                ->distinct()
                 ->get();
 
 

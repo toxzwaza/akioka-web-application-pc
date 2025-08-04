@@ -193,14 +193,23 @@ class StockController extends Controller
     // 在庫一覧
     public function stocks(Request $request)
     {
-        $suppliers = StockSupplier::select('suppliers.id', 'suppliers.name')->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->distinct()->get();
+        $suppliers = StockSupplier::select('suppliers.id', 'suppliers.name')
+            ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
+            ->distinct()
+            ->get();
+
         $keyword = $request->keyword;
         $supplier_name = $request->supplier_name;
+        $storage_address_id = $request->storage_address_id;
 
 
 
         $stocks = Stock::with(['stockSuppliers.supplier', 'classification'])
-            ->orderBy('updated_at', 'desc');
+            ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
+            ->orderBy('stocks.updated_at', 'desc');
+        if ($storage_address_id) {
+            $stocks->where('stock_storages.storage_address_id', $storage_address_id);
+        }
 
         if ($keyword) {
             $stocks->where(function ($query) use ($keyword) {
@@ -214,6 +223,8 @@ class StockController extends Controller
                 $query->where('suppliers.name', $supplier_name);
             });
         }
+
+
 
         $stocks = $stocks->paginate(60)->withQueryString();
 
@@ -537,9 +548,9 @@ class StockController extends Controller
             }
 
             // 既存在庫に紐づいている取引先を付与
-            if($dup_stock_id){
+            if ($dup_stock_id) {
                 $dup_stock_supplier = StockSupplier::where('stock_id', $dup_stock_id)->first();
-                if($dup_stock_supplier){
+                if ($dup_stock_supplier) {
                     $stock_supplier = new StockSupplier();
                     $stock_supplier->stock_id = $stock->id;
                     $stock_supplier->supplier_id = $dup_stock_supplier->supplier_id;
@@ -549,7 +560,6 @@ class StockController extends Controller
                     $stock_supplier->memo = $dup_stock_supplier->memo;
                     $stock_supplier->save();
                 }
-
             }
 
             if ($order_request_id) {
@@ -593,7 +603,7 @@ class StockController extends Controller
     {
         $order_request_id = $request->order_request_id;
         $stock_id = $request->stock_id;
- 
+
         // 物品依頼から基本データ入力済み
         $order_request = null;
         if ($order_request_id) {
@@ -602,7 +612,7 @@ class StockController extends Controller
 
         // 既存在庫から基本データ入力済み
         $stock = null;
-        if($stock_id){
+        if ($stock_id) {
             $stock = Stock::find($stock_id);
         }
 
@@ -980,7 +990,7 @@ class StockController extends Controller
             if ($orderNumber) {
                 $stock_request->orderNumber = $orderNumber;
             }
-            if($orderUnit){
+            if ($orderUnit) {
                 $stock_request->unit = $orderUnit;
             }
             $stock_request->save();

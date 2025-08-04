@@ -128,6 +128,16 @@ onMounted(() => {
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
+                    登録済みアドレス数
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    部署
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
                     最終更新日
                   </th>
                   <th
@@ -150,6 +160,7 @@ onMounted(() => {
                       {{ process.name }}
                     </span>
                   </td>
+                  <td class="px-4 py-3">{{ location.address_count }}</td>
                   <td class="px-4 py-3 text-lg text-gray-900">
                     {{
                       new Date(location.updated_at).toLocaleDateString(

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Location;
 use App\Models\LocationProcess;
 use App\Models\Process;
+use App\Models\StockStorage;
 use App\Models\StorageAddress;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class LocationController extends Controller
@@ -18,6 +20,9 @@ class LocationController extends Controller
 
         $locations = Location::with(['processes'])
             ->select('locations.id', 'locations.name', 'locations.updated_at')
+            ->leftJoin('storage_addresses', 'storage_addresses.location_id', 'locations.id')
+            ->select('locations.id', 'locations.name', 'locations.updated_at', DB::raw('COUNT(storage_addresses.id) as address_count'))
+            ->groupBy('locations.id', 'locations.name', 'locations.updated_at')
             ->get();
         $processes = Process::all();
 
@@ -69,7 +74,20 @@ class LocationController extends Controller
 
         $location = Location::where('id', $location_id)->first();
         $location_processes = LocationProcess::where('location_id', $location_id)->pluck('process_id');
-        $storage_addresses = StorageAddress::where('location_id', $location_id)->orderBy('shelf')->orderBy('row')->orderBy('col')->get();
+        $storage_addresses = StorageAddress::
+        leftJoin('stock_storages', 'stock_storages.storage_address_id', 'storage_addresses.id')
+        // ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
+        ->where('location_id', $location_id)
+        ->orderBy('shelf')
+        ->orderBy('row')
+        ->orderBy('col')
+        ->select('storage_addresses.id', 'storage_addresses.address', 'storage_addresses.shelf', 'storage_addresses.row', 'storage_addresses.col', DB::raw('COUNT(stock_storages.id) as stock_count'), 'storage_addresses.updated_at')
+        ->groupBy('storage_addresses.id', 'storage_addresses.address', 'storage_addresses.shelf', 'storage_addresses.row', 'storage_addresses.col', 'storage_addresses.updated_at')
+        ->get()
+        ->map(function ($storage_address) {
+            $storage_address->storage_address_stocks = StockStorage::where('storage_address_id', $storage_address->id)->get();
+            return $storage_address;
+        });
 
         return Inertia::render('Stock/Location/Show', ['location' => $location, 'processes' => $processes, 'location_processes' => $location_processes, 'storage_addresses' => $storage_addresses]);
     }
