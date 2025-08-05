@@ -204,9 +204,12 @@ class StockController extends Controller
 
 
 
-        $stocks = Stock::with(['stockSuppliers.supplier', 'classification'])
+        $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->
+        with(['stockSuppliers.supplier', 'classification'])
             ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
+            ->leftJoin('classifications', 'classifications.id', 'stocks.classification_id')
             ->orderBy('stocks.updated_at', 'desc');
+        
         if ($storage_address_id) {
             $stocks->where('stock_storages.storage_address_id', $storage_address_id);
         }
