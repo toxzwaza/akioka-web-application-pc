@@ -354,6 +354,33 @@ class InitialOrderController extends Controller
         return response()->json(['status' => $status, 'message' => $msg]);
     }
 
+    public function delete(Request $request)
+    {
+        $status = true;
+        $msg = '';
+
+        $initial_order_id = $request->initial_order_id;
+        $order_request_id = null;
+
+
+
+        try {
+
+
+            $initial_order = InitialOrder::find($initial_order_id);
+            $initial_order->del_flg = 1;
+            $order_request_id = $initial_order->order_request_id;
+            $initial_order->save();
+
+            $order_request = OrderRequest::find($order_request_id);
+            $order_request->status = 0;
+            $order_request->save();
+
+        } catch (Exception $e) {
+            $status = false;
+        }
+    }
+
     public function update_date(Request $request)
     {
         $flg = $request->flg;
@@ -541,7 +568,7 @@ class InitialOrderController extends Controller
             $initial_order->save();
 
             if ($order_complete_flg) {
-                if ($initial_order->to_device_id && $initial_order->order_user_id != $initial_order->user_id ) {
+                if ($initial_order->to_device_id && $initial_order->order_user_id != $initial_order->user_id) {
                     $msg = "以下の物品が発注されました。\n依頼者: $initial_order->order_user\n品名: $initial_order->name\n品番: $initial_order->s_name\n\n納品完了までもうしばらくお待ちください。";
 
                     Helper::createDeviceMessage(

@@ -76,15 +76,15 @@ const changeMessage = (order) => {
     }
 
     axios
-      .post(route('stock.initialOrder.sendDeviceMessage'), {
+      .post(route("stock.initialOrder.sendDeviceMessage"), {
         device_notify_flg: device_notify_flg,
         initial_order_id: order.id,
         message: order.description,
       })
       .then((res) => {
         console.log(res.data);
-        if(res.data.status){
-          alert('成功しました。')
+        if (res.data.status) {
+          alert("成功しました。");
         }
       })
       .catch((error) => {
@@ -530,6 +530,38 @@ const fileUpload = async (event) => {
       });
   }
 };
+
+
+// 削除
+const deleteInitialOrder = order => {
+  console.log(order)
+  const msg = `
+  以下の物品を削除してもよろしいですか？
+  依頼者: ${order.order_user}
+  発注担当者: ${order.manage_user_name}
+  品名: ${order.name}
+  品番: ${order.s_name}
+  単価: ${order.price}
+  数量: ${order.quantity}
+  金額: ${order.calc_price}
+  `
+  if(confirm(msg)){
+    axios.delete(route('stock.delete.initialOrders'), {
+      params: {
+        initial_order_id : order.id
+      }
+    })
+    .then(res => {
+      console.log(res.data)
+      if(res.data.status){
+        alert('削除が完了しました。')
+      }
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+}
 </script>
 <template>
   <MainLayout :title="'発注一覧'">
@@ -1040,6 +1072,12 @@ const fileUpload = async (event) => {
                   >
                     発注済み登録
                   </th>
+                  <th
+                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                    v-if="is_login"
+                  >
+                    削除
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1349,6 +1387,17 @@ const fileUpload = async (event) => {
                         >完了済<i class="ml-2 fas fa-check"></i
                       ></span>
                       <span v-else>未完了</span>
+                    </button>
+                  </td>
+                  <td
+                    v-if="is_login"
+                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                  >
+                    <button
+                      class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-xs"
+                      @click="deleteInitialOrder(order)"
+                    >
+                      削除
                     </button>
                   </td>
                 </tr>

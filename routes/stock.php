@@ -42,6 +42,8 @@ Route::get('/stocks/inventory/records/date', [StockController::class, 'getInvent
 // 発注関連
 Route::get('/initial-order', [InitialOrderController::class, 'index'])->name('stock.initialOrders');
 Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->name('stock.create.initialOrders');
+// 発注依頼
+Route::delete('/initial-order/delete', [InitialOrderController::class, 'delete'])->name('stock.delete.initialOrders');
 // 発注登録
 Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->name('stock.store.initialOrders');
 // 納品書変更
