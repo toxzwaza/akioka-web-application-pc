@@ -1228,18 +1228,31 @@ onMounted(() => {
                       : "コメントがありません。"
                   }}
                 </p>
-                <button
-                  @click="
-                    reNotify(
-                      modal_status.order_request.order_request_id,
-                      approval.user_id
-                    )
-                  "
+
+                <div
                   v-if="approval.status == 0"
-                  class="notify_button bg-blue-600 py-1 px-2.5 rounded"
+                  class="notify_button flex space-x-2"
                 >
-                  <i class="text-white fas fa-bell"></i>
-                </button>
+                  <a
+                    class="inline-block bg-blue-600 py-1 px-2.5 rounded"
+                    :href="`https://akioka.cloud/accept/order-request?user_id=${approval.user_id}`"
+                    target="_blank"
+                  >
+                    <i class="text-white fas fa-external-link-alt"></i>
+                  </a>
+
+                  <button
+                    class="bg-blue-600 py-1 px-2.5 rounded"
+                    @click.prevent="
+                      reNotify(
+                        modal_status.order_request.order_request_id,
+                        approval.user_id
+                      )
+                    "
+                  >
+                    <i class="text-white fas fa-bell"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1258,12 +1271,15 @@ onMounted(() => {
                 :approval_document="modal_status.order_request.document_data"
               />
             </div>
-            <div v-if="modal_status.approval_path" class="mt-12 mb-8 bg-gray-100 p-4">
+            <div
+              v-if="modal_status.approval_path"
+              class="mt-12 mb-8 bg-gray-100 p-4"
+            >
               <!-- <h2 class="text-lg text-gray-700 font-bold mb-2">添付資料</h2> -->
               <iframe
                 ref="pdfViewer"
                 :src="modal_status.approval_path"
-                style="height:100vh; width: 96%; margin:0 auto;"
+                style="height: 100vh; width: 96%; margin: 0 auto"
               ></iframe>
             </div>
           </div>
