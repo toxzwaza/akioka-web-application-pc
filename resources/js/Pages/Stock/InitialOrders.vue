@@ -20,6 +20,7 @@ const props = defineProps({
   totals: Object,
   groups: Array,
   processes: Array,
+  classifications: Array
 });
 
 const form = reactive({
@@ -427,6 +428,7 @@ const getInitialOrders = (reset) => {
     form.user_id = null;
     form.group_id = null;
     form.process_id = null;
+    form.classification_id = null;
 
     console.log("検索条件リセット");
   }
@@ -441,6 +443,7 @@ const getInitialOrders = (reset) => {
     user_id: form.user_id,
     group_id: form.group_id,
     process_id: form.process_id,
+    classification_id: form.classification_id
   });
 };
 
@@ -490,6 +493,7 @@ onMounted(() => {
   form.user_id = params.get("user_id");
   form.group_id = params.get("group_id");
   form.process_id = params.get("process_id");
+  form.classification_id = params.get("classification_id");
 
   console.log(props.totals);
 });
@@ -794,6 +798,30 @@ const deleteInitialOrder = order => {
                         :value="user.id"
                       >
                         {{ user.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="w-32 mr-2 ml-4">
+                    <label
+                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                      for="grid-last-name"
+                    >
+                      カテゴリー
+                    </label>
+                    <select
+                     
+                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      name="order_user"
+                      id=""
+                      v-model="form.classification_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="classification in props.classifications"
+                        :key="classification.id"
+                        :value="classification.id"
+                      >
+                        {{ classification.name }}
                       </option>
                     </select>
                   </div>

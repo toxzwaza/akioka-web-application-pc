@@ -37,11 +37,13 @@ class InitialOrderController extends Controller
         $user_id = $request->user_id;
         $group_id = $request->group_id;
         $process_id = $request->process_id;
+        $classification_id = $request->classification_id;
 
         $query = InitialOrder::select(
             'initial_orders.*',
             'stocks.img_path',
             'stocks.url',
+            'stocks.classification_id',
             'stock_suppliers.lead_time as base_lead_time',
             'suppliers.tel',
             'suppliers.fax',
@@ -112,6 +114,9 @@ class InitialOrderController extends Controller
         if ($process_id) {
             $query->where('order_users.process_id', $process_id);
         }
+        if ($classification_id) {
+            $query->where('stocks.classification_id', $classification_id);
+        }
 
         $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(14)->withQueryString();
 
@@ -173,6 +178,7 @@ class InitialOrderController extends Controller
         $groups = Group::select('id', 'name')
             ->get();
         $processes = Process::select('id', 'name')->get();
+        $classifications = Classification::select('id', 'name')->get();
 
 
 
@@ -187,7 +193,8 @@ class InitialOrderController extends Controller
             'suppliers' => $suppliers,
             'totals' => $totals,
             'groups' => $groups,
-            'processes' => $processes
+            'processes' => $processes,
+            'classifications' => $classifications
         ]);
     }
 
