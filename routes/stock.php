@@ -160,3 +160,4 @@ Route::get('/locations/create', [StockController::class, 'store_location'])->nam
 
 // 棚卸用
 Route::get('/stock-count/export', [StockCountController::class, 'export_data'])->name('stock.stock_count.export');
+Route::get('/storage-address/export', [StockCountController::class, 'export_storage_address_data'])->name('stock.storage_address.export');

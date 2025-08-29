@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\StockStorage;
+use App\Models\StorageAddress;
 use Illuminate\Http\Request;
 
 class StockCountController extends Controller
@@ -29,5 +30,12 @@ class StockCountController extends Controller
 
 
         return response()->json($stock_storage_data);
+    }
+
+    public function export_storage_address_data(){
+
+        $storage_address_data = StorageAddress::select('uid', 'id')->where('uid', '!=', null)->get();
+
+        return response()->json($storage_address_data);
     }
 }

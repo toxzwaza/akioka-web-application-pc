@@ -31,18 +31,33 @@ class TestController extends Controller
     //
     public function test()
     {
-
-        $stock_storages = StockStorage::leftJoin('stocks', 'stocks.id', '=', 'stock_storages.stock_id')
-            ->whereNull('stocks.id')
-            ->get();
-
-        foreach ($stock_storages as $stock_storage) {
-
-            $stock_storage->delete();
-            echo "削除しました";
+        // public/address_data.jsonを取得して配列で繰り返し表示
+        $jsonPath = public_path('address_data.json');
+        
+        if (File::exists($jsonPath)) {
+            $jsonContent = File::get($jsonPath);
+            $addressData = json_decode($jsonContent, true);
+            
+            if ($addressData) {
+                foreach ($addressData as $address) {
+                    echo "ID: " . $address['id'] . " - UID: " . $address['uid'];
+                    echo "<br>";
+                    $storage_address = StorageAddress::find($address['id']);
+                    $storage_address->uid = $address['uid'];
+                    $storage_address->save();
+                    echo "保存完了";
+                    echo "<br>";
+                }
+            } else {
+                echo "JSONデータの解析に失敗しました";
+                echo "<br>";
+            }
+        } else {
+            echo "address_data.jsonファイルが見つかりません";
             echo "<br>";
         }
-        dd("完了");
+
+
         return;
         //    サンプル承認フロー作成
         // $stock_storage_data = StockStorage::select('stock_id', 'stocks.name', 'stocks.s_name', 'stocks.img_path', 'stock_storages.id as stock_storage_id', 'quantity', 'storage_address_id')
