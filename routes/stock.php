@@ -132,8 +132,8 @@ Route::get('/locations/show/{location_id}', [LocationController::class, 'show'])
 Route::post('/storage-addresses/store', [StockStorageController::class, 'store'])->name('stock.storage_addresses.store');
 Route::get('/storage-addresses/print', [StockController::class, 'print'])->name('stock.storage_addresses.print');
 
-// Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');
-// Route::delete('/stock-storage/delete', [StockStorageController::class, 'delete'])->name('stock.stock_storage.delete');
+Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');
+Route::delete('/stock-storage/delete', [StockStorageController::class, 'delete'])->name('stock.stock_storage.delete');
 // Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
 
 // Route::get('/suppliers/add', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');

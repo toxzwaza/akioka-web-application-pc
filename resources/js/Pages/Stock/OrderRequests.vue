@@ -194,24 +194,12 @@ const order_config = reactive({
 });
 
 const order_requests = ref([]);
-const handleUserId = (user_id) => {
-  order_config.user_id = user_id;
-  const selectedUser = props.order_users.find((user) => user.id == user_id);
-  if (selectedUser) {
-    order_config.user_name = selectedUser.name;
-    console.log(selectedUser.name);
-    getOrderRequests();
-  } else {
-    order_config.user_id = null;
-    order_config.user_name = null;
-  }
-};
 
-const getOrderRequests = () => {
+const getOrderRequests = (user_id) => {
   axios
     .get(route("stock.getOrderRequests"), {
       params: {
-        user_id: order_config.user_id,
+        user_id: user_id,
       },
     })
     .then((res) => {
@@ -522,12 +510,36 @@ const skipAccept = (order_request_id) => {
   }
   console.log(order_request_id);
 };
-onMounted(() => {
-  // getOrderRequests();
+const handleUserId = (user_id) => {
+  localStorage.setItem("user_id", user_id);
+  loginCheck();
+};
+const ClearLocalStorage = () => {
+  localStorage.removeItem("user_id");
+  loginCheck();
+};
 
-  if (props.user_id) {
-    handleUserId(props.user_id);
+const loginCheck = () => {
+  const userId = localStorage.getItem("user_id");
+  if (userId && userId != "null") {
+    console.log(userId);
+    getOrderRequests(userId);
+
+    const selectedUser = props.order_users.find((user) => user.id == userId);
+    if (selectedUser) {
+      order_config.user_name = selectedUser.name;
+      order_config.user_id = userId;
+      console.log(selectedUser.name);
+    }
+  } else {
+    order_config.user_id = null;
+    order_config.user_name = null;
   }
+};
+
+onMounted(() => {
+  // デバイスID取得
+  loginCheck();
 });
 </script>
 <template>
@@ -608,10 +620,7 @@ onMounted(() => {
             <h2 class="mb-4 text-lg font-bold">
               ログイン中：{{ order_config.user_name }}
               <button
-                @click="
-                  order_config.user_id = null;
-                  order_config.user_name = null;
-                "
+                @click="ClearLocalStorage"
                 class="ml-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
               >
                 <i class="fas fa-sign-out-alt"></i> Logout
