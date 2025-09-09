@@ -648,7 +648,7 @@ const deleteInitialOrder = order => {
                       品名・品番から検索
                     </label>
                     <input
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       type="text"
                       name=""
                       id=""
@@ -667,7 +667,7 @@ const deleteInitialOrder = order => {
                         type="date"
                         name=""
                         id=""
-                        class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
+                        class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
                         v-model="form.start_order_date"
                       />
                       ～
@@ -675,7 +675,7 @@ const deleteInitialOrder = order => {
                         type="date"
                         name=""
                         id=""
-                        class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 ml-2"
+                        class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 ml-2"
                         v-model="form.end_order_date"
                       />
                     </div>
@@ -836,7 +836,7 @@ const deleteInitialOrder = order => {
                       @change="
                         updateFilter('delifile_path', $event.target.value)
                       "
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
                     >
@@ -856,7 +856,7 @@ const deleteInitialOrder = order => {
                       @change="
                         updateFilter('delifile_path', $event.target.value)
                       "
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
                     >
@@ -876,7 +876,7 @@ const deleteInitialOrder = order => {
                       @change="
                         updateFilter('delifile_path', $event.target.value)
                       "
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       name="order_user"
                       id=""
                     >
@@ -1112,7 +1112,10 @@ const deleteInitialOrder = order => {
                 <tr
                   v-for="order in initial_orders.data"
                   :key="order.id"
-                  :class="{ 'bg-green-50': order.order_complete_flg }"
+                  :class="{
+                    'transition duration-30 hover:bg-gray-300': true, 
+                    'bg-green-50': order.order_complete_flg 
+                  }"
                 >
                   <td class="text-center">
                     <input
@@ -1175,7 +1178,7 @@ const deleteInitialOrder = order => {
                       name="name"
                       v-model="order.deli_location"
                       id=""
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
 
                     <span v-else>{{ order.deli_location }}</span>
@@ -1193,7 +1196,7 @@ const deleteInitialOrder = order => {
                       name="name"
                       v-model="order.name"
                       id=""
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
 
                     <span v-else>{{ order.name }}</span>
@@ -1212,7 +1215,7 @@ const deleteInitialOrder = order => {
                       name="s_name"
                       v-model="order.s_name"
                       id=""
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     />
 
                     <span v-else>{{ order.s_name }}</span>
@@ -1224,7 +1227,7 @@ const deleteInitialOrder = order => {
                       type="date"
                       name=""
                       id=""
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.desire_delivery_date"
                       @change="
                         updateDate('desired', order.id, $event.target.value)
@@ -1247,7 +1250,7 @@ const deleteInitialOrder = order => {
                       type="date"
                       name=""
                       id=""
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.expected_delivery_date"
                     />
                     <span v-else>{{
@@ -1267,7 +1270,7 @@ const deleteInitialOrder = order => {
                       type="date"
                       name=""
                       id=""
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.delivery_date"
                     />
                     <span v-else>{{
@@ -1301,7 +1304,7 @@ const deleteInitialOrder = order => {
                     <input
                       v-if="is_login"
                       type="number"
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.price"
                       @change="handlePrice(order, $event.target.value)"
                     />
@@ -1316,7 +1319,7 @@ const deleteInitialOrder = order => {
                     <input
                       v-if="is_login"
                       type="number"
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       :value="order.postage"
                       @change="handlePostage(order, $event.target.value)"
                     />
@@ -1340,7 +1343,7 @@ const deleteInitialOrder = order => {
                     <input
                       v-if="is_login"
                       type="text"
-                      class="appearance-none block w-full bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       v-model="order.description"
                       @change="changeMessage(order)"
                     />

@@ -756,7 +756,7 @@ onMounted(() => {
                   v-for="order_request in order_requests"
                   :key="order_request.id"
                   :class="{
-                    'transition duration-300 border': true,
+                    'transition duration-300 border hover:bg-gray-300': true,
                     'bg-blue-50': order_request.select_flg,
                     'bg-gray-100 ':
                       order_request.order_user_id != order_config.user_id,

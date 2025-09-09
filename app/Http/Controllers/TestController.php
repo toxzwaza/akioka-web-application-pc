@@ -31,31 +31,37 @@ class TestController extends Controller
     //
     public function test()
     {
-        // public/address_data.jsonを取得して配列で繰り返し表示
-        $jsonPath = public_path('address_data.json');
+
+
+
+        $stock_storages = StockStorage::join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('stocks', 'stocks.id', 'stock_storages.stock_id')->where('stocks.del_flg', 0)->whereIn('storage_addresses.location_id', [1,2])->get();
+        dd(count($stock_storages));
+        return;
+        // // public/address_data.jsonを取得して配列で繰り返し表示
+        // $jsonPath = public_path('address_data.json');
         
-        if (File::exists($jsonPath)) {
-            $jsonContent = File::get($jsonPath);
-            $addressData = json_decode($jsonContent, true);
+        // if (File::exists($jsonPath)) {
+        //     $jsonContent = File::get($jsonPath);
+        //     $addressData = json_decode($jsonContent, true);
             
-            if ($addressData) {
-                foreach ($addressData as $address) {
-                    echo "ID: " . $address['id'] . " - UID: " . $address['uid'];
-                    echo "<br>";
-                    $storage_address = StorageAddress::find($address['id']);
-                    $storage_address->uid = $address['uid'];
-                    $storage_address->save();
-                    echo "保存完了";
-                    echo "<br>";
-                }
-            } else {
-                echo "JSONデータの解析に失敗しました";
-                echo "<br>";
-            }
-        } else {
-            echo "address_data.jsonファイルが見つかりません";
-            echo "<br>";
-        }
+        //     if ($addressData) {
+        //         foreach ($addressData as $address) {
+        //             echo "ID: " . $address['id'] . " - UID: " . $address['uid'];
+        //             echo "<br>";
+        //             $storage_address = StorageAddress::find($address['id']);
+        //             $storage_address->uid = $address['uid'];
+        //             $storage_address->save();
+        //             echo "保存完了";
+        //             echo "<br>";
+        //         }
+        //     } else {
+        //         echo "JSONデータの解析に失敗しました";
+        //         echo "<br>";
+        //     }
+        // } else {
+        //     echo "address_data.jsonファイルが見つかりません";
+        //     echo "<br>";
+        // }
 
 
         return;
