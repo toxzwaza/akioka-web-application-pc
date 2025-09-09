@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MasterController;
+use App\Http\Controllers\DeviceController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -16,3 +17,13 @@ Route::get('/create/users', [MasterController::class, 'create_user'])->name('mas
 Route::post('/store/users', [MasterController::class, 'store_user'])->name('master.store.users');
 
 Route::get('/show/users/{user_id}', [MasterController::class, 'show_user'])->name('master.show.user');
+
+// デバイス情報管理
+Route::get('/devices', [DeviceController::class, 'index'])->name('master.devices');
+Route::get('/devices/get', [DeviceController::class, 'getDevices'])->name('master.devices.get');
+Route::get('/devices/create', [DeviceController::class, 'create'])->name('master.devices.create');
+Route::post('/devices/store', [DeviceController::class, 'store'])->name('master.devices.store');
+Route::get('/devices/{device}/edit', [DeviceController::class, 'edit'])->name('master.devices.edit');
+Route::put('/devices/{device}', [DeviceController::class, 'update'])->name('master.devices.update');
+Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('master.devices.destroy');
+Route::post('/devices/update-last-access', [DeviceController::class, 'updateLastAccess'])->name('master.devices.update-last-access');

@@ -5,7 +5,7 @@ import { ref } from "vue";
 
 const props = defineProps({
   title: String,
-  p_none: Boolean
+  p_none: Boolean,
 });
 
 const sub_nav_close = ref(false);
@@ -201,6 +201,20 @@ const sub_nav_close = ref(false);
             </span>
             カレンダー</Link
           >
+          <Link
+            :href="route('master.devices')"
+            :class="{
+              '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
+              'bg-white text-gray-900':
+                !route().current().startsWith('master.devices'),
+              'bg-blue-500 text-white':
+                route().current().startsWith('master.devices'),
+            }"
+          >
+            <span class="text-gray-100 mr-1 material-symbols-outlined">
+              devices </span
+            >デバイス情報</Link
+          >
         </template>
 
         <template v-else-if="route().current().startsWith('stock')">
@@ -251,10 +265,8 @@ const sub_nav_close = ref(false);
             :href="route('stock.locations')"
             :class="{
               '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
-              'bg-white text-gray-900':
-                route().current() != 'stock.locations',
-              'bg-blue-500 text-white':
-                route().current() == 'stock.locations',
+              'bg-white text-gray-900': route().current() != 'stock.locations',
+              'bg-blue-500 text-white': route().current() == 'stock.locations',
             }"
           >
             <span class="text-gray-100 mr-1 material-symbols-outlined">
@@ -320,20 +332,20 @@ const sub_nav_close = ref(false);
             滞留品</Link
           >
 
-        <Link
-        :href="route('stock.stocks.taking')"
-        class="text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2"
-        :class="{
-          'text-blue-500 font-bold':
-            route().current() == 'stock.storage_addresses',
-        }"
-      >
-        <span class="text-gray-100 mr-1 material-symbols-outlined">
-          list_alt
-        </span>
-        棚卸し</Link
-      >
-      <!-- <Link
+          <Link
+            :href="route('stock.stocks.taking')"
+            class="text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2"
+            :class="{
+              'text-blue-500 font-bold':
+                route().current() == 'stock.storage_addresses',
+            }"
+          >
+            <span class="text-gray-100 mr-1 material-symbols-outlined">
+              list_alt
+            </span>
+            棚卸し</Link
+          >
+          <!-- <Link
         :href="route('stock.retained.stocks')"
         class="text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2"
         :class="{
