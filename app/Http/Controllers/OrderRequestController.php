@@ -81,6 +81,8 @@ class OrderRequestController extends Controller
                 'device_messages.message as message',
                 'device_messages.answer as answer',
                 'device_messages.read_flg',
+                'devices.id as device_id',
+                'devices.name as device_name',
             )
                 ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
@@ -93,6 +95,7 @@ class OrderRequestController extends Controller
                 ->leftJoin(DB::raw('(SELECT stock_id, MAX(quantity) as max_quantity, MAX(reorder_point) as reorder_point FROM stock_storages GROUP BY stock_id) as max_stock_storages'), 'max_stock_storages.stock_id', '=', 'stocks.id')
                 ->leftJoin('device_messages', 'device_messages.id', '=', 'order_requests.device_message_id')
                 ->leftJoin('document_images', 'document_images.document_id', 'order_requests.document_id')
+                ->leftJoin('devices', 'devices.id', 'order_requests.device_id')
                 ->where('order_requests.del_flg', '=', 0)
                 ->where('order_requests.status', '=', 0)
                 ->where(function ($query) use ($user_id) {

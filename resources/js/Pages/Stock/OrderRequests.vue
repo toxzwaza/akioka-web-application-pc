@@ -752,6 +752,11 @@ onMounted(() => {
                     依頼者
                   </th>
                   <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  >
+                    依頼元端末
+                  </th>
+                  <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     発注者
@@ -1057,6 +1062,13 @@ onMounted(() => {
                       'px-4 py-4 text-lg text-gray-900': true,
                     }"
                   >
+                    {{ order_request.device_name }}
+                  </td>
+                  <td
+                    :class="{
+                      'px-4 py-4 text-lg text-gray-900': true,
+                    }"
+                  >
                     {{ order_request.order_user_name }}
                   </td>
                   <td class="w-32">
@@ -1135,6 +1147,9 @@ onMounted(() => {
           </p>
           <p class="font-bold w-full text-sm text-gray-700">
             依頼者: {{ modal_status.order_request.request_user_name }}
+          </p>
+          <p class="font-bold w-full text-sm text-gray-700">
+            依頼元デバイス: {{ modal_status.order_request.device_name }}
           </p>
           <hr class="my-4" />
           <h3
