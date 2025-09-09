@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Services\Helper;
+use App\Models\Device;
 use App\Models\Document;
 use App\Models\DocumentImage;
 use App\Models\InitialOrder;
@@ -31,7 +32,10 @@ class OrderRequestController extends Controller
         // 発注可能ユーザー（総務部）
         $order_users = User::select('users.id', 'users.name')->where('is_admin', 1)->get();
 
-        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id]);
+        // デバイス一覧
+        $devices = Device::select('devices.id', 'devices.name')->get();
+
+        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices]);
     }
 
     public function getOrderRequests(Request $request)
@@ -470,6 +474,52 @@ class OrderRequestController extends Controller
                 $order_request->save();
             }
         }catch(Exception $e){
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
+    /**
+     * 発注依頼にデバイスIDを設定
+     */
+    public function setDeviceId(Request $request)
+    {
+        $status = true;
+        $msg = "";
+
+        try {
+            // バリデーション
+            $request->validate([
+                'device_id' => 'required|exists:devices,id',
+                'order_request_id' => 'required|exists:order_requests,id'
+            ]);
+
+            $device_id = $request->device_id;
+            $order_request_id = $request->order_request_id;
+
+            // 発注依頼を取得
+            $order_request = OrderRequest::find($order_request_id);
+            
+            if (!$order_request) {
+                throw new Exception('発注依頼が見つかりません。');
+            }
+
+            // デバイスを取得（デバイス名も一緒に保存したい場合）
+            $device = Device::find($device_id);
+            
+            if (!$device) {
+                throw new Exception('デバイスが見つかりません。');
+            }
+
+            // デバイスIDを設定
+            $order_request->device_id = $device_id;
+            $order_request->save();
+
+            $msg = "デバイス「{$device->name}」を発注依頼に設定しました。";
+
+        } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
         }

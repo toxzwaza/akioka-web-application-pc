@@ -10,6 +10,7 @@ import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
 const props = defineProps({
   order_users: Array,
   user_id: Number,
+  devices: Array
 });
 const form = reactive({
   upload_file: null,
@@ -538,22 +539,42 @@ const loginCheck = () => {
 };
 
 const changeStockId = (order_request_id, stock_id) => {
-  console.log(order_request_id, stock_id )
-  if(confirm(`在庫ID: ${stock_id} で登録を行います。よろしいですか？`)){
-    axios.post(route('stock.updateStockId'), {
-      order_request_id: order_request_id,
-      stock_id : stock_id
-    })
-    .then(res => {
-      console.log(res.data)
-      if(res.data.status){
-        windows.location.reload()
-      }
-    })
-    .catch(error => {
-      console.log(error)
-    })
+  console.log(order_request_id, stock_id);
+  if (confirm(`在庫ID: ${stock_id} で登録を行います。よろしいですか？`)) {
+    axios
+      .post(route("stock.updateStockId"), {
+        order_request_id: order_request_id,
+        stock_id: stock_id,
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status) {
+          windows.location.reload();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+};
 
+const setDeviceId = async (device_id, order_request_id) => {
+  try {
+    const response = await axios.post(route('stock.setDeviceId'), {
+      device_id: device_id,
+      order_request_id: order_request_id
+    })
+    
+    if (response.data.status) {
+      alert(response.data.msg)
+      // データを再読み込み
+      window.location.reload()
+    } else {
+      alert('エラー: ' + response.data.msg)
+    }
+  } catch (error) {
+    console.error('デバイスID設定エラー:', error)
+    alert('デバイスIDの設定に失敗しました')
   }
 }
 
@@ -802,11 +823,16 @@ onMounted(() => {
                   </td>
                   <td class="text-center">
                     <input
-                      v-if="order_request.accept_flg === 0 && !order_request.stock_id"
+                      v-if="
+                        order_request.accept_flg === 0 &&
+                        !order_request.stock_id
+                      "
                       type="number"
                       :value="order_request.stock_id"
                       class="w-24 appearance-none block bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-center"
-                      @change="changeStockId(order_request.id, $event.target.value)"
+                      @change="
+                        changeStockId(order_request.id, $event.target.value)
+                      "
                     />
                     <span v-else>{{ order_request.stock_id }}</span>
                   </td>
@@ -1062,7 +1088,15 @@ onMounted(() => {
                       'px-4 py-4 text-lg text-gray-900': true,
                     }"
                   >
-                    {{ order_request.device_name }}
+                    <span v-if="order_request.device_id">{{
+                      `${order_request.device_id ?? ""} - ${
+                        order_request.device_name ?? ""
+                      }`
+                    }}</span>
+                    <select v-else class="font-bold appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" @change="setDeviceId($event.target.value, order_request.id)">
+                      <option value="">未選択</option>
+                      <option v-for="device in props.devices" :key="device.id" :value="device.id">{{ device.name }}</option>
+                    </select>
                   </td>
                   <td
                     :class="{

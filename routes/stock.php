@@ -110,6 +110,9 @@ Route::delete('/order-requests/delete', [OrderRequestController::class, 'delete'
 // 発注依頼から発注作成
 Route::post('/order-requests/create/initial-order', [OrderRequestController::class, 'createInitialOrder'])->name('stock.createInitialOrder');
 
+// デバイスID設定
+Route::post('/order-requests/set-device-id', [OrderRequestController::class, 'setDeviceId'])->name('stock.setDeviceId');
+
 // 滞留品
 Route::get('/retentions', [RetentionController::class, 'index'])->name('stock.retentions');
 Route::get('/retentions/get', [RetentionController::class, 'getRetentionStocks'])->name('stock.getRetentionStocks');
