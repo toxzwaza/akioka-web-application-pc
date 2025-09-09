@@ -435,4 +435,42 @@ class OrderRequestController extends Controller
 
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
+
+    public function updateStockId(Request $request){
+        $status = true;
+        $msg = "";
+        $order_request_id = $request->order_request_id;
+        $stock_id = $request->stock_id;
+
+        $order_request = OrderRequest::find($order_request_id);
+        $stock = Stock::find($stock_id);
+
+        try{
+            $order_request->stock_id = $stock_id;
+            $order_request->save();
+            $msg = "品名: " . $stock->name . " 品番: " . $stock->s_name . " で登録を行いました。";
+
+            // main_flgが立っているものを優先、なければ最初のものを取得
+            $stock_supplier = StockSupplier::where('stock_id', $stock_id)
+                ->orderByRaw('main_flg DESC')
+                ->first();
+
+            if($stock_supplier){
+                $order_request->supplier_id = $stock_supplier->supplier_id;
+                $order_request->supplier_name = $stock_supplier->supplier->name;
+                $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
+                $order_request->price = $stock->price;
+                $order_request->calc_price = $stock->price * $order_request->quantity;
+                $order_request->postage = $stock_supplier->postage;
+                $order_request->lead_time = $stock_supplier->lead_time;
+                
+                $order_request->save();
+            }
+        }catch(Exception $e){
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
 }

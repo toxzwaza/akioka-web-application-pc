@@ -537,6 +537,26 @@ const loginCheck = () => {
   }
 };
 
+const changeStockId = (order_request_id, stock_id) => {
+  console.log(order_request_id, stock_id )
+  if(confirm(`在庫ID: ${stock_id} で登録を行います。よろしいですか？`)){
+    axios.post(route('stock.updateStockId'), {
+      order_request_id: order_request_id,
+      stock_id : stock_id
+    })
+    .then(res => {
+      console.log(res.data)
+      if(res.data.status){
+        windows.location.reload()
+      }
+    })
+    .catch(error => {
+      console.log(error)
+    })
+
+  }
+}
+
 onMounted(() => {
   // デバイスID取得
   loginCheck();
@@ -636,6 +656,11 @@ onMounted(() => {
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   >
                     選択
+                  </th>
+                  <th
+                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  >
+                    在庫ID
                   </th>
                   <th
                     class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -769,6 +794,16 @@ onMounted(() => {
                       type="checkbox"
                       @change="toggle_contain_approvals(order_request)"
                     />
+                  </td>
+                  <td class="text-center">
+                    <input
+                      v-if="order_request.accept_flg === 0 && !order_request.stock_id"
+                      type="number"
+                      :value="order_request.stock_id"
+                      class="w-24 appearance-none block bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-center"
+                      @change="changeStockId(order_request.id, $event.target.value)"
+                    />
+                    <span v-else>{{ order_request.stock_id }}</span>
                   </td>
                   <td
                     :class="{

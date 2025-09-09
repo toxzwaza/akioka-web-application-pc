@@ -97,6 +97,8 @@ Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.ac
 Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrderRequest'])->name('stock.updateOrderRequest');
 // 発注担当者コメント更新
 Route::post('/order-requests/update/sub_description', [OrderRequestController::class, 'updateSubDescription'])->name('stock.updateSubDescription');
+// 未在庫登録品 ID紐づけ
+Route::post('/order-requests/update/stock-id', [OrderRequestController::class, 'updateStockId'])->name('stock.updateStockId');
 Route::post('/accept/order-request/re-notify', [AcceptController::class, 'reNotify'])->name('stock.accept.order_request.re-notify');
 //非承認
 Route::post('/accept/order-request/reject', [AcceptController::class, 'sendReject'])->name('stock.accept.order_request.reject');
