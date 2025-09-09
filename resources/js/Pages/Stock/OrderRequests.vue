@@ -863,6 +863,12 @@ onMounted(() => {
                       >
                         確認中
                       </button>
+                      <button
+                        v-else-if="order_request.accept_flg === 6"
+                        class="text-sm bg-yellow-500 hover:bg-yellow-700 text-white py-2 px-4 rounded-full"
+                      >
+                        差戻対応
+                      </button>
                     </div>
                   </td>
 
