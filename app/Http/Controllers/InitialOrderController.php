@@ -485,6 +485,12 @@ class InitialOrderController extends Controller
                     $stock->price = $val;
                     $stock->save();
                     break;
+                
+                case "quantity":
+                    $initial_order->quantity = $val;
+                    $initial_order->calc_price = $val * $initial_order->price;
+                    break;
+                break;
                 case 'postage':
                     $initial_order->postage = $val;
                     break;

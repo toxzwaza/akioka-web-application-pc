@@ -8,6 +8,8 @@ import Purchase from "@/Components/Purchase.vue";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 import { getImgPath } from "@/Helper/Method";
 import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
+import SearchLoading from "@/Components/Loading/SearchLoading.vue";
+import UserLogin from "@/Components/Auth/UserLogin.vue";
 
 const props = defineProps({
   initial_orders: Object,
@@ -20,7 +22,7 @@ const props = defineProps({
   totals: Object,
   groups: Array,
   processes: Array,
-  classifications: Array
+  classifications: Array,
 });
 
 const form = reactive({
@@ -57,6 +59,7 @@ const approval_document = reactive({
 
 const is_login = ref(false);
 const pwd = ref("");
+const isSearchLoading = ref(false);
 
 const modal_status = reactive({
   initial_order_id: null,
@@ -362,6 +365,33 @@ const handlePostage = (order, postage) => {
     });
 };
 
+const handleQuantity = (order, quantity) => {
+  const newQuantity = parseInt(quantity);
+  if (newQuantity <= 0) {
+    alert("数量は1以上で入力してください。");
+    return;
+  }
+
+  axios
+    .post(route("stock.update_data"), {
+      initial_order_id: order.id,
+      flg: "quantity",
+      val: newQuantity,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("数量を更新しました。");
+        // 金額の再計算
+        order.quantity = newQuantity;
+        order.calc_price = order.price * newQuantity;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
 // 納入希望日を保存する
 const handleDeliveryDateUpdate = (date) => {
   console.log("選択された納入希望日:", date, print_order.value);
@@ -411,6 +441,21 @@ const handleSelect = (order) => {
   console.log(purchase_list.value);
 };
 
+// 新しいログインコンポーネント用のハンドラー
+const handleAdminLoginSuccess = (loginData) => {
+  console.log("管理者ログイン成功:", loginData);
+  is_login.value = true;
+  // 選択されたユーザー情報をログに出力
+  console.log("選択された管理者:", loginData.user.name);
+};
+
+const handleAdminLogout = () => {
+  console.log("管理者ログアウト");
+  is_login.value = false;
+  pwd.value = "";
+};
+
+// 従来のメソッド（後方互換性のため保持）
 const login = () => {
   if (props.admin_users.some((user) => user.password == pwd.value)) {
     is_login.value = true;
@@ -418,6 +463,9 @@ const login = () => {
 };
 
 const getInitialOrders = (reset) => {
+  // ローディング開始
+  isSearchLoading.value = true;
+
   if (reset === "reset") {
     form.order_by = null;
     form.keyword = null;
@@ -433,18 +481,34 @@ const getInitialOrders = (reset) => {
     console.log("検索条件リセット");
   }
 
-  router.get(route("stock.initialOrders"), {
-    order_by: form.order_by,
-    keyword: form.keyword,
-    start_order_date: form.start_order_date,
-    end_order_date: form.end_order_date,
-    supplier_id: form.supplier_id,
-    order_user_id: form.order_user_id,
-    user_id: form.user_id,
-    group_id: form.group_id,
-    process_id: form.process_id,
-    classification_id: form.classification_id
-  });
+  // Inertia.jsのイベントリスナーを追加してローディングを制御
+  router.get(
+    route("stock.initialOrders"),
+    {
+      order_by: form.order_by,
+      keyword: form.keyword,
+      start_order_date: form.start_order_date,
+      end_order_date: form.end_order_date,
+      supplier_id: form.supplier_id,
+      order_user_id: form.order_user_id,
+      user_id: form.user_id,
+      group_id: form.group_id,
+      process_id: form.process_id,
+      classification_id: form.classification_id,
+    },
+    {
+      onFinish: () => {
+        // ページ遷移完了後にローディングを停止
+        setTimeout(() => {
+          isSearchLoading.value = false;
+        }, 500); // 少し遅延を入れて自然な感じにする
+      },
+      onError: () => {
+        // エラー時もローディングを停止
+        isSearchLoading.value = false;
+      },
+    }
+  );
 };
 
 // 発注完了登録
@@ -496,6 +560,17 @@ onMounted(() => {
   form.classification_id = params.get("classification_id");
 
   console.log(props.totals);
+
+  // Inertiaのページ遷移イベントをリッスン（ページネーション対応）
+  router.on("start", () => {
+    isSearchLoading.value = true;
+  });
+
+  router.on("finish", () => {
+    setTimeout(() => {
+      isSearchLoading.value = false;
+    }, 300);
+  });
 });
 
 // 納品書更新
@@ -535,10 +610,9 @@ const fileUpload = async (event) => {
   }
 };
 
-
 // 削除
-const deleteInitialOrder = order => {
-  console.log(order)
+const deleteInitialOrder = (order) => {
+  console.log(order);
   const msg = `
   以下の物品を削除してもよろしいですか？
   依頼者: ${order.order_user}
@@ -548,899 +622,935 @@ const deleteInitialOrder = order => {
   単価: ${order.price}
   数量: ${order.quantity}
   金額: ${order.calc_price}
-  `
-  if(confirm(msg)){
-    axios.delete(route('stock.delete.initialOrders'), {
-      params: {
-        initial_order_id : order.id
-      }
-    })
-    .then(res => {
-      console.log(res.data)
-      if(res.data.status){
-        alert('削除が完了しました。')
-      }
-    })
-    .catch(error => {
-      console.log(error)
-    })
+  `;
+  if (confirm(msg)) {
+    axios
+      .delete(route("stock.delete.initialOrders"), {
+        params: {
+          initial_order_id: order.id,
+        },
+      })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status) {
+          alert("削除が完了しました。");
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
-}
+};
 </script>
 <template>
   <MainLayout :title="'発注一覧'">
     <template #content>
-      <div class="flex justify-between">
-        <MainTitle
-          :top="'発注一覧'"
-          :sub="'発注情報の確認ができます。ログインすることで、品名・品番の修正が可能です。'"
-        />
-        <form class="w-full max-w-sm">
-          <div class="flex items-center border-b border-blue-500 py-2">
-            <input
-              class="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
-              type="text"
-              placeholder="生年月日"
-              v-model="pwd"
-            />
-            <button
-              @click.prevent="login()"
-              class="flex-shrink-0 bg-blue-500 hover:bg-blue-700 border-blue-500 hover:border-blue-700 text-sm border-4 text-white py-1 px-2 rounded"
-              type="button"
-            >
-              Sign Up
-            </button>
-            <button
-              class="flex-shrink-0 border-transparent border-4 text-blue-500 hover:text-blue-800 text-sm py-1 px-2 rounded"
-              type="button"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+      <!-- Header Section -->
+      <div class="header-section mb-8">
+        <div class="header-content">
+          <MainTitle
+            :top="'発注一覧'"
+            :sub="'発注情報の確認・管理ができます。'"
+          />
+
+          <!-- Admin Login Component -->
+          <UserLogin
+            :users="admin_users"
+            title="管理者ログイン"
+            role="管理者"
+            helpText="管理者権限で品名・品番・数量の編集が可能です"
+            storageKey="user_id"
+            @login="handleAdminLoginSuccess"
+            @logout="handleAdminLogout"
+          />
+        </div>
       </div>
 
-      <section class="text-gray-600 body-font">
-        <div class="py-12 mx-auto">
-          <div id="sort_container" class="my-8 flex items-start justify-start">
-            <div class="w-1/6">
-              <p class="mb-2 font-bold">並び順</p>
-              <div class="button_container flex items-center justify-start">
-                <!-- <button
-                  :class="{
-                    'mr-4 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded': true,
-                  }"
-                  @click="updateFilter('reset')"
-                >
-                  リセット
-                </button> -->
+      <!-- Search and Filter Section -->
+      <div class="search-section mb-8">
+        <div class="search-card">
+          <div class="search-header">
+            <h2 class="search-title">
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+              検索・フィルター
+            </h2>
+          </div>
 
+          <div class="search-content">
+            <!-- Sort Controls -->
+            <div class="sort-section">
+              <label class="sort-label">並び順</label>
+              <div class="sort-buttons">
                 <button
-                  :class="{
-                    'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                    'opacity-60': form.order_by != 'desc',
-                  }"
+                  class="sort-btn"
+                  :class="{ active: form.order_by === 'desc' }"
                   @click="form.order_by = 'desc'"
                 >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    ></path>
+                  </svg>
                   新しい順
                 </button>
                 <button
-                  :class="{
-                    'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                    'opacity-60': form.order_by != 'asc',
-                  }"
+                  class="sort-btn"
+                  :class="{ active: form.order_by === 'asc' }"
                   @click="form.order_by = 'asc'"
                 >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    ></path>
+                  </svg>
                   古い順
                 </button>
               </div>
             </div>
 
-            <div class="w-5/6">
-              <div class="mr-8">
-                <p class="mb-2 font-bold">検索</p>
-                <div class="button_container flex items-bottom justify-start">
-                  <div class="w-62 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      品名・品番から検索
-                    </label>
-                    <input
-                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      type="text"
-                      name=""
-                      id=""
-                      v-model="form.keyword"
-                    />
-                  </div>
-                  <div class="mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      注文日
-                    </label>
-                    <div class="flex items-center">
-                      <input
-                        type="date"
-                        name=""
-                        id=""
-                        class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 mr-2"
-                        v-model="form.start_order_date"
-                      />
-                      ～
-                      <input
-                        type="date"
-                        name=""
-                        id=""
-                        class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 ml-2"
-                        v-model="form.end_order_date"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="w-32 mr-6">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      注文先
-                    </label>
-                    <select
-                      @change="updateFilter('com_name', $event.target.value)"
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.supplier_id"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="supplier in props.suppliers"
-                        :key="supplier.id"
-                        :value="supplier.id"
-                      >
-                        {{ supplier.name }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      依頼部門（大区分）
-                    </label>
-                    <select
-                      @change="updateFilter('group', $event.target.value)"
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.group_id"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="group in props.groups"
-                        :key="group.id"
-                        :value="group.id"
-                      >
-                        {{ group.name }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      依頼部門（中区分）
-                    </label>
-                    <select
-                      @change="updateFilter('process', $event.target.value)"
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.process_id"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="process in props.processes"
-                        :key="process.id"
-                        :value="process.id"
-                      >
-                        {{ process.name }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      依頼者
-                    </label>
-                    <select
-                      @change="updateFilter('order_user', $event.target.value)"
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.order_user_id"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="user in props.order_users"
-                        :key="user.id"
-                        :value="user.id"
-                      >
-                        {{ user.name }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2 ml-4">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      担当者
-                    </label>
-                    <select
-                      @change="updateFilter('order_user', $event.target.value)"
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.user_id"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="user in props.users"
-                        :key="user.id"
-                        :value="user.id"
-                      >
-                        {{ user.name }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2 ml-4">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      カテゴリー
-                    </label>
-                    <select
-                     
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.classification_id"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="classification in props.classifications"
-                        :key="classification.id"
-                        :value="classification.id"
-                      >
-                        {{ classification.name }}
-                      </option>
-                    </select>
-                  </div>
-                  <!-- <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      納品書
-                    </label>
-                    <select
-                      @change="
-                        updateFilter('delifile_path', $event.target.value)
-                      "
-                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                    >
-                      <option value="0">未選択</option>
-                      <option value="1">済</option>
-                      <option value="2">未</option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      稟議書
-                    </label>
-                    <select
-                      @change="
-                        updateFilter('delifile_path', $event.target.value)
-                      "
-                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                    >
-                      <option value="0">未選択</option>
-                      <option value="1">済</option>
-                      <option value="2">未</option>
-                    </select>
-                  </div>
-                  <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      ステータス
-                    </label>
-                    <select
-                      @change="
-                        updateFilter('delifile_path', $event.target.value)
-                      "
-                      class="appearance-none block w-64 bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                    >
-                      <option value="0">未選択</option>
-                      <option value="1">済</option>
-                      <option value="2">未</option>
-                    </select>
-                  </div> -->
-
-                  <button
-                    @click="getInitialOrders()"
-                    class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            <!-- Filter Grid -->
+            <div class="filter-grid">
+              <div class="filter-item">
+                <label class="filter-label">品名・品番</label>
+                <div class="input-with-icon">
+                  <svg
+                    class="input-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    検索
-                  </button>
-                  <button
-                    @click="getInitialOrders('reset')"
-                    class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    リセット
-                  </button>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                  <input
+                    class="filter-input"
+                    type="text"
+                    placeholder="品名または品番で検索"
+                    v-model="form.keyword"
+                  />
                 </div>
               </div>
+              <div class="filter-item date-range">
+                <label class="filter-label">注文日</label>
+                <div class="date-range-inputs">
+                  <input
+                    type="date"
+                    class="filter-input date-input"
+                    v-model="form.start_order_date"
+                  />
+                  <span class="date-separator">～</span>
+                  <input
+                    type="date"
+                    class="filter-input date-input"
+                    v-model="form.end_order_date"
+                  />
+                </div>
+              </div>
+
+              <div class="filter-item">
+                <label class="filter-label">注文先</label>
+                <select class="filter-select" v-model="form.supplier_id">
+                  <option value="0">すべての注文先</option>
+                  <option
+                    v-for="supplier in props.suppliers"
+                    :key="supplier.id"
+                    :value="supplier.id"
+                  >
+                    {{ supplier.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">部門（大区分）</label>
+                <select class="filter-select" v-model="form.group_id">
+                  <option value="0">すべての部門</option>
+                  <option
+                    v-for="group in props.groups"
+                    :key="group.id"
+                    :value="group.id"
+                  >
+                    {{ group.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">部門（中区分）</label>
+                <select class="filter-select" v-model="form.process_id">
+                  <option value="0">すべての部門</option>
+                  <option
+                    v-for="process in props.processes"
+                    :key="process.id"
+                    :value="process.id"
+                  >
+                    {{ process.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">依頼者</label>
+                <select class="filter-select" v-model="form.order_user_id">
+                  <option value="0">すべての依頼者</option>
+                  <option
+                    v-for="user in props.order_users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">担当者</label>
+                <select class="filter-select" v-model="form.user_id">
+                  <option value="0">すべての担当者</option>
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">カテゴリー</label>
+                <select class="filter-select" v-model="form.classification_id">
+                  <option value="0">すべてのカテゴリー</option>
+                  <option
+                    v-for="classification in props.classifications"
+                    :key="classification.id"
+                    :value="classification.id"
+                  >
+                    {{ classification.name }}
+                  </option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <hr class="my-8" />
-
-          <section id="topContent" class="">
-            <div id="cardContent">
-              <div class="contactCard bg-gray-500">
-                <p class="title">検索合計発注数</p>
-                <hr class="my-1" />
-                <p class="value">{{ props.totals.total_order_count }}件</p>
-              </div>
-              <div class="contactCard bg-gray-500">
-                <p class="title">検索合計金額</p>
-                <hr class="my-1" />
-                <p class="value">
-                  {{
-                    Number(props.totals.total_calc_price_sum).toLocaleString()
-                  }}円
-                </p>
-              </div>
-              <div class="contactCard bg-blue-500">
-                <p class="title">今月合計発注数</p>
-                <hr class="my-1" />
-                <p class="value">{{ props.totals.current_month_count }}件</p>
-              </div>
-              <div class="contactCard bg-blue-500">
-                <p class="title">今月合計金額</p>
-                <hr class="my-1" />
-                <p class="value">
-                  {{
-                    Number(props.totals.current_month_sum).toLocaleString()
-                  }}円
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <div class="mb-8 flex justify-end">
-            <Pagination :links="initial_orders.links" />
-          </div>
-
-          <div
-            v-if="purchase_list.length > 1"
-            class="mt-12 mb-2 flex justify-end"
-          >
-            <button
-              @click="openModal(null, null, 'multi')"
-              class="bg-red-500 hover:bg-red-500 text-white font-bold py-2 px-4 rounded"
-            >
-              まとめて発注書作成
-            </button>
-          </div>
-
-          <div class="w-full mx-auto overflow-x-scroll">
-            <!-- <p class="mb-2">
-              <span class="text-green-500 font-bold">緑色</span
-              >の注文Noをクリックすると<span class="font-bold text-red-600"
-                >納品書</span
-              >を確認できます。
-            </p> -->
-            <table
-              id="table_container"
-              class="table-auto w-full text-left whitespace-no-wrap"
-            >
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
-                  >
-                    選択
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    注文No
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
-                  >
-                    画像
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    工程
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    注文依頼者
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    担当者
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    注文日
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    納入場所
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    注文先
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                    style="
-                      border-radius: 10px 0 0 10px;
-                      background-color: #ffabab;
-                    "
-                  >
-                    品名
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                    style="background-color: rgb(255 188 188)"
-                  >
-                    品番
-                  </th>
-
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
-                  >
-                    納入希望日
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-400"
-                  >
-                    納入予定日
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-500"
-                    style="border-radius: 0 10px 10px 0"
-                  >
-                    納入日
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    LT
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    単価
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    送料
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    数量
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    単位
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    金額
-                  </th>
-                  <th
-                    class="w-1/5 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    備考
-                  </th>
-
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    発注書
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    納品書
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    稟議書
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    発注済み登録
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                    v-if="is_login"
-                  >
-                    削除
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="order in initial_orders.data"
-                  :key="order.id"
-                  :class="{
-                    'transition duration-30 hover:bg-gray-300': true, 
-                    'bg-green-50': order.order_complete_flg 
-                  }"
+            <!-- Action Buttons -->
+            <div class="search-actions">
+              <button @click="getInitialOrders()" class="action-btn primary">
+                <svg
+                  class="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <td class="text-center">
-                    <input
-                      type="checkbox"
-                      name=""
-                      id=""
-                      @change="handleSelect(order)"
-                      v-model="order.select_flg"
-                    />
-                  </td>
-                  <td
-                    :class="{
-                      'px-4 py-3': true,
-                      'text-green-500 font-bold cursor-pointer':
-                        order.receive_flg,
-                    }"
-                  >
-                    {{ order.order_no }}
-                  </td>
-                  <td class="w-28">
-                    <img
-                      :src="
-                        order.img_path && order.img_path.includes('https://')
-                          ? order.img_path
-                          : 'https://akioka.cloud/' + order.img_path
-                      "
-                      @click="openModal(order.img_path, null, 'img')"
-                      alt=""
-                    />
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-center">
-                    {{
-                      order.stock_processes_order_request_code
-                        ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
-                        : order.stock_processes_base_code
-                        ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
-                        : "-"
-                    }}
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    {{ order.order_user }}
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    {{ order.manage_user_name }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900 whitespace-nowrap">
-                    <input
-                      v-if="is_login"
-                      @change="
-                        updateNameOrSName(
-                          order.id,
-                          'deli_location',
-                          $event.target.value
-                        )
-                      "
-                      type="text"
-                      name="name"
-                      v-model="order.deli_location"
-                      id=""
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    />
-
-                    <span v-else>{{ order.deli_location }}</span>
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{ order.com_name }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      @change="
-                        updateNameOrSName(order.id, 'name', $event.target.value)
-                      "
-                      type="text"
-                      name="name"
-                      v-model="order.name"
-                      id=""
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    />
-
-                    <span v-else>{{ order.name }}</span>
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      @change="
-                        updateNameOrSName(
-                          order.id,
-                          's_name',
-                          $event.target.value
-                        )
-                      "
-                      type="text"
-                      name="s_name"
-                      v-model="order.s_name"
-                      id=""
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    />
-
-                    <span v-else>{{ order.s_name }}</span>
-                  </td>
-
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      type="date"
-                      name=""
-                      id=""
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order.desire_delivery_date"
-                      @change="
-                        updateDate('desired', order.id, $event.target.value)
-                      "
-                    />
-                    <span v-else>{{
-                      order.desire_delivery_date
-                        ? new Date(
-                            order.desire_delivery_date
-                          ).toLocaleDateString("ja-JP")
-                        : "-"
-                    }}</span>
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      @change="
-                        updateDate('expected', order.id, $event.target.value)
-                      "
-                      type="date"
-                      name=""
-                      id=""
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order.expected_delivery_date"
-                    />
-                    <span v-else>{{
-                      order.expected_delivery_date
-                        ? new Date(
-                            order.expected_delivery_date
-                          ).toLocaleDateString("ja-JP")
-                        : "-"
-                    }}</span>
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      @change="
-                        updateDate('delivery', order.id, $event.target.value)
-                      "
-                      type="date"
-                      name=""
-                      id=""
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order.delivery_date"
-                    />
-                    <span v-else>{{
-                      order.delivery_date
-                        ? new Date(order.delivery_date).toLocaleDateString(
-                            "ja-JP"
-                          )
-                        : "-"
-                    }}</span>
-                  </td>
-
-                  <td
-                    :class="{
-                      'ml-2 px-4 py-3 text-lg whitespace-nowrap': true,
-                      'text-gray-400': order.base_lead_time != null,
-                      'text-gray-700': order.lead_time != null,
-                    }"
-                  >
-                    {{
-                      order.lead_time
-                        ? `${order.lead_time}日`
-                        : order.base_lead_time
-                        ? `≒ ${order.base_lead_time}日`
-                        : "-"
-                    }}
-                  </td>
-
-                  <td
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    <input
-                      v-if="is_login"
-                      type="number"
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order.price"
-                      @change="handlePrice(order, $event.target.value)"
-                    />
-                    <span v-else
-                      >{{ order.price.toLocaleString()
-                      }}{{
-                        order.stock_tax_included ? " (税込)" : " (税抜)"
-                      }}</span
-                    >
-                  </td>
-                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      type="number"
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      :value="order.postage"
-                      @change="handlePostage(order, $event.target.value)"
-                    />
-                    <span v-else>{{
-                      order.postage ? order.postage.toLocaleString() : "-"
-                    }}</span>
-                  </td>
-                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
-                    {{ order.quantity }}
-                  </td>
-                  <td class="ml-2 px-4 py-3 text-lg text-gray-900">
-                    {{ order.order_unit }}
-                  </td>
-                  <td
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    {{ order.calc_price.toLocaleString() }}
-                    <span class="text-xs text-gray-600">円</span>
-                  </td>
-                  <td class="min-w-md ml-2 px-4 py-3 text-lg text-gray-900">
-                    <input
-                      v-if="is_login"
-                      type="text"
-                      class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      v-model="order.description"
-                      @change="changeMessage(order)"
-                    />
-                    <span v-else>{{ order.description }}</span>
-                  </td>
-
-                  <td
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    <button
-                      v-if="!order.url"
-                      @click="openModal(null, order, 'purchase')"
-                      :class="{
-                        ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
-                        'bg-green-500': order.purchase_path,
-                        'bg-gray-500': !order.purchase_path,
-                      }"
-                    >
-                      {{ order.purchase_path ? "発行済" : "未発行" }}
-                      <i
-                        v-if="order.purchase_path"
-                        class="ml-2 fas fa-check"
-                      ></i>
-                    </button>
-
-                    <a
-                      v-else
-                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      :href="order.url"
-                      target="blank"
-                      >URL</a
-                    >
-                  </td>
-                  <td
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    <button
-                      v-if="order.delifile_path"
-                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="
-                        openModal(order.delifile_path, order, 'deli_file')
-                      "
-                    >
-                      納品書
-                    </button>
-                  </td>
-                  <td
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    <button
-                      v-if="order.file_path || order.document_id"
-                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="openModal(null, order, 'approval')"
-                    >
-                      稟議書
-                    </button>
-                  </td>
-                  <td
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    <button
-                      @click="orderComplete(order)"
-                      :class="{
-                        ' text-white font-bold py-2 px-4 rounded text-xs': true,
-                        'bg-green-500 hover:bg-green-700':
-                          order.order_complete_flg,
-                        'bg-gray-500 hover:bg-gray-700':
-                          !order.order_complete_flg,
-                      }"
-                    >
-                      <span v-if="order.order_complete_flg"
-                        >完了済<i class="ml-2 fas fa-check"></i
-                      ></span>
-                      <span v-else>未完了</span>
-                    </button>
-                  </td>
-                  <td
-                    v-if="is_login"
-                    class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                  >
-                    <button
-                      class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-xs"
-                      @click="deleteInitialOrder(order)"
-                    >
-                      削除
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+                検索
+              </button>
+              <button
+                @click="getInitialOrders('reset')"
+                class="action-btn secondary"
+              >
+                <svg
+                  class="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  ></path>
+                </svg>
+                リセット
+              </button>
+            </div>
           </div>
-          <hr class="my-8" />
-          <div class="mb-8 flex justify-end">
+        </div>
+      </div>
+
+      <!-- Statistics Section -->
+      <div class="stats-section mb-8">
+        <div class="stats-header mb-6">
+          <h2 class="stats-title">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              ></path>
+            </svg>
+            発注統計
+          </h2>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card search-stats">
+            <div class="stat-header">
+              <div class="stat-icon">
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-title">検索結果</h3>
+                <p class="stat-subtitle">現在の検索条件</p>
+              </div>
+            </div>
+            <div class="stat-values">
+              <div class="stat-value-item">
+                <span class="stat-value">{{
+                  props.totals.total_order_count
+                }}</span>
+                <span class="stat-unit">件</span>
+              </div>
+              <div class="stat-amount">
+                {{
+                  Number(props.totals.total_calc_price_sum).toLocaleString()
+                }}円
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card monthly-stats">
+            <div class="stat-header">
+              <div class="stat-icon">
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-title">今月の発注</h3>
+                <p class="stat-subtitle">
+                  {{
+                    new Date().toLocaleDateString("ja-JP", {
+                      year: "numeric",
+                      month: "long",
+                    })
+                  }}
+                </p>
+              </div>
+            </div>
+            <div class="stat-values">
+              <div class="stat-value-item">
+                <span class="stat-value">{{
+                  props.totals.current_month_count
+                }}</span>
+                <span class="stat-unit">件</span>
+              </div>
+              <div class="stat-amount">
+                {{ Number(props.totals.current_month_sum).toLocaleString() }}円
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card performance-stats">
+            <div class="stat-header">
+              <div class="stat-icon">
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                  ></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-title">平均単価</h3>
+                <p class="stat-subtitle">検索結果から算出</p>
+              </div>
+            </div>
+            <div class="stat-values">
+              <div class="stat-amount large">
+                {{
+                  props.totals.total_order_count > 0
+                    ? Math.round(
+                        props.totals.total_calc_price_sum /
+                          props.totals.total_order_count
+                      ).toLocaleString()
+                    : 0
+                }}円
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Controls -->
+      <div class="table-controls mb-6">
+        <div class="controls-left">
+          <div class="pagination-wrapper">
             <Pagination :links="initial_orders.links" />
           </div>
         </div>
-      </section>
+
+        <div class="controls-right">
+          <button
+            v-if="purchase_list.length > 1"
+            @click="openModal(null, null, 'multi')"
+            class="batch-order-btn"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            まとめて発注書作成 ({{ purchase_list.length }}件)
+          </button>
+        </div>
+      </div>
+
+      <!-- Modern Table Container -->
+      <div class="modern-table-container">
+        <div class="table-wrapper">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
+                >
+                  選択
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
+                >
+                  注文No
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
+                >
+                  画像
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  工程
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  注文依頼者
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  担当者
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  注文日
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  納入場所
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  注文先
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  style="
+                    border-radius: 10px 0 0 10px;
+                    background-color: #ffabab;
+                  "
+                >
+                  品名
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  style="background-color: rgb(255 188 188)"
+                >
+                  品番
+                </th>
+
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
+                >
+                  納入希望日
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-400"
+                >
+                  納入予定日
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-500"
+                  style="border-radius: 0 10px 10px 0"
+                >
+                  納入日
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  LT
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  単価
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  送料
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  数量
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  単位
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  金額
+                </th>
+                <th
+                  class="w-1/5 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  備考
+                </th>
+
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  発注書
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  納品書
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  稟議書
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  発注済み登録
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  v-if="is_login"
+                >
+                  削除
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="order in initial_orders.data"
+                :key="order.id"
+                :class="{
+                  'transition duration-30': true,
+                  'bg-green-100': order.order_complete_flg,
+                }"
+              >
+                <td class="text-center">
+                  <input
+                    type="checkbox"
+                    name=""
+                    id=""
+                    @change="handleSelect(order)"
+                    v-model="order.select_flg"
+                  />
+                </td>
+                <td
+                  :class="{
+                    'px-4 py-3': true,
+                    'text-green-500 font-bold cursor-pointer':
+                      order.receive_flg,
+                  }"
+                >
+                  {{ order.order_no }}
+                </td>
+                <td class="w-28">
+                  <img
+                    :src="
+                      order.img_path && order.img_path.includes('https://')
+                        ? order.img_path
+                        : 'https://akioka.cloud/' + order.img_path
+                    "
+                    @click="openModal(order.img_path, null, 'img')"
+                    alt=""
+                  />
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-center">
+                  {{
+                    order.stock_processes_order_request_code
+                      ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
+                      : order.stock_processes_base_code
+                      ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
+                      : "-"
+                  }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  {{ order.order_user }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  {{ order.manage_user_name }}
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900 whitespace-nowrap">
+                  <input
+                    v-if="is_login"
+                    @change="
+                      updateNameOrSName(
+                        order.id,
+                        'deli_location',
+                        $event.target.value
+                      )
+                    "
+                    type="text"
+                    name="name"
+                    v-model="order.deli_location"
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+
+                  <span v-else>{{ order.deli_location }}</span>
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  {{ order.com_name }}
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    @change="
+                      updateNameOrSName(order.id, 'name', $event.target.value)
+                    "
+                    type="text"
+                    name="name"
+                    v-model="order.name"
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+
+                  <span v-else>{{ order.name }}</span>
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    @change="
+                      updateNameOrSName(order.id, 's_name', $event.target.value)
+                    "
+                    type="text"
+                    name="s_name"
+                    v-model="order.s_name"
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+
+                  <span v-else>{{ order.s_name }}</span>
+                </td>
+
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.desire_delivery_date"
+                    @change="
+                      updateDate('desired', order.id, $event.target.value)
+                    "
+                  />
+                  <span v-else>{{
+                    order.desire_delivery_date
+                      ? new Date(order.desire_delivery_date).toLocaleDateString(
+                          "ja-JP"
+                        )
+                      : "-"
+                  }}</span>
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    @change="
+                      updateDate('expected', order.id, $event.target.value)
+                    "
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.expected_delivery_date"
+                  />
+                  <span v-else>{{
+                    order.expected_delivery_date
+                      ? new Date(
+                          order.expected_delivery_date
+                        ).toLocaleDateString("ja-JP")
+                      : "-"
+                  }}</span>
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    @change="
+                      updateDate('delivery', order.id, $event.target.value)
+                    "
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.delivery_date"
+                  />
+                  <span v-else>{{
+                    order.delivery_date
+                      ? new Date(order.delivery_date).toLocaleDateString(
+                          "ja-JP"
+                        )
+                      : "-"
+                  }}</span>
+                </td>
+
+                <td
+                  :class="{
+                    'ml-2 px-4 py-3 text-lg whitespace-nowrap': true,
+                    'text-gray-400': order.base_lead_time != null,
+                    'text-gray-700': order.lead_time != null,
+                  }"
+                >
+                  {{
+                    order.lead_time
+                      ? `${order.lead_time}日`
+                      : order.base_lead_time
+                      ? `≒ ${order.base_lead_time}日`
+                      : "-"
+                  }}
+                </td>
+
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <input
+                    v-if="is_login"
+                    type="number"
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.price"
+                    @change="handlePrice(order, $event.target.value)"
+                  />
+                  <span v-else
+                    >{{ order.price.toLocaleString()
+                    }}{{
+                      order.stock_tax_included ? " (税込)" : " (税抜)"
+                    }}</span
+                  >
+                </td>
+                <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    type="number"
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.postage"
+                    @change="handlePostage(order, $event.target.value)"
+                  />
+                  <span v-else>{{
+                    order.postage ? order.postage.toLocaleString() : "-"
+                  }}</span>
+                </td>
+                <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    type="number"
+                    min="1"
+                    class="appearance-none block w-20 bg-gray-100 text-gray-700 border border-gray-200 rounded py-2 px-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.quantity"
+                    @change="handleQuantity(order, $event.target.value)"
+                  />
+                  <span v-else>{{ order.quantity }}</span>
+                </td>
+                <td class="ml-2 px-4 py-3 text-lg text-gray-900">
+                  {{ order.order_unit }}
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  {{ order.calc_price.toLocaleString() }}
+                  <span class="text-xs text-gray-600">円</span>
+                </td>
+                <td class="min-w-md ml-2 px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    type="text"
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    v-model="order.description"
+                    @change="changeMessage(order)"
+                  />
+                  <span v-else>{{ order.description }}</span>
+                </td>
+
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    v-if="!order.url"
+                    @click="openModal(null, order, 'purchase')"
+                    :class="{
+                      ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
+                      'bg-green-500': order.purchase_path,
+                      'bg-gray-500': !order.purchase_path,
+                    }"
+                  >
+                    {{ order.purchase_path ? "発行済" : "未発行" }}
+                    <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
+                  </button>
+
+                  <a
+                    v-else
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    :href="order.url"
+                    target="blank"
+                    >URL</a
+                  >
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    v-if="order.delifile_path"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    @click="openModal(order.delifile_path, order, 'deli_file')"
+                  >
+                    納品書
+                  </button>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    v-if="order.file_path || order.document_id"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    @click="openModal(null, order, 'approval')"
+                  >
+                    稟議書
+                  </button>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    @click="orderComplete(order)"
+                    :class="{
+                      ' text-white font-bold py-2 px-4 rounded text-xs': true,
+                      'bg-green-500 hover:bg-green-700':
+                        order.order_complete_flg,
+                      'bg-gray-500 hover:bg-gray-700':
+                        !order.order_complete_flg,
+                    }"
+                  >
+                    <span v-if="order.order_complete_flg"
+                      >完了済<i class="ml-2 fas fa-check"></i
+                    ></span>
+                    <span v-else>未完了</span>
+                  </button>
+                </td>
+                <td
+                  v-if="is_login"
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    @click="deleteInitialOrder(order)"
+                  >
+                    削除
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bottom Pagination -->
+      </div>
+      <div class=" mt-6">
+        <Pagination :links="initial_orders.links" />
+      </div>
 
       <!-- モーダルウィンドウ -->
       <div id="modal" :class="{ active: modal_status.status }">
@@ -1531,12 +1641,312 @@ const deleteInitialOrder = order => {
           </div>
         </div>
       </div>
+
+      <!-- Search Loading Component -->
+      <SearchLoading
+        :isLoading="isSearchLoading"
+        title="検索中..."
+        message="発注データを取得しています。しばらくお待ちください。"
+      />
     </template>
   </MainLayout>
 </template>
 <style scoped lang="scss">
-#table_container {
-  width: 130vw;
+// Header Section
+.header-section {
+  .header-content {
+    @apply flex items-start justify-between;
+  }
+}
+
+// Search Section
+.search-section {
+  .search-card {
+    @apply bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+
+    .search-header {
+      @apply p-6 bg-gray-50 border-b border-gray-100;
+
+      .search-title {
+        @apply text-xl font-semibold text-gray-800 flex items-center;
+      }
+    }
+
+    .search-content {
+      @apply p-6;
+
+      .sort-section {
+        @apply mb-6;
+
+        .sort-label {
+          @apply block text-sm font-medium text-gray-700 mb-3;
+        }
+
+        .sort-buttons {
+          @apply flex gap-2;
+
+          .sort-btn {
+            @apply flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200;
+
+            &.active {
+              @apply bg-blue-600 text-white border-blue-600;
+            }
+          }
+        }
+      }
+
+      .filter-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6;
+
+        .filter-item {
+          .filter-label {
+            @apply block text-sm font-medium text-gray-700 mb-2;
+          }
+
+          .filter-input {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+          }
+
+          .filter-select {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white;
+          }
+
+          .input-with-icon {
+            @apply relative;
+
+            .input-icon {
+              @apply absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400;
+            }
+
+            .filter-input {
+              @apply pl-10;
+            }
+          }
+
+          &.date-range {
+            .date-range-inputs {
+              @apply flex items-center gap-2;
+
+              .date-input {
+                @apply flex-1;
+              }
+
+              .date-separator {
+                @apply text-gray-500 font-medium;
+              }
+            }
+          }
+        }
+      }
+
+      .search-actions {
+        @apply flex gap-3 justify-end;
+
+        .action-btn {
+          @apply flex items-center px-6 py-2 rounded-lg font-medium transition-colors duration-200;
+
+          &.primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white;
+          }
+
+          &.secondary {
+            @apply bg-gray-100 hover:bg-gray-200 text-gray-700;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Statistics Section
+.stats-section {
+  .stats-header {
+    .stats-title {
+      @apply text-2xl font-bold text-gray-800 flex items-center;
+    }
+  }
+
+  .stats-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+
+    .stat-card {
+      @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300;
+
+      .stat-header {
+        @apply flex items-start gap-4 mb-4;
+
+        .stat-icon {
+          @apply w-12 h-12 rounded-lg flex items-center justify-center;
+        }
+
+        .stat-content {
+          .stat-title {
+            @apply text-lg font-semibold text-gray-800;
+          }
+
+          .stat-subtitle {
+            @apply text-sm text-gray-600;
+          }
+        }
+      }
+
+      .stat-values {
+        .stat-value-item {
+          @apply flex items-baseline gap-1 mb-2;
+
+          .stat-value {
+            @apply text-3xl font-bold text-gray-900;
+          }
+
+          .stat-unit {
+            @apply text-lg text-gray-600;
+          }
+        }
+
+        .stat-amount {
+          @apply text-lg font-semibold text-gray-700;
+
+          &.large {
+            @apply text-2xl font-bold text-gray-900;
+          }
+        }
+      }
+
+      &.search-stats {
+        .stat-icon {
+          @apply bg-blue-100 text-blue-600;
+        }
+      }
+
+      &.monthly-stats {
+        .stat-icon {
+          @apply bg-green-100 text-green-600;
+        }
+      }
+
+      &.performance-stats {
+        .stat-icon {
+          @apply bg-purple-100 text-purple-600;
+        }
+      }
+    }
+  }
+}
+
+// Table Section
+.table-controls {
+  @apply flex items-center justify-between;
+
+  .controls-left {
+    .pagination-wrapper {
+      // Pagination styles will be inherited
+    }
+  }
+
+  .controls-right {
+    .batch-order-btn {
+      @apply bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center;
+    }
+  }
+}
+
+.modern-table-container {
+  @apply bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+
+  .table-wrapper {
+    @apply overflow-x-auto;
+
+    .modern-table {
+      @apply w-full min-w-max;
+
+      thead {
+        @apply bg-gray-50;
+
+        th {
+          @apply px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-b border-gray-200;
+
+          &:first-child {
+            @apply rounded-tl-lg;
+          }
+
+          &:last-child {
+            @apply rounded-tr-lg;
+          }
+        }
+      }
+
+      tbody {
+        @apply bg-white divide-y divide-gray-200;
+
+        tr {
+          @apply hover:bg-gray-50 transition-colors duration-150;
+
+          &.bg-green-50 {
+            background-color: #f0fdf4;
+
+            &:hover {
+              background-color: #dcfce7;
+            }
+          }
+
+          td {
+            @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+
+            input,
+            select,
+            textarea {
+              @apply w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent;
+            }
+
+            button {
+              @apply px-3 py-1 rounded text-xs font-medium transition-colors duration-200;
+            }
+
+            img {
+              @apply w-16 h-16 object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .table-footer {
+    @apply p-4 bg-gray-50 border-t border-gray-200 flex justify-center mt-8;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .header-content {
+    @apply flex-col gap-6;
+  }
+
+  .filter-grid {
+    @apply grid-cols-1 md:grid-cols-2;
+  }
+
+  .stats-grid {
+    @apply grid-cols-1 md:grid-cols-2;
+  }
+
+  .table-controls {
+    @apply flex-col gap-4 items-stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-actions {
+    @apply flex-col;
+  }
+
+  .stats-grid {
+    @apply grid-cols-1;
+  }
+
+  .filter-grid {
+    @apply grid-cols-1;
+  }
 }
 
 #modal {

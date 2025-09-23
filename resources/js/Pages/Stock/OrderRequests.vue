@@ -6,6 +6,7 @@ import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
+import SearchLoading from "@/Components/Loading/SearchLoading.vue";
 
 const props = defineProps({
   order_users: Array,
@@ -195,8 +196,12 @@ const order_config = reactive({
 });
 
 const order_requests = ref([]);
+const isDataLoading = ref(false);
 
 const getOrderRequests = (user_id) => {
+  // ローディング開始
+  isDataLoading.value = true;
+  
   axios
     .get(route("stock.getOrderRequests"), {
       params: {
@@ -209,6 +214,12 @@ const getOrderRequests = (user_id) => {
     })
     .catch((error) => {
       console.log(error);
+    })
+    .finally(() => {
+      // ローディング終了
+      setTimeout(() => {
+        isDataLoading.value = false;
+      }, 500);
     });
 };
 
@@ -586,44 +597,43 @@ onMounted(() => {
 <template>
   <MainLayout :title="'発注依頼一覧'">
     <template #content>
+      <!-- Header Section -->
+      <div class="header-section mb-8">
       <MainTitle
         :top="'発注依頼一覧'"
-        :sub="'在庫管理システムより取得した発注依頼を完了することができます。複数選択後、依頼をクリックすると添付されている稟議書を共有して承認フローを回します。'"
-      />
+          :sub="'発注依頼の承認・完了処理ができます。'"
+        />
+      </div>
 
-      <section class="text-gray-600 body-font">
-        <div class="mx-auto">
-          <div
-            v-if="!order_config.user_id"
-            class="w-full mx-auto mb-8 p-4 bg-gray-100"
-          >
-            <div
-              class="flex min-h-full flex-col justify-center px-6 py-4 lg:px-8"
-            >
-              <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+      <!-- Login Section -->
+      <div v-if="!order_config.user_id" class="login-section mb-8">
+        <div class="login-container">
+          <div class="login-card">
+            <div class="login-header">
+              <div class="logo-container">
                 <img
-                  class="mt-10 mx-auto h-10 w-auto"
+                  class="company-logo"
                   src="/img/base/AK_logo.png"
-                  alt="Your Company"
+                  alt="会社ロゴ"
                 />
               </div>
+              <h2 class="login-title">発注担当者ログイン</h2>
+              <p class="login-subtitle">発注依頼の管理・承認を行うためにログインしてください</p>
+              </div>
 
-              <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                <form class="space-y-6" action="#" method="POST">
-                  <div>
-                    <label
-                      for="email"
-                      class="block text-sm/6 font-medium text-gray-900"
-                      >ログインユーザー</label
-                    >
-                    <div class="mt-2">
+            <div class="login-form">
+              <div class="form-group">
+                <label class="form-label">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  ユーザー選択
+                </label>
                       <select
-                        name=""
-                        id=""
-                        class="block w-full rounded-md bg-white px-3 py-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  class="form-select"
                         @change="handleUserId($event.target.value)"
                       >
-                        <option value="0">選択してください</option>
+                  <option value="0">ユーザーを選択してください</option>
                         <option
                           v-for="order_user in order_users"
                           :key="order_user.id"
@@ -632,45 +642,62 @@ onMounted(() => {
                           {{ order_user.name }}
                         </option>
                       </select>
-                    </div>
                   </div>
 
-                  <div>
-                    <button
-                      type="submit"
-                      class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                    >
-                      Sign in
-                    </button>
+              <div class="login-help">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                アカウントがない場合は管理者にお問い合わせください
                   </div>
-                </form>
-
-                <p class="mt-10 text-center text-sm/6 text-gray-500">
-                  Not a member?
-                  <a
-                    href="#"
-                    class="font-semibold text-indigo-600 hover:text-indigo-500"
-                    >管理者に確認してください。</a
-                  >
-                </p>
+            </div>
               </div>
             </div>
           </div>
 
-          <div v-else class="w-full mx-auto overflow-auto">
-            <h2 class="mb-4 text-lg font-bold">
-              ログイン中：{{ order_config.user_name }}
+      <!-- User Dashboard -->
+      <div v-else class="dashboard-section mb-8">
+        <!-- User Info Card -->
+        <div class="user-info-card mb-6">
+          <div class="user-info-content">
+            <div class="user-avatar">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+            </div>
+            <div class="user-details">
+              <h2 class="user-name">{{ order_config.user_name }}</h2>
+              <p class="user-role">発注担当者</p>
+            </div>
+          </div>
               <button
                 @click="ClearLocalStorage"
-                class="ml-4 px-4 py-2 bg-red-700 text-white font-semibold rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
+            class="logout-btn"
               >
-                <i class="fas fa-sign-out-alt"></i> Logout
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            ログアウト
               </button>
-            </h2>
-            <table
-              id="table_container"
-              class="table-auto w-full text-left whitespace-no-wrap"
-            >
+        </div>
+        
+        <!-- Orders Table Section -->
+        <div class="orders-table-section">
+          <div class="table-container">
+            <div class="table-header mb-4">
+              <h3 class="table-title">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                発注依頼一覧 ({{ order_requests.length }}件)
+              </h3>
+              <div v-if="contain_approvals.list.length > 0" class="batch-actions">
+                <span class="selected-count">{{ contain_approvals.list.length }}件選択中</span>
+              </div>
+            </div>
+            
+            <div class="table-wrapper">
+              <table class="modern-table">
               <thead>
                 <tr>
                   <th
@@ -1158,7 +1185,8 @@ onMounted(() => {
             </table>
           </div>
         </div>
-      </section>
+        </div>
+      </div>
 
       <!-- モーダルウィンドウ -->
       <div id="modal" :class="{ active: modal_status.status }">
@@ -1431,90 +1459,300 @@ onMounted(() => {
           </div>
         </details>
       </div>
+      
+      <!-- Search Loading Component -->
+      <SearchLoading 
+        :isLoading="isDataLoading"
+        title="データ取得中..."
+        message="発注依頼データを取得しています。しばらくお待ちください。"
+      />
     </template>
   </MainLayout>
 </template>
 <style scoped lang="scss">
-table {
-  &#table_container {
-    width: 130vw;
-  }
+// Header Section
+.header-section {
+  @apply mb-8;
+}
 
-  td {
-    white-space: nowrap;
-
-    &.img_container {
-      width: 2vw;
-      padding: 0;
-
-      img {
-        width: 100%;
-        height: auto;
-        width: 80px;
-        object-fit: contain;
+// Login Section
+.login-section {
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 -mx-8 -mt-8 px-8 py-12;
+  
+  .login-container {
+    @apply w-full max-w-md;
+    
+    .login-card {
+      @apply bg-white rounded-2xl shadow-xl border border-gray-100 p-8;
+      
+      .login-header {
+        @apply text-center mb-8;
+        
+        .logo-container {
+          @apply mb-6;
+          
+          .company-logo {
+            @apply mx-auto h-16 w-auto;
+          }
+        }
+        
+        .login-title {
+          @apply text-2xl font-bold text-gray-900 mb-2;
+        }
+        
+        .login-subtitle {
+          @apply text-gray-600 leading-relaxed;
+        }
+      }
+      
+      .login-form {
+        .form-group {
+          @apply mb-6;
+          
+          .form-label {
+            @apply flex items-center text-sm font-medium text-gray-700 mb-3;
+          }
+          
+          .form-select {
+            @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900;
+          }
+        }
+        
+        .login-help {
+          @apply flex items-start text-sm text-gray-500 bg-blue-50 p-3 rounded-lg;
+        }
       }
     }
-    &.name {
-      max-width: 300px;
-      overflow-x: auto;
-    }
+  }
+}
 
-    &.s_name {
-      max-width: 220px;
-      overflow-x: auto;
+// Dashboard Section
+.dashboard-section {
+  .user-info-card {
+    @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex items-center justify-between;
+    
+    .user-info-content {
+      @apply flex items-center gap-4;
+      
+      .user-avatar {
+        @apply w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center;
+      }
+      
+      .user-details {
+        .user-name {
+          @apply text-xl font-semibold text-gray-900;
+        }
+        
+        .user-role {
+          @apply text-sm text-gray-600;
+        }
+      }
+    }
+    
+    .logout-btn {
+      @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center;
+    }
+  }
+  
+  .orders-table-section {
+    @apply bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+    
+    .table-container {
+      .table-header {
+        @apply p-6 bg-gray-50 border-b border-gray-100 flex items-center justify-between;
+        
+        .table-title {
+          @apply text-xl font-semibold text-gray-800 flex items-center;
+        }
+        
+        .batch-actions {
+          @apply flex items-center gap-3;
+          
+          .selected-count {
+            @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold;
+          }
+        }
+      }
+      
+      .table-wrapper {
+        @apply overflow-x-auto;
+        
+        .modern-table {
+          @apply w-full min-w-max;
+          
+          thead {
+            @apply bg-gray-50;
+            
+            th {
+              @apply px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-b border-gray-200;
+            }
+          }
+          
+          tbody {
+            @apply bg-white divide-y divide-gray-200;
+            
+            tr {
+              @apply hover:bg-gray-50 transition-colors duration-150;
+              
+              &.bg-blue-50 {
+                background-color: #eff6ff;
+                
+                &:hover {
+                  background-color: #dbeafe;
+                }
+              }
+              
+              &.bg-gray-100 {
+                background-color: #f3f4f6;
+                
+                &:hover {
+                  background-color: #e5e7eb;
+                }
+              }
+              
+              td {
+                @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+                
+                input, select, textarea {
+                  @apply px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent;
+                }
+                
+                button {
+                  @apply px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200;
+                }
+                
+                img {
+                  @apply w-16 h-16 object-cover rounded-lg shadow-sm;
+                }
+
+    &.img_container {
+                  @apply p-2;
+                  
+                  img {
+                    @apply w-20 h-20 object-contain;
+                  }
+                }
+                
+                &.name, &.s_name {
+                  @apply max-w-xs;
+                  
+                  a {
+                    @apply text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
 
-// モーダルウインドウ
+// Modern Modal
 #modal {
-  position: fixed;
-  bottom: 0;
-  left: 48%;
-  // transform: translateX(-50%);
-
-  width: 50vw;
-
-  padding: 1rem;
-
-  background-color: white;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px 10px 0 0;
+  @apply fixed bottom-0 left-1/2 transform -translate-x-1/2 w-11/12 max-w-4xl bg-white rounded-t-2xl shadow-2xl border border-gray-200;
   height: 0;
-  transform: translateY(100%);
-  overflow-y: scroll;
+  transform: translateX(-50%) translateY(100%);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
   &.active {
-    height: auto;
-    max-height: 80vh;
-    overflow-y: scroll;
-
-    transform: translateY(0);
-    transition: all 0.5s;
+    height: 85vh;
+    transform: translateX(-50%) translateY(0);
   }
-
-  & #close_container {
-    width: 100%;
-    display: flex;
-    justify-content: end;
-  }
-  & #pdfviewer {
-    // height: 70vh;
-    margin-bottom: 2vh;
-
-    & iframe {
-      height: 96%;
-      width: 100%;
+  
+  #close_container {
+    @apply p-4 flex justify-end border-b border-gray-100;
+    
+    .modal__close {
+      @apply bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center;
     }
   }
-}
+  
+  .modal-content {
+    @apply p-6 overflow-y-auto;
+    max-height: calc(85vh - 80px);
+  }
+  
+  #pdfviewer {
+    @apply mb-4;
+    
+    iframe {
+      @apply w-full rounded-lg border border-gray-200;
+      height: 60vh;
+    }
+  }
+  
+  details {
+    @apply border border-gray-200 rounded-lg overflow-hidden mb-4;
+    
+    summary {
+      @apply bg-gray-50 p-4 font-semibold text-gray-800 cursor-pointer hover:bg-gray-100 transition-colors duration-200;
+    }
+    
+    &[open] summary {
+      @apply border-b border-gray-200;
+    }
+  }
+  
+  #approval_container {
+    @apply p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
 
 .card {
-  position: relative;
-
-  & .notify_button {
-    position: absolute;
-    right: 2%;
-    top: 2%;
+      @apply bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200;
+      
+      img {
+        @apply w-full h-32 object-contain bg-gray-50;
+      }
+      
+      .notify_button {
+        @apply absolute top-2 right-2 flex gap-1;
+        
+        a, button {
+          @apply w-8 h-8 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200;
+        }
+      }
+    }
+  }
+  
+  textarea {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none;
+  }
+  
+  label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
   }
 }
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .dashboard-section {
+    .user-info-card {
+      @apply flex-col gap-4 items-stretch;
+    }
+  }
+  
+  #modal {
+    @apply w-full left-0 transform-none;
+    
+    &.active {
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .login-section {
+    @apply px-4;
+    
+    .login-card {
+      @apply p-6;
+    }
+  }
+  
+  #approval_container {
+    @apply grid-cols-1;
+  }
+}
+
 </style>
