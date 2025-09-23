@@ -1189,18 +1189,20 @@ onMounted(() => {
       </div>
 
       <!-- モーダルウィンドウ -->
-      <div id="modal" :class="{ active: modal_status.status }">
-        <div id="close_container">
-          <button
-            @click="modal_status.status = !modal_status.status"
-            class="modal__close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
-            aria-label="Close modal"
-          >
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
+      <div id="modal" :class="{ active: modal_status.status }" @click.self="modal_status.status = false">
+        <div class="modal__panel">
+          <div id="close_container">
+            <button
+              @click="modal_status.status = !modal_status.status"
+              class="modal__close"
+              aria-label="Close modal"
+            >
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
 
-        <div v-if="modal_status.order_request" class="mb-4">
+          <div class="modal__body">
+            <div v-if="modal_status.order_request" class="mb-4">
           <p class="font-bold w-full text-sm text-gray-700">
             品名: {{ modal_status.order_request.name }}
           </p>
@@ -1318,43 +1320,37 @@ onMounted(() => {
           </summary>
           <div
             v-if="modal_status.order_request"
-            class="flex items-center justify-start mt-4"
+            class="mt-4"
             id="approval_container"
           >
             <div
               v-for="approval in modal_status.order_request
                 .order_request_approvals"
               :key="approval.id"
-              class="card rounded overflow-hidden shadow-lg mr-8"
+              class="card"
             >
-              <img
-                class="w-full"
-                :src="
-                  approval.status === 1
-                    ? '/img/stock/order_request/approval_icon.png'
-                    : approval.status === 2
-                    ? '/img/stock/order_request/not_approval_icon.png'
-                    : '/img/stock/order_request/none_approval.png'
-                "
-                alt="承認状態アイコン"
-              />
-              <div class="px-6 py-4">
-                <div class="text-sm mb-2">
-                  {{ new Date(approval.updated_at).getFullYear() }}年{{
-                    new Date(approval.updated_at).getMonth() + 1
-                  }}月{{ new Date(approval.updated_at).getDate() }}日
-                  {{ new Date(approval.updated_at).getHours() }}時{{
-                    new Date(approval.updated_at).getMinutes()
-                  }}分
-                </div>
-                <div class="font-bold text-xl mb-2">{{ approval.name }}</div>
-                <p class="text-gray-700 text-base">
-                  {{
-                    approval.comment
-                      ? approval.comment
-                      : "コメントがありません。"
-                  }}
-                </p>
+              <div
+                class="card-header"
+                :class="{
+                  'is-approved': approval.status === 1,
+                  'is-rejected': approval.status === 2,
+                  'is-pending': approval.status === 0
+                }"
+              >
+                <span class="status-badge">
+                  {{ approval.status === 1 ? '承認' : approval.status === 2 ? '却下' : '未処理' }}
+                </span>
+                <i
+                  :class="[
+                    'status-icon fas',
+                    approval.status === 1
+                      ? 'fa-check-circle text-green-600'
+                      : approval.status === 2
+                      ? 'fa-times-circle text-red-600'
+                      : 'fa-clock text-gray-500'
+                  ]"
+                  aria-hidden="true"
+                ></i>
 
                 <div
                   v-if="approval.status == 0"
@@ -1381,6 +1377,25 @@ onMounted(() => {
                   </button>
                 </div>
               </div>
+
+              <div class="card-body">
+                <div class="date-chip">
+                  {{ new Date(approval.updated_at).getFullYear() }}年{{
+                    new Date(approval.updated_at).getMonth() + 1
+                  }}月{{ new Date(approval.updated_at).getDate() }}日
+                  {{ new Date(approval.updated_at).getHours() }}時{{
+                    new Date(approval.updated_at).getMinutes()
+                  }}分
+                </div>
+                <div class="approver-name">{{ approval.name }}</div>
+                <p class="comment">
+                  {{
+                    approval.comment
+                      ? approval.comment
+                      : 'コメントがありません。'
+                  }}
+                </p>
+              </div>
             </div>
           </div>
         </details>
@@ -1406,7 +1421,7 @@ onMounted(() => {
               <iframe
                 ref="pdfViewer"
                 :src="modal_status.approval_path"
-                style="height: 100vh; width: 96%; margin: 0 auto"
+                style="height: 60vh; width: 96%; margin: 0 auto"
               ></iframe>
             </div>
           </div>
@@ -1458,6 +1473,8 @@ onMounted(() => {
             </label>
           </div>
         </details>
+          </div>
+        </div>
       </div>
       
       <!-- Search Loading Component -->
@@ -1651,27 +1668,32 @@ onMounted(() => {
 
 // Modern Modal
 #modal {
-  @apply fixed bottom-0 left-1/2 transform -translate-x-1/2 w-11/12 max-w-4xl bg-white rounded-t-2xl shadow-2xl border border-gray-200;
-  height: 0;
-  transform: translateX(-50%) translateY(100%);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  
+  @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity;
+
   &.active {
-    height: 85vh;
-    transform: translateX(-50%) translateY(0);
+    @apply opacity-100 pointer-events-auto;
   }
-  
+
+  .modal__panel {
+    @apply w-11/12 max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transform scale-95 transition-transform;
+    max-height: 80vh;
+  }
+
+  &.active .modal__panel {
+    @apply scale-100;
+  }
+
   #close_container {
     @apply p-4 flex justify-end border-b border-gray-100;
     
     .modal__close {
-      @apply bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center;
+      @apply bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-3 py-2 rounded-lg transition-colors duration-200 flex items-center;
     }
   }
   
-  .modal-content {
+  .modal__body {
     @apply p-6 overflow-y-auto;
-    max-height: calc(85vh - 80px);
+    max-height: calc(80vh - 64px);
   }
   
   #pdfviewer {
@@ -1696,17 +1718,39 @@ onMounted(() => {
   }
   
   #approval_container {
-    @apply p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+    @apply p-4 flex flex-col gap-4;
 
 .card {
-      @apply bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200;
+      @apply bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200 relative;
       
-      img {
-        @apply w-full h-32 object-contain bg-gray-50;
+      .card-header {
+        @apply relative h-28 flex items-center justify-between px-4 py-3;
+        
+        &.is-approved { @apply bg-green-50; }
+        &.is-rejected { @apply bg-red-50; }
+        &.is-pending { @apply bg-gray-50; }
+
+        .status-badge {
+          @apply text-xs font-bold px-2 py-1 rounded-full shadow-sm;
+        }
+        &.is-approved .status-badge { @apply bg-green-100 text-green-700; }
+        &.is-rejected .status-badge { @apply bg-red-100 text-red-700; }
+        &.is-pending .status-badge { @apply bg-gray-200 text-gray-700; }
+
+        .status-icon { @apply text-2xl; }
       }
       
+      .card-body {
+        @apply px-4 py-3;
+        
+        .date-chip {
+          @apply inline-block text-[11px] bg-gray-100 text-gray-700 px-2 py-1 rounded-full mb-2;
+        }
+        .approver-name { @apply font-bold text-base text-gray-900 mb-1; }
+        .comment { @apply text-sm text-gray-600 leading-relaxed; }
+      }
       .notify_button {
-        @apply absolute top-2 right-2 flex gap-1;
+        @apply absolute top-2 right-2 flex gap-1 z-10;
         
         a, button {
           @apply w-8 h-8 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200;
