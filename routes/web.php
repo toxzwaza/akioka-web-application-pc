@@ -28,6 +28,7 @@ use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\PDFController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\LabelController;
 
 Route::get('/test', [TestController::class, 'test'])->name('test');
 Route::get('/storage_address/test', [TestController::class, 'storage_address_test'])->name('storage_address.test');
@@ -165,3 +166,6 @@ Route::get('/task/getData', [TaskController::class, 'getData'])->name('task.getD
 Route::get('/task/getGanttData', [TaskController::class, 'getGanttData'])->name('task.getGanttData');
 Route::get('/task/getCompleteTasks', [TaskController::class, 'getCompleteTasks'])->name('task.getCompleteTasks');
 Route::get('/task/export', [TaskController::class, 'export'])->name('task.export');
+
+// ラベルデザイナ
+Route::get('/label', [LabelController::class, 'index'])->name('label.home');
