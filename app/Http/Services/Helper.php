@@ -81,7 +81,6 @@ class Helper
     // 承認フローを作成
     public static function createApprovalFlow($price, $user_id, $new_flg = 0)
     {
-
         $user = User::find($user_id);
         if (
             in_array($user->group_id, [8, 10, 11]) || //役員・統括部（役員）・顧問
@@ -92,7 +91,6 @@ class Helper
         }
 
         $approval_list = [];
-
 
         if ($user->position_id >= 7) {  //係長・GL・一般 からの依頼の場合
             // 係長・GL・一般からの承認者マッピング
@@ -158,6 +156,24 @@ class Helper
         }
 
         return $approval_list;
+    }
+
+    // 承認フローを作成（新しいデータベースベースシステム）
+    public static function newCreateApprovalFlow($price, $user_id, $new_flg = 0)
+    {
+        return \App\Http\Services\ApprovalFlowService::createApprovalFlow($price, $user_id, $new_flg);
+    }
+
+    // 承認フロー作成の統一インターフェース（.envで切り替え可能）
+    public static function createApprovalFlowUnified($price, $user_id, $new_flg = 0)
+    {
+        $useNewSystem = config('app.use_new_approval_system', false);
+        
+        if ($useNewSystem) {
+            return self::newCreateApprovalFlow($price, $user_id, $new_flg);
+        } else {
+            return self::createApprovalFlow($price, $user_id, $new_flg);
+        }
     }
 
 

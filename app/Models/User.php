@@ -25,4 +25,20 @@ class User extends Model
         'fax_folder_name',
         'del_flg',
     ];
+
+    /**
+     * ユーザーの部署を取得
+     */
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * ユーザーの役職を取得
+     */
+    public function position()
+    {
+        return $this->belongsTo(Position::class);
+    }
 }

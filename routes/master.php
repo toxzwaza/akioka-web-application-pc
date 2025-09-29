@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\ApprovalFlowController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -27,3 +28,18 @@ Route::get('/devices/{device}/edit', [DeviceController::class, 'edit'])->name('m
 Route::put('/devices/{device}', [DeviceController::class, 'update'])->name('master.devices.update');
 Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('master.devices.destroy');
 Route::post('/devices/update-last-access', [DeviceController::class, 'updateLastAccess'])->name('master.devices.update-last-access');
+
+// 承認フロー管理
+Route::get('/approval-flows', [ApprovalFlowController::class, 'index'])->name('master.approval-flows.index');
+Route::get('/approval-flows/create', [ApprovalFlowController::class, 'create'])->name('master.approval-flows.create');
+Route::post('/approval-flows', [ApprovalFlowController::class, 'store'])->name('master.approval-flows.store');
+Route::get('/approval-flows/{approvalFlow}', [ApprovalFlowController::class, 'show'])->name('master.approval-flows.show');
+Route::get('/approval-flows/{approvalFlow}/edit', [ApprovalFlowController::class, 'edit'])->name('master.approval-flows.edit');
+Route::put('/approval-flows/{approvalFlow}', [ApprovalFlowController::class, 'update'])->name('master.approval-flows.update');
+Route::delete('/approval-flows/{approvalFlow}', [ApprovalFlowController::class, 'destroy'])->name('master.approval-flows.destroy');
+
+// 承認フローテスト機能
+Route::get('/approval-flows-test', [ApprovalFlowController::class, 'test'])->name('master.approval-flows.test');
+Route::post('/approval-flows-test', [ApprovalFlowController::class, 'runTest'])->name('master.approval-flows.run-test');
+Route::get('/approval-flows-bulk-test', [ApprovalFlowController::class, 'bulkTest'])->name('master.approval-flows.bulk-test');
+Route::post('/approval-flows-test-api', [ApprovalFlowController::class, 'runTestApi'])->name('master.approval-flows.run-test-api');
