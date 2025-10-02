@@ -215,6 +215,20 @@ const sub_nav_close = ref(false);
               devices </span
             >デバイス情報</Link
           >
+          <Link
+            :href="route('master.approval-flows.index')"
+            :class="{
+              '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
+              'bg-white text-gray-900':
+                !route().current().startsWith('master.approval-flows'),
+              'bg-blue-500 text-white':
+                route().current().startsWith('master.approval-flows'),
+            }"
+          >
+            <span class="text-gray-100 mr-1 material-symbols-outlined">
+              assignment </span
+            >承認フロー作成</Link
+          >
         </template>
 
         <template v-else-if="route().current().startsWith('stock')">
