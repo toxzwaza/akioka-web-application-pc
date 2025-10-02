@@ -206,3 +206,5 @@ const handlePrint = () => {
 .btn-primary { @apply px-4 py-2 rounded text-white bg-indigo-600 hover:bg-indigo-700; }
 </style>
 
+
+

@@ -32,7 +32,11 @@ class TestController extends Controller
     public function test()
     {
 
-
+        $stocks = Stock::select('suppliers.name', 'stocks.name', 'stocks.memo','stocks.s_name','stocks.id', 'stocks.price', 'stocks.solo_unit', 'stocks.org_unit', 'stocks.quantity_per_org', 'stocks.deli_location', 'stocks.created_at', 'stock_suppliers.lead_time')
+        ->leftJoin('stock_suppliers', 'stock_suppliers.stock_id', 'stocks.id')
+        ->leftJoin('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
+        ->get();
+        return;
 
         $stock_storages = StockStorage::join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')->join('stocks', 'stocks.id', 'stock_storages.stock_id')->where('stocks.del_flg', 0)->whereIn('storage_addresses.location_id', [1,2])->get();
         dd(count($stock_storages));
