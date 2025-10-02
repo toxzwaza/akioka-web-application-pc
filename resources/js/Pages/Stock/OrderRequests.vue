@@ -410,6 +410,34 @@ const updateSubDescription = (val) => {
     });
 };
 
+// 希望納期更新
+const updateDesireDeliveryDate = (order_request) => {
+  if (confirm("希望納期を変更しますか？")) {
+    axios
+      .put(route("stock.updateOrderRequest"), {
+        order_request_id: order_request.id,
+        desire_delivery_date: order_request.desire_delivery_date,
+      })
+      .then((res) => {
+        console.log("Response:", res.data);
+        if (res.data.status) {
+          alert("希望納期を更新しました。");
+        } else {
+          alert("希望納期の更新に失敗しました。詳細はコンソールを確認してください。");
+          console.error("Update failed:", res.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Request error:", error);
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+          console.error("Error status:", error.response.status);
+        }
+        alert("希望納期の更新に失敗しました。詳細はコンソールを確認してください。");
+      });
+  }
+};
+
 // 完了処理
 const completeOrderRequest = (order_request_id) => {
   const order_request = getOrderRequestByOrderRequestId(order_request_id);
@@ -977,11 +1005,23 @@ onMounted(() => {
                     }}
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
-                    {{
-                      new Date(
-                        order_request.desire_delivery_date
-                      ).toLocaleDateString("ja-JP")
-                    }}
+                    <input
+                      v-if="order_config.user_id"
+                      type="date"
+                      class="appearance-none block w-48 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      :value="order_request.desire_delivery_date ? new Date(order_request.desire_delivery_date).toISOString().split('T')[0] : ''"
+                      @change="
+                        order_request.desire_delivery_date = $event.target.value;
+                        updateDesireDeliveryDate(order_request)
+                      "
+                    />
+                    <span v-else>
+                      {{
+                        new Date(
+                          order_request.desire_delivery_date
+                        ).toLocaleDateString("ja-JP")
+                      }}
+                    </span>
                   </td>
                   <td class="px-4 py-4 text-lg text-gray-900">
                     {{ order_request.now_quantity }}

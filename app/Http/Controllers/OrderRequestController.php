@@ -16,6 +16,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
@@ -134,7 +135,7 @@ class OrderRequestController extends Controller
                     ->get();
                 $order_request->order_request_approvals = $order_request_approvals;
 
-                if($order_request->document_id){
+                if ($order_request->document_id) {
                     $document = Document::find($order_request->document_id);
                     if ($document) {
                         $order_request->document_data = $document;
@@ -145,8 +146,6 @@ class OrderRequestController extends Controller
                         $order_request->document_data->document_images = $document_images;
                     }
                 }
-
-
             }
         } catch (Exception $e) {
             $status = false;
@@ -269,14 +268,64 @@ class OrderRequestController extends Controller
         $is_update_price = $request->is_update_price;
         $is_update_postage = $request->is_update_postage;
         $supplier_id = $request->supplier_id;
+        $desire_delivery_date = $request->desire_delivery_date;
 
 
         try {
             $order_request = OrderRequest::find($order_request_id);
-            $order_request->quantity = $quantity;
-            $order_request->price = $price;
-            $order_request->calc_price = $calc_price;
-            $order_request->postage = $postage;
+
+            // 希望納期の更新
+            if ($desire_delivery_date) {
+                // 変更前の希望納期を保存
+                $old_desire_delivery_date = $order_request->desire_delivery_date;
+
+                // 希望納期が変更された場合、依頼元端末にメッセージを送信
+                if ($old_desire_delivery_date != $desire_delivery_date && $order_request->device_id) {
+                    try {
+                        $stock_name = $order_request->stock_id
+                            ? (Stock::find($order_request->stock_id) ? Stock::find($order_request->stock_id)->name : $order_request->order_request_name)
+                            : $order_request->order_request_name;
+
+                        $old_date = $old_desire_delivery_date ? date('Y年m月d日', strtotime($old_desire_delivery_date)) : '未設定';
+                        $new_date = date('Y年m月d日', strtotime($desire_delivery_date));
+
+                        $message = "【希望納期変更通知】\n";
+                        $message .= "品名: {$stock_name}\n";
+                        $message .= "変更前: {$old_date}\n";
+                        $message .= "変更後: {$new_date}";
+
+                        Helper::createDeviceMessage(
+                            1, // priority
+                            $order_request->device_id, // to_device_id
+                            null, // from_device_id
+                            $order_request->request_user_id, // to_user_id
+                            $order_request->user_id, // from_user_id
+                            $message
+                        );
+
+                    } catch (Exception $e) {
+                        Log::error('Device message error: ' . $e->getMessage());
+                        // メッセージ送信エラーでも処理は継続
+                    }
+                }
+
+                $order_request->desire_delivery_date = $desire_delivery_date;
+            }
+
+            // 数量、単価、金額、送料の更新
+            if ($quantity !== null) {
+                $order_request->quantity = $quantity;
+            }
+            if ($price !== null) {
+                $order_request->price = $price;
+            }
+            if ($calc_price !== null) {
+                $order_request->calc_price = $calc_price;
+            }
+            if ($postage !== null) {
+                $order_request->postage = $postage;
+            }
+
             $order_request->save();
 
             // マスタに設定する場合は追記
@@ -295,6 +344,8 @@ class OrderRequestController extends Controller
             }
         } catch (Exception $e) {
             $status = false;
+            Log::error('OrderRequest update error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
         }
 
         return response()->json(['status' => $status]);
@@ -421,21 +472,22 @@ class OrderRequestController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
-    public function reloadSupplier(Request $request){
+    public function reloadSupplier(Request $request)
+    {
         $status = true;
         $msg = "";
 
         $order_request_id = $request->order_request_id;
 
-        try{
+        try {
             $order_request = OrderRequest::find($order_request_id);
             $stock_supplier = StockSupplier::where('stock_id', $order_request->stock_id)->where('main_flg', 1)->first();
 
-            if($stock_supplier){
+            if ($stock_supplier) {
                 $order_request->supplier_id = $stock_supplier->supplier_id;
                 $order_request->save();
             }
-        }catch(Exception $e){
+        } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
         }
@@ -443,7 +495,8 @@ class OrderRequestController extends Controller
         return response()->json(['status' => $status, 'msg' => $msg]);
     }
 
-    public function updateStockId(Request $request){
+    public function updateStockId(Request $request)
+    {
         $status = true;
         $msg = "";
         $order_request_id = $request->order_request_id;
@@ -452,7 +505,7 @@ class OrderRequestController extends Controller
         $order_request = OrderRequest::find($order_request_id);
         $stock = Stock::find($stock_id);
 
-        try{
+        try {
             $order_request->stock_id = $stock_id;
             $order_request->save();
             $msg = "品名: " . $stock->name . " 品番: " . $stock->s_name . " で登録を行いました。";
@@ -462,7 +515,7 @@ class OrderRequestController extends Controller
                 ->orderByRaw('main_flg DESC')
                 ->first();
 
-            if($stock_supplier){
+            if ($stock_supplier) {
                 $order_request->supplier_id = $stock_supplier->supplier_id;
                 $order_request->supplier_name = $stock_supplier->supplier->name;
                 $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
@@ -470,10 +523,10 @@ class OrderRequestController extends Controller
                 $order_request->calc_price = $stock->price * $order_request->quantity;
                 $order_request->postage = $stock_supplier->postage;
                 $order_request->lead_time = $stock_supplier->lead_time;
-                
+
                 $order_request->save();
             }
-        }catch(Exception $e){
+        } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
         }
@@ -501,14 +554,14 @@ class OrderRequestController extends Controller
 
             // 発注依頼を取得
             $order_request = OrderRequest::find($order_request_id);
-            
+
             if (!$order_request) {
                 throw new Exception('発注依頼が見つかりません。');
             }
 
             // デバイスを取得（デバイス名も一緒に保存したい場合）
             $device = Device::find($device_id);
-            
+
             if (!$device) {
                 throw new Exception('デバイスが見つかりません。');
             }
@@ -518,7 +571,6 @@ class OrderRequestController extends Controller
             $order_request->save();
 
             $msg = "デバイス「{$device->name}」を発注依頼に設定しました。";
-
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
