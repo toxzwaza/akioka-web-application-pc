@@ -7,6 +7,7 @@ use App\Http\Controllers\PurchaseOrder;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockExportController;
 use App\Http\Controllers\StockSupplierController;
 use App\Http\Controllers\StockStorageController;
 use Illuminate\Support\Facades\Route;
@@ -166,3 +167,6 @@ Route::get('/locations/create', [StockController::class, 'store_location'])->nam
 // 棚卸用
 Route::get('/stock-count/export', [StockCountController::class, 'export_data'])->name('stock.stock_count.export');
 Route::get('/storage-address/export', [StockCountController::class, 'export_storage_address_data'])->name('stock.storage_address.export');
+
+// 在庫・サプライヤー情報エクスポート
+Route::get('/stocks/export-with-suppliers', [StockExportController::class, 'exportStocksWithSuppliers'])->name('stock.export.with_suppliers');
