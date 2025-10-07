@@ -267,6 +267,7 @@ onMounted(() => {
               <th class="desired_date px-4 py-2 text-gray-700">納入希望日</th>
               <th class="quantity px-4 py-2 text-gray-700">数量</th>
               <th class="price px-4 py-2 text-gray-700">単価</th>
+              <th class="price px-4 py-2 text-gray-700">単位</th>
               <th class="calc_price px-4 py-2 text-gray-700">金額(税抜価格)</th>
               <th class="order_user px-4 py-2 text-gray-700">注文指示者</th>
             </tr>
@@ -317,6 +318,9 @@ onMounted(() => {
               </td>
               <td class="calc_price text-center border">
                 {{ order.calc_price.toLocaleString() }}
+              </td>
+              <td class="calc_price text-center border">
+                {{ order.order_unit }}
               </td>
               <td class="order_user text-center border">
                 {{ order.order_user }}
