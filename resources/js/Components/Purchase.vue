@@ -317,9 +317,6 @@ onMounted(() => {
                 {{ order.price.toLocaleString() }}
               </td>
               <td class="calc_price text-center border">
-                {{ order.calc_price.toLocaleString() }}
-              </td>
-              <td class="calc_price text-center border">
                 {{ order.order_unit }}
               </td>
               <td class="order_user text-center border">
