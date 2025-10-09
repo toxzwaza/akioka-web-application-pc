@@ -311,6 +311,7 @@ onMounted(() => {
                 <th class="deli_location px-4 py-2 text-gray-700">納入場所</th>
                 <th class="desired_date px-4 py-2 text-gray-700">納入希望日</th>
                 <th class="quantity px-4 py-2 text-gray-700">数量</th>
+                <th class="unit px-4 py-2 text-gray-700">単位</th>
                 <th class="price px-4 py-2 text-gray-700">単価</th>
                 <th class="calc_price px-4 py-2 text-gray-700">
                   金額(税抜価格)
@@ -371,6 +372,9 @@ onMounted(() => {
                 <td class="quantity text-center border">
                   {{ order.quantity }}
                 </td>
+                <td class="unit text-center border">
+                  {{ order.order_unit }}
+                </td>
                 <td class="price text-center border">
                   {{ order.price.toLocaleString() }}
                 </td>
@@ -383,7 +387,7 @@ onMounted(() => {
               </tr>
 
               <tr>
-                <td colspan="7" class="text-right border">送料</td>
+                <td colspan="8" class="text-right border">送料</td>
                 <td class="text-center border">
                   {{ calc_postage.toLocaleString() }}
                 </td>
@@ -391,7 +395,7 @@ onMounted(() => {
               </tr>
 
               <tr>
-                <td colspan="7" class="text-right border">合計（税抜）</td>
+                <td colspan="8" class="text-right border">合計（税抜）</td>
                 <td class="text-center border">
                   {{
                     (
@@ -486,6 +490,7 @@ onMounted(() => {
                 <th class="s_name px-4 py-2 text-gray-700">品番</th>
                 <th class="deli_location px-4 py-2 text-gray-700">納入場所</th>
                 <th class="quantity px-4 py-2 text-gray-700">数量</th>
+                <th class="unit px-4 py-2 text-gray-700">単位</th>
                 <th class="price px-4 py-2 text-gray-700">単価</th>
                 <th class="calc_price px-4 py-2 text-gray-700">
                   金額(税抜価格)
@@ -523,6 +528,9 @@ onMounted(() => {
                 <td class="quantity text-center border">
                   {{ order.quantity }}
                 </td>
+                <td class="unit text-center border">
+                  {{ order.order_unit }}
+                </td>
                 <td class="price text-center border">
                   {{ order.price.toLocaleString() }}
                 </td>
@@ -532,14 +540,14 @@ onMounted(() => {
               </tr>
 
               <tr>
-                <td colspan="6" class="text-right border">送料</td>
+                <td colspan="7" class="text-right border">送料</td>
                 <td class="text-center border">
                   {{ calc_postage.toLocaleString() }}
                 </td>
               </tr>
 
               <tr>
-                <td colspan="6" class="text-right border">合計（税抜）</td>
+                <td colspan="7" class="text-right border">合計（税抜）</td>
                 <td class="text-center border">
                   {{
                     (
@@ -697,8 +705,14 @@ onMounted(() => {
           overflow: hidden;
           text-overflow: ellipsis;
         }
+        &.unit {
+          width: 5%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         &.price {
-          width: 8%;
+          width: 7%;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -793,19 +807,25 @@ onMounted(() => {
           text-overflow: ellipsis;
         }
         &.quantity {
-          width: 8%;
+          width: 7%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        &.unit {
+          width: 6%;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         &.price {
-          width: 11%;
+          width: 10%;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         &.calc_price {
-          width: 12%;
+          width: 11%;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
