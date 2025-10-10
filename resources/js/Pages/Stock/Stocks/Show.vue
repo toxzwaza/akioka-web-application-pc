@@ -46,6 +46,7 @@ const form = reactive({
   del_flg: null,
   tax_included: null,
   approval_supplier_name: null,
+  desc_memo: null, //備考
 
   // 発注依頼用
   order_user: null,
@@ -439,6 +440,7 @@ onMounted(() => {
   form.del_flg = props.stock.del_flg;
   form.tax_included = props.stock.tax_included;
   form.approval_supplier_name = props.stock.approval_supplier_name;
+  form.desc_memo  = props.stock.desc_memo
 
   if (props.stock_suppliers && props.stock_suppliers.length > 0) {
     form.supplier_id = props.stock_suppliers[0].id;
@@ -1539,6 +1541,21 @@ onMounted(() => {
                     'pointer-events-none appearance-none block w-full bg-gray-300 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
                   }"
                   v-model="form.approval_supplier_name"
+                />
+              </div>
+              <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                <label
+                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                  for="grid-city"
+                >
+                  備考
+                </label>
+                <input
+                  type="text"
+                  :class="{
+                    'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
+                  }"
+                  v-model="form.desc_memo"
                 />
               </div>
               <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">

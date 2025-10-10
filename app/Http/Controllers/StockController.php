@@ -504,6 +504,7 @@ class StockController extends Controller
         $stock_process_id = $request->stock_process_id;
         $del_flg = $request->del_flg;
         $tax_included = $request->tax_included;
+        $desc_memo = $request->desc_memo;
 
         try {
             $stock = null;
@@ -530,6 +531,7 @@ class StockController extends Controller
             $stock->stock_process_id = $stock_process_id;
             $stock->del_flg = $del_flg;
             $stock->tax_included = $tax_included ?? 0;
+            $stock->desc_memo = $desc_memo;
 
 
             if (!$is_new && $stock->price != $price) {

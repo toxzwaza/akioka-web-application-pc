@@ -57,6 +57,7 @@ class OrderRequestController extends Controller
                 'stocks.img_path',
                 'stocks.name',
                 'stocks.s_name',
+                'stocks.desc_memo as stock_desc_memo',
                 'order_requests.name as order_request_name',
                 'order_requests.s_name as order_request_s_name',
                 'stocks.url',
@@ -265,8 +266,10 @@ class OrderRequestController extends Controller
         $price = $request->price;
         $calc_price = $request->calc_price;
         $postage = $request->postage;
+        $solo_unit = $request->solo_unit;
         $is_update_price = $request->is_update_price;
         $is_update_postage = $request->is_update_postage;
+        $is_update_solo_unit = $request->is_update_solo_unit;
         $supplier_id = $request->supplier_id;
         $desire_delivery_date = $request->desire_delivery_date;
 
@@ -325,6 +328,9 @@ class OrderRequestController extends Controller
             if ($postage !== null) {
                 $order_request->postage = $postage;
             }
+            if($solo_unit !== null){
+                $order_request->unit = $solo_unit;
+            }
 
             $order_request->save();
 
@@ -342,6 +348,14 @@ class OrderRequestController extends Controller
                     $stock_supplier->save();
                 }
             }
+
+            if($is_update_solo_unit){
+                $stock = Stock::find($order_request->stock_id);
+                $stock->solo_unit = $solo_unit;
+                $stock->save();
+            }
+
+
         } catch (Exception $e) {
             $status = false;
             Log::error('OrderRequest update error: ' . $e->getMessage());
