@@ -344,6 +344,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
     price: false,
     postage: false,
     stock_process_id: false,
+    solo_unit: false,
   };
 
   switch (flg) {
@@ -374,7 +375,13 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
         master.stock_process_id = true;
       }
       break;
+    case  "unit":
+      if(confirm('単位が変更されました。設定された単位を[単位１]に設定しますか？')){
+        master.solo_unit = true;
+      }
+      break;
   }
+
 
   axios
     .put(route("stock.updateOrderRequest"), {
@@ -383,9 +390,11 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
       price: order_request.price,
       calc_price: order_request.calc_price,
       postage: order_request.postage,
+      solo_unit: order_request.unit,
       is_update_price: master.price,
       is_update_postage: master.postage,
       is_update_stock_process_id: master.stock_process_id,
+      is_update_solo_unit: master.solo_unit,
       supplier_id: order_request.supplier_id,
       stock_process_id: order_request.stock_process_id,
     })
@@ -911,11 +920,16 @@ onMounted(() => {
                     >
                       発注者
                     </th>
+                    <th
+                      class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                    >
+                      備考
+                    </th>
                     <!-- <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    注文書
-                  </th> -->
+                      class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    >
+                      注文書
+                    </th> -->
 
                     <th
                       class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1164,7 +1178,19 @@ onMounted(() => {
                       />
                     </td>
                     <td class="px-4 py-4 text-lg text-gray-900 w-32">
-                      {{ order_request.unit }}
+                      <input
+                        type="text"
+                        name=""
+                        id=""
+                        class="appearance-none block w-32 bg-gray-200 text-gray-700 border border-gray-200 rounded py-4 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                        v-model="order_request.unit"
+                        @change="
+                          updateQuantityPriceCalcPricePostage(
+                            'unit',
+                            order_request
+                          )
+                        "
+                      />
                     </td>
 
                     <td class="px-4 py-4 text-lg text-gray-900">
@@ -1287,6 +1313,13 @@ onMounted(() => {
                       }"
                     >
                       {{ order_request.order_user_name }}
+                    </td>
+                    <td
+                      :class="{
+                        'px-4 py-4 text-lg text-gray-900': true,
+                      }"
+                    >
+                      {{ order_request.stock_desc_memo }}
                     </td>
                     <td class="w-32">
                       <button
