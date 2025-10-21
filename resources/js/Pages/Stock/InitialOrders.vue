@@ -512,24 +512,26 @@ const getInitialOrders = (reset) => {
 };
 
 // 発注完了登録
-const orderComplete = (order) => {
+const orderComplete = (order, value) => {
   let flg;
 
-  if (order.order_complete_flg) {
-    flg = 0;
-  } else {
-    flg = 1;
+  if (!value) {
+    return
   }
+
+  const numericValue = Number(value);
 
   axios
     .post(route("stock.updateOrderComplete"), {
       initial_order_id: order.id,
-      order_complete_flg: flg,
+      order_complete_flg: numericValue,
     })
     .then((res) => {
       console.log(res.data);
       if (res.data.status) {
-        order.order_complete_flg = flg;
+        order.order_complete_flg = numericValue;
+        // 強制的に再レンダリングさせるため、リアクティブな更新を確認
+        console.log('order_complete_flg updated:', order.order_complete_flg);
       }
     })
     .catch((error) => {
@@ -540,9 +542,16 @@ const orderComplete = (order) => {
 onMounted(() => {
   console.log(props.initial_orders);
 
-  initial_orders.value.data = props.initial_orders.data;
+  // initial_ordersのデータをマッピングし、order_complete_flgを数値に変換
+  initial_orders.value.data = props.initial_orders.data.map(order => ({
+    ...order,
+    order_complete_flg: order.order_complete_flg ? Number(order.order_complete_flg) : null
+  }));
   initial_orders.value.links = props.initial_orders.links;
-  base_initial_orders.value = props.initial_orders.data;
+  base_initial_orders.value = props.initial_orders.data.map(order => ({
+    ...order,
+    order_complete_flg: order.order_complete_flg ? Number(order.order_complete_flg) : null
+  }));
 
   // updateOrderUsers();
   // updateComName();
@@ -1209,7 +1218,7 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                 >
-                  発注済み登録
+                  完了登録
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1224,8 +1233,10 @@ const deleteInitialOrder = (order) => {
                 v-for="order in initial_orders.data"
                 :key="order.id"
                 :class="{
-                  'transition duration-30': true,
-                  'bg-green-100': order.order_complete_flg,
+                  'transition duration-300 hover:scale-[1.01] hover:z-10 hover:shadow-lg hover:bg-yellow-100 hover:font-bold hover:border-2 hover:border-yellow-300': true,
+                  'bg-green-100': order.order_complete_flg === 1,
+                  'bg-blue-100': order.order_complete_flg === 2,
+                  'bg-white': !order.order_complete_flg || order.order_complete_flg === 0,
                 }"
               >
                 <td class="text-center">
@@ -1514,7 +1525,7 @@ const deleteInitialOrder = (order) => {
                 <td
                   class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                 >
-                  <button
+                  <!-- <button
                     @click="orderComplete(order)"
                     :class="{
                       ' text-white font-bold py-2 px-4 rounded text-xs': true,
@@ -1528,7 +1539,26 @@ const deleteInitialOrder = (order) => {
                       >完了済<i class="ml-2 fas fa-check"></i
                     ></span>
                     <span v-else>未完了</span>
-                  </button>
+                  </button> -->
+
+                  <select
+                    name=""
+                    v-model="order.order_complete_flg"
+                    @change="orderComplete(order, $event.target.value)"
+                    :class="{
+                      ' font-bold py-2 px-4 rounded text-xs': true,
+                      'text-white bg-green-500':
+                        order.order_complete_flg === 1,
+                      'text-white bg-blue-500':
+                        order.order_complete_flg === 2,
+                      'bg-gray-200 text-gray-700':
+                        !order.order_complete_flg || order.order_complete_flg === 0,
+                    }"
+                  >
+                    <option class="" :value="0">未完了</option>
+                    <option class="" :value="1">発注済み</option>
+                    <option class="" :value="2">返信済み</option>
+                  </select>
                 </td>
                 <td
                   v-if="is_login"
@@ -1548,7 +1578,7 @@ const deleteInitialOrder = (order) => {
 
         <!-- Bottom Pagination -->
       </div>
-      <div class=" mt-6">
+      <div class="mt-6">
         <Pagination :links="initial_orders.links" />
       </div>
 
@@ -1879,14 +1909,9 @@ const deleteInitialOrder = (order) => {
         @apply bg-white divide-y divide-gray-200;
 
         tr {
-          @apply hover:bg-gray-50 transition-colors duration-150;
-
           &.bg-green-50 {
             background-color: #f0fdf4;
 
-            &:hover {
-              background-color: #dcfce7;
-            }
           }
 
           td {
