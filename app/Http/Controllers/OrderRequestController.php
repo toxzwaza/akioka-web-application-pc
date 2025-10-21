@@ -10,6 +10,7 @@ use App\Models\InitialOrder;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestApproval;
 use App\Models\Stock;
+use App\Models\StockProcess;
 use App\Models\StockSupplier;
 use App\Models\Supplier;
 use App\Models\User;
@@ -36,7 +37,10 @@ class OrderRequestController extends Controller
         // デバイス一覧
         $devices = Device::select('devices.id', 'devices.name')->get();
 
-        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices]);
+        // 工程一覧
+        $stock_processes = StockProcess::all();
+
+        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices, 'stock_processes' => $stock_processes]);
     }
 
     public function getOrderRequests(Request $request)
@@ -88,6 +92,7 @@ class OrderRequestController extends Controller
                 'device_messages.read_flg',
                 'devices.id as device_id',
                 'devices.name as device_name',
+                DB::raw('COALESCE(order_requests.stock_process_id, stocks.stock_process_id) as stock_process_id'),
             )
                 ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
@@ -269,6 +274,8 @@ class OrderRequestController extends Controller
         $is_update_postage = $request->is_update_postage;
         $supplier_id = $request->supplier_id;
         $desire_delivery_date = $request->desire_delivery_date;
+        $stock_process_id = $request->stock_process_id;
+        $is_update_stock_process_id = $request->is_update_stock_process_id;
 
 
         try {
@@ -325,6 +332,9 @@ class OrderRequestController extends Controller
             if ($postage !== null) {
                 $order_request->postage = $postage;
             }
+            if ($stock_process_id !== null) {
+                $order_request->stock_process_id = $stock_process_id;
+            }
 
             $order_request->save();
 
@@ -341,6 +351,12 @@ class OrderRequestController extends Controller
                     $stock_supplier->postage = $postage;
                     $stock_supplier->save();
                 }
+            }
+
+            if ($is_update_stock_process_id) {
+                $stock = Stock::find($order_request->stock_id);
+                $stock->stock_process_id = $stock_process_id;
+                $stock->save();
             }
         } catch (Exception $e) {
             $status = false;
