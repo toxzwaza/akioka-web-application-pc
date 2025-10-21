@@ -1991,6 +1991,7 @@ const deleteInitialOrder = (order) => {
     height: 99vh;
     transform: translateY(0);
     transition: all 0.5s;
+    overflow-y: scroll;
   }
 
   & #close_container {

@@ -21,6 +21,35 @@ const reCreatePurchasePath = (order) => {
   order.purchase_path = false;
 };
 
+// FAX送信
+const sendFax = (order) => {
+  let fax_number = null;
+  let file_url = null;
+
+  if (!confirm(`FAX送信を行ってもよろしいですか？\n発注先:${order.com_name}\nFAX番号: ${order.fax}`)) {
+    return
+  }
+
+  console.log(order);
+  const cleanFaxNumber = order.fax.replace(/-/g, '');
+  fax_number = cleanFaxNumber;
+  file_url = `http://monokanri-manage.local/storage/${order.purchase_path}`
+
+  console.log(fax_number, file_url)
+
+  axios.post('http://monokanri-manage.local:5000/send_fax', {
+    file_url: file_url,
+    fax_number: fax_number,
+  })
+  .then(res => {
+    console.log(res.data)
+    alert(res.data.message)
+  })
+  .catch(error => {
+    console.log(error)
+  })
+};
+
 function printElement() {
   // 納入希望日が入力されていない場合最短とする
   props.orders.forEach((order) => {
@@ -176,8 +205,8 @@ const generateQRCode = async () => {
         margin: 1,
         color: {
           dark: "#000000",
-          light: "#FFFFFF"
-        }
+          light: "#FFFFFF",
+        },
       });
       qrCodeUrl.value = url;
     } catch (error) {
@@ -193,18 +222,25 @@ onMounted(() => {
 </script>
 <template>
   <div v-if="orders.length === 1 && orders[0].purchase_path">
-    <div>
+    <div class="flex justify-start">
       <button
         @click="reCreatePurchasePath(orders[0])"
         class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
       >
         発注書再発行
       </button>
+
+      <button
+        @click="sendFax(orders[0])"
+        class="ml-8 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
+      >
+        発注書FAX送信
+      </button>
     </div>
 
     <img
-      class="w-2/3 mt-8 mx-auto"
-      :src="`/storage/${orders[0].purchase_path}`"
+      class="w-2/5 mt-8 mx-auto"
+      :src="`http://monokanri-manage.local/storage/${orders[0].purchase_path}`"
       alt="発注書"
     />
   </div>
@@ -467,8 +503,8 @@ onMounted(() => {
           </div>
           <div class="center_container text-left p-2">
             <h3 class="font-bold text-xs mb-2 text-center">【重要】</h3>
-            <p class="text-lg font-bold leading-relaxed text-center ">
-              納品の際は本納品書を<br>ご使用ください。
+            <p class="text-lg font-bold leading-relaxed text-center">
+              納品の際は本納品書を<br />ご使用ください。
             </p>
           </div>
 
@@ -575,9 +611,18 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="details w-1/6 pl-4 flex flex-col items-center justify-center">
-            <img v-if="qrCodeUrl" :src="qrCodeUrl" alt="注文IDのQRコード" class="qr-code" />
-            <p class="text-xs font-serif mt-2">注文ID: {{ orders[0].order_no }}</p>
+          <div
+            class="details w-1/6 pl-4 flex flex-col items-center justify-center"
+          >
+            <img
+              v-if="qrCodeUrl"
+              :src="qrCodeUrl"
+              alt="注文IDのQRコード"
+              class="qr-code"
+            />
+            <p class="text-xs font-serif mt-2">
+              注文ID: {{ orders[0].order_no }}
+            </p>
           </div>
         </div>
       </div>
@@ -880,7 +925,7 @@ onMounted(() => {
 
     & .details {
       font-size: 2.5mm;
-      
+
       & .qr-code {
         width: 100px;
         height: 100px;
