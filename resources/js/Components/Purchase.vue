@@ -242,7 +242,7 @@ onMounted(() => {
       </button>
 
       <button
-          @click="sendFax()"
+          @click="sendFax(orders[0])"
           class="ml-8 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
         >
           発注書FAX送信
