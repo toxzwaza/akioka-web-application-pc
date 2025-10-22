@@ -26,28 +26,33 @@ const sendFax = (order) => {
   let fax_number = null;
   let file_url = null;
 
-  if (!confirm(`FAX送信を行ってもよろしいですか？\n発注先:${order.com_name}\nFAX番号: ${order.fax}`)) {
-    return
+  if (
+    !confirm(
+      `FAX送信を行ってもよろしいですか？\n発注先:${order.com_name}\nFAX番号: ${order.fax}`
+    )
+  ) {
+    return;
   }
 
   console.log(order);
-  const cleanFaxNumber = order.fax.replace(/-/g, '');
+  const cleanFaxNumber = order.fax.replace(/-/g, "");
   fax_number = cleanFaxNumber;
-  file_url = `http://monokanri-manage.local/storage/${order.purchase_path}`
+  file_url = `http://monokanri-manage.local/storage/${order.purchase_path}`;
 
-  console.log(fax_number, file_url)
+  console.log(fax_number, file_url);
 
-  axios.post('http://monokanri-manage.local:5000/send_fax', {
-    file_url: file_url,
-    fax_number: fax_number,
-  })
-  .then(res => {
-    console.log(res.data)
-    alert(res.data.message)
-  })
-  .catch(error => {
-    console.log(error)
-  })
+  axios
+    .post("http://monokanri-manage.local:5000/send_fax", {
+      file_url: file_url,
+      fax_number: fax_number,
+    })
+    .then((res) => {
+      console.log(res.data);
+      alert(res.data.message);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 function printElement() {
@@ -110,6 +115,7 @@ function printElement() {
 }
 
 async function saveAsImage() {
+
   approval_flg.value = true;
 
   // 納入希望日が入力されていない場合最短とする
@@ -148,7 +154,11 @@ async function saveAsImage() {
     });
 
     if (response.data.status) {
+      console.log(response.data)
+      props.orders[0].purchase_path = response.data.path
+
       alert("画像が正常に保存されました");
+
     } else {
       throw new Error(response.data.message);
     }
@@ -215,6 +225,7 @@ const generateQRCode = async () => {
   }
 };
 
+
 onMounted(() => {
   calculatePostage();
   generateQRCode();
@@ -231,10 +242,10 @@ onMounted(() => {
       </button>
 
       <button
-        @click="sendFax(orders[0])"
-        class="ml-8 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-      >
-        発注書FAX送信
+          @click="sendFax()"
+          class="ml-8 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
+        >
+          発注書FAX送信
       </button>
     </div>
 
@@ -260,19 +271,20 @@ onMounted(() => {
 
     <div id="purchase_container" class="mx-auto p-4">
       <div class="flex gap-2">
-        <button
+        <!-- <button
           id="print_button"
           @click="printElement"
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >
           印刷 & FAX
-        </button>
+        </button> -->
         <button
           @click="saveAsImage"
           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
         >
           発注書保存
         </button>
+
       </div>
 
       <!-- 発注書エリア（上半分） -->
