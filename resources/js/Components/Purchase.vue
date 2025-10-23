@@ -25,6 +25,10 @@ const reCreatePurchasePath = (order) => {
 const sendFax = (order) => {
   let fax_number = null;
   let file_url = null;
+  let request_user = null; //依頼者
+  let file_name = '注文書,納品書'; //ファイル名
+  let callback_url = null; //コールバックURL
+  let order_destination; //発注先
 
   if (
     !confirm(
@@ -115,7 +119,6 @@ function printElement() {
 }
 
 async function saveAsImage() {
-
   approval_flg.value = true;
 
   // 納入希望日が入力されていない場合最短とする
@@ -154,11 +157,10 @@ async function saveAsImage() {
     });
 
     if (response.data.status) {
-      console.log(response.data)
-      props.orders[0].purchase_path = response.data.path
+      console.log(response.data);
+      props.orders[0].purchase_path = response.data.path;
 
       alert("画像が正常に保存されました");
-
     } else {
       throw new Error(response.data.message);
     }
@@ -225,7 +227,6 @@ const generateQRCode = async () => {
   }
 };
 
-
 onMounted(() => {
   calculatePostage();
   generateQRCode();
@@ -242,10 +243,10 @@ onMounted(() => {
       </button>
 
       <button
-          @click="sendFax(orders[0])"
-          class="ml-8 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-        >
-          発注書FAX送信
+        @click="sendFax(orders[0])"
+        class="ml-8 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
+      >
+        発注書FAX送信
       </button>
     </div>
 
@@ -271,20 +272,19 @@ onMounted(() => {
 
     <div id="purchase_container" class="mx-auto p-4">
       <div class="flex gap-2">
-        <!-- <button
-          id="print_button"
-          @click="printElement"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          印刷 & FAX
-        </button> -->
         <button
           @click="saveAsImage"
           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
         >
           発注書保存
         </button>
-
+        <button
+          id="print_button"
+          @click="printElement"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          印刷 & FAX
+        </button>
       </div>
 
       <!-- 発注書エリア（上半分） -->
