@@ -97,7 +97,7 @@ Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.ac
 // 発注依頼更新（数量、単価、金額、送料）
 Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrderRequest'])->name('stock.updateOrderRequest');
 // コールバック
-Route::post('/callback', [CallBackController::class, 'callback'])->name('stock.callback');
+Route::get('/callback', [CallBackController::class, 'callback'])->name('stock.callback');
 // 発注担当者コメント更新
 Route::post('/order-requests/update/sub_description', [OrderRequestController::class, 'updateSubDescription'])->name('stock.updateSubDescription');
 // 未在庫登録品 ID紐づけ
