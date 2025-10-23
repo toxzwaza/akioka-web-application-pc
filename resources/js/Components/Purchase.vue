@@ -8,6 +8,7 @@ const props = defineProps({
   current_month_holidays: Array,
   next_month_holidays: Array,
   orders: Array,
+  admin_user: Object,
 });
 
 const shortest = ref(false);
@@ -25,10 +26,11 @@ const reCreatePurchasePath = (order) => {
 const sendFax = (order) => {
   let fax_number = null;
   let file_url = null;
-  let request_user = null; //依頼者
+  let request_user = props.admin_user.name; //依頼者
   let file_name = '注文書,納品書'; //ファイル名
-  let callback_url = null; //コールバックURL
-  let order_destination; //発注先
+  let callback_url = route('stock.callback', { flg: 'initial_order_id', value: order.id }); //コールバックURL
+  let order_destination = order.com_name; //発注先
+
 
   if (
     !confirm(
@@ -43,12 +45,16 @@ const sendFax = (order) => {
   fax_number = cleanFaxNumber;
   file_url = `http://monokanri-manage.local/storage/${order.purchase_path}`;
 
-  console.log(fax_number, file_url);
+  console.log(fax_number, file_url, request_user, file_name, callback_url, order_destination);
 
   axios
     .post("http://monokanri-manage.local:5000/send_fax", {
       file_url: file_url,
       fax_number: fax_number,
+      request_user: request_user,
+      file_name: file_name,
+      callback_url: callback_url,
+      order_destination: order_destination,
     })
     .then((res) => {
       console.log(res.data);
@@ -344,7 +350,7 @@ onMounted(() => {
               <p class="tracking-wider text-xs">TEL:086-522-7686</p>
               <p class="tracking-wider text-xs">FAX:086-522-7674</p>
               <p class="tracking-wider text-xs">
-                発注者：{{ orders[0].manage_user_name }}
+                発注者：{{ admin_user ? admin_user.name : orders[0].manage_user_name }}
               </p>
             </div>
           </div>
@@ -509,7 +515,7 @@ onMounted(() => {
               <p class="tracking-wider text-xs">TEL:086-522-7686</p>
               <p class="tracking-wider text-xs">FAX:086-522-7674</p>
               <p class="tracking-wider text-xs">
-                発注者：{{ orders[0].manage_user_name }}
+                発注者：{{ admin_user ? admin_user.name : orders[0].manage_user_name }}
               </p>
             </div>
           </div>

@@ -60,6 +60,7 @@ const approval_document = reactive({
 const is_login = ref(false);
 const pwd = ref("");
 const isSearchLoading = ref(false);
+const current_admin_user = ref(null);
 
 const modal_status = reactive({
   initial_order_id: null,
@@ -445,6 +446,7 @@ const handleSelect = (order) => {
 const handleAdminLoginSuccess = (loginData) => {
   console.log("管理者ログイン成功:", loginData);
   is_login.value = true;
+  current_admin_user.value = loginData.user;
   // 選択されたユーザー情報をログに出力
   console.log("選択された管理者:", loginData.user.name);
 };
@@ -453,6 +455,7 @@ const handleAdminLogout = () => {
   console.log("管理者ログアウト");
   is_login.value = false;
   pwd.value = "";
+  current_admin_user.value = null;
 };
 
 // 従来のメソッド（後方互換性のため保持）
@@ -1655,6 +1658,7 @@ const deleteInitialOrder = (order) => {
           :current_month_holidays="props.current_month_holidays"
           :next_month_holidays="props.next_month_holidays"
           :orders="print_order"
+          :admin_user="current_admin_user"
           @update-delivery-date="handleDeliveryDateUpdate"
         />
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AcceptController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\CallBackController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PurchaseOrder;
 use App\Http\Controllers\RaspiController;
@@ -17,7 +18,6 @@ use App\Http\Controllers\InitialOrderController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\StockCountController;
 use App\Http\Controllers\SupplierController;
-use App\Models\InitialOrder;
 
 // 在庫管理システム
 Route::get('/test', [StockController::class, 'test'])->name('stock.test');
@@ -96,6 +96,8 @@ Route::get('/accept', [AcceptController::class, 'index'])->name('stock.accept');
 Route::post('/accept/store', [AcceptController::class, 'store'])->name('stock.accept.store');
 // 発注依頼更新（数量、単価、金額、送料）
 Route::put('/order-requests/update', [OrderRequestController::class, 'updateOrderRequest'])->name('stock.updateOrderRequest');
+// コールバック
+Route::post('/callback', [CallBackController::class, 'callback'])->name('stock.callback');
 // 発注担当者コメント更新
 Route::post('/order-requests/update/sub_description', [OrderRequestController::class, 'updateSubDescription'])->name('stock.updateSubDescription');
 // 未在庫登録品 ID紐づけ
