@@ -72,6 +72,7 @@ class OrderRequestController extends Controller
                 'order_requests.created_at', //依頼日
                 'order_requests.digest_date', //消化予定日
                 'order_requests.desire_delivery_date', //希望納期
+                'order_requests.lead_time', //リードタイム
                 'order_requests.file_path',
                 'order_requests.description',
                 'order_requests.sub_description',

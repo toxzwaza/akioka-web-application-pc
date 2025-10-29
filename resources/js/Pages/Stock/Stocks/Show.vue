@@ -491,9 +491,9 @@ onMounted(() => {
       <div class="flex justify-center py-12">
         <div id="left_container" class="w-2/5">
           <!-- 発注登録 -->
-          <div class="bg-red-50 p-4">
-            <h3 class="text-lg font-bold dark:text-white mb-2">発注依頼登録</h3>
-            <div v-if="props.stock_suppliers.length > 0">
+          <!-- <div class="bg-red-50 p-4"> -->
+            <!-- <h3 class="text-lg font-bold dark:text-white mb-2">発注依頼登録</h3> -->
+            <!-- <div v-if="props.stock_suppliers.length > 0">
               <p
                 v-if="props.initial_order != null"
                 class="text-gray-700 mb-3 text-sm"
@@ -785,14 +785,11 @@ onMounted(() => {
                   登録
                 </button>
               </div>
-            </div>
-            <p v-else>
-              手配先が設定されていません。先に手配先を登録してください。<br />
-              リードタイムは取引に応じて自動で設定されるため、厳格に設定する必要はありません。
-            </p>
+            </div> -->
+
 
             <!-- 発注履歴を表示 -->
-            <details id="initial_order_details" class="mt-8">
+            <!-- <details id="initial_order_details" class="mt-8">
               <summary
                 @click="getInitialOrders"
                 class="cursor-pointer text-blue-500"
@@ -851,8 +848,8 @@ onMounted(() => {
                   </tbody>
                 </table>
               </div>
-            </details>
-          </div>
+            </details> -->
+          <!-- </div> -->
 
           <!-- 手配先設定 -->
           <div class="mt-8 bg-gray-100 p-4">

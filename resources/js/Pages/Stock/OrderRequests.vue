@@ -857,6 +857,11 @@ onMounted(() => {
                       希望納期
                     </th>
                     <th
+                      class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                    >
+                      リードタイム
+                    </th>
+                    <th
                       class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                     >
                       現在個数
@@ -1142,6 +1147,9 @@ onMounted(() => {
                           ).toLocaleDateString("ja-JP")
                         }}
                       </span>
+                    </td>
+                    <td class="px-4 py-4 text-lg text-gray-900">
+                      {{ order_request.lead_time }}日
                     </td>
                     <td class="px-4 py-4 text-lg text-gray-900">
                       {{ order_request.now_quantity }}

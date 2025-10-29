@@ -11,6 +11,7 @@ use App\Models\LastTreatRecord;
 use App\Models\Log;
 use App\Models\Movie;
 use App\Models\MovieMemo;
+use App\Models\OrderRequest;
 use App\Models\Stock;
 use App\Models\StockPriceArchive;
 use App\Models\StockStorage;
@@ -31,7 +32,19 @@ class TestController extends Controller
     //
     public function test()
     {
+        // 過去物品依頼チェッカー
+        $initial_orders = InitialOrder::where('stock_id', 8735)->get();
+        foreach ($initial_orders as $order_request) {
+            echo $order_request->id;
+            echo "<br>";
+            echo $order_request->order_date;
+            echo "<br>";
+            echo $order_request->desire_delivery_date;
+            echo "<br>";
+            echo "<br>";
+        }
 
+        return;
         $stocks = Stock::select('suppliers.name as supplier_name', 'stocks.name', 'stocks.memo','stocks.s_name','stocks.id', 'stocks.price', 'stocks.solo_unit', 'stocks.org_unit', 'stocks.quantity_per_org', 'stocks.deli_location', 'stocks.created_at', 'prioritized_stock_suppliers.lead_time')
         ->join(DB::raw('(
             SELECT ss1.*
