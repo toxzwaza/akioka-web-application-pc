@@ -137,11 +137,15 @@ class MasterController extends Controller
         $status = true;
 
         try {
+            // 既存の休日をすべて削除（is_holiday = 0に設定）
+            Holiday::where('is_holiday', 1)->update(['is_holiday' => 0]);
+
+            // 新しい休日を登録（既存の日付があればupdateし、なければinsert）
             foreach ($holidays as $holiday_date) {
-                $holiday = new Holiday();
-                $holiday->date = $holiday_date;
-                $holiday->is_holiday = 1;
-                $holiday->save();
+                Holiday::updateOrCreate(
+                    ['date' => $holiday_date],
+                    ['is_holiday' => 1]
+                );
             }
         } catch (Exception $e) {
             $status = false;
