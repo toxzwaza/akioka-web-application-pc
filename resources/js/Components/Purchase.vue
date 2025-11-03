@@ -328,7 +328,7 @@ onMounted(() => {
           </div>
           <div class="center_container text-center">
             <h3 class="font-bold text-sm mb-1 closeTitle">休業日</h3>
-            <p class="font-bold closedDay">
+            <p class="font-bold closedDay whitespace-nowrap">
               {{ new Date().getMonth() + 1 }}月
               <span
                 class="font-normal"
@@ -337,7 +337,7 @@ onMounted(() => {
                 >{{ new Date(currentMonth.date).getDate() }},</span
               >日
             </p>
-            <p class="font-bold closedDay">
+            <p class="font-bold closedDay whitespace-nowrap">
               {{ new Date().getMonth() + 2 }}月
               <span
                 class="font-normal"
