@@ -17,6 +17,7 @@ use App\Models\StockProcess;
 use App\Models\StockRequest;
 use App\Models\StockStorage;
 use App\Models\StockSupplier;
+use App\Models\StockSupplierPrice;
 use App\Models\StorageAddress;
 use App\Models\Supplier;
 use App\Models\User;
@@ -342,6 +343,11 @@ class StockController extends Controller
         // 価格改定リスト
         $stock_price_archive = StockPriceArchive::select('price', 'created_at', 'system_check_flg')->where('stock_id', $stock_id)->orderBy('created_at', 'asc')->get();
 
+        // 手配先価格リスト
+        $stock_supplier_prices = StockSupplierPrice::with('stockSupplier.supplier')
+            ->where('stock_id', $stock_id)
+            ->orderBy('start_date', 'desc')
+            ->get();
 
         return Inertia::render(
             'Stock/Stocks/Show',
@@ -358,7 +364,8 @@ class StockController extends Controller
                 'suppliers' => $suppliers,
                 'initial_order' => $initial_order,
                 'stock_processes' => $stock_processes,
-                'stock_price_archive' => $stock_price_archive
+                'stock_price_archive' => $stock_price_archive,
+                'stock_supplier_prices' => $stock_supplier_prices
             ]
         );
     }

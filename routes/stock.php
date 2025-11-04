@@ -10,6 +10,7 @@ use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockExportController;
 use App\Http\Controllers\StockSupplierController;
+use App\Http\Controllers\StockSupplierPriceController;
 use App\Http\Controllers\StockStorageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
@@ -130,6 +131,13 @@ Route::post('/stock-suppliers/store', [StockSupplierController::class, 'store'])
 Route::post('/stock-suppliers/update', [StockSupplierController::class, 'update'])->name('stock.stock_supplier.update');
 Route::delete('/stock-suppliers/delete', [StockSupplierController::class, 'delete'])->name('stock.stock_supplier.delete');
 Route::post('/stock-suppliers/change/main-flg', [StockSupplierController::class, 'changeMainFlg'])->name('stock.stock_supplier.change.main_flg');
+
+// 手配先価格
+Route::get('/stock-supplier-prices', [StockSupplierPriceController::class, 'index'])->name('stock.stock_supplier_price.index');
+Route::post('/stock-supplier-prices/store', [StockSupplierPriceController::class, 'store'])->name('stock.stock_supplier_price.store');
+Route::post('/stock-supplier-prices/update', [StockSupplierPriceController::class, 'update'])->name('stock.stock_supplier_price.update');
+Route::delete('/stock-supplier-prices/delete', [StockSupplierPriceController::class, 'destroy'])->name('stock.stock_supplier_price.delete');
+Route::post('/stock-supplier-prices/toggle-active', [StockSupplierPriceController::class, 'toggleActive'])->name('stock.stock_supplier_price.toggle_active');
 
 
 // 格納先
