@@ -1225,6 +1225,11 @@ const deleteInitialOrder = (order) => {
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  FAX送信
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                   v-if="is_login"
                 >
                   削除
@@ -1562,6 +1567,71 @@ const deleteInitialOrder = (order) => {
                     <option class="" :value="1">発注済み</option>
                     <option class="" :value="2">返信済み</option>
                   </select>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <span
+                    :class="{
+                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold': true,
+                      'bg-green-100 text-green-800': order.fax_parameter_id && order.fax_parameter_status === 1,
+                      'bg-yellow-100 text-yellow-800': order.fax_parameter_id && order.fax_parameter_status === 0,
+                      'bg-gray-100 text-gray-600': !order.fax_parameter_id,
+                    }"
+                  >
+                    <!-- 完了アイコン -->
+                    <svg
+                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <!-- 待機中アイコン -->
+                    <svg
+                      v-else-if="order.fax_parameter_id && order.fax_parameter_status === 0"
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <!-- 未送信アイコン -->
+                    <svg
+                      v-else
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    {{
+                      order.fax_parameter_id && order.fax_parameter_status === 1
+                        ? '完了'
+                        : order.fax_parameter_id && order.fax_parameter_status === 0
+                        ? '待機中'
+                        : '未送信'
+                    }}
+                  </span>
                 </td>
                 <td
                   v-if="is_login"

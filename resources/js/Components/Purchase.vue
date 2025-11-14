@@ -64,6 +64,7 @@ const sendFax = (order) => {
       file_name: file_name,
       callback_url: callback_url,
       order_destination: order_destination,
+      initial_order_id: order.id
     })
     .then((res) => {
       console.log(res.data);

@@ -60,6 +60,8 @@ class InitialOrderController extends Controller
             'documents.sub_reason as document_sub_reason',
             'documents.evalution_date as document_evalution_date',
             'stocks.tax_included as stock_tax_included', //税区分
+            'fax_parameters.id as fax_parameter_id',
+            'fax_parameters.status as fax_parameter_status',
         )
             ->leftJoin('stocks', 'stocks.id', 'initial_orders.stock_id')
             ->leftJoin('order_requests', 'order_requests.id', 'initial_orders.order_request_id')
@@ -74,6 +76,7 @@ class InitialOrderController extends Controller
             ->leftJoin('users as order_users', 'order_users.id', 'initial_orders.order_user_id') //依頼者
             ->leftJoin('stock_processes', 'stock_processes.id', 'initial_orders.stock_process_id')
             ->leftJoin('documents', 'documents.id', 'order_requests.document_id')
+            ->leftJoin('fax_parameters', 'fax_parameters.id', 'initial_orders.fax_parameter_id')
             ->orderBy('initial_orders.created_at', 'desc');
 
 
