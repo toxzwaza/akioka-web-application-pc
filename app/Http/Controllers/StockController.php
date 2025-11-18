@@ -512,6 +512,7 @@ class StockController extends Controller
         $del_flg = $request->del_flg;
         $tax_included = $request->tax_included;
         $desc_memo = $request->desc_memo;
+        $show_price_on_invoice = $request->show_price_on_invoice;
 
         try {
             $stock = null;
@@ -539,6 +540,7 @@ class StockController extends Controller
             $stock->del_flg = $del_flg;
             $stock->tax_included = $tax_included ?? 0;
             $stock->desc_memo = $desc_memo;
+            $stock->show_price_on_invoice = $show_price_on_invoice ?? 0;
 
 
             if (!$is_new && $stock->price != $price) {
