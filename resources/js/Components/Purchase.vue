@@ -43,6 +43,13 @@ const sendFax = (order) => {
   }
 
   console.log(order);
+  
+  // FAX番号が存在しない場合はエラー表示
+  if (!order.fax) {
+    alert("FAX番号が登録されていません。");
+    return;
+  }
+  
   const cleanFaxNumber = order.fax.replace(/-/g, "");
   fax_number = cleanFaxNumber;
   file_url = order.purchase_path;
@@ -489,7 +496,7 @@ onMounted(() => {
             <div class="text font-bold text-xs">
               備考
 
-              <p v-html="description.replace(/\n/g, '<br>')"></p>
+              <p v-html="description ? description.replace(/\n/g, '<br>') : ''"></p>
             </div>
           </div>
 

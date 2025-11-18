@@ -240,7 +240,7 @@ class StockTabletController extends Controller
                 }
                 $order = InitialOrder::find($id);
                 if ($order) {
-                    $order->delifile_path = '/deli_file/' . $filename;
+                    $order->delifile_path = config('app.url') . '/storage/deli_file/' . $filename;
                     $order->save();
                 }
 
