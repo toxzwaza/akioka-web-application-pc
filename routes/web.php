@@ -168,4 +168,4 @@ Route::get('/task/getCompleteTasks', [TaskController::class, 'getCompleteTasks']
 Route::get('/task/export', [TaskController::class, 'export'])->name('task.export');
 
 // ラベルデザイナ
-// Route::get('/label', [LabelController::class, 'index'])->name('label.home');
+Route::get('/label', [LabelController::class, 'index'])->name('label.home');
