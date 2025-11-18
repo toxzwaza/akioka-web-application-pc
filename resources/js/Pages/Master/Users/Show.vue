@@ -354,15 +354,15 @@ onMounted(() => {
               'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
               'text-red-500': !form.position_id,
             }"
-            >表示フラグ</label
+            >ステータス</label
           >
           <select
             name="position_id"
             class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
             v-model="form.del_flg"
           >
-            <option value="0" class="font-bold text-green-500">表示</option>
-            <option value="1" class="font-bold text-red-500">非表示</option>
+            <option value="0" class="font-bold text-green-500">有効</option>
+            <option value="1" class="font-bold text-red-500">無効</option>
 
           </select>
         </div>

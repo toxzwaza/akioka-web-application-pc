@@ -281,6 +281,11 @@ const updateFilter = (filter, value) => {
   }
 };
 
+const openFaxParameter = (faxParameterId) => {
+  const url = `http://monokanri-manage.local:5000/${faxParameterId}`;
+  window.open(url, '_blank');
+};
+
 const updateDate = (flg, order_id, date) => {
   console.log(flg, order_id, date);
   // return;
@@ -1572,9 +1577,10 @@ const deleteInitialOrder = (order) => {
                   class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                 >
                   <span
+                    @click="order.fax_parameter_id && order.fax_parameter_status === 1 ? openFaxParameter(order.fax_parameter_id) : null"
                     :class="{
-                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold': true,
-                      'bg-green-100 text-green-800': order.fax_parameter_id && order.fax_parameter_status === 1,
+                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-all': true,
+                      'bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 hover:shadow-md': order.fax_parameter_id && order.fax_parameter_status === 1,
                       'bg-yellow-100 text-yellow-800': order.fax_parameter_id && order.fax_parameter_status === 0,
                       'bg-gray-100 text-gray-600': !order.fax_parameter_id,
                     }"
@@ -1631,6 +1637,21 @@ const deleteInitialOrder = (order) => {
                         ? '待機中'
                         : '未送信'
                     }}
+                    <!-- 外部リンクアイコン（完了時のみ表示） -->
+                    <svg
+                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
+                      class="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
                   </span>
                 </td>
                 <td

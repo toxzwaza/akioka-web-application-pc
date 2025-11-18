@@ -48,6 +48,7 @@ const form = reactive({
   tax_included: null,
   approval_supplier_name: null,
   desc_memo: null, //備考
+  show_price_on_invoice: null,
 
   // 発注依頼用
   order_user: null,
@@ -581,6 +582,7 @@ onMounted(() => {
   form.tax_included = props.stock.tax_included;
   form.approval_supplier_name = props.stock.approval_supplier_name;
   form.desc_memo  = props.stock.desc_memo
+  form.show_price_on_invoice = props.stock.show_price_on_invoice
 
   if (props.stock_suppliers && props.stock_suppliers.length > 0) {
     form.supplier_id = props.stock_suppliers[0].id;
@@ -1869,20 +1871,36 @@ onMounted(() => {
                     </div>
                     <div>
                       <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        表示フラグ
+                        納品書金額表示
                       </label>
                       <select
-                        v-model="form.del_flg"
+                        v-model="form.show_price_on_invoice"
                         :class="{
                           'w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 transition-all duration-200 outline-none hover:border-gray-300 font-semibold': true,
-                          'text-green-600 focus:border-green-500 focus:ring-green-100': !form.del_flg,
-                          'text-red-600 focus:border-red-500 focus:ring-red-100': form.del_flg
+                          'text-green-600 focus:border-green-500 focus:ring-green-100': !form.show_price_on_invoice,
+                          'text-red-600 focus:border-red-500 focus:ring-red-100': form.show_price_on_invoice
                         }"
                       >
                         <option class="text-green-600" value="0">表示</option>
                         <option class="text-red-600" value="1">非表示</option>
                       </select>
                     </div>
+                  </div>
+                  <div class="w-full">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                      ステータス
+                    </label>
+                    <select
+                      v-model="form.del_flg"
+                      :class="{
+                        'text-center w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 transition-all duration-200 outline-none hover:border-gray-300 font-semibold': true,
+                        'text-green-600 focus:border-green-500 focus:ring-green-100': !form.del_flg,
+                        'text-red-600 focus:border-red-500 focus:ring-red-100': form.del_flg
+                      }"
+                    >
+                      <option class="text-green-600" value="0">有効</option>
+                      <option class="text-red-600" value="1">無効</option>
+                    </select>
                   </div>
 
                   <!-- 変更ボタン -->
