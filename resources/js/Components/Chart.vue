@@ -1,47 +1,66 @@
 <script setup>
-import { Chart, registerables } from "chart.js";
-import { LineChart } from "vue-chart-3"; // BarChartからLineChartに変更
-import { reactive, onMounted, watch } from "vue";
+import { Line } from "vue-chartjs";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { reactive, watch } from "vue";
+
 const props = defineProps({
   labels: Array,
   data: Array,
   label: String,
-  color: String
+  color: String,
 });
 
-Chart.register(...registerables);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
 const lineData = reactive({
-  // lineDataに変更
   labels: [],
   datasets: [
     {
       label: "",
       data: [],
       backgroundColor: "",
+      borderColor: "",
       tension: 0.1,
     },
   ],
 });
 
-
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: true,
+};
 
 watch(
-  () => [props.labels, props.data],
-  ([newLabels, newData]) => {
+  () => [props.labels, props.data, props.label, props.color],
+  ([newLabels, newData, newLabel, newColor]) => {
     lineData.labels = newLabels;
     lineData.datasets[0].data = newData;
+    lineData.datasets[0].label = newLabel;
+    lineData.datasets[0].backgroundColor = newColor;
+    lineData.datasets[0].borderColor = newColor;
   },
   { immediate: true }
 );
-
-onMounted(() => {
-  lineData.datasets[0].label = props.label;
-  lineData.datasets[0].backgroundColor = props.color;
-  
-})
 </script>
 <template>
   <div>
-    <LineChart :chartData="lineData" />
+    <Line :data="lineData" :options="chartOptions" />
   </div>
 </template>
