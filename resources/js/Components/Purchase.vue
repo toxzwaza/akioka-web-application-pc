@@ -246,6 +246,7 @@ const generateQRCode = async () => {
 onMounted(() => {
   calculatePostage();
   generateQRCode();
+
 });
 </script>
 <template>
@@ -617,17 +618,17 @@ onMounted(() => {
                   {{ order.order_unit }}
                 </td>
                 <td class="price text-center border">
-                  {{ order.price.toLocaleString() }}
+                  {{ order.show_price_on_invoice === 1 ? '-' : order.price.toLocaleString() }}
                 </td>
                 <td class="calc_price text-center border">
-                  {{ order.calc_price.toLocaleString() }}
+                  {{ order.show_price_on_invoice === 1 ? '-' : order.calc_price.toLocaleString() }}
                 </td>
               </tr>
 
               <tr>
                 <td colspan="4" class="text-right border">送料</td>
                 <td class="text-center border">
-                  {{ calc_postage.toLocaleString() }}
+                  {{ orders[0].show_price_on_invoice === 1 ? '-' : calc_postage.toLocaleString() }}
                 </td>
               </tr>
 
@@ -635,12 +636,14 @@ onMounted(() => {
                 <td colspan="4" class="text-right border">合計（税抜）</td>
                 <td class="text-center border">
                   {{
-                    (
-                      props.orders.reduce(
-                        (sum, order) => sum + order.calc_price,
-                        0
-                      ) + calc_postage
-                    ).toLocaleString()
+                    orders[0].show_price_on_invoice === 1 
+                      ? '-' 
+                      : (
+                          props.orders.reduce(
+                            (sum, order) => sum + order.calc_price,
+                            0
+                          ) + calc_postage
+                        ).toLocaleString()
                   }}
                 </td>
               </tr>

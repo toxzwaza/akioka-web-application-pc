@@ -44,6 +44,7 @@ class InitialOrderController extends Controller
             'stocks.img_path',
             'stocks.url',
             'stocks.classification_id',
+            'stocks.show_price_on_invoice',
             'stock_suppliers.lead_time as base_lead_time',
             'suppliers.tel',
             'suppliers.fax',
