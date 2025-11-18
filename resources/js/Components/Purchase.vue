@@ -45,7 +45,7 @@ const sendFax = (order) => {
   console.log(order);
   const cleanFaxNumber = order.fax.replace(/-/g, "");
   fax_number = cleanFaxNumber;
-  file_url = `http://monokanri-manage.local/storage/${order.purchase_path}`;
+  file_url = order.purchase_path;
 
   console.log(
     fax_number,
@@ -269,7 +269,7 @@ onMounted(() => {
 
     <img
       class="w-2/5 mt-8 mx-auto"
-      :src="`http://monokanri-manage.local/storage/${orders[0].purchase_path}`"
+      :src="orders[0].purchase_path"
       alt="発注書"
     />
   </div>

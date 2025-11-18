@@ -415,7 +415,7 @@ class OrderRequestController extends Controller
             foreach ($orders as $order) {
                 $initial_order = InitialOrder::where('id', $order)->first();
                 if ($initial_order) {
-                    $initial_order->purchase_path = 'purchase/' . $filename;
+                    $initial_order->purchase_path = config('app.url') . '/storage/purchase/' . $filename;
                     $initial_order->save();
                 }
             }
@@ -425,7 +425,7 @@ class OrderRequestController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Image saved successfully',
-                'path' => 'purchase/' . $filename
+                'path' => config('app.url') . '/storage/purchase/' . $filename
             ]);
         } catch (Exception $e) {
             return response()->json([
