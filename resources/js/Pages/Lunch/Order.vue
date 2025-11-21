@@ -5,6 +5,7 @@ import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue"
 
 const props = defineProps({
+  date: String,
   price: Number,
   count: Number,
   today_lunch_description: String,
@@ -89,7 +90,7 @@ onMounted(() => {
         <h1 class="doc-title">注文書</h1>
         <div class="top-text-container">
           <h2>株式会社倉敷まるたま<span>御中</span></h2>
-          <p>{{ today }}</p>
+          <p>{{ props.date }}</p>
         </div>
         <div class="middle-text-container">
           <div>

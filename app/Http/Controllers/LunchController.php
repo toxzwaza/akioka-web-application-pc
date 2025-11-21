@@ -22,17 +22,18 @@ class LunchController extends Controller
         return redirect()->route('lunch.order');
         return Inertia::render('Lunch/Index');
     }
-    public function order()
+    public function order(Request $request)
     {
-
         $price = Lunch::find(1)->price;
-        $lunch_order = LunchOrder::whereDate('date', \Carbon\Carbon::today()->format('Y-m-d'))->where('order_flg', 1)->get();
-        $today_lunch_description = TodayLunchDescription::whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
+        $date = $request->date ?? Carbon::today()->format('Y-m-d');
+
+        $lunch_order = LunchOrder::whereDate('date', $date)->where('order_flg', 1)->get();
+        $today_lunch_description = TodayLunchDescription::whereDate('created_at', $date)->first();
 
         $count = count($lunch_order);
 
         // 注文書アーカイブが存在しない場合
-        $lunch_order_archive = LunchOrderArchive::whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
+        $lunch_order_archive = LunchOrderArchive::whereDate('created_at', $date)->first();
         if (!$lunch_order_archive) {
             $lunch_order_archive = new LunchOrderArchive();
             $lunch_order_archive->lunch_count = $count;
@@ -44,8 +45,21 @@ class LunchController extends Controller
             $lunch_order_archive->save();
         }
 
+        // 曜日を取得
+        $weekMap = ['日', '月', '火', '水', '木', '金', '土'];
+        $carbonDate = Carbon::parse($date);
+        $formatted_date = $carbonDate->format('Y/m/d');
+        $weekday = $weekMap[$carbonDate->dayOfWeek];
 
-        return Inertia::render('Lunch/Order', ['count' => $count, 'price' => $price, 'today_lunch_description' => $today_lunch_description->description ?? '']);
+        // dateに（曜日）を追加
+        $date_with_weekday = $formatted_date . '（' . $weekday . '）';
+
+        return Inertia::render('Lunch/Order', [
+            'date' => $date_with_weekday,
+            'count' => $count,
+            'price' => $price,
+            'today_lunch_description' => $today_lunch_description->description ?? ''
+        ]);
     }
 
     public function reserve(Request $request)
