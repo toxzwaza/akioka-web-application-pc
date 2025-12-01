@@ -347,7 +347,7 @@ onMounted(() => {
               >日
             </p>
             <p class="font-bold closedDay whitespace-nowrap">
-              {{ new Date().getMonth() + 2 }}月
+              {{ (new Date().getMonth() + 2) > 12 ? 1 : (new Date().getMonth() + 2) }}月
               <span
                 class="font-normal"
                 v-for="nextMonth in next_month_holidays"
