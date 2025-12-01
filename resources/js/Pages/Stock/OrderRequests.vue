@@ -1,7 +1,7 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue";
@@ -198,6 +198,220 @@ const order_config = reactive({
 
 const order_requests = ref([]);
 const isDataLoading = ref(false);
+
+// 検索フィルター
+const searchFilters = reactive({
+  accept_flg: '', // 承認状態
+  new_stock_flg: '', // 依頼品（新規品/既存品）
+  name_search: '', // 品名・品番
+  stock_process_id: '', // 工程
+  desire_delivery_date_from: '', // 希望納期（開始）
+  desire_delivery_date_to: '', // 希望納期（終了）
+  supplier_id: '', // 発注先
+  created_at_from: '', // 発注依頼日時（開始）
+  created_at_to: '', // 発注依頼日時（終了）
+  request_user_id: '', // 依頼者
+});
+
+// フィルタリングされた発注依頼データ
+const filteredOrderRequests = computed(() => {
+  return order_requests.value.filter((order_request) => {
+    // 承認状態でフィルタ
+    if (searchFilters.accept_flg !== '' && order_request.accept_flg != searchFilters.accept_flg) {
+      return false;
+    }
+    
+    // 依頼品でフィルタ
+    if (searchFilters.new_stock_flg !== '') {
+      const isNewStock = order_request.new_stock_flg ? '1' : '0';
+      if (isNewStock !== searchFilters.new_stock_flg) {
+        return false;
+      }
+    }
+    
+    // 品名・品番でフィルタ
+    if (searchFilters.name_search) {
+      const searchText = searchFilters.name_search.toLowerCase();
+      const name = (order_request.name || order_request.order_request_name || '').toLowerCase();
+      const sName = (order_request.s_name || order_request.order_request_s_name || '').toLowerCase();
+      if (!name.includes(searchText) && !sName.includes(searchText)) {
+        return false;
+      }
+    }
+    
+    // 工程でフィルタ
+    if (searchFilters.stock_process_id && order_request.stock_process_id != searchFilters.stock_process_id) {
+      return false;
+    }
+    
+    // 希望納期でフィルタ
+    if (searchFilters.desire_delivery_date_from) {
+      const deliveryDate = order_request.desire_delivery_date ? new Date(order_request.desire_delivery_date) : null;
+      const fromDate = new Date(searchFilters.desire_delivery_date_from);
+      if (!deliveryDate || deliveryDate < fromDate) {
+        return false;
+      }
+    }
+    if (searchFilters.desire_delivery_date_to) {
+      const deliveryDate = order_request.desire_delivery_date ? new Date(order_request.desire_delivery_date) : null;
+      const toDate = new Date(searchFilters.desire_delivery_date_to);
+      toDate.setHours(23, 59, 59, 999); // 終日を含める
+      if (!deliveryDate || deliveryDate > toDate) {
+        return false;
+      }
+    }
+    
+    // 発注先でフィルタ
+    if (searchFilters.supplier_id && order_request.supplier_id != searchFilters.supplier_id) {
+      return false;
+    }
+    
+    // 発注依頼日時でフィルタ
+    if (searchFilters.created_at_from) {
+      const createdAt = new Date(order_request.created_at);
+      const fromDate = new Date(searchFilters.created_at_from);
+      if (createdAt < fromDate) {
+        return false;
+      }
+    }
+    if (searchFilters.created_at_to) {
+      const createdAt = new Date(order_request.created_at);
+      const toDate = new Date(searchFilters.created_at_to);
+      toDate.setHours(23, 59, 59, 999); // 終日を含める
+      if (createdAt > toDate) {
+        return false;
+      }
+    }
+    
+    // 依頼者でフィルタ
+    if (searchFilters.request_user_id && order_request.request_user_id != searchFilters.request_user_id) {
+      return false;
+    }
+    
+    return true;
+  });
+});
+
+// フィルターをリセット
+const resetFilters = () => {
+  searchFilters.accept_flg = '';
+  searchFilters.new_stock_flg = '';
+  searchFilters.name_search = '';
+  searchFilters.stock_process_id = '';
+  searchFilters.desire_delivery_date_from = '';
+  searchFilters.desire_delivery_date_to = '';
+  searchFilters.supplier_id = '';
+  searchFilters.created_at_from = '';
+  searchFilters.created_at_to = '';
+  searchFilters.request_user_id = '';
+};
+
+// 発注先のリスト（ユニーク）
+const supplierList = computed(() => {
+  const suppliers = new Map();
+  order_requests.value.forEach((order_request) => {
+    if (order_request.supplier_id && order_request.supplier_name) {
+      suppliers.set(order_request.supplier_id, {
+        id: order_request.supplier_id,
+        name: order_request.supplier_name,
+      });
+    }
+  });
+  return Array.from(suppliers.values()).sort((a, b) => a.name.localeCompare(b.name));
+});
+
+// 依頼者のリスト（ユニーク）
+const requestUserList = computed(() => {
+  const users = new Map();
+  order_requests.value.forEach((order_request) => {
+    if (order_request.request_user_id && order_request.request_user_name) {
+      users.set(order_request.request_user_id, {
+        id: order_request.request_user_id,
+        name: order_request.request_user_name,
+      });
+    }
+  });
+  return Array.from(users.values()).sort((a, b) => a.name.localeCompare(b.name));
+});
+
+// グループの表示/非表示を管理
+const groupVisibility = reactive({});
+
+// document_idでグループ化した発注依頼データ
+const groupedOrderRequests = computed(() => {
+  const groups = {};
+  
+  filteredOrderRequests.value.forEach((order_request) => {
+    // 既存品で稟議書がない場合は 'existing-no-document' グループ
+    const isExisting = !order_request.new_stock_flg;
+    const hasDocument = order_request.document_id;
+    
+    let groupKey;
+    if (!hasDocument && isExisting) {
+      groupKey = 'existing-no-document';
+    } else {
+      groupKey = order_request.document_id || 'no-document';
+    }
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        document_id: groupKey === 'existing-no-document' ? null : (groupKey === 'no-document' ? null : groupKey),
+        groupKey: groupKey,
+        isExistingGroup: groupKey === 'existing-no-document',
+        items: [],
+      };
+    }
+    groups[groupKey].items.push(order_request);
+  });
+  
+  // 各グループ内のアイテムをソート
+  // 優先順位: 1. 発注者がログインユーザーと等しいもの, 2. その他
+  Object.values(groups).forEach((group) => {
+    group.items.sort((a, b) => {
+      const aIsMyOrder = a.order_user_id == order_config.user_id;
+      const bIsMyOrder = b.order_user_id == order_config.user_id;
+      
+      if (aIsMyOrder && !bIsMyOrder) return -1;
+      if (!aIsMyOrder && bIsMyOrder) return 1;
+      return 0;
+    });
+  });
+  
+  // グループを配列に変換して優先順位でソート
+  return Object.values(groups).sort((a, b) => {
+    // 優先順位を計算する関数
+    const getPriority = (group) => {
+      // 最優先: グループ内に発注者がログインユーザーと等しいアイテムがある
+      const hasMyOrder = group.items.some(
+        (item) => item.order_user_id == order_config.user_id
+      );
+      if (hasMyOrder) return 0;
+      
+      // 次に優先: 稟議書がある（document_id !== null && !== 'no-document'）
+      if (group.document_id && group.document_id !== 'no-document') return 1;
+      
+      // その他
+      return 2;
+    };
+    
+    const priorityA = getPriority(a);
+    const priorityB = getPriority(b);
+    
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+    
+    // 同じ優先順位の場合は、document_idでソート
+    if (!a.document_id || a.groupKey === 'no-document' || a.groupKey === 'existing-no-document') return 1;
+    if (!b.document_id || b.groupKey === 'no-document' || b.groupKey === 'existing-no-document') return -1;
+    return String(a.document_id).localeCompare(String(b.document_id));
+  });
+});
+
+// グループの表示/非表示を切り替える
+const toggleGroupVisibility = (groupKey) => {
+  groupVisibility[groupKey] = !groupVisibility[groupKey];
+};
 
 const getOrderRequests = (user_id) => {
   // ローディング開始
@@ -775,6 +989,204 @@ onMounted(() => {
           </button>
         </div>
 
+        <!-- Search Filters Section -->
+        <div class="search-filters-section mb-6">
+          <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+                絞り込み検索
+              </h3>
+              <button
+                @click="resetFilters"
+                class="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                リセット
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <!-- 承認状態 -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  承認状態
+                </label>
+                <select
+                  v-model="searchFilters.accept_flg"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">すべて</option>
+                  <option value="0">未依頼</option>
+                  <option value="1">承認待ち</option>
+                  <option value="2">承認済み</option>
+                  <option value="3">却下</option>
+                  <option value="4">却下再依頼待ち</option>
+                  <option value="5">確認中</option>
+                  <option value="6">差戻対応</option>
+                </select>
+              </div>
+
+              <!-- 依頼品 -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  依頼品
+                </label>
+                <select
+                  v-model="searchFilters.new_stock_flg"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">すべて</option>
+                  <option value="1">新規品</option>
+                  <option value="0">既存品</option>
+                </select>
+              </div>
+
+              <!-- 品名・品番 -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  品名・品番
+                </label>
+                <input
+                  v-model="searchFilters.name_search"
+                  type="text"
+                  placeholder="品名または品番で検索"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <!-- 工程 -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  工程
+                </label>
+                <select
+                  v-model="searchFilters.stock_process_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">すべて</option>
+                  <option
+                    v-for="stock_process in stock_processes"
+                    :key="stock_process.id"
+                    :value="stock_process.id"
+                  >
+                    {{ stock_process.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 希望納期（開始） -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  希望納期（開始）
+                </label>
+                <input
+                  v-model="searchFilters.desire_delivery_date_from"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <!-- 希望納期（終了） -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  希望納期（終了）
+                </label>
+                <input
+                  v-model="searchFilters.desire_delivery_date_to"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <!-- 発注先 -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  発注先
+                </label>
+                <select
+                  v-model="searchFilters.supplier_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">すべて</option>
+                  <option
+                    v-for="supplier in supplierList"
+                    :key="supplier.id"
+                    :value="supplier.id"
+                  >
+                    {{ supplier.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 発注依頼日時（開始） -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  発注依頼日時（開始）
+                </label>
+                <input
+                  v-model="searchFilters.created_at_from"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <!-- 発注依頼日時（終了） -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  発注依頼日時（終了）
+                </label>
+                <input
+                  v-model="searchFilters.created_at_to"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <!-- 依頼者 -->
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  依頼者
+                </label>
+                <select
+                  v-model="searchFilters.request_user_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">すべて</option>
+                  <option
+                    v-for="user in requestUserList"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 検索結果件数表示 -->
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <p class="text-sm text-gray-600">
+                検索結果: <span class="font-semibold text-gray-900">{{ filteredOrderRequests.length }}</span>件
+                <span v-if="filteredOrderRequests.length !== order_requests.length" class="text-gray-500">
+                  (全{{ order_requests.length }}件中)
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Orders Table Section -->
         <div class="orders-table-section">
           <div class="table-container">
@@ -793,7 +1205,10 @@ onMounted(() => {
                     d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                   ></path>
                 </svg>
-                発注依頼一覧 ({{ order_requests.length }}件)
+                発注依頼一覧 ({{ filteredOrderRequests.length }}件)
+                <span v-if="filteredOrderRequests.length !== order_requests.length" class="text-sm text-gray-500 font-normal">
+                  / 全{{ order_requests.length }}件
+                </span>
               </h3>
               <div
                 v-if="contain_approvals.list.length > 0"
@@ -954,17 +1369,123 @@ onMounted(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="order_request in order_requests"
-                    :key="order_request.id"
-                    :class="{
-                      'transition duration-300 border hover:bg-gray-300': true,
-                      'bg-blue-50': order_request.select_flg,
-                      'bg-gray-100 ':
-                        order_request.order_user_id != order_config.user_id,
-                    }"
-                  >
-                    <td class="text-center">
+                  <template v-for="group in groupedOrderRequests" :key="group.groupKey">
+                    <!-- グループヘッダー行（稟議書がある場合） -->
+                    <tr
+                      v-if="group.document_id && group.document_id !== 'no-document'"
+                      @click="toggleGroupVisibility(group.groupKey)"
+                      class="group-header-row bg-indigo-50 border-t-4 border-indigo-500 cursor-pointer hover:bg-indigo-100 transition-colors"
+                    >
+                      <td :colspan="25" class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                          <svg
+                            class="w-5 h-5 text-indigo-600 transition-transform"
+                            :class="{ 'rotate-90': groupVisibility[group.groupKey] }"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5l7 7-7 7"
+                            ></path>
+                          </svg>
+                          <svg
+                            class="w-5 h-5 text-indigo-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            ></path>
+                          </svg>
+                          <span class="font-bold text-indigo-800 text-lg">
+                            同一稟議書グループ
+                          </span>
+                          <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            稟議書No: {{ group.document_id }}
+                          </span>
+                          <span class="text-indigo-600 text-sm">
+                            ({{ group.items.length }}件)
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- 既存品グループヘッダー行 -->
+                    <tr
+                      v-if="group.isExistingGroup"
+                      @click="toggleGroupVisibility(group.groupKey)"
+                      class="group-header-row bg-orange-50 border-t-4 border-orange-500 cursor-pointer hover:bg-orange-100 transition-colors"
+                    >
+                      <td :colspan="25" class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                          <svg
+                            class="w-5 h-5 text-orange-600 transition-transform"
+                            :class="{ 'rotate-90': groupVisibility[group.groupKey] }"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5l7 7-7 7"
+                            ></path>
+                          </svg>
+                          <svg
+                            class="w-5 h-5 text-orange-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            ></path>
+                          </svg>
+                          <span class="font-bold text-orange-800 text-lg">
+                            既存品依頼グループ
+                          </span>
+                          <span class="bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            稟議書なし
+                          </span>
+                          <span class="text-orange-600 text-sm">
+                            ({{ group.items.length }}件)
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- グループ内の各発注依頼行 -->
+                    <tr
+                      v-for="(order_request, itemIndex) in group.items"
+                      :key="order_request.id"
+                      v-show="group.document_id || group.isExistingGroup ? !groupVisibility[group.groupKey] : true"
+                      :class="{
+                        'transition duration-300 border hover:bg-gray-300': true,
+                        'bg-blue-50': order_request.select_flg,
+                        'my-order-row': order_request.order_user_id == order_config.user_id,
+                        'other-order-row': order_request.order_user_id != order_config.user_id && order_request.order_user_id,
+                        'no-order-user-row': !order_request.order_user_id,
+                        'group-item-row': group.document_id && group.document_id !== 'no-document',
+                        'existing-group-item-row': group.isExistingGroup,
+                        'border-l-4 border-indigo-400': group.document_id && group.document_id !== 'no-document' && itemIndex === 0,
+                        'border-b-2 border-indigo-300': group.document_id && group.document_id !== 'no-document' && itemIndex === group.items.length - 1,
+                        'border-l-4 border-orange-400': group.isExistingGroup && itemIndex === 0,
+                        'border-b-2 border-orange-300': group.isExistingGroup && itemIndex === group.items.length - 1,
+                      }"
+                    >
+                      <td class="text-center">
                       <input
                         v-if="order_request.accept_flg === 0"
                         v-model="order_request.select_flg"
@@ -1053,6 +1574,8 @@ onMounted(() => {
                         </button>
                       </div>
                     </td>
+
+                    
 
                     <td class="px-4 py-4 text-lg text-gray-900">
                       <span
@@ -1382,6 +1905,7 @@ onMounted(() => {
                       </button>
                     </td>
                   </tr>
+                  </template>
                 </tbody>
               </table>
             </div>
@@ -1822,6 +2346,62 @@ onMounted(() => {
 
           tbody {
             @apply bg-white divide-y divide-gray-200;
+
+            // グループヘッダー行
+            .group-header-row {
+              @apply sticky top-0 z-10;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            // グループ内の行（稟議書グループ）
+            .group-item-row {
+              background-color: rgba(224, 231, 255, 0.2);
+              
+              &:hover {
+                background-color: rgba(224, 231, 255, 0.4);
+              }
+            }
+
+            // 既存品グループ内の行
+            .existing-group-item-row {
+              background-color: rgba(255, 237, 213, 0.3);
+              
+              &:hover {
+                background-color: rgba(255, 237, 213, 0.5);
+              }
+            }
+
+            // 発注者がログインユーザーの行
+            .my-order-row {
+              background-color: rgba(219, 234, 254, 0.4);
+              border-top: 2px solid rgba(59, 130, 246, 0.5);
+              border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+              
+              &:hover {
+                background-color: rgba(219, 234, 254, 0.6);
+              }
+            }
+
+            // 発注者が他のユーザーの行
+            .other-order-row {
+              background-color: rgba(243, 244, 246, 0.6);
+              border-top: 1px solid rgba(156, 163, 175, 0.3);
+              
+              &:hover {
+                background-color: rgba(243, 244, 246, 0.8);
+              }
+            }
+
+            // 発注者未登録の行
+            .no-order-user-row {
+              background-color: rgba(254, 242, 242, 0.4);
+              border-top: 2px solid rgba(239, 68, 68, 0.4);
+              border-bottom: 2px solid rgba(239, 68, 68, 0.4);
+              
+              &:hover {
+                background-color: rgba(254, 242, 242, 0.6);
+              }
+            }
 
             tr {
               @apply hover:bg-gray-50 transition-colors duration-150;
