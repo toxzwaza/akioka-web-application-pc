@@ -62,12 +62,14 @@ const pwd = ref("");
 const isSearchLoading = ref(false);
 const current_admin_user = ref(null);
 
-const modal_status = reactive({
-  initial_order_id: null,
-  type: null,
-  status: false,
-  img_path: "",
+// モーダル状態管理（シンプル化）
+const modal = reactive({
+  isOpen: false,
+  type: null, // 'image', 'purchase', 'delivery', 'approval'
+  data: null, // モーダルに表示するデータ
+  currentIndex: 0, // 複数アイテム表示時の現在のインデックス
 });
+
 const purchase_list = ref([]);
 const print_order = ref([]);
 
@@ -97,63 +99,97 @@ const changeMessage = (order) => {
       });
   }
 };
-const openModal = (img_path, order, flg) => {
-  modal_status.img_path = "";
+// モーダルを開く（シンプル化）
+const openModal = (type, data) => {
+  modal.type = type;
+  modal.data = data;
+  modal.currentIndex = 0;
+  modal.isOpen = true;
+};
 
-  switch (flg) {
-    case "img": //画像表示
-      modal_status.type = "img";
-      modal_status.img_path = getImgPath(img_path);
-      break;
-    case "purchase": //発注書表示
-      modal_status.type = "purchase";
-      print_order.value = [order];
-      break;
-    case "multi":
-      modal_status.type = "purchase";
-      print_order.value = purchase_list.value;
-      console.log("purchase_list", purchase_list.value);
-      console.log("print_order", print_order.value);
-      break;
-    case "deli_file": //納品書表示
-      modal_status.type = "deli_file";
-      modal_status.initial_order_id = order.id;
-      modal_status.img_path =
-        img_path && img_path.includes("storage")
-          ? `https://akioka.cloud/${img_path}`
-          : img_path.includes("deli_file")
-          ? `https://akioka.cloud/storage/${img_path}`
-          : img_path;
-      break;
-    case "approval":
-      modal_status.type = "approval";
+// モーダルを閉じる
+const closeModal = () => {
+  modal.isOpen = false;
+  modal.type = null;
+  modal.data = null;
+  modal.currentIndex = 0;
+};
 
-      if (order.document_id) {
-        console.log("稟議書を表示--->", order);
-        approval_document.document_id = order.document_id;
-        approval_document.user_name = order.order_user;
-        approval_document.evalution_date = order.document_evalution_date; //評価日
-        approval_document.desire_delivery_date = order.desire_delivery_date; //希望日
-        approval_document.supplier_name = order.com_name;
-        approval_document.price = order.price;
-        approval_document.quantity = order.quantity;
-        approval_document.calc_price = order.calc_price;
-        approval_document.name = order.name;
-        approval_document.s_name = order.s_name;
-        approval_document.title = order.document_title;
-        approval_document.content = order.document_content;
-        approval_document.main_reason = order.document_main_reason;
-        approval_document.sub_reason = order.document_sub_reason;
-        approval_document.approvals = order.order_request_approvals;
-      } else {
-        modal_status.img_path = `https://akioka.cloud/${order.file_path}`;
+// 画像パスを取得
+const getImagePath = (path) => {
+  if (!path) return '';
+  if (path.includes('https://')) return path;
+  if (path.includes('storage')) return `https://akioka.cloud/${path}`;
+  if (path.includes('deli_file')) return `https://akioka.cloud/storage/${path}`;
+  return `https://akioka.cloud/${path}`;
+};
+
+// 納品書パスを配列で取得（複数対応）
+const getDeliveryFiles = (order) => {
+  if (!order) return [];
+  
+  const files = [];
+  
+  // deliveriesリレーションから納品書を取得（優先）
+  if (order.deliveries && Array.isArray(order.deliveries) && order.deliveries.length > 0) {
+    order.deliveries.forEach((delivery, index) => {
+      if (delivery.document_image) {
+        files.push({
+          path: getImagePath(delivery.document_image),
+          id: delivery.id || `${order.id}_${index}`,
+          delivery_id: delivery.id,
+        });
       }
-
-      console.log(modal_status.img_path);
-      break;
+    });
   }
+  
+  // 後方互換性: deliveriesがない場合は既存のdelifile_pathを使用
+  if (files.length === 0) {
+    // 単一の納品書パスがある場合
+    if (order.delifile_path) {
+      files.push({
+        path: getImagePath(order.delifile_path),
+        id: order.id,
+      });
+    }
+    
+    // 複数の納品書パスがある場合（配列またはカンマ区切り）
+    if (order.delifile_paths && Array.isArray(order.delifile_paths)) {
+      order.delifile_paths.forEach((path, index) => {
+        files.push({
+          path: getImagePath(path),
+          id: `${order.id}_${index}`,
+        });
+      });
+    } else if (order.delifile_paths && typeof order.delifile_paths === 'string') {
+      // カンマ区切りの場合
+      order.delifile_paths.split(',').forEach((path, index) => {
+        const trimmedPath = path.trim();
+        if (trimmedPath) {
+          files.push({
+            path: getImagePath(trimmedPath),
+            id: `${order.id}_${index}`,
+          });
+        }
+      });
+    }
+  }
+  
+  return files;
+};
 
-  modal_status.status = true;
+// 前の納品書に移動
+const prevDeliveryFile = () => {
+  if (modal.currentIndex > 0) {
+    modal.currentIndex--;
+  }
+};
+
+// 次の納品書に移動
+const nextDeliveryFile = () => {
+  if (modal.data && modal.data.files && modal.currentIndex < modal.data.files.length - 1) {
+    modal.currentIndex++;
+  }
 };
 
 const base_initial_orders = ref([]);
@@ -400,10 +436,17 @@ const handleQuantity = (order, quantity) => {
 
 // 納入希望日を保存する
 const handleDeliveryDateUpdate = (date) => {
-  console.log("選択された納入希望日:", date, print_order.value);
+  if (!modal.data || !modal.data.orders || modal.data.orders.length === 0) {
+    console.error("発注データが見つかりません");
+    return;
+  }
+  
+  const orderId = modal.data.orders[0].id;
+  console.log("選択された納入希望日:", date, orderId);
+  
   axios
     .post(route("stock.update_desired_delivery_date"), {
-      initial_order_id: print_order.value.id,
+      initial_order_id: orderId,
       desired_delivery_date: date,
     })
     .then((res) => {
@@ -592,7 +635,7 @@ onMounted(() => {
 
 // 納品書更新
 
-const fileUpload = async (event) => {
+const fileUpload = async (event, initial_order_id) => {
   const file = event.target.files[0];
   if (file) {
     if (!confirm("ファイルが選択されました。納品書を更新しますか？")) {
@@ -602,7 +645,7 @@ const fileUpload = async (event) => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("initial_order_id", modal_status.initial_order_id);
+    formData.append("initial_order_id", initial_order_id);
     console.log(formData);
 
     axios
@@ -1068,7 +1111,7 @@ const deleteInitialOrder = (order) => {
         <div class="controls-right">
           <button
             v-if="purchase_list.length > 1"
-            @click="openModal(null, null, 'multi')"
+            @click="openModal('purchase', { orders: purchase_list })"
             class="batch-order-btn"
           >
             <svg
@@ -1277,7 +1320,7 @@ const deleteInitialOrder = (order) => {
                         ? order.img_path
                         : 'https://akioka.cloud/' + order.img_path
                     "
-                    @click="openModal(order.img_path, null, 'img')"
+                    @click="openModal('image', { path: order.img_path && order.img_path.includes('https://') ? order.img_path : 'https://akioka.cloud/' + order.img_path })"
                     alt=""
                   />
                 </td>
@@ -1494,7 +1537,7 @@ const deleteInitialOrder = (order) => {
                 >
                   <button
                     v-if="!order.url"
-                    @click="openModal(null, order, 'purchase')"
+                    @click="openModal('purchase', { orders: [order] })"
                     :class="{
                       ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
                       'bg-green-500': order.purchase_path,
@@ -1517,11 +1560,11 @@ const deleteInitialOrder = (order) => {
                   class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                 >
                   <button
-                    v-if="order.delifile_path"
+                    v-if="(order.deliveries && order.deliveries.length > 0) || order.delifile_path || (order.delifile_paths && order.delifile_paths.length > 0)"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                    @click="openModal(order.delifile_path, order, 'deli_file')"
+                    @click="openModal('delivery', { order: order, files: getDeliveryFiles(order) })"
                   >
-                    納品書
+                    納品書{{ getDeliveryFiles(order).length > 1 ? ` (${getDeliveryFiles(order).length}件)` : '' }}
                   </button>
                 </td>
                 <td
@@ -1530,7 +1573,7 @@ const deleteInitialOrder = (order) => {
                   <button
                     v-if="order.file_path || order.document_id"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                    @click="openModal(null, order, 'approval')"
+                    @click="openModal('approval', { order: order, document: order.document_id ? { document_id: order.document_id, user_name: order.order_user, evalution_date: order.document_evalution_date, desire_delivery_date: order.desire_delivery_date, supplier_name: order.com_name, price: order.price, quantity: order.quantity, calc_price: order.calc_price, name: order.name, s_name: order.s_name, title: order.document_title, content: order.document_content, main_reason: order.document_main_reason, sub_reason: order.document_sub_reason, approvals: order.order_request_approvals } : null, file_path: order.file_path ? `https://akioka.cloud/${order.file_path}` : null })"
                   >
                     稟議書
                   </button>
@@ -1676,96 +1719,181 @@ const deleteInitialOrder = (order) => {
         <Pagination :links="initial_orders.links" />
       </div>
 
-      <!-- モーダルウィンドウ -->
-      <div id="modal" :class="{ active: modal_status.status }">
-        <div id="close_container">
-          <button
-            @click="modal_status.status = !modal_status.status"
-            class="modal__close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
-            aria-label="Close modal"
-          >
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-
+      <!-- モーダルウィンドウ（モダンなデザイン） -->
+      <Transition name="modal">
         <div
-          v-if="
-            modal_status.type === 'img' || modal_status.type === 'deli_file'
-          "
+          v-if="modal.isOpen"
+          class="modal-overlay"
+          @click.self="closeModal"
         >
-          <div
-            v-if="modal_status.type === 'deli_file'"
-            class="w-1/2 mx-auto mb-8"
-          >
-            <div class="flex items-center justify-center w-full">
-              <label
-                for="dropzone-file"
-                class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+          <div class="modal-container" @click.stop>
+            <!-- モーダルヘッダー -->
+            <div class="modal-header">
+              <h3 class="modal-title">
+                <span v-if="modal.type === 'image'">画像</span>
+                <span v-else-if="modal.type === 'purchase'">発注書</span>
+                <span v-else-if="modal.type === 'delivery'">納品書</span>
+                <span v-else-if="modal.type === 'approval'">稟議書</span>
+              </h3>
+              <button
+                @click="closeModal"
+                class="modal-close-btn"
+                aria-label="閉じる"
               >
-                <div
-                  class="flex flex-col items-center justify-center pt-5 pb-6"
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 16"
-                  >
-                    <path
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                    />
-                  </svg>
-                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span class="font-semibold">Click to upload</span> or drag
-                    and drop
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    稟議書を変更する場合は、こちらから再設定してください。
-                  </p>
-                </div>
-                <input
-                  id="dropzone-file"
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  @change="fileUpload($event, modal_status.initial_order_id)"
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- モーダルコンテンツ -->
+            <div class="modal-content">
+              <!-- 画像表示 -->
+              <div v-if="modal.type === 'image' && modal.data" class="modal-image-viewer">
+                <img :src="modal.data.path" alt="画像" />
+              </div>
+
+              <!-- 発注書表示 -->
+              <div v-else-if="modal.type === 'purchase' && modal.data" class="modal-purchase-viewer">
+                <Purchase
+                  :current_month_holidays="props.current_month_holidays"
+                  :next_month_holidays="props.next_month_holidays"
+                  :orders="modal.data.orders"
+                  :admin_user="current_admin_user"
+                  @update-delivery-date="handleDeliveryDateUpdate"
                 />
-              </label>
+              </div>
+
+              <!-- 納品書表示（複数対応） -->
+              <div
+                v-else-if="modal.type === 'delivery' && modal.data && modal.data.files && modal.data.files.length > 0"
+                class="modal-delivery-viewer"
+              >
+                <!-- ファイルアップロードエリア -->
+                <!-- <div class="delivery-upload-section">
+                  <label
+                    for="dropzone-file"
+                    class="delivery-upload-area"
+                  >
+                    <div class="upload-content">
+                      <svg
+                        class="upload-icon"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p class="upload-text">
+                        <span class="font-semibold">クリックしてアップロード</span> または ドラッグ&ドロップ
+                      </p>
+                      <p class="upload-hint">
+                        納品書を変更する場合は、こちらから再設定してください
+                      </p>
+                    </div>
+                    <input
+                      id="dropzone-file"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      @change="fileUpload($event, modal.data.order.id)"
+                    />
+                  </label>
+                </div> -->
+
+                <!-- 複数納品書のナビゲーション -->
+                <div
+                  v-if="modal.data.files.length > 1"
+                  class="delivery-navigation"
+                >
+                  <button
+                    @click="prevDeliveryFile"
+                    :disabled="modal.currentIndex === 0"
+                    class="nav-btn"
+                    :class="{ disabled: modal.currentIndex === 0 }"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                    前へ
+                  </button>
+                  <span class="nav-counter">
+                    {{ modal.currentIndex + 1 }} / {{ modal.data.files.length }}
+                  </span>
+                  <button
+                    @click="nextDeliveryFile"
+                    :disabled="modal.currentIndex === modal.data.files.length - 1"
+                    class="nav-btn"
+                    :class="{ disabled: modal.currentIndex === modal.data.files.length - 1 }"
+                  >
+                    次へ
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- 納品書画像表示 -->
+                <div class="delivery-image-container">
+                  <img
+                    :src="modal.data.files[modal.currentIndex].path"
+                    alt="納品書"
+                    class="delivery-image"
+                  />
+                </div>
+              </div>
+
+              <!-- 稟議書表示 -->
+              <div v-else-if="modal.type === 'approval' && modal.data" class="modal-approval-viewer">
+                <iframe
+                  v-if="modal.data.file_path"
+                  ref="pdfViewer"
+                  :src="modal.data.file_path"
+                  class="approval-iframe"
+                ></iframe>
+                <div v-else-if="modal.data.document" class="approval-document-container">
+                  <ApprovalDocument :approval_document="modal.data.document" />
+                </div>
+              </div>
             </div>
           </div>
-
-          <div id="img_modal">
-            <img :src="modal_status.img_path" alt="" />
-          </div>
         </div>
-
-        <Purchase
-          v-else-if="modal_status.type === 'purchase'"
-          :current_month_holidays="props.current_month_holidays"
-          :next_month_holidays="props.next_month_holidays"
-          :orders="print_order"
-          :admin_user="current_admin_user"
-          @update-delivery-date="handleDeliveryDateUpdate"
-        />
-
-        <div id="pdfviewer" v-else-if="modal_status.type === 'approval'">
-          <iframe
-            v-if="modal_status.img_path"
-            ref="pdfViewer"
-            :src="modal_status.img_path"
-          ></iframe>
-
-          <!-- 画像ファイルがない場合稟議書要素を表示 -->
-          <div v-else>
-            <ApprovalDocument :approval_document="approval_document" />
-          </div>
-        </div>
-      </div>
+      </Transition>
 
       <!-- Search Loading Component -->
       <SearchLoading
@@ -1963,9 +2091,7 @@ const deleteInitialOrder = (order) => {
   @apply flex items-center justify-between;
 
   .controls-left {
-    .pagination-wrapper {
-      // Pagination styles will be inherited
-    }
+    // Pagination styles will be inherited from Pagination component
   }
 
   .controls-right {
@@ -2069,50 +2195,401 @@ const deleteInitialOrder = (order) => {
   }
 }
 
-#modal {
+// モーダルオーバーレイ
+.modal-overlay {
   position: fixed;
-  bottom: 0;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
 
+// モーダルコンテナ
+.modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   width: 90vw;
+  max-width: 1200px;
+  height: 90vh;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  padding: 1rem;
+// モーダルヘッダー
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(to right, #f9fafb, #ffffff);
 
-  background-color: white;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px 10px 0 0;
-  height: 0;
-  transform: translateY(100%);
-  &.active {
-    height: 99vh;
-    transform: translateY(0);
-    transition: all 0.5s;
-    overflow-y: scroll;
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
   }
 
-  & #close_container {
-    width: 100%;
+  .modal-close-btn {
     display: flex;
-    justify-content: end;
-  }
-
-  & #img_modal {
-    height: 92%;
-    display: flex;
+    align-items: center;
     justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
 
-    & img {
-      height: 100%;
-      object-fit: contain;
-      box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    &:hover {
+      background-color: #e5e7eb;
+      color: #374151;
+      transform: rotate(90deg);
+    }
+
+    &:active {
+      transform: rotate(90deg) scale(0.95);
+    }
+  }
+}
+
+// モーダルコンテンツ
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem;
+  min-height: 0; // flexboxでスクロールを有効にするため
+}
+
+// 画像ビューアー
+.modal-image-viewer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+
+  img {
+    max-width: 100%;
+    max-height: calc(90vh - 250px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// 発注書ビューアー
+.modal-purchase-viewer {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  // Purchaseコンポーネント内のテーブルが横にはみ出さないように
+  > * {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  // テーブルが横にはみ出さないように
+  table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    word-wrap: break-word;
+  }
+}
+
+// 納品書ビューアー
+.modal-delivery-viewer {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  .delivery-upload-section {
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 100%;
+
+    .delivery-upload-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      background: linear-gradient(to bottom, #f9fafb, #ffffff);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
+
+      &:hover {
+        border-color: #3b82f6;
+        background: linear-gradient(to bottom, #eff6ff, #f0f9ff);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+      }
+
+      .upload-content {
+        text-align: center;
+        width: 100%;
+
+        .upload-icon {
+          width: 3rem;
+          height: 3rem;
+          color: #6b7280;
+          margin-bottom: 1rem;
+        }
+
+        .upload-text {
+          font-size: 0.875rem;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+          font-size: 0.75rem;
+          color: #9ca3af;
+        }
+      }
     }
   }
 
-  & #pdfviewer {
-    height: 100%;
+  .delivery-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(to right, #f9fafb, #ffffff);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
 
-    & iframe {
-      height: 96%;
-      width: 100%;
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(to right, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+      white-space: nowrap;
+
+      &:hover:not(.disabled) {
+        background: linear-gradient(to right, #2563eb, #1d4ed8);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+      }
+
+      &:active:not(.disabled) {
+        transform: translateY(0);
+      }
+
+      &.disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+
+    .nav-counter {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #374151;
+      min-width: 4rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+  }
+
+  .delivery-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex: 1;
+    min-height: 400px;
+    max-height: calc(90vh - 350px);
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+
+    .delivery-image {
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      min-height: 0;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      display: block;
+    }
+  }
+}
+
+// 稟議書ビューアー
+.modal-approval-viewer {
+  min-height: 400px;
+  max-height: calc(90vh - 250px);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+
+  .approval-iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+    max-height: calc(90vh - 250px);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .approval-document-container {
+    padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+}
+
+// モーダルアニメーション（フェードイン）
+.modal-enter-active {
+  transition: opacity 0.2s ease;
+
+  .modal-container {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+}
+
+.modal-leave-active {
+  transition: opacity 0.15s ease;
+
+  .modal-container {
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+}
+
+.modal-enter-from {
+  opacity: 0;
+
+  .modal-container {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.modal-leave-to {
+  opacity: 0;
+
+  .modal-container {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+// レスポンシブ対応
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+
+    .modal-title {
+      font-size: 1.25rem;
+    }
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+
+  .modal-image-viewer {
+    img {
+      max-height: calc(100vh - 200px);
+    }
+  }
+
+  .modal-purchase-viewer {
+    min-height: auto;
+  }
+
+  .modal-delivery-viewer {
+    .delivery-upload-section {
+      .delivery-upload-area {
+        padding: 2rem 1rem;
+      }
+    }
+
+    .delivery-navigation {
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      .nav-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+      }
+    }
+
+    .delivery-image-container {
+      max-height: calc(100vh - 400px);
+    }
+  }
+
+  .modal-approval-viewer {
+    max-height: calc(100vh - 200px);
+
+    .approval-iframe {
+      max-height: calc(100vh - 200px);
     }
   }
 }

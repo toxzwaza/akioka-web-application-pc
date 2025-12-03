@@ -122,7 +122,10 @@ class InitialOrderController extends Controller
             $query->where('stocks.classification_id', $classification_id);
         }
 
-        $initial_orders = $query->where('initial_orders.del_flg', 0)->paginate(14)->withQueryString();
+        $initial_orders = $query->where('initial_orders.del_flg', 0)
+            ->with('deliveries') // 納品書リレーションをロード
+            ->paginate(14)
+            ->withQueryString();
 
         // 承認者を取得
         foreach ($initial_orders as $initial_order) {
