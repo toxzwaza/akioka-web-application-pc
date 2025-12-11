@@ -44,7 +44,7 @@ const editSupplier = () => {
     .then((res) => {
       console.log(res.data);
       if (confirm("編集が完了しました。")) {
-        window.location.href = route("stock");
+        window.location.href = route("stock.suppliers");
       }
     })
     .catch((error) => {

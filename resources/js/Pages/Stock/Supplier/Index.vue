@@ -3,7 +3,7 @@ import MainLayout from "@/Layouts/MainLayout.vue";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, Link } from "@inertiajs/vue3";
 
 const props = defineProps({
     suppliers: Object,
@@ -65,6 +65,14 @@ const getStatusText = (delFlg) => {
         :top="'取引先'"
         :sub="'取引先一覧の確認と登録を行います。必須項目を入力して、追加ボタンを押してください。'"
       />
+      <div class="mt-4 mb-4 flex justify-end">
+        <Link
+          :href="route('stock.suppliers.create')"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          取引先追加
+        </Link>
+      </div>
       <div class="mt-4 mb-4 p-4 bg-gray-50 rounded-lg">
         <p class="mb-3 font-bold text-gray-700">検索・絞り込み</p>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -190,8 +198,11 @@ const getStatusText = (delFlg) => {
               <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
                 更新日時
               </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">
+              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
                 インボイス登録番号
+              </th>
+              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">
+                操作
               </th>
             </tr>
           </thead>
@@ -238,6 +249,14 @@ const getStatusText = (delFlg) => {
               </td>
               <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
                 {{ supplier.invoice_registration_number ?? '-' }}
+              </td>
+              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
+                <Link
+                  :href="route('stock.suppliers.edit', supplier.id)"
+                  class="bg-yellow-500 hover:bg-yellow-700 text-white text-xs font-bold py-1 px-3 rounded"
+                >
+                  編集
+                </Link>
               </td>
             </tr>
           </tbody>
