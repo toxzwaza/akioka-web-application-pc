@@ -11,11 +11,52 @@ class SupplierController extends Controller
 {
     //
     //
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::orderby('updated_at', 'desc')->paginate(20);
+        $name = $request->name;
+        $rub_name = $request->rub_name;
+        $tel = $request->tel;
+        $fax = $request->fax;
+        $p_code = $request->p_code;
+        $address = $request->address;
 
-        return view('stock.suppliers', compact('suppliers'));
+        $query = Supplier::orderby('updated_at', 'desc');
+
+        if ($name) {
+            $query->where('name', 'like', "%{$name}%");
+        }
+
+        if ($rub_name) {
+            $query->where('rub_name', 'like', "%{$rub_name}%");
+        }
+
+        if ($tel) {
+            $query->where('tel', 'like', "%{$tel}%");
+        }
+
+        if ($fax) {
+            $query->where('fax', 'like', "%{$fax}%");
+        }
+
+        if ($p_code) {
+            $query->where('p_code', 'like', "%{$p_code}%");
+        }
+
+        if ($address) {
+            $query->where('address', 'like', "%{$address}%");
+        }
+
+        $suppliers = $query->paginate(20)->withQueryString();
+
+        return Inertia::render('Stock/Supplier/Index', [
+            'suppliers' => $suppliers,
+            'name' => $name,
+            'rub_name' => $rub_name,
+            'tel' => $tel,
+            'fax' => $fax,
+            'p_code' => $p_code,
+            'address' => $address,
+        ]);
     }
     public function create()
     {

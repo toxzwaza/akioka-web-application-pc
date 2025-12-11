@@ -68,13 +68,13 @@ onMounted(() => {
 });
 </script>
 <template>
-  <MainLayout :title="props.edit ? `取引先編集` : `取引先追加`">
+  <MainLayout :title="'取引先'">
     <template #content>
       <div>
         <section class="text-gray-600 body-font">
           <MainTitle
-            :top="'取引先追加'"
-            :sub="'取引先の登録を行います。必須項目を入力して、追加ボタンを押してください。'"
+            :top="'取引先'"
+            :sub="'取引先一覧の確認と登録を行います。必須項目を入力して、追加ボタンを押してください。'"
           />
           <div
             class="container mx-auto flex px-5 md:flex-row flex-col items-start justify-center"

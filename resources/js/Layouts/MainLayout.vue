@@ -262,7 +262,7 @@ const sub_nav_close = ref(false);
             新規品発注</Link
           >
           <a
-            :href="route('stock.suppliers.create')"
+            :href="route('stock.suppliers')"
             :class="{
               '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
               'bg-white text-gray-900':
@@ -273,7 +273,7 @@ const sub_nav_close = ref(false);
           >
             <span class="text-gray-100 mr-1 material-symbols-outlined">
               edit_square </span
-            >取引先追加</a
+            >取引先</a
           >
           <a
             :href="route('stock.locations')"
