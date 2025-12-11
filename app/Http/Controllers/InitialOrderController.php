@@ -38,6 +38,9 @@ class InitialOrderController extends Controller
         $group_id = $request->group_id;
         $process_id = $request->process_id;
         $classification_id = $request->classification_id;
+        $delivery_status = $request->delivery_status;
+        $start_delivery_date = $request->start_delivery_date;
+        $end_delivery_date = $request->end_delivery_date;
 
         $query = InitialOrder::select(
             'initial_orders.*',
@@ -120,6 +123,23 @@ class InitialOrderController extends Controller
         }
         if ($classification_id) {
             $query->where('stocks.classification_id', $classification_id);
+        }
+
+        // 納入日でのフィルタリング
+        if ($delivery_status === 'delivered') {
+            // 納入済みの場合
+            $query->whereNotNull('initial_orders.delivery_date');
+            
+            // 期間指定がある場合
+            if ($start_delivery_date) {
+                $query->where('initial_orders.delivery_date', '>=', $start_delivery_date);
+            }
+            if ($end_delivery_date) {
+                $query->where('initial_orders.delivery_date', '<=', $end_delivery_date);
+            }
+        } elseif ($delivery_status === 'undelivered') {
+            // 未納品の場合
+            $query->whereNull('initial_orders.delivery_date');
         }
 
         $initial_orders = $query->where('initial_orders.del_flg', 0)
@@ -585,6 +605,9 @@ class InitialOrderController extends Controller
                 ->first();
 
             $initial_order->order_complete_flg = $order_complete_flg;
+            if ($order_complete_flg == 1) {
+                $initial_order->order_date = date('Y-m-d');
+            }
             $initial_order->save();
 
             if ($order_complete_flg) {

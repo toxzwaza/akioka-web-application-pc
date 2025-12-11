@@ -35,6 +35,9 @@ const form = reactive({
   user_id: null,
   group_id: null,
   process_id: null,
+  delivery_status: null,
+  start_delivery_date: null,
+  end_delivery_date: null,
 });
 
 // 稟議書OBJ
@@ -528,6 +531,9 @@ const getInitialOrders = (reset) => {
     form.group_id = null;
     form.process_id = null;
     form.classification_id = null;
+    form.delivery_status = null;
+    form.start_delivery_date = null;
+    form.end_delivery_date = null;
 
     console.log("検索条件リセット");
   }
@@ -546,6 +552,9 @@ const getInitialOrders = (reset) => {
       group_id: form.group_id,
       process_id: form.process_id,
       classification_id: form.classification_id,
+      delivery_status: form.delivery_status,
+      start_delivery_date: form.start_delivery_date,
+      end_delivery_date: form.end_delivery_date,
     },
     {
       onFinish: () => {
@@ -618,6 +627,9 @@ onMounted(() => {
   form.group_id = params.get("group_id");
   form.process_id = params.get("process_id");
   form.classification_id = params.get("classification_id");
+  form.delivery_status = params.get("delivery_status");
+  form.start_delivery_date = params.get("start_delivery_date");
+  form.end_delivery_date = params.get("end_delivery_date");
 
   console.log(props.totals);
 
@@ -916,6 +928,63 @@ const deleteInitialOrder = (order) => {
                     {{ classification.name }}
                   </option>
                 </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">納入状況</label>
+                <div class="flex flex-col gap-2">
+                  <label class="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      :checked="form.delivery_status === 'delivered'"
+                      @change="
+                        if ($event.target.checked) {
+                          form.delivery_status = 'delivered';
+                        } else {
+                          form.delivery_status = null;
+                          form.start_delivery_date = null;
+                          form.end_delivery_date = null;
+                        }
+                      "
+                      class="mr-2"
+                    />
+                    <span class="text-sm">納入済み</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      :checked="form.delivery_status === 'undelivered'"
+                      @change="
+                        if ($event.target.checked) {
+                          form.delivery_status = 'undelivered';
+                        } else {
+                          form.delivery_status = null;
+                          form.start_delivery_date = null;
+                          form.end_delivery_date = null;
+                        }
+                      "
+                      class="mr-2"
+                    />
+                    <span class="text-sm">未納品</span>
+                  </label>
+                </div>
+              </div>
+              <div class="filter-item date-range" v-if="form.delivery_status === 'delivered'">
+                <label class="filter-label">納入日（期間指定は任意）</label>
+                <div class="date-range-inputs">
+                  <input
+                    type="date"
+                    class="filter-input date-input"
+                    v-model="form.start_delivery_date"
+                    placeholder="開始日"
+                  />
+                  <span class="date-separator">～</span>
+                  <input
+                    type="date"
+                    class="filter-input date-input"
+                    v-model="form.end_delivery_date"
+                    placeholder="終了日"
+                  />
+                </div>
               </div>
             </div>
 
