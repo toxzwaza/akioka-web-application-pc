@@ -544,19 +544,7 @@ onMounted(() => {
       <div id="delivery_section">
         <p class="delivery_date">
           納品日:
-          <span v-if="orders[0].shortest">最短</span>
-          <span v-else-if="orders[0].desire_delivery_date">
-            {{
-              new Date(orders[0].desire_delivery_date)
-                .toLocaleDateString("ja-JP", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })
-                .replace(/\//g, "/")
-            }}
-          </span>
-          <span v-else>未設定</span>
+          <span class="delivery_date_input"></span>
         </p>
 
         <h1 class="text-center font-bold text-xl py-2 mb-2">納品書</h1>
@@ -807,9 +795,24 @@ onMounted(() => {
       position: absolute;
       top: 0;
       left: 0;
-      font-size: 4mm;
+      font-size: 5mm;
       font-weight: bold;
       margin-top: 2mm;
+      display: flex;
+      align-items: center;
+
+      & .delivery_date_input {
+        display: inline-block;
+        margin-left: 2mm;
+        padding: 4mm 2mm;
+        font-size: 4mm;
+        border: 3px solid #2c2c2c;
+        border-radius: 2px;
+        font-family: inherit;
+        min-width: 50mm;
+        height: 5mm;
+        background-color: white;
+      }
     }
 
     & h1 {
