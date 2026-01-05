@@ -141,6 +141,7 @@ const getDeliveryFiles = (order) => {
           path: getImagePath(delivery.document_image),
           id: delivery.id || `${order.id}_${index}`,
           delivery_id: delivery.id,
+          delivery_date: order.delivery_date, // 納品日（initial_orderのdelivery_dateを使用）
         });
       }
     });
@@ -153,6 +154,7 @@ const getDeliveryFiles = (order) => {
       files.push({
         path: getImagePath(order.delifile_path),
         id: order.id,
+        delivery_date: order.delivery_date, // 納品日（initial_orderのdelivery_dateを使用）
       });
     }
     
@@ -162,6 +164,7 @@ const getDeliveryFiles = (order) => {
         files.push({
           path: getImagePath(path),
           id: `${order.id}_${index}`,
+          delivery_date: order.delivery_date, // 納品日（initial_orderのdelivery_dateを使用）
         });
       });
     } else if (order.delifile_paths && typeof order.delifile_paths === 'string') {
@@ -172,6 +175,7 @@ const getDeliveryFiles = (order) => {
           files.push({
             path: getImagePath(trimmedPath),
             id: `${order.id}_${index}`,
+            delivery_date: order.delivery_date, // 納品日（initial_orderのdelivery_dateを使用）
           });
         }
       });
@@ -1939,6 +1943,22 @@ const deleteInitialOrder = (order) => {
 
                 <!-- 納品書画像表示 -->
                 <div class="delivery-image-container">
+                  <!-- 納品日表示（1枚でも複数枚でも表示） -->
+                  <div 
+                    v-if="modal.data && modal.data.files && modal.data.files[modal.currentIndex] && modal.data.files[modal.currentIndex].delivery_date" 
+                    class="delivery-date-info"
+                  >
+                    <span class="delivery-date-label">納品日:</span>
+                    <span class="delivery-date-value">
+                      {{
+                        new Date(modal.data.files[modal.currentIndex].delivery_date).toLocaleDateString("ja-JP", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                        })
+                      }}
+                    </span>
+                  </div>
                   <img
                     :src="modal.data.files[modal.currentIndex].path"
                     alt="納品書"
@@ -2507,8 +2527,9 @@ const deleteInitialOrder = (order) => {
 
   .delivery-image-container {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
     flex: 1;
     min-height: 400px;
     max-height: calc(90vh - 350px);
@@ -2520,6 +2541,29 @@ const deleteInitialOrder = (order) => {
     overflow-y: auto;
     overflow-x: hidden;
     box-sizing: border-box;
+
+    .delivery-date-info {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .delivery-date-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+      }
+
+      .delivery-date-value {
+        color: #1f2937;
+        font-size: 0.875rem;
+      }
+    }
 
     .delivery-image {
       max-width: 100%;
