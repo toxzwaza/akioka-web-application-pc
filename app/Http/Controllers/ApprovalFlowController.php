@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Group;
 use App\Models\Position;
 use App\Http\Services\ApprovalFlowService;
+use App\Http\Services\Helper;
 
 class ApprovalFlowController extends Controller
 {
@@ -256,5 +257,124 @@ class ApprovalFlowController extends Controller
                 'description' => $approvalFlow->description
             ] : null
         ]);
+    }
+
+    /**
+     * Helper::createApprovalFlowのテストページを表示
+     */
+    public function helperTest()
+    {
+        // 有効な全ユーザーを取得（del_flg = 0）
+        $users = User::with(['group', 'position'])
+            ->where('del_flg', 0)
+            ->orderBy('group_id')
+            ->orderBy('position_id')
+            ->orderBy('name')
+            ->get();
+        
+        $groups = Group::all();
+        $positions = Position::all();
+        
+        // テスト用の固定金額配列
+        $testPrices = [9999, 10001, 49999, 50001, 149999, 150001];
+        
+        return Inertia::render('Master/ApprovalFlows/HelperTest', [
+            'users' => $users,
+            'groups' => $groups,
+            'positions' => $positions,
+            'testPrices' => $testPrices,
+            'testResults' => session('testResults')
+        ]);
+    }
+
+    /**
+     * Helper::createApprovalFlowの一括テストを実行
+     */
+    public function runHelperTest()
+    {
+        // 有効な全ユーザーを取得（del_flg = 0）
+        $users = User::with(['group', 'position'])
+            ->where('del_flg', 0)
+            ->orderBy('group_id')
+            ->orderBy('position_id')
+            ->orderBy('name')
+            ->get();
+        
+        // テスト用の固定金額配列
+        $testPrices = [9999, 10001, 49999, 50001, 149999, 150001];
+        
+        // 承認者情報を事前取得（パフォーマンス向上のため）
+        $allUserIds = $users->pluck('id')->toArray();
+        $allApprovers = User::whereIn('id', $allUserIds)->get()->keyBy('id');
+        
+        // テスト結果を格納する配列
+        $testResults = [];
+        
+        foreach ($users as $user) {
+            $userResults = [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'group_id' => $user->group_id,
+                'group_name' => $user->group ? $user->group->name : '未設定',
+                'position_id' => $user->position_id,
+                'position_name' => $user->position ? $user->position->name : '未設定',
+                'prices' => []
+            ];
+            
+            foreach ($testPrices as $price) {
+                $priceResults = [
+                    'price' => $price,
+                    'new_item' => [],
+                    'existing_item' => []
+                ];
+                
+                // 新規品フラグ = 1（新規品）のテスト
+                $newItemApprovers = Helper::createApprovalFlow($price, $user->id, 1);
+                $priceResults['new_item'] = $this->convertApproverIdsToNames($newItemApprovers, $allApprovers);
+                
+                // 新規品フラグ = 0（既存品）のテスト
+                $existingItemApprovers = Helper::createApprovalFlow($price, $user->id, 0);
+                $priceResults['existing_item'] = $this->convertApproverIdsToNames($existingItemApprovers, $allApprovers);
+                
+                $userResults['prices'][] = $priceResults;
+            }
+            
+            $testResults[] = $userResults;
+        }
+        
+        return back()->with('testResults', $testResults);
+    }
+
+    /**
+     * 承認者ID配列を承認者情報配列に変換
+     */
+    private function convertApproverIdsToNames($approverIds, $allApprovers)
+    {
+        if (empty($approverIds)) {
+            return [];
+        }
+        
+        $approvers = [];
+        foreach ($approverIds as $approverId) {
+            $approver = $allApprovers->get($approverId);
+            if ($approver) {
+                $approvers[] = [
+                    'id' => $approver->id,
+                    'name' => $approver->name,
+                    'group_name' => $approver->group ? $approver->group->name : '未設定',
+                    'position_name' => $approver->position ? $approver->position->name : '未設定'
+                ];
+            } else {
+                // ユーザーが見つからない場合でもIDを表示
+                $approvers[] = [
+                    'id' => $approverId,
+                    'name' => "ユーザーID: {$approverId} (未検出)",
+                    'group_name' => '未設定',
+                    'position_name' => '未設定'
+                ];
+            }
+        }
+        
+        return $approvers;
     }
 }

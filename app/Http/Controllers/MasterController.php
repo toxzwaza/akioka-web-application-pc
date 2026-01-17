@@ -118,6 +118,35 @@ class MasterController extends Controller
         return Inertia::render('Master/Users/Show', ['user' => $user, 'groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
     }
 
+    // 部署作成
+    public function create_group()
+    {
+        return Inertia::render('Master/Groups/Create');
+    }
+
+    public function store_group(Request $request)
+    {
+        $id = $request->id;
+        $name = $request->name;
+        $phone_number = $request->phone_number;
+
+        $status = true;
+        $msg = "";
+
+        try {
+            $group = $id ? Group::find($id) : new Group();
+            $group->fill([
+                'name' => $name,
+                'phone_number' => $phone_number,
+            ]);
+            $group->save();
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
 
     // カレンダー編集
     public function calender()

@@ -95,11 +95,10 @@ class Helper
         if ($user->position_id >= 7) {  //係長・GL・一般 からの依頼の場合
             // 係長・GL・一般からの承認者マッピング
             $approvalMap = [
-                1 => 63, // 技術 常務
-                2 => 16, // 品証 梶谷課長
-                3 => 37, // 製造一課 長谷川課長
-                4 => 84, // 製造二課 宮原課長
-                5 => 94, // 保全 細矢本部長
+                1 => 16, // 技術 梶谷課長
+                2 => 18, // 品証 繁田課長
+                12 => 37, // 工程管理課 長谷川課長　
+                4 => 84, // 鋳造課 宮原部長
                 6 => $new_flg ? 63 : 36, // 新規品: 常務 , 既存品: 部長
                 7 => $new_flg ? 63 : 36, // 新規品: 常務 , 既存品: 部長
             ];
@@ -111,8 +110,18 @@ class Helper
 
             // 10,000円以上の場合の追加承認
             if ($price > 10000) {
-                if (in_array($user->group_id, [2, 3, 4])) {
+                if (in_array($user->group_id, [2])) {
                     $approval_list[] = 94; //品証 => 細矢本部長
+                }
+            }
+            if ($price > 10000) {
+                if (in_array($user->group_id, [12])) {
+                    $approval_list[] = 84; //工程管理課 => 宮原本部長
+                }
+            }
+            if ($price > 10000) {
+                if (in_array($user->group_id, [1])) {
+                    $approval_list[] = 144; //技術課 => 原部長
                 }
             }
 
@@ -128,15 +137,16 @@ class Helper
         } else if ($user->position_id == 6) { //課長からの依頼
             // 部署ごとの承認者マッピング
             $approvalMap = [
-                2 => 94, // 品証 梶谷課長=>細矢本部長
-                3 => 94,  // 製造一課 長谷川課長=>細矢本部長
-                4 => 94,  // 製造二課 宮原課長=>細矢本部長
+                1 => 144,// 技術 梶谷課長=>原部長
+                2 => 94,  // 品証 繁田課長=>細矢本部長
+                12 => 84,  // 工程管理課 長谷川課長=>宮原部長
             ];
 
             // ユーザーの部署に対応する承認者を追加
             if (isset($approvalMap[$user->group_id])) {
                 $approval_list[] = $approvalMap[$user->group_id];
             }
+
 
             // 150,000円以上の場合の追加承認
             if ($price > 150000) {
@@ -145,9 +155,19 @@ class Helper
         } else if ($user->position_id == 3) { //本部長からの依頼
 
             $approval_list[] = 2; //社長のみ
-        } else if ($user->position_id == 5) { //荒川部長からの依頼
+        } else if ($user->position_id == 5) { //部長からの依頼(荒川部長・宮原部長・原部長)
 
-            $approval_list[] = 63; // 常務
+            if (in_array($user->group_id, [4])) { //宮原部長
+                $approval_list[] = 94; //宮原本部長 => 細矢本部長
+            }
+
+            if (in_array($user->group_id, [1])) { //原部長
+                $approval_list[] = 94; //原部長 => 細矢本部長
+            }
+
+            if (in_array($user->group_id, [7])) { //荒川部長
+                $approval_list[] = 63; //荒川部長 => 常務
+            }
 
             // 150,000円以上の場合の追加承認
             if ($price > 150000) {

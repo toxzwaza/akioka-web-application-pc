@@ -17,6 +17,9 @@ Route::post('/store/holiday', [MasterController::class, 'store_holiday'])->name(
 Route::get('/create/users', [MasterController::class, 'create_user'])->name('master.create.user');
 Route::post('/store/users', [MasterController::class, 'store_user'])->name('master.store.users');
 
+Route::get('/create/groups', [MasterController::class, 'create_group'])->name('master.create.group');
+Route::post('/store/groups', [MasterController::class, 'store_group'])->name('master.store.groups');
+
 Route::get('/show/users/{user_id}', [MasterController::class, 'show_user'])->name('master.show.user');
 
 // デバイス情報管理
@@ -43,3 +46,7 @@ Route::get('/approval-flows-test', [ApprovalFlowController::class, 'test'])->nam
 Route::post('/approval-flows-test', [ApprovalFlowController::class, 'runTest'])->name('master.approval-flows.run-test');
 Route::get('/approval-flows-bulk-test', [ApprovalFlowController::class, 'bulkTest'])->name('master.approval-flows.bulk-test');
 Route::post('/approval-flows-test-api', [ApprovalFlowController::class, 'runTestApi'])->name('master.approval-flows.run-test-api');
+
+// Helper::createApprovalFlowのテスト機能
+Route::get('/approval-flows-helper-test', [ApprovalFlowController::class, 'helperTest'])->name('master.approval-flows.helper-test');
+Route::post('/approval-flows-helper-test', [ApprovalFlowController::class, 'runHelperTest'])->name('master.approval-flows.run-helper-test');

@@ -11,6 +11,6 @@ class Group extends Model
 
     protected $fillable = [
         'name',
-        'description'
+        'phone_number'
     ];
 }
