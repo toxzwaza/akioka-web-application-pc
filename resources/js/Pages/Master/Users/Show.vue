@@ -194,7 +194,6 @@ onMounted(() => {
         </div>
         <div
           class="sm:col-span-2"
-          v-if="form.group_id == 3 || form.group_id == 4"
         >
           <label
             for="process_id"
@@ -202,11 +201,8 @@ onMounted(() => {
               'mb-2 inline-block text-sm text-gray-800 sm:text-base': true,
               'text-red-500': form.group_id == 3 || form.group_id == 4,
             }"
-            >製造工程</label
+            >工程</label
           >
-          <p class="text-sm mb-4 text-gray-500">
-            製造部に所属しない場合は、選択する必要はありません。
-          </p>
           <div class="sm:col-span-2">
             <select
               name="process_id"
