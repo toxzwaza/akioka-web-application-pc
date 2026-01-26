@@ -351,8 +351,12 @@ const updateDate = (flg, order_id, date) => {
 
 //  単価改定
 const handlePrice = (order, price) => {
+  // 数値に変換して比較
+  const currentPrice = Number(order.price);
+  const newPrice = Number(price);
+  
   // 値上がりした場合
-  if (order.price < price) {
+  if (currentPrice < newPrice) {
     if (
       confirm(
         "単価が変更されました。\n値上がりしている為、再承認が必要です。\n発注依頼をおこないますか？"
@@ -361,7 +365,7 @@ const handlePrice = (order, price) => {
       axios
         .post(route("stock.update_price"), {
           initial_order_id: order.id,
-          price: price,
+          price: newPrice,
         })
         .then((res) => {
           console.log(res.data);
@@ -382,7 +386,7 @@ const handlePrice = (order, price) => {
       .post(route("stock.update_data"), {
         initial_order_id: order.id,
         flg: "price",
-        val: price,
+        val: newPrice,
       })
       .then((res) => {
         console.log(res.data);
