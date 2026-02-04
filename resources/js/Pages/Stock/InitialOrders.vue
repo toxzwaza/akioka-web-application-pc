@@ -65,6 +65,11 @@ const pwd = ref("");
 const isSearchLoading = ref(false);
 const current_admin_user = ref(null);
 
+// 検索テキスト用のref
+const supplier_search_text = ref("");
+const order_user_search_text = ref("");
+const user_search_text = ref("");
+
 // モーダル状態管理（シンプル化）
 const modal = reactive({
   isOpen: false,
@@ -324,6 +329,82 @@ const updateFilter = (filter, value) => {
   }
 };
 
+// 検索テキストからIDを解決するハンドラー
+const handleSupplierSearch = () => {
+  const searchText = supplier_search_text.value.trim();
+  if (!searchText) {
+    form.supplier_id = null;
+    return;
+  }
+  
+  const found = props.suppliers.find(
+    (supplier) => supplier.name === searchText
+  );
+  if (found) {
+    form.supplier_id = found.id;
+  } else {
+    // 完全一致しない場合は部分一致で検索
+    const partialMatch = props.suppliers.find(
+      (supplier) => supplier.name.includes(searchText)
+    );
+    if (partialMatch) {
+      form.supplier_id = partialMatch.id;
+    } else {
+      form.supplier_id = null;
+    }
+  }
+};
+
+const handleOrderUserSearch = () => {
+  const searchText = order_user_search_text.value.trim();
+  if (!searchText) {
+    form.order_user_id = null;
+    return;
+  }
+  
+  const found = props.order_users.find(
+    (user) => user.name === searchText
+  );
+  if (found) {
+    form.order_user_id = found.id;
+  } else {
+    // 完全一致しない場合は部分一致で検索
+    const partialMatch = props.order_users.find(
+      (user) => user.name.includes(searchText)
+    );
+    if (partialMatch) {
+      form.order_user_id = partialMatch.id;
+    } else {
+      form.order_user_id = null;
+    }
+  }
+};
+
+const handleUserSearch = () => {
+  const searchText = user_search_text.value.trim();
+  if (!searchText) {
+    form.user_id = null;
+    return;
+  }
+  
+  const found = props.users.find(
+    (user) => user.name === searchText
+  );
+  if (found) {
+    form.user_id = found.id;
+  } else {
+    // 完全一致しない場合は部分一致で検索
+    const partialMatch = props.users.find(
+      (user) => user.name.includes(searchText)
+    );
+    if (partialMatch) {
+      form.user_id = partialMatch.id;
+    } else {
+      form.user_id = null;
+    }
+  }
+};
+
 const openFaxParameter = (faxParameterId) => {
   const url = `http://monokanri-manage.local:5000/${faxParameterId}`;
   window.open(url, '_blank');
@@ -542,8 +623,17 @@ const getInitialOrders = (reset) => {
     form.delivery_status = null;
     form.start_delivery_date = null;
     form.end_delivery_date = null;
+    // 検索テキストもクリア
+    supplier_search_text.value = "";
+    order_user_search_text.value = "";
+    user_search_text.value = "";
 
     console.log("検索条件リセット");
+  } else {
+    // 検索実行前に、入力テキストからIDを解決
+    handleSupplierSearch();
+    handleOrderUserSearch();
+    handleUserSearch();
   }
 
   // Inertia.jsのイベントリスナーを追加してローディングを制御
@@ -638,6 +728,32 @@ onMounted(() => {
   form.delivery_status = params.get("delivery_status");
   form.start_delivery_date = params.get("start_delivery_date");
   form.end_delivery_date = params.get("end_delivery_date");
+
+  // URLパラメータからIDが設定されている場合、対応するnameを検索テキストに設定
+  if (form.supplier_id) {
+    const supplier = props.suppliers.find(
+      (s) => s.id == form.supplier_id
+    );
+    if (supplier) {
+      supplier_search_text.value = supplier.name;
+    }
+  }
+  if (form.order_user_id) {
+    const orderUser = props.order_users.find(
+      (u) => u.id == form.order_user_id
+    );
+    if (orderUser) {
+      order_user_search_text.value = orderUser.name;
+    }
+  }
+  if (form.user_id) {
+    const user = props.users.find(
+      (u) => u.id == form.user_id
+    );
+    if (user) {
+      user_search_text.value = user.name;
+    }
+  }
 
   console.log(props.totals);
 
@@ -861,16 +977,37 @@ const deleteInitialOrder = (order) => {
 
               <div class="filter-item">
                 <label class="filter-label">注文先</label>
-                <select class="filter-select" v-model="form.supplier_id">
-                  <option value="0">すべての注文先</option>
-                  <option
-                    v-for="supplier in props.suppliers"
-                    :key="supplier.id"
-                    :value="supplier.id"
+                <div class="input-with-icon">
+                  <svg
+                    class="input-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {{ supplier.name }}
-                  </option>
-                </select>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                  <input
+                    class="filter-input"
+                    type="text"
+                    placeholder="注文先で検索"
+                    v-model="supplier_search_text"
+                    list="suppliers-list"
+                    @input="handleSupplierSearch"
+                  />
+                  <datalist id="suppliers-list">
+                    <option
+                      v-for="supplier in props.suppliers"
+                      :key="supplier.id"
+                      :value="supplier.name"
+                    >
+                    </option>
+                  </datalist>
+                </div>
               </div>
               <div class="filter-item">
                 <label class="filter-label">部門（大区分）</label>
@@ -900,29 +1037,71 @@ const deleteInitialOrder = (order) => {
               </div>
               <div class="filter-item">
                 <label class="filter-label">依頼者</label>
-                <select class="filter-select" v-model="form.order_user_id">
-                  <option value="0">すべての依頼者</option>
-                  <option
-                    v-for="user in props.order_users"
-                    :key="user.id"
-                    :value="user.id"
+                <div class="input-with-icon">
+                  <svg
+                    class="input-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {{ user.name }}
-                  </option>
-                </select>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                  <input
+                    class="filter-input"
+                    type="text"
+                    placeholder="依頼者で検索"
+                    v-model="order_user_search_text"
+                    list="order-users-list"
+                    @input="handleOrderUserSearch"
+                  />
+                  <datalist id="order-users-list">
+                    <option
+                      v-for="user in props.order_users"
+                      :key="user.id"
+                      :value="user.name"
+                    >
+                    </option>
+                  </datalist>
+                </div>
               </div>
               <div class="filter-item">
                 <label class="filter-label">担当者</label>
-                <select class="filter-select" v-model="form.user_id">
-                  <option value="0">すべての担当者</option>
-                  <option
-                    v-for="user in props.users"
-                    :key="user.id"
-                    :value="user.id"
+                <div class="input-with-icon">
+                  <svg
+                    class="input-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {{ user.name }}
-                  </option>
-                </select>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                  <input
+                    class="filter-input"
+                    type="text"
+                    placeholder="担当者で検索"
+                    v-model="user_search_text"
+                    list="users-list"
+                    @input="handleUserSearch"
+                  />
+                  <datalist id="users-list">
+                    <option
+                      v-for="user in props.users"
+                      :key="user.id"
+                      :value="user.name"
+                    >
+                    </option>
+                  </datalist>
+                </div>
               </div>
               <div class="filter-item">
                 <label class="filter-label">カテゴリー</label>
