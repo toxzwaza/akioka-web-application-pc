@@ -519,8 +519,8 @@ onMounted(() => {
             </tbody>
           </table>
         </div>
-        <div id="bottom_content" class="mt-2 flex items-start justify-between">
-          <div class="textarea">
+        <div id="bottom_content" class="mt-2 flex items-start justify-between w-full">
+          <div class="textarea w-full">
             <div class="text font-bold text-xs">
               備考
 
@@ -528,14 +528,15 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="details w-1/2 pl-4">
+          <!-- <div class="details w-1/2 pl-4">
             <p class="text-xs font-serif">
               納期に問題があればその旨の記載をお願いします。<br />
-              <!-- 受信後３日以内に確認印を押印し返信をお願いします。 10:00-10:10,
+               受信後３日以内に確認印を押印し返信をお願いします。 10:00-10:10,
               12:00-12:50, 15:00-15:10の間の納品はご遠慮願います。<br />
-              上記時間での納品になる場合は事前にご相談願います。 -->
+              上記時間での納品になる場合は事前にご相談願います。
             </p>
-          </div>
+          </div> -->
+          
         </div>
       </div>
       <!-- 発注書エリア終了 -->
@@ -1134,8 +1135,8 @@ onMounted(() => {
     & .textarea {
       min-height: 80%;
       height: 100%;
-      width: 50%;
-      border: 1px solid rgba(82, 82, 82, 0.555);
+      width: 100%;
+      border: none;
       border-radius: 3px;
       position: relative;
 
@@ -1147,7 +1148,8 @@ onMounted(() => {
 
         & p {
           font-weight: normal;
-          font-size: 2.8mm;
+          font-size: 4mm;
+          line-height: 1.5;
         }
       }
     }
