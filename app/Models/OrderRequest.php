@@ -13,7 +13,12 @@ class OrderRequest extends Model
         'supplier_id',
         'price',
         'quantity',
+        'file_path_sub',
         // 他のフィールドも必要に応じて追加
+    ];
+
+    protected $casts = [
+        'file_path_sub' => 'array',
     ];
     
 }

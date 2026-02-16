@@ -47,6 +47,7 @@ class OrderRequestController extends Controller
     {
         $status = true;
         $msg = "";
+        $order_requests = [];
 
         $user_id = $request->user_id ?? null;
 
@@ -74,6 +75,7 @@ class OrderRequestController extends Controller
                 'order_requests.desire_delivery_date', //希望納期
                 'order_requests.lead_time', //リードタイム
                 'order_requests.file_path',
+                'order_requests.file_path_sub',
                 'order_requests.description',
                 'order_requests.sub_description',
                 'order_requests.document_id',  //稟議書
@@ -439,6 +441,8 @@ class OrderRequestController extends Controller
     public function storeApprovalDocument(Request $request)
     {
         $status = true;
+        $message = '';
+        $file_url = null;
 
         $upload_file = $request->file('upload_file');
         $order_request_id = $request->order_request_id;
@@ -450,24 +454,123 @@ class OrderRequestController extends Controller
                 $vpsApiUrl = 'https://akioka.cloud/api/order_request/upload_file';
 
                 // POSTリクエストをマルチパート形式で送信
-                $response = Http::asMultipart()->attach(
-                    'upload_file', // 相手側のAPIが期待するinput名
-                    file_get_contents($upload_file->getRealPath()),
-                    $upload_file->getClientOriginalName()
-                )->post($vpsApiUrl, [
-                    // 他に送信したいデータがあればここに追加
-                    'order_request_id' => $order_request_id,
-                ]);
+                // SSL証明書の検証を無効化（開発環境用）
+                $response = Http::withoutVerifying()
+                    ->asMultipart()
+                    ->attach(
+                        'upload_file', // 相手側のAPIが期待するinput名
+                        file_get_contents($upload_file->getRealPath()),
+                        $upload_file->getClientOriginalName()
+                    )
+                    ->post($vpsApiUrl, [
+                        // 他に送信したいデータがあればここに追加
+                        'order_request_id' => $order_request_id,
+                    ]);
+
+                // レスポンスを確認
+                if ($response->successful()) {
+                    $responseData = $response->json();
+                    if (isset($responseData['file_url'])) {
+                        $file_url = $responseData['file_url'];
+                        
+                        // OrderRequestを取得
+                        $order_request = OrderRequest::find($order_request_id);
+                        if ($order_request) {
+                            // 既存のfile_path_subを取得（配列）
+                            $file_path_sub = $order_request->file_path_sub ?? [];
+                            
+                            // 新しいファイルパスを配列に追加
+                            if (!in_array($file_url, $file_path_sub)) {
+                                $file_path_sub[] = $file_url;
+                                $order_request->file_path_sub = $file_path_sub;
+                                $order_request->save();
+                            }
+                            
+                            $message = 'ファイルアップロード成功';
+                        } else {
+                            throw new Exception('発注依頼が見つかりません。');
+                        }
+                    } else {
+                        throw new Exception('VPS APIからのレスポンスにfile_urlが含まれていません。');
+                    }
+                } else {
+                    throw new Exception('VPS APIへのリクエストが失敗しました。');
+                }
+            } else {
+                throw new Exception('ファイルがアップロードされていません。');
             }
         } catch (Exception $e) {
             $status = false;
+            $message = $e->getMessage();
+            Log::error('storeApprovalDocument error: ' . $e->getMessage());
         }
 
-
-
-        return response()->json(['status' => $status]);
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+            'file_url' => $file_url,
+        ]);
     }
 
+    // ファイル削除
+    public function deleteApprovalDocument(Request $request)
+    {
+        $status = true;
+        $message = '';
+
+        $order_request_id = $request->order_request_id;
+        $file_path = $request->file_path;
+
+        try {
+            if (!$file_path) {
+                throw new Exception('ファイルパスが指定されていません。');
+            }
+
+            // OrderRequestを取得
+            $order_request = OrderRequest::find($order_request_id);
+            if (!$order_request) {
+                throw new Exception('発注依頼が見つかりません。');
+            }
+
+            // file_path_subから該当ファイルを削除
+            $file_path_sub = $order_request->file_path_sub ?? [];
+            $key = array_search($file_path, $file_path_sub);
+            
+            if ($key !== false) {
+                // 配列から削除
+                unset($file_path_sub[$key]);
+                $file_path_sub = array_values($file_path_sub); // インデックスを再振り当て
+                $order_request->file_path_sub = $file_path_sub;
+                $order_request->save();
+
+                // VPS APIの削除エンドポイントを呼び出し
+                // SSL証明書の検証を無効化（開発環境用）
+                $vpsApiUrl = 'https://akioka.cloud/api/order_request/delete_file';
+                $response = Http::withoutVerifying()->delete($vpsApiUrl, [
+                    'file_path' => $file_path,
+                ]);
+
+                if ($response->successful()) {
+                    $message = 'ファイル削除成功';
+                } else {
+                    // VPS APIの削除が失敗しても、データベースからは削除済み
+                    $message = 'ファイルをデータベースから削除しましたが、VPS APIでの削除に失敗しました。';
+                    Log::warning('VPS API delete_file failed: ' . $response->body());
+                }
+            } else {
+                throw new Exception('指定されたファイルが見つかりません。');
+            }
+        } catch (Exception $e) {
+            $status = false;
+            $message = $e->getMessage();
+            Log::error('deleteApprovalDocument error: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+        ]);
+    }
 
     // デバイスメッセージを取得
     public function sendDeviceMessage(Request $request)

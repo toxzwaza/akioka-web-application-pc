@@ -21,6 +21,7 @@ const modal_status = reactive({
   status: false,
   order_request: null,
   approval_path: null,
+  file_paths: [], // 表示用のファイルパス配列
 });
 
 const sendDeviceMessage = () => {
@@ -83,60 +84,142 @@ const sendRejectInitialOrder = (order_request_id) => {
 };
 
 const uploadFile = (event) => {
-  const file = event.target.files[0];
-  form.upload_file = file;
-
-  const formData = new FormData();
-
-  // upload_fileを追加
-  if (form.upload_file instanceof File) {
-    formData.append("upload_file", form.upload_file);
+  const files = event.target.files;
+  if (!files || files.length === 0) {
+    return;
   }
 
-  // modal_status.order_request.idを追加
-  if (modal_status.order_request && modal_status.order_request.id) {
-    formData.append("order_request_id", modal_status.order_request.id);
-  }
-
-  // formオブジェクトをFormDataに変換
-  Object.keys(form).forEach((key) => {
-    // nullでない値のみを追加（upload_fileは既に追加済みなので除外）
-    if (form[key] !== null && key !== "upload_file") {
-      formData.append(key, form[key]);
+  // 複数ファイルを順次アップロード
+  const uploadPromises = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const formData = new FormData();
+    formData.append("upload_file", file);
+    
+    if (modal_status.order_request && modal_status.order_request.id) {
+      formData.append("order_request_id", modal_status.order_request.id);
     }
-  });
 
-  axios
-    .post(route("stock.store.approval_document"), formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
-    .then((res) => {
-      console.log(res.data);
-      if (res.data.status) {
-        if (confirm("稟議書を登録しました。")) {
-          window.location.reload();
-        } else {
-          // window.location.href = route("stock");
+    uploadPromises.push(
+      axios.post(route("stock.store.approval_document"), formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+    );
+  }
+
+  // すべてのアップロードが完了するまで待機
+  Promise.all(uploadPromises)
+    .then((responses) => {
+      console.log("Upload responses:", responses); // デバッグ用
+      const successCount = responses.filter((res) => res.data.status).length;
+      const failedResponses = responses.filter((res) => !res.data.status);
+      
+      if (failedResponses.length > 0) {
+        // 失敗したレスポンスの詳細を表示
+        console.error("Failed uploads:", failedResponses);
+        const errorMessages = failedResponses.map((res) => res.data.message || "不明なエラー").join("\n");
+        alert(`ファイルのアップロードに失敗しました。\n\nエラー詳細:\n${errorMessages}`);
+      }
+      
+      if (successCount > 0) {
+        alert(`${successCount}件のファイルを登録しました。`);
+        // データを再読み込み
+        if (order_config.user_id) {
+          getOrderRequests(order_config.user_id);
         }
+        // モーダルを再オープンして最新データを表示
+        const order_request = order_requests.value.find(
+          (req) => req.id === modal_status.order_request.id
+        );
+        if (order_request) {
+          openModal(order_request);
+        }
+      } else if (failedResponses.length === 0) {
+        alert("ファイルのアップロードに失敗しました。");
       }
     })
     .catch((error) => {
-      console.log(error);
+      console.error("Upload error:", error);
+      console.error("Error response:", error.response);
+      const errorMessage = error.response?.data?.message || error.message || "不明なエラー";
+      alert(`ファイルのアップロード中にエラーが発生しました。\n\nエラー: ${errorMessage}`);
     });
 
-  console.log(form.upload_file);
+  // ファイル入力欄をリセット
+  event.target.value = "";
 };
 
 const openModal = (order_request) => {
   modal_status.approval_path = "";
   modal_status.order_request = order_request;
   modal_status.status = true;
+  
+  // ファイルパス配列を構築
+  modal_status.file_paths = [];
+  
+  // file_pathがある場合は最初に追加（後方互換性のため）
   if (order_request.file_path) {
+    modal_status.file_paths.push({
+      path: order_request.file_path,
+      url: `https://akioka.cloud/${order_request.file_path}`,
+      is_legacy: true, // file_pathからのものは削除不可
+    });
     modal_status.approval_path = `https://akioka.cloud/${order_request.file_path}`;
   }
+  
+  // file_path_subがある場合は追加
+  if (order_request.file_path_sub && Array.isArray(order_request.file_path_sub)) {
+    order_request.file_path_sub.forEach((filePath) => {
+      // 重複チェック（file_pathと同じパスは追加しない）
+      if (!order_request.file_path || filePath !== order_request.file_path) {
+        modal_status.file_paths.push({
+          path: filePath,
+          url: `https://akioka.cloud/${filePath}`,
+          is_legacy: false, // file_path_subからのものは削除可能
+        });
+      }
+    });
+  }
 };
+const deleteFile = (filePath) => {
+  if (!confirm("このファイルを削除してもよろしいですか？")) {
+    return;
+  }
+
+  axios
+    .delete(route("stock.delete.approval_document"), {
+      params: {
+        order_request_id: modal_status.order_request.id,
+        file_path: filePath,
+      },
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("ファイルを削除しました。");
+        // データを再読み込み
+        if (order_config.user_id) {
+          getOrderRequests(order_config.user_id);
+        }
+        // モーダルを再オープンして最新データを表示
+        const order_request = order_requests.value.find(
+          (req) => req.id === modal_status.order_request.id
+        );
+        if (order_request) {
+          openModal(order_request);
+        }
+      } else {
+        alert("ファイルの削除に失敗しました: " + (res.data.message || ""));
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      alert("ファイルの削除中にエラーが発生しました。");
+    });
+};
+
 const reNotify = (order_request_id, user_id) => {
   console.log(order_request_id, user_id);
   axios
@@ -2150,11 +2233,55 @@ onMounted(() => {
                     "
                   />
                 </div>
+                
+                <!-- 既存ファイル一覧 -->
+                <div v-if="modal_status.file_paths && modal_status.file_paths.length > 0" class="mt-4 mb-4">
+                  <h3 class="text-sm font-semibold text-gray-700 mb-2">アップロード済みファイル</h3>
+                  <div class="space-y-2">
+                    <div
+                      v-for="(fileItem, index) in modal_status.file_paths"
+                      :key="index"
+                      class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <div class="flex items-center gap-3 flex-1">
+                        <svg
+                          class="w-5 h-5 text-red-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <a
+                          :href="fileItem.url"
+                          target="_blank"
+                          class="text-blue-600 hover:text-blue-800 hover:underline flex-1 truncate"
+                        >
+                          {{ fileItem.path.split('/').pop() }}
+                        </a>
+                      </div>
+                      <button
+                        v-if="!fileItem.is_legacy"
+                        @click="deleteFile(fileItem.path)"
+                        class="ml-2 text-red-600 hover:text-red-800 px-2 py-1 rounded"
+                        title="ファイルを削除"
+                      >
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ファイル表示（最初のファイルを表示） -->
                 <div
                   v-if="modal_status.approval_path"
-                  class="mt-12 mb-8 bg-gray-100 p-4"
+                  class="mt-4 mb-8 bg-gray-100 p-4"
                 >
-                  <!-- <h2 class="text-lg text-gray-700 font-bold mb-2">添付資料</h2> -->
                   <iframe
                     ref="pdfViewer"
                     :src="modal_status.approval_path"
@@ -2162,7 +2289,9 @@ onMounted(() => {
                   ></iframe>
                 </div>
               </div>
-              <div v-if="!modal_status.approval_path" class="w-full mb-8">
+              
+              <!-- アップロードセクション（常に表示） -->
+              <div class="w-full mb-8">
                 <label
                   for="dropzone-file"
                   :class="{
@@ -2191,15 +2320,8 @@ onMounted(() => {
                       <span class="font-semibold text-lg">稟議書</span
                       >をアップロードしてください。
                     </p>
-                    <p
-                      class="text-xs text-green-500 dark:text-green-400 text-center"
-                    >
-                      {{
-                        form.upload_file
-                          ? `${form.upload_file.name} が選択されています。`
-                          : ""
-                      }}
-                      <br />
+                    <p class="text-xs text-gray-400 text-center">
+                      複数ファイルを選択できます（PDF形式）
                     </p>
                   </div>
                   <input
@@ -2208,6 +2330,7 @@ onMounted(() => {
                     class="hidden"
                     @change="uploadFile"
                     accept="application/pdf"
+                    multiple
                   />
                 </label>
               </div>

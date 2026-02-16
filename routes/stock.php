@@ -51,6 +51,7 @@ Route::post('/initial-order/store', [InitialOrderController::class, 'store'])->n
 // 納品書変更
 Route::post('/initial-order/update/deli_file', [InitialOrderController::class, 'update_deli_file'])->name('stock.update_deli_file');
 Route::post('/order-requests/store/approval_document', [OrderRequestController::class, 'storeApprovalDocument'])->name('stock.store.approval_document');
+Route::delete('/order-requests/delete/approval_document', [OrderRequestController::class, 'deleteApprovalDocument'])->name('stock.delete.approval_document');
 Route::post('/order-requests/send-device-message', [OrderRequestController::class, 'sendDeviceMessage'])->name('stock.sendDeviceMessage');
 // 発注先再ロード
 Route::post('/order-requests/reload/supplier', [OrderRequestController::class, 'reloadSupplier'])->name('stock.reloadSupplier');
