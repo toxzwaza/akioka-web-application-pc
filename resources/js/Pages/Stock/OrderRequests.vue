@@ -22,6 +22,7 @@ const modal_status = reactive({
   order_request: null,
   approval_path: null,
   file_paths: [], // 表示用のファイルパス配列
+  selected_file_index: 0, // 選択中のファイルインデックス
 });
 
 const sendDeviceMessage = () => {
@@ -159,6 +160,21 @@ const openModal = (order_request) => {
   // ファイルパス配列を構築
   modal_status.file_paths = [];
   
+  // file_path_subを配列に変換（文字列の場合はJSONパース）
+  let file_path_sub_array = [];
+  if (order_request.file_path_sub) {
+    if (typeof order_request.file_path_sub === 'string') {
+      try {
+        file_path_sub_array = JSON.parse(order_request.file_path_sub);
+      } catch (e) {
+        console.error('file_path_subのJSONパースに失敗しました:', e);
+        file_path_sub_array = [];
+      }
+    } else if (Array.isArray(order_request.file_path_sub)) {
+      file_path_sub_array = order_request.file_path_sub;
+    }
+  }
+  
   // file_pathがある場合は最初に追加（後方互換性のため）
   if (order_request.file_path) {
     modal_status.file_paths.push({
@@ -170,8 +186,8 @@ const openModal = (order_request) => {
   }
   
   // file_path_subがある場合は追加
-  if (order_request.file_path_sub && Array.isArray(order_request.file_path_sub)) {
-    order_request.file_path_sub.forEach((filePath) => {
+  if (file_path_sub_array && file_path_sub_array.length > 0) {
+    file_path_sub_array.forEach((filePath) => {
       // 重複チェック（file_pathと同じパスは追加しない）
       if (!order_request.file_path || filePath !== order_request.file_path) {
         modal_status.file_paths.push({
@@ -181,6 +197,22 @@ const openModal = (order_request) => {
         });
       }
     });
+  }
+  
+  // 最初のファイルを表示用に設定（file_pathがない場合、file_path_subの最初のファイルを使用）
+  if (modal_status.file_paths.length > 0) {
+    modal_status.selected_file_index = 0;
+    modal_status.approval_path = modal_status.file_paths[0].url;
+  } else {
+    modal_status.selected_file_index = 0;
+    modal_status.approval_path = "";
+  }
+};
+
+const selectFile = (index) => {
+  if (modal_status.file_paths && modal_status.file_paths[index]) {
+    modal_status.selected_file_index = index;
+    modal_status.approval_path = modal_status.file_paths[index].url;
   }
 };
 const deleteFile = (filePath) => {
@@ -2234,50 +2266,83 @@ onMounted(() => {
                   />
                 </div>
                 
-                <!-- 既存ファイル一覧 -->
+                <!-- ファイル選択タブ -->
                 <div v-if="modal_status.file_paths && modal_status.file_paths.length > 0" class="mt-4 mb-4">
-                  <h3 class="text-sm font-semibold text-gray-700 mb-2">アップロード済みファイル</h3>
-                  <div class="space-y-2">
-                    <div
-                      v-for="(fileItem, index) in modal_status.file_paths"
-                      :key="index"
-                      class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
-                    >
-                      <div class="flex items-center gap-3 flex-1">
-                        <svg
-                          class="w-5 h-5 text-red-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <a
-                          :href="fileItem.url"
-                          target="_blank"
-                          class="text-blue-600 hover:text-blue-800 hover:underline flex-1 truncate"
-                        >
-                          {{ fileItem.path.split('/').pop() }}
-                        </a>
-                      </div>
+                  <!-- タブナビゲーション -->
+                  <div class="border-b border-gray-200 mb-4">
+                    <nav class="flex space-x-1" aria-label="ファイルタブ">
                       <button
-                        v-if="!fileItem.is_legacy"
-                        @click="deleteFile(fileItem.path)"
-                        class="ml-2 text-red-600 hover:text-red-800 px-2 py-1 rounded"
+                        v-for="(fileItem, index) in modal_status.file_paths"
+                        :key="index"
+                        @click="selectFile(index)"
+                        :class="{
+                          'file-tab': true,
+                          'file-tab-active': modal_status.selected_file_index === index,
+                          'file-tab-inactive': modal_status.selected_file_index !== index,
+                        }"
+                        :title="fileItem.path.split('/').pop()"
+                      >
+                        <div class="flex items-center gap-2">
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                          </svg>
+                          <span class="truncate max-w-[200px]">
+                            {{ fileItem.path.split('/').pop() }}
+                          </span>
+                          <span
+                            v-if="fileItem.is_legacy"
+                            class="px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600"
+                          >
+                            既存
+                          </span>
+                        </div>
+                      </button>
+                    </nav>
+                  </div>
+                  
+                  <!-- ファイル操作ボタン -->
+                  <div class="flex items-center justify-between mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm text-gray-600">
+                        現在表示中:
+                      </span>
+                      <span class="text-sm font-medium text-gray-900">
+                        {{ modal_status.file_paths[modal_status.selected_file_index]?.path.split('/').pop() }}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <a
+                        :href="modal_status.file_paths[modal_status.selected_file_index]?.url"
+                        target="_blank"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-colors"
+                      >
+                        <i class="fas fa-external-link-alt"></i>
+                        新しいタブで開く
+                      </a>
+                      <button
+                        v-if="!modal_status.file_paths[modal_status.selected_file_index]?.is_legacy"
+                        @click="deleteFile(modal_status.file_paths[modal_status.selected_file_index]?.path)"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors"
                         title="ファイルを削除"
                       >
                         <i class="fas fa-trash"></i>
+                        削除
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <!-- ファイル表示（最初のファイルを表示） -->
+                <!-- ファイル表示（選択中のファイルを表示） -->
                 <div
                   v-if="modal_status.approval_path"
                   class="mt-4 mb-8 bg-gray-100 p-4"
@@ -2705,6 +2770,23 @@ onMounted(() => {
 
   label {
     @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+
+  // ファイルタブスタイル
+  .file-tab {
+    @apply px-4 py-2.5 text-sm font-medium transition-all duration-200 border-b-2 border-transparent;
+    @apply hover:text-blue-600 hover:border-gray-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-t-lg;
+    
+    &.file-tab-active {
+      @apply text-blue-600 border-blue-500 bg-blue-50;
+      @apply shadow-sm;
+    }
+    
+    &.file-tab-inactive {
+      @apply text-gray-600 bg-transparent;
+      @apply hover:bg-gray-50;
+    }
   }
 }
 

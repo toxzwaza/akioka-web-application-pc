@@ -155,6 +155,18 @@ class OrderRequestController extends Controller
                         $order_request->document_data->document_images = $document_images;
                     }
                 }
+
+                // file_path_subを配列に変換（文字列の場合はJSONデコード）
+                if ($order_request->file_path_sub) {
+                    if (is_string($order_request->file_path_sub)) {
+                        $decoded = json_decode($order_request->file_path_sub, true);
+                        $order_request->file_path_sub = $decoded !== null ? $decoded : [];
+                    } elseif (!is_array($order_request->file_path_sub)) {
+                        $order_request->file_path_sub = [];
+                    }
+                } else {
+                    $order_request->file_path_sub = [];
+                }
             }
         } catch (Exception $e) {
             $status = false;
