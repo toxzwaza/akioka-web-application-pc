@@ -157,23 +157,32 @@ class LunchController extends Controller
 
     public function create_description(Request $request)
     {
-        $today_lunch_description = TodayLunchDescription::select('description')->whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
+        // リクエストから日付を取得、なければ当日
+        $target_date = $request->date ?? \Carbon\Carbon::today()->format('Y-m-d');
+        
+        // 指定日付の備考を取得
+        $today_lunch_description = TodayLunchDescription::select('description')
+            ->whereDate('created_at', $target_date)
+            ->first();
 
-        return view('lunch.create_description', compact('today_lunch_description'));
+        return view('lunch.create_description', [
+            'today_lunch_description' => $today_lunch_description,
+            'target_date' => $target_date
+        ]);
     }
     public function store_description(Request $request)
     {
         $description = $request->description;
         $method = $request->method;
+        $target_date = $request->target_date ?? \Carbon\Carbon::today()->format('Y-m-d');
+        
         switch ($method) {
             case 'delete':
-                $today_lunch_description = TodayLunchDescription::whereDate('created_at', \Carbon\Carbon::today()->format('Y-m-d'))->first();
-
+                $today_lunch_description = TodayLunchDescription::whereDate('created_at', $target_date)->first();
 
                 if ($today_lunch_description) {
                     $today_lunch_description->delete();
-
-                    Method::msg('success', '本日の備考を削除しました。');
+                    Method::msg('success', $target_date . 'の備考を削除しました。');
                 }
 
                 break;
@@ -183,18 +192,29 @@ class LunchController extends Controller
                     return redirect()->back();
                 }
 
-                $today_lunch_description = new TodayLunchDescription();
-                $today_lunch_description->description = $description;
-                $today_lunch_description->save();
-
-                Method::msg('success', '本日の備考を追加しました');
-
+                // 既存の備考があるか確認
+                $existing_description = TodayLunchDescription::whereDate('created_at', $target_date)->first();
+                
+                if ($existing_description) {
+                    // 既存の備考を更新
+                    $existing_description->description = $description;
+                    $existing_description->save();
+                    Method::msg('success', $target_date . 'の備考を更新しました');
+                } else {
+                    // 新規作成（created_atを指定日付に設定）
+                    $today_lunch_description = new TodayLunchDescription();
+                    $today_lunch_description->description = $description;
+                    // created_atを指定日付に設定
+                    $today_lunch_description->created_at = \Carbon\Carbon::parse($target_date)->startOfDay();
+                    $today_lunch_description->save();
+                    Method::msg('success', $target_date . 'の備考を追加しました');
+                }
 
                 break;
         }
 
-
-        return redirect()->back();
+        // 日付パラメータを保持してリダイレクト
+        return redirect()->route('lunch.create_description', ['date' => $target_date]);
     }
 
 

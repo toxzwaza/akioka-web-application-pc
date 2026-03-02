@@ -9,7 +9,7 @@
 
 
             <p class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg">
-                当日の注文書に記載する備考を設定することができます。<br>
+                指定した日付の注文書に記載する備考を設定することができます。<br>
                 注文時間[8:55]を超過した場合、反映されませんのでご注意ください。
             </p>
         </div>
@@ -33,6 +33,18 @@
             <input id="method" type="hidden" name="method" value="">
 
             <div class="sm:col-span-2">
+                <label for="target_date" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">対象日付*</label>
+                <input 
+                    type="date" 
+                    id="target_date" 
+                    name="target_date" 
+                    value="{{ $target_date ?? \Carbon\Carbon::today()->format('Y-m-d') }}" 
+                    class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
+                    required
+                />
+            </div>
+
+            <div class="sm:col-span-2">
                 <label for="message" class="mb-2 inline-block text-sm text-gray-800 sm:text-base">備考*</label>
                 <textarea id="description" name="description" class="h-64 w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring">{{ $today_lunch_description->description ?? '' }}</textarea>
             </div>
@@ -54,26 +66,33 @@
     </div>
 </div>
 <script>
-    const current_date = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP', {
-        month: 'numeric',
-        day: 'numeric',
-        weekday: 'long'
-    });
-
     const template_button = document.querySelectorAll('.template_button');
     const description = document.querySelector('#description');
+    const target_date_input = document.querySelector('#target_date');
 
+    // 日付を日本語形式に変換する関数
+    function formatDateToJapanese(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ja-JP', {
+            month: 'numeric',
+            day: 'numeric',
+            weekday: 'long'
+        });
+    }
 
     template_button.forEach((btn) => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+            const selectedDate = target_date_input.value;
+            const formatted_date = formatDateToJapanese(selectedDate);
+            
             if (e.target.classList.contains('tmp_1')) {
-                description.textContent = `お世話になっております。\n${ current_date }の配達の際までにふりかけを持ってきてください。\nよろしくお願いいたします。`;
+                description.textContent = `お世話になっております。\n${ formatted_date }の配達の際までにふりかけを持ってきてください。\nよろしくお願いいたします。`;
             } else if (e.target.classList.contains('tmp_2')) {
-                description.textContent = `お世話になっております。\n${ current_date }の配達の際までに味噌汁を持ってきてください。\nよろしくお願いいたします。`;
+                description.textContent = `お世話になっております。\n${ formatted_date }の配達の際までに味噌汁を持ってきてください。\nよろしくお願いいたします。`;
 
             } else if (e.target.classList.contains('tmp_3')) {
-                description.textContent = `お世話になっております。\n${ current_date }の配達の際までにふりかけと味噌汁を持ってきてください。\nよろしくお願いいたします。`;
+                description.textContent = `お世話になっております。\n${ formatted_date }の配達の際までにふりかけと味噌汁を持ってきてください。\nよろしくお願いいたします。`;
             }
         });
     });
@@ -87,6 +106,13 @@
         e.preventDefault();
         method.value = "delete";
         description_form.submit();
+    });
+
+    // 日付変更時に備考を再読み込み
+    const target_date = document.querySelector('#target_date');
+    target_date.addEventListener('change', function() {
+        const selectedDate = this.value;
+        window.location.href = `{{ route('lunch.create_description') }}?date=${selectedDate}`;
     });
 </script>
 
