@@ -347,6 +347,8 @@ onMounted(() => {
           padding: 2.6rem 0 0 1rem;
           border: none;
           box-sizing: border-box;
+          font-size: 1.1rem;
+          font-weight: bold;
         }
         &::before {
           content: "備考";
