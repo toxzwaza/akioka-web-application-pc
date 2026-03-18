@@ -1,5 +1,5 @@
 <script setup>
-import { watch, ref, onMounted } from "vue";
+import { watch, ref, onMounted, computed } from "vue";
 import domtoimage from "dom-to-image";
 import axios from "axios";
 import QRCode from "qrcode";
@@ -250,6 +250,21 @@ const generateQRCode = async () => {
   }
 };
 
+// 休業日を日付の昇順でソート
+const sortedCurrentMonthHolidays = computed(() => {
+  if (!props.current_month_holidays) return [];
+  return [...props.current_month_holidays].sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
+});
+
+const sortedNextMonthHolidays = computed(() => {
+  if (!props.next_month_holidays) return [];
+  return [...props.next_month_holidays].sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
+});
+
 onMounted(() => {
   calculatePostage();
   generateQRCode();
@@ -369,7 +384,7 @@ onMounted(() => {
               {{ new Date().getMonth() + 1 }}月
               <span
                 class="font-normal"
-                v-for="currentMonth in current_month_holidays"
+                v-for="currentMonth in sortedCurrentMonthHolidays"
                 :key="currentMonth.id"
                 >{{ new Date(currentMonth.date).getDate() }},</span
               >日
@@ -378,7 +393,7 @@ onMounted(() => {
               {{ (new Date().getMonth() + 2) > 12 ? 1 : (new Date().getMonth() + 2) }}月
               <span
                 class="font-normal"
-                v-for="nextMonth in next_month_holidays"
+                v-for="nextMonth in sortedNextMonthHolidays"
                 :key="nextMonth.id"
                 >{{ new Date(nextMonth.date).getDate() }},</span
               >日
