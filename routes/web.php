@@ -169,3 +169,6 @@ Route::get('/task/export', [TaskController::class, 'export'])->name('task.export
 
 // ラベルデザイナ
 Route::get('/label', [LabelController::class, 'index'])->name('label.home');
+
+// FAX API 疎通確認ページ
+Route::view('/fax/api-test', 'fax.api_test')->name('fax.api_test');

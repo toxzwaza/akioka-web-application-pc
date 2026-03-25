@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'fax_api' => [
+        'token' => env('FAX_API_TOKEN'),
+    ],
+
 ];
