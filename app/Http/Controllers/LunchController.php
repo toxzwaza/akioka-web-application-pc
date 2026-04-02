@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Services\Method;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class LunchController extends Controller
@@ -303,5 +305,58 @@ class LunchController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * 弁当当番を always_order_flg=1 のユーザー内で id 昇順にローテーションする。
+     */
+    public function rotateDuty(): JsonResponse
+    {
+        $poolUsers = User::query()
+            ->where('always_order_flg', 1)
+            ->orderBy('id')
+            ->get(['id', 'name']);
+
+        if ($poolUsers->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => '弁当注文グループ（always_order_flg=1）のユーザーがいません。',
+            ], 422);
+        }
+
+        $poolIds = $poolUsers->pluck('id')->values()->all();
+
+        $current = User::query()
+            ->where('duty_flg', 1)
+            ->whereIn('id', $poolIds)
+            ->orderBy('id')
+            ->first(['id']);
+
+        if ($current === null) {
+            $previousDutyUserId = null;
+            $nextId = $poolIds[0];
+        } else {
+            $previousDutyUserId = $current->id;
+            $idx = array_search($current->id, $poolIds, true);
+            $nextIdx = ($idx + 1) % count($poolIds);
+            $nextId = $poolIds[$nextIdx];
+        }
+
+        DB::transaction(function () use ($poolIds, $nextId) {
+            User::query()->whereIn('id', $poolIds)->update(['duty_flg' => 0]);
+            User::query()->where('id', $nextId)->update(['duty_flg' => 1]);
+        });
+
+        $nextUser = $poolUsers->firstWhere('id', $nextId);
+
+        return response()->json([
+            'success' => true,
+            'previous_duty_user_id' => $previousDutyUserId,
+            'next_duty_user_id' => $nextId,
+            'next_user' => $nextUser ? [
+                'id' => $nextUser->id,
+                'name' => $nextUser->name,
+            ] : null,
+        ]);
     }
 }

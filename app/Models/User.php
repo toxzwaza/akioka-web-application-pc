@@ -22,6 +22,7 @@ class User extends Model
         'dispatch_flg',
         'part_flg',
         'always_order_flg',
+        'duty_flg',
         'fax_folder_name',
         'del_flg',
     ];

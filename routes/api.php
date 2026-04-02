@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\FaxJobController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\LunchController;
 use App\Http\Controllers\NewMovieController;
 use App\Http\Controllers\SignageController;
 use App\Http\Controllers\StockController;
@@ -18,6 +19,9 @@ Route::post('/log/create', [LogController::class, 'createLog'])->name('log.creat
 
 // 文字お越し待ち取得
 Route::get('/getWaitingTranscription', [NewMovieController::class, 'getWaitingTranscription'])->name('movie2.getWaitingTranscription');
+
+// 弁当当番ローテーション（always_order_flg=1 のユーザー内で id 昇順・循環）
+Route::get('/lunch/rotate-duty', [LunchController::class, 'rotateDuty'])->name('api.lunch.rotate-duty');
 
 // 物品発注可能状況確認待ち取得
 Route::get('/stock/urlStocks', [StockController::class, 'urlStocks']);
