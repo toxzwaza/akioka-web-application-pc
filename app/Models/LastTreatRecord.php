@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SplitOrderQuantity extends Model
+class LastTreatRecord extends Model
 {
     protected $guarded = [];
 
-    public function initialOrder(): BelongsTo
+    public function stock(): BelongsTo
     {
-        return $this->belongsTo(InitialOrder::class, 'initial_order_id');
+        return $this->belongsTo(Stock::class, 'stock_id');
     }
 }

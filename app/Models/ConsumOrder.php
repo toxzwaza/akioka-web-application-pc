@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class FaxUserGroup extends Model
+class ConsumOrder extends Model
 {
     protected $guarded = [];
 
@@ -14,8 +14,8 @@ class FaxUserGroup extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function faxGroup(): BelongsTo
+    public function stock(): BelongsTo
     {
-        return $this->belongsTo(FaxGroup::class, 'fax_group_id');
+        return $this->belongsTo(Stock::class, 'stock_id');
     }
 }

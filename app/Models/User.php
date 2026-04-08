@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Position::class, 'position_id');
     }
+
+    public function process(): BelongsTo
+    {
+        return $this->belongsTo(Process::class, 'process_id');
+    }
 }

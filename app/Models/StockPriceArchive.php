@@ -3,8 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockPriceArchive extends Model
 {
     protected $guarded = [];
+
+    public function stock(): BelongsTo
+    {
+        return $this->belongsTo(Stock::class, 'stock_id');
+    }
 }
