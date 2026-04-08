@@ -31,6 +31,11 @@ class SignageContentController extends Controller
 
         return Inertia::render('Signage/Content/StockDeliveryList');
     }
+
+    public function delivery(){
+        return Inertia::render('Signage/Content/Delivery');
+    }
+
     public function schedule(){
         // 全てのファイルを取得
         $files = Storage::files('public/schedule_file');

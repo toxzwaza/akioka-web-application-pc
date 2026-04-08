@@ -1,0 +1,19 @@
+ダンプ（akioka_db_20260402.sql）にテーブルが存在しないが、アプリコードがまだ参照しているモデル
+================================================================================
+
+- App\Models\Approval — OrderController
+- App\Models\ApprovalAcceptFlow — OrderController
+- App\Models\ConsumOrder — OrderController
+- App\Models\RequestAcceptFlow — OrderController
+- App\Models\RemoteComputer — RemoteController
+- App\Models\ImportProduct — TestController
+- App\Models\CalcProductFile — CalcProductController
+- App\Models\LastTreatRecord — StockController, TestController
+
+別タスクで、承認フロー周りの置き換え・テーブル復活・コントローラ修正のいずれかを行う必要があります。
+
+その他メモ
+----------
+- マイグレーションは MySQL/MariaDB 向けの raw SQL（ENGINE=InnoDB 等）です。SQLite では実行できません。
+- UserFactory は group_id=1, position_id=1 を前提とします。テストや factory 利用時は groups / positions に id=1 が存在するようシードしてください。
+- RegisteredUserController は group_id / position_id を設定していないため、外部キー制約下では User::create が失敗します。登録処理の修正が必要です。

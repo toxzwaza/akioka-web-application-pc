@@ -1,12 +1,13 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
 import SearchLoading from "@/Components/Loading/SearchLoading.vue";
+import UserLogin from "@/Components/Auth/UserLogin.vue";
 
 const props = defineProps({
   order_users: Array,
@@ -252,6 +253,79 @@ const deleteFile = (filePath) => {
     });
 };
 
+/** 一覧テーブルと同じ品名表示 */
+const displayProductName = (or) => {
+  if (!or) return "";
+  if (or.stock_id) return or.name ?? "";
+  return or.order_request_name ?? "";
+};
+
+/** 一覧テーブルと同じ品番表示 */
+const displayProductSName = (or) => {
+  if (!or) return "";
+  return or.s_name ? or.s_name : (or.order_request_s_name ?? "");
+};
+
+/** 一覧の承認状態ボタン文言と揃える */
+const acceptFlgLabel = (flg) => {
+  const n = Number(flg);
+  switch (n) {
+    case 0:
+      return "依頼";
+    case 1:
+      return "待ち";
+    case 2:
+      return "承認";
+    case 3:
+      return "却下";
+    case 4:
+      return "却下再依頼待ち";
+    case 5:
+      return "確認中";
+    case 6:
+      return "差戻対応";
+    default:
+      return "-";
+  }
+};
+
+const stockProcessName = (id) => {
+  if (id == null || id === "") return "-";
+  const p = props.stock_processes?.find((sp) => String(sp.id) === String(id));
+  return p?.name ?? "-";
+};
+
+const imageUrlForOrderRequest = (or) => {
+  if (!or?.img_path) return null;
+  const p = or.img_path;
+  return p.includes("storage") ? "https://akioka.cloud/" + p : p;
+};
+
+const formatModalDateTime = (iso) => {
+  if (!iso) return "-";
+  try {
+    return new Date(iso).toLocaleString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  } catch {
+    return "-";
+  }
+};
+
+const formatModalDateOnly = (val) => {
+  if (!val) return "-";
+  try {
+    return new Date(val).toLocaleDateString("ja-JP");
+  } catch {
+    return "-";
+  }
+};
+
 const reNotify = (order_request_id, user_id) => {
   console.log(order_request_id, user_id);
   axios
@@ -313,6 +387,7 @@ const order_config = reactive({
 
 const order_requests = ref([]);
 const isDataLoading = ref(false);
+const isFilterCollapsed = ref(false);
 
 // 検索フィルター
 const searchFilters = reactive({
@@ -327,6 +402,21 @@ const searchFilters = reactive({
   created_at_to: '', // 発注依頼日時（終了）
   request_user_id: '', // 依頼者
 });
+
+const debouncedNameSearch = ref("");
+let nameSearchTimer = null;
+watch(
+  () => searchFilters.name_search,
+  (value) => {
+    if (nameSearchTimer) {
+      clearTimeout(nameSearchTimer);
+    }
+    nameSearchTimer = setTimeout(() => {
+      debouncedNameSearch.value = value || "";
+    }, 180);
+  },
+  { immediate: true }
+);
 
 // フィルタリングされた発注依頼データ
 const filteredOrderRequests = computed(() => {
@@ -345,8 +435,8 @@ const filteredOrderRequests = computed(() => {
     }
     
     // 品名・品番でフィルタ
-    if (searchFilters.name_search) {
-      const searchText = searchFilters.name_search.toLowerCase();
+    if (debouncedNameSearch.value) {
+      const searchText = debouncedNameSearch.value.toLowerCase();
       const name = (order_request.name || order_request.order_request_name || '').toLowerCase();
       const sName = (order_request.s_name || order_request.order_request_s_name || '').toLowerCase();
       if (!name.includes(searchText) && !sName.includes(searchText)) {
@@ -908,10 +998,19 @@ const skipAccept = (order_request_id) => {
 };
 const handleUserId = (user_id) => {
   localStorage.setItem("user_id", user_id);
+  const selectedUser = props.order_users.find((user) => user.id == user_id);
+  if (selectedUser) {
+    localStorage.setItem("user_name", selectedUser.name);
+    localStorage.setItem("user_role", "共通担当者");
+  }
+  window.dispatchEvent(new CustomEvent("shared-login-changed"));
   loginCheck();
 };
 const ClearLocalStorage = () => {
   localStorage.removeItem("user_id");
+  localStorage.removeItem("user_name");
+  localStorage.removeItem("user_role");
+  window.dispatchEvent(new CustomEvent("shared-login-changed"));
   loginCheck();
 };
 
@@ -925,12 +1024,18 @@ const loginCheck = () => {
     if (selectedUser) {
       order_config.user_name = selectedUser.name;
       order_config.user_id = userId;
+      localStorage.setItem("user_name", selectedUser.name);
+      localStorage.setItem("user_role", "共通担当者");
       console.log(selectedUser.name);
     }
   } else {
     order_config.user_id = null;
     order_config.user_name = null;
   }
+};
+
+const handleOrderLoginSuccess = (loginData) => {
+  handleUserId(loginData.userId);
 };
 
 const changeStockId = (order_request_id, stock_id) => {
@@ -991,124 +1096,31 @@ onMounted(() => {
 
       <!-- Login Section -->
       <div v-if="!order_config.user_id" class="login-section mb-8">
-        <div class="login-container">
-          <div class="login-card">
-            <div class="login-header">
-              <div class="logo-container">
-                <img
-                  class="company-logo"
-                  src="/img/base/AK_logo.png"
-                  alt="会社ロゴ"
-                />
-              </div>
-              <h2 class="login-title">発注担当者ログイン</h2>
-              <p class="login-subtitle">
-                発注依頼の管理・承認を行うためにログインしてください
-              </p>
-            </div>
-
-            <div class="login-form">
-              <div class="form-group">
-                <label class="form-label">
-                  <svg
-                    class="w-5 h-5 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    ></path>
-                  </svg>
-                  ユーザー選択
-                </label>
-                <select
-                  class="form-select"
-                  @change="handleUserId($event.target.value)"
-                >
-                  <option value="0">ユーザーを選択してください</option>
-                  <option
-                    v-for="order_user in order_users"
-                    :key="order_user.id"
-                    :value="order_user.id"
-                  >
-                    {{ order_user.name }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="login-help">
-                <svg
-                  class="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                アカウントがない場合は管理者にお問い合わせください
-              </div>
-            </div>
-          </div>
-        </div>
+        <UserLogin
+          :users="order_users"
+          title="共通ログイン"
+          role="共通担当者"
+          helpText="発注依頼の管理・承認を行うためにログインしてください"
+          storageKey="user_id"
+          @login="handleOrderLoginSuccess"
+          @logout="ClearLocalStorage"
+        />
       </div>
 
       <!-- User Dashboard -->
-      <div v-else class="dashboard-section mb-8">
-        <!-- User Info Card -->
-        <div class="user-info-card mb-6">
-          <div class="user-info-content">
-            <div class="user-avatar">
-              <svg
-                class="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                ></path>
-              </svg>
-            </div>
-            <div class="user-details">
-              <h2 class="user-name">{{ order_config.user_name }}</h2>
-              <p class="user-role">発注担当者</p>
-            </div>
-          </div>
-          <button @click="ClearLocalStorage" class="logout-btn">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              ></path>
-            </svg>
-            ログアウト
-          </button>
-        </div>
-
+      <div
+        v-else
+        class="dashboard-section mb-8"
+        :class="{ 'is-filter-collapsed': isFilterCollapsed }"
+      >
         <!-- Search Filters Section -->
-        <div class="search-filters-section mb-6">
-          <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+        <div
+          class="search-filters-section mb-6"
+          :class="{ 'is-collapsed': isFilterCollapsed }"
+        >
+          <div class="filter-panel bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div class="filter-panel__header flex items-center justify-between mb-4">
+              <h3 v-show="!isFilterCollapsed" class="text-lg font-semibold text-gray-800 flex items-center">
                 <svg
                   class="w-5 h-5 mr-2"
                   fill="none"
@@ -1124,17 +1136,38 @@ onMounted(() => {
                 </svg>
                 絞り込み検索
               </h3>
-              <button
-                @click="resetFilters"
-                class="text-sm text-gray-600 hover:text-gray-800 underline"
-              >
-                リセット
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="isFilterCollapsed = !isFilterCollapsed"
+                  class="collapse-icon-btn"
+                  :title="isFilterCollapsed ? 'フィルターを展開' : 'フィルターを折りたたむ'"
+                >
+                  <svg
+                    class="h-4 w-4 transition-transform"
+                    :class="{ 'rotate-180': isFilterCollapsed }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  @click="resetFilters"
+                  class="text-xs text-gray-600 hover:text-gray-800 underline"
+                  v-show="!isFilterCollapsed"
+                >
+                  リセット
+                </button>
+              </div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+
+            <div
+              v-show="!isFilterCollapsed"
+              class="filter-grid"
+            >
               <!-- 承認状態 -->
-              <div class="form-group">
+              <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   承認状態
                 </label>
@@ -1154,7 +1187,7 @@ onMounted(() => {
               </div>
 
               <!-- 依頼品 -->
-              <div class="form-group">
+              <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   依頼品
                 </label>
@@ -1169,7 +1202,7 @@ onMounted(() => {
               </div>
 
               <!-- 品名・品番 -->
-              <div class="form-group">
+              <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   品名・品番
                 </label>
@@ -1182,7 +1215,7 @@ onMounted(() => {
               </div>
 
               <!-- 工程 -->
-              <div class="form-group">
+              <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   工程
                 </label>
@@ -1201,32 +1234,18 @@ onMounted(() => {
                 </select>
               </div>
 
-              <!-- 希望納期（開始） -->
-              <div class="form-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  希望納期（開始）
-                </label>
-                <input
-                  v-model="searchFilters.desire_delivery_date_from"
-                  type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <!-- 希望納期（終了） -->
-              <div class="form-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  希望納期（終了）
-                </label>
-                <input
-                  v-model="searchFilters.desire_delivery_date_to"
-                  type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <!-- 希望納期 -->
+              <div class="form-group filter-field date-range-field">
+                <label>希望納期</label>
+                <div class="date-inputs">
+                  <input v-model="searchFilters.desire_delivery_date_from" type="date" />
+                  <span>〜</span>
+                  <input v-model="searchFilters.desire_delivery_date_to" type="date" />
+                </div>
               </div>
 
               <!-- 発注先 -->
-              <div class="form-group">
+              <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   発注先
                 </label>
@@ -1245,32 +1264,18 @@ onMounted(() => {
                 </select>
               </div>
 
-              <!-- 発注依頼日時（開始） -->
-              <div class="form-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  発注依頼日時（開始）
-                </label>
-                <input
-                  v-model="searchFilters.created_at_from"
-                  type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <!-- 発注依頼日時（終了） -->
-              <div class="form-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  発注依頼日時（終了）
-                </label>
-                <input
-                  v-model="searchFilters.created_at_to"
-                  type="date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <!-- 発注依頼日時 -->
+              <div class="form-group filter-field date-range-field">
+                <label>発注依頼日時</label>
+                <div class="date-inputs">
+                  <input v-model="searchFilters.created_at_from" type="date" />
+                  <span>〜</span>
+                  <input v-model="searchFilters.created_at_to" type="date" />
+                </div>
               </div>
 
               <!-- 依頼者 -->
-              <div class="form-group">
+              <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   依頼者
                 </label>
@@ -1291,7 +1296,7 @@ onMounted(() => {
             </div>
 
             <!-- 検索結果件数表示 -->
-            <div class="mt-4 pt-4 border-t border-gray-200">
+            <div v-show="!isFilterCollapsed" class="mt-4 pt-4 border-t border-gray-200">
               <p class="text-sm text-gray-600">
                 検索結果: <span class="font-semibold text-gray-900">{{ filteredOrderRequests.length }}</span>件
                 <span v-if="filteredOrderRequests.length !== order_requests.length" class="text-gray-500">
@@ -2031,125 +2036,339 @@ onMounted(() => {
       <!-- モーダルウィンドウ -->
       <div
         id="modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-hidden="!modal_status.status"
         :class="{ active: modal_status.status }"
         @click.self="modal_status.status = false"
       >
         <div class="modal__panel">
-          <div id="close_container">
+          <div id="close_container" class="modal__header">
+            <div class="modal__header-text">
+              <h2 class="modal__title">発注依頼の詳細</h2>
+              <p
+                v-if="modal_status.order_request"
+                class="modal__header-meta mt-1 text-xs text-gray-600 dark:text-gray-400"
+              >
+                ID
+                {{
+                  modal_status.order_request.order_request_id ??
+                  modal_status.order_request.id
+                }}
+                <span class="text-gray-400"> · </span>
+                {{ modal_status.order_request.new_stock_flg ? "新規品" : "既存品" }}
+                <span class="text-gray-400"> · </span>
+                {{ acceptFlgLabel(modal_status.order_request.accept_flg) }}
+              </p>
+            </div>
             <button
+              type="button"
               @click="modal_status.status = !modal_status.status"
               class="modal__close"
-              aria-label="Close modal"
+              aria-label="閉じる"
             >
               <i class="fa fa-times"></i>
             </button>
           </div>
 
           <div class="modal__body">
-            <div v-if="modal_status.order_request" class="mb-4">
-              <p class="font-bold w-full text-sm text-gray-700">
-                品名: {{ modal_status.order_request.name }}
-              </p>
-              <p class="font-bold w-full text-sm text-gray-700">
-                品番: {{ modal_status.order_request.s_name }}
-              </p>
-              <p class="font-bold w-full text-sm text-gray-700">
-                依頼者: {{ modal_status.order_request.request_user_name }}
-              </p>
-              <p class="font-bold w-full text-sm text-gray-700">
-                依頼元デバイス: {{ modal_status.order_request.device_name }}
-              </p>
-              <hr class="my-4" />
-              <h3
-                class="block mb-2 text-medium font-medium text-gray-700 dark:text-white"
+            <!-- サマリー -->
+            <section
+              v-if="modal_status.order_request"
+              class="modal-summary-section mb-6"
+            >
+              <p
+                class="modal-meta-line mb-4 border-b border-gray-200 pb-3 text-sm text-gray-800 dark:border-gray-600 dark:text-gray-200"
               >
+                <span class="text-gray-500 dark:text-gray-400">依頼日時</span>
+                {{
+                  formatModalDateTime(modal_status.order_request.created_at)
+                }}
+              </p>
+
+              <div class="modal-summary-grid">
+                <!-- 品目 -->
+                <div class="modal-summary-card modal-summary-card--full">
+                  <h3 class="modal-summary-card__title">品目</h3>
+                  <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div
+                      v-if="imageUrlForOrderRequest(modal_status.order_request)"
+                      class="modal-summary-thumb shrink-0"
+                    >
+                      <img
+                        :src="imageUrlForOrderRequest(modal_status.order_request)"
+                        alt=""
+                        class="h-24 w-24 border border-gray-200 object-contain dark:border-gray-600"
+                      />
+                    </div>
+                    <div class="min-w-0 flex-1 space-y-2">
+                      <p
+                        class="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100"
+                      >
+                        {{ displayProductName(modal_status.order_request) }}
+                      </p>
+                      <p class="text-sm text-gray-600 dark:text-gray-300">
+                        品番:
+                        {{ displayProductSName(modal_status.order_request) }}
+                      </p>
+                      <p
+                        v-if="modal_status.order_request.stock_id"
+                        class="text-sm text-gray-500"
+                      >
+                        在庫ID: {{ modal_status.order_request.stock_id }}
+                      </p>
+                      <div class="flex flex-wrap gap-2">
+                        <Link
+                          v-if="modal_status.order_request.stock_id"
+                          class="text-sm text-blue-600 underline hover:text-blue-800"
+                          :href="
+                            route('stock.show.stocks', {
+                              stock_id: modal_status.order_request.stock_id,
+                            })
+                          "
+                        >
+                          在庫詳細
+                        </Link>
+                        <a
+                          v-if="modal_status.order_request.url"
+                          class="text-sm text-blue-600 underline hover:text-blue-800"
+                          :href="modal_status.order_request.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          ネット注文リンク
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 数量・金額 -->
+                <div class="modal-summary-card">
+                  <h3 class="modal-summary-card__title">数量・金額</h3>
+                  <dl class="modal-kv">
+                    <dt>数量</dt>
+                    <dd>{{ modal_status.order_request.quantity ?? "-" }}</dd>
+                    <dt>単価</dt>
+                    <dd>{{ modal_status.order_request.price ?? "-" }}</dd>
+                    <dt>単位</dt>
+                    <dd>{{ modal_status.order_request.unit ?? "-" }}</dd>
+                    <dt>計算金額</dt>
+                    <dd>{{ modal_status.order_request.calc_price ?? "-" }}</dd>
+                    <dt>送料</dt>
+                    <dd>{{ modal_status.order_request.postage ?? "-" }}</dd>
+                  </dl>
+                </div>
+
+                <!-- 在庫・納期 -->
+                <div class="modal-summary-card">
+                  <h3 class="modal-summary-card__title">在庫・納期</h3>
+                  <dl class="modal-kv">
+                    <dt>現在数</dt>
+                    <dd>{{ modal_status.order_request.now_quantity ?? "-" }}</dd>
+                    <dt>発注点</dt>
+                    <dd>{{ modal_status.order_request.reorder_point ?? "-" }}</dd>
+                    <dt>倉庫最大</dt>
+                    <dd>
+                      {{
+                        modal_status.order_request.stock_storage_quantity ?? "-"
+                      }}
+                    </dd>
+                    <dt>希望納期</dt>
+                    <dd>
+                      {{
+                        formatModalDateOnly(
+                          modal_status.order_request.desire_delivery_date
+                        )
+                      }}
+                    </dd>
+                    <dt>リードタイム</dt>
+                    <dd>
+                      {{
+                        modal_status.order_request.lead_time != null
+                          ? `${modal_status.order_request.lead_time}日`
+                          : "-"
+                      }}
+                    </dd>
+                    <dt>仕入先LT</dt>
+                    <dd>
+                      {{
+                        modal_status.order_request.stock_supplier_lead_time !=
+                        null
+                          ? `${modal_status.order_request.stock_supplier_lead_time}日`
+                          : "-"
+                      }}
+                    </dd>
+                    <dt>消化予定日</dt>
+                    <dd>
+                      {{
+                        formatModalDateOnly(
+                          modal_status.order_request.digest_date
+                        )
+                      }}
+                    </dd>
+                  </dl>
+                </div>
+
+                <!-- 担当・取引 -->
+                <div class="modal-summary-card">
+                  <h3 class="modal-summary-card__title">担当・取引</h3>
+                  <dl class="modal-kv">
+                    <dt>発注先</dt>
+                    <dd>
+                      <template v-if="modal_status.order_request.supplier_id">
+                        {{ modal_status.order_request.supplier_name }}
+                        （仕入LT:
+                        {{
+                          modal_status.order_request.stock_supplier_lead_time !=
+                          null
+                            ? `${modal_status.order_request.stock_supplier_lead_time}日`
+                            : "未"
+                        }}）
+                      </template>
+                      <span v-else class="text-amber-600 dark:text-amber-400"
+                        >未設定</span
+                      >
+                    </dd>
+                    <dt>工程</dt>
+                    <dd>
+                      {{
+                        stockProcessName(
+                          modal_status.order_request.stock_process_id
+                        )
+                      }}
+                    </dd>
+                    <dt>依頼者</dt>
+                    <dd>
+                      {{ modal_status.order_request.request_user_name ?? "-" }}
+                    </dd>
+                    <dt>発注担当</dt>
+                    <dd>
+                      {{ modal_status.order_request.order_user_name ?? "-" }}
+                    </dd>
+                    <dt>依頼元デバイス</dt>
+                    <dd>
+                      <template
+                        v-if="
+                          modal_status.order_request.device_id ||
+                          modal_status.order_request.device_name
+                        "
+                      >
+                        {{ modal_status.order_request.device_id ?? "—" }}
+                        -
+                        {{ modal_status.order_request.device_name ?? "—" }}
+                      </template>
+                      <template v-else>—</template>
+                    </dd>
+                    <dt>稟議書</dt>
+                    <dd>
+                      {{
+                        modal_status.order_request.document_id ?? "—"
+                      }}
+                    </dd>
+                    <dt>備考（在庫）</dt>
+                    <dd class="whitespace-pre-wrap">
+                      {{
+                        modal_status.order_request.stock_desc_memo || "—"
+                      }}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </section>
+
+            <!-- 依頼者へ確認メッセージ -->
+            <div
+              v-if="modal_status.order_request"
+              class="modal-section-card mb-6"
+            >
+              <h3 class="modal-summary-card__title">
                 依頼者へ確認メッセージ
-                <span class="text-sm text-red-500"
-                  >(※依頼元端末のTOP画面に送信されます)</span
+                <span class="text-sm font-normal text-red-500"
+                  >（※依頼元端末のTOP画面に送信されます）</span
                 >
               </h3>
               <textarea
-                id="message"
+                id="modal-send-message"
                 rows="4"
-                :class="{
-                  'block p-2.5 w-full text-sm text-gray-900 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500': true,
-                }"
+                class="modal-textarea-input"
                 placeholder="メッセージを入力してください。"
                 v-model="modal_status.order_request.message"
               ></textarea>
-              <div class="flex justify-end">
+              <div class="mt-3 flex justify-end">
                 <button
+                  type="button"
                   @click.prevent="sendDeviceMessage"
-                  class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  class="border border-gray-400 bg-white px-4 py-1.5 text-sm text-gray-800 hover:bg-gray-50 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                 >
-                  <i class="fas fa-paper-plane"></i> 送信
+                  送信
                 </button>
               </div>
-              <div class="pl-4">
+              <div class="mt-4 border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-900/40">
                 <label
-                  for="message"
-                  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  for="modal-answer-message"
+                  class="mb-2 block text-sm text-gray-700 dark:text-gray-300"
                 >
-                  <i class="fas fa-user"></i> 回答メッセージ</label
-                >
+                  回答メッセージ
+                </label>
                 <textarea
-                  id="message"
+                  id="modal-answer-message"
                   rows="4"
-                  :class="{
-                    'block p-2.5 w-full text-sm text-gray-900 bg-gray-200 rounded-lg border border-gray-300 h-auto': true,
-                  }"
+                  readonly
+                  class="modal-textarea-readonly"
                   placeholder="コメントがありません。"
                   :value="modal_status.order_request.answer"
                 ></textarea>
-                <label
+                <p
                   v-if="modal_status.order_request.read_flg"
-                  for="visibility"
-                  class="text-right block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  class="mt-2 text-right text-xs text-gray-600 dark:text-gray-400"
                 >
-                  <i class="fas fa-eye"></i> 確認済
-                </label>
-                <label
+                  確認済
+                </p>
+                <p
                   v-else
-                  for="visibility"
-                  class="text-right block mb-2 text-sm font-medium text-gray-500 dark:text-white"
+                  class="mt-2 text-right text-xs text-gray-500 dark:text-gray-500"
                 >
                   未確認
-                </label>
+                </p>
               </div>
+            </div>
 
-              <hr class="my-4" />
-              <h3
-                class="block mb-2 text-medium font-medium text-gray-700 dark:text-white"
-              >
-                承認用コメント
-              </h3>
+            <!-- 承認用コメント -->
+            <div
+              v-if="modal_status.order_request"
+              class="modal-section-card mb-6"
+            >
+              <h3 class="modal-summary-card__title">承認用コメント</h3>
               <label
-                for="message"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                for="modal-requester-comment"
+                class="mb-2 block text-sm text-gray-700 dark:text-gray-300"
                 >依頼者コメント</label
               >
               <textarea
-                id="message"
+                id="modal-requester-comment"
                 rows="4"
-                :class="{
-                  'block p-2.5 w-full text-sm text-gray-900 bg-gray-200 rounded-lg border border-gray-300 h-auto': true,
-                }"
+                readonly
+                class="modal-textarea-readonly"
                 placeholder="コメントがありません。"
                 :value="modal_status.order_request.description"
               ></textarea>
             </div>
-            <div v-if="modal_status.order_request" class="mb-8">
+
+            <!-- 発注者コメント -->
+            <div
+              v-if="modal_status.order_request"
+              class="modal-section-card mb-8"
+            >
               <label
-                for="message"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                for="modal-order-comment"
+                class="modal-summary-card__title mb-3 block"
                 >発注者コメント</label
               >
               <textarea
-                id="message"
+                id="modal-order-comment"
                 rows="4"
-                :class="{
-                  'block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500': true,
-                }"
+                class="modal-textarea-input"
                 @change="updateSubDescription($event.target.value)"
                 placeholder="コメントがある場合はこちらに記載してください。"
                 :value="modal_status.order_request.sub_description"
@@ -2472,29 +2691,64 @@ onMounted(() => {
 
 // Dashboard Section
 .dashboard-section {
-  .user-info-card {
-    @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex items-center justify-between;
+  @apply grid gap-6;
+  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+  transition: grid-template-columns 0.2s ease;
 
-    .user-info-content {
-      @apply flex items-center gap-4;
+  &.is-filter-collapsed {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
 
-      .user-avatar {
-        @apply w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center;
-      }
+  .search-filters-section {
+    @apply sticky top-6 self-start;
+    transition: width 0.2s ease;
 
-      .user-details {
-        .user-name {
-          @apply text-xl font-semibold text-gray-900;
-        }
-
-        .user-role {
-          @apply text-sm text-gray-600;
-        }
-      }
+    &.is-collapsed {
+      width: 72px;
     }
 
-    .logout-btn {
-      @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center;
+    .filter-panel {
+      min-height: 72px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid #dbe7ff;
+      box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.08),
+        0 2px 6px rgba(37, 99, 235, 0.08);
+    }
+
+    .filter-panel__header {
+      min-height: 40px;
+    }
+
+    .collapse-icon-btn {
+      @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-blue-50 hover:text-blue-700;
+    }
+
+    .filter-field {
+      @apply rounded-xl border border-slate-200 bg-white p-3;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    .filter-grid {
+      @apply grid grid-cols-1 gap-3;
+
+      .form-group {
+        label {
+          @apply block text-xs font-semibold tracking-wide text-slate-600 mb-1.5;
+        }
+
+        input,
+        select {
+          @apply w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-800;
+          @apply focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200;
+        }
+      }
+
+      .date-range-field {
+        .date-inputs {
+          @apply grid grid-cols-[1fr_auto_1fr] items-center gap-2;
+        }
+      }
     }
   }
 
@@ -2611,7 +2865,7 @@ onMounted(() => {
               }
 
               td {
-                @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+                @apply px-4 py-3 whitespace-nowrap text-[13px] text-gray-900;
 
                 input,
                 select,
@@ -2620,7 +2874,7 @@ onMounted(() => {
                 }
 
                 button {
-                  @apply px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200;
+                  @apply px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors duration-200;
                 }
 
                 img {
@@ -2652,17 +2906,18 @@ onMounted(() => {
   }
 }
 
-// Modern Modal
+// Modern Modal（横幅を広く・装飾は最小）
 #modal {
-  @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity;
+  @apply fixed inset-0 bg-black/35 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity p-2 sm:p-3;
 
   &.active {
     @apply opacity-100 pointer-events-auto;
   }
 
   .modal__panel {
-    @apply w-11/12 max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transform scale-95 transition-transform;
-    max-height: 80vh;
+    @apply w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 overflow-hidden transform scale-[0.99] transition-transform;
+    max-width: min(100rem, calc(100vw - 1rem));
+    max-height: 92vh;
   }
 
   &.active .modal__panel {
@@ -2670,16 +2925,76 @@ onMounted(() => {
   }
 
   #close_container {
-    @apply p-4 flex justify-end border-b border-gray-100;
+    @apply px-4 py-3 sm:px-5 flex justify-between items-start gap-4 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800;
+
+    .modal__header-text {
+      @apply min-w-0 flex-1;
+    }
+
+    .modal__title {
+      @apply text-base font-semibold text-gray-900 dark:text-gray-100 m-0;
+    }
 
     .modal__close {
-      @apply bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-3 py-2 rounded-lg transition-colors duration-200 flex items-center;
+      @apply shrink-0 px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-transparent hover:border-gray-300 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white flex items-center;
     }
   }
 
+  .modal-summary-section {
+    @apply w-full;
+  }
+
+  .modal-summary-grid {
+    @apply grid gap-3 w-full;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 1280px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .modal-summary-card--full {
+      @media (min-width: 1280px) {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  .modal-summary-card {
+    @apply border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800;
+  }
+
+  .modal-summary-card__title {
+    @apply mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-600 pb-1.5;
+  }
+
+  .modal-section-card {
+    @apply border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800;
+  }
+
+  .modal-kv {
+    @apply grid gap-x-3 gap-y-1.5 text-sm;
+    grid-template-columns: minmax(5.5rem, auto) 1fr;
+
+    dt {
+      @apply text-xs text-gray-500 dark:text-gray-400;
+    }
+
+    dd {
+      @apply text-sm text-gray-900 dark:text-gray-100 break-words;
+    }
+  }
+
+  .modal-textarea-input {
+    @apply block w-full border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100;
+  }
+
+  .modal-textarea-readonly {
+    @apply block w-full border border-gray-200 bg-gray-50 px-2 py-2 text-sm text-gray-800 dark:border-gray-600 dark:bg-gray-900/60 dark:text-gray-200;
+  }
+
   .modal__body {
-    @apply p-6 overflow-y-auto;
-    max-height: calc(80vh - 64px);
+    @apply px-4 py-4 sm:px-6 overflow-y-auto;
+    max-height: calc(92vh - 4rem);
   }
 
   #pdfviewer {
@@ -2692,14 +3007,18 @@ onMounted(() => {
   }
 
   details {
-    @apply border border-gray-200 rounded-lg overflow-hidden mb-4;
+    @apply border border-gray-200 dark:border-gray-600 overflow-hidden mb-3;
 
     summary {
-      @apply bg-gray-50 p-4 font-semibold text-gray-800 cursor-pointer hover:bg-gray-100 transition-colors duration-200;
+      @apply bg-gray-50 dark:bg-gray-900/60 px-3 py-2.5 text-sm font-medium text-gray-800 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 list-none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
     }
 
     &[open] summary {
-      @apply border-b border-gray-200;
+      @apply border-b border-gray-200 dark:border-gray-600;
     }
   }
 
@@ -2772,20 +3091,18 @@ onMounted(() => {
     @apply block text-sm font-medium text-gray-700 mb-2;
   }
 
-  // ファイルタブスタイル
+  // ファイルタブ（最小）
   .file-tab {
-    @apply px-4 py-2.5 text-sm font-medium transition-all duration-200 border-b-2 border-transparent;
-    @apply hover:text-blue-600 hover:border-gray-300;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-t-lg;
-    
+    @apply px-3 py-2 text-sm border-b-2 border-transparent text-gray-600;
+    @apply hover:text-gray-900 hover:border-gray-300;
+    @apply focus:outline-none focus:ring-1 focus:ring-gray-400;
+
     &.file-tab-active {
-      @apply text-blue-600 border-blue-500 bg-blue-50;
-      @apply shadow-sm;
+      @apply text-gray-900 border-gray-800 bg-gray-50 dark:hover:bg-gray-800;
     }
-    
+
     &.file-tab-inactive {
-      @apply text-gray-600 bg-transparent;
-      @apply hover:bg-gray-50;
+      @apply bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50;
     }
   }
 }
@@ -2793,9 +3110,7 @@ onMounted(() => {
 // Responsive Design
 @media (max-width: 1024px) {
   .dashboard-section {
-    .user-info-card {
-      @apply flex-col gap-4 items-stretch;
-    }
+    grid-template-columns: 1fr;
   }
 
   #modal {

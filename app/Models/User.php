@@ -3,18 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class User extends Model
+class User extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name',
         'emp_no',
-        'gender_flg',
-        'email',
+        'name',
         'password',
+        'email',
+        'gender_flg',
         'group_id',
         'position_id',
         'process_id',
@@ -24,22 +26,35 @@ class User extends Model
         'always_order_flg',
         'duty_flg',
         'fax_folder_name',
+        'cybozu_flg',
         'del_flg',
     ];
 
-    /**
-     * ユーザーの部署を取得
-     */
-    public function group()
+    protected $hidden = [
+        'password',
+    ];
+
+    protected $casts = [
+        'gender_flg' => 'integer',
+        'group_id' => 'integer',
+        'position_id' => 'integer',
+        'process_id' => 'integer',
+        'is_admin' => 'integer',
+        'dispatch_flg' => 'integer',
+        'part_flg' => 'integer',
+        'always_order_flg' => 'integer',
+        'duty_flg' => 'integer',
+        'cybozu_flg' => 'integer',
+        'del_flg' => 'integer',
+    ];
+
+    public function group(): BelongsTo
     {
-        return $this->belongsTo(Group::class);
+        return $this->belongsTo(Group::class, 'group_id');
     }
 
-    /**
-     * ユーザーの役職を取得
-     */
-    public function position()
+    public function position(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(Position::class, 'position_id');
     }
 }

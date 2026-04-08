@@ -129,16 +129,10 @@
   <!-- サブナビゲーション -->
   <nav class="flex justify-flex-start items-center bg-gray-200 p-4 overflow-x-auto">
     @if(Route::is('master*'))
-    <a href="{{ route('master.create.user') }}" class="flex mx-2 px-8 hover:text-gray-900">
+    <a href="{{ route('master') }}" class="flex mx-2 px-8 hover:text-gray-900">
       <span class="text-gray-500 mr-1 material-symbols-outlined">
-        edit_square
-      </span>従業員登録</a>
-    <a href="{{ route('master.users') }}" class="flex mx-2 px-8 hover:text-gray-900">
-      <span class="text-gray-500 mr-1 material-symbols-outlined">
-        list_alt
-      </span>
-      全従業員参照
-    </a>
+        groups
+      </span>従業員・部署</a>
 
     <a href="{{ route('master.calender') }}" class="flex mx-2 px-8 hover:text-gray-900">
       <span class="text-gray-500 mr-1 material-symbols-outlined">

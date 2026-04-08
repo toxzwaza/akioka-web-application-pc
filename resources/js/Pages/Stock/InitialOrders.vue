@@ -64,6 +64,7 @@ const is_login = ref(false);
 const pwd = ref("");
 const isSearchLoading = ref(false);
 const current_admin_user = ref(null);
+const isFilterCollapsed = ref(false);
 
 // 検索テキスト用のref
 const supplier_search_text = ref("");
@@ -73,10 +74,11 @@ const user_search_text = ref("");
 // モーダル状態管理（シンプル化）
 const modal = reactive({
   isOpen: false,
-  type: null, // 'image', 'purchase', 'delivery', 'approval'
+  type: null, // 'image', 'purchase', 'delivery', 'approval', 'detail', 'note'
   data: null, // モーダルに表示するデータ
   currentIndex: 0, // 複数アイテム表示時の現在のインデックス
 });
+const noteDraft = ref("");
 
 const purchase_list = ref([]);
 const print_order = ref([]);
@@ -112,6 +114,9 @@ const openModal = (type, data) => {
   modal.type = type;
   modal.data = data;
   modal.currentIndex = 0;
+  if (type === "note") {
+    noteDraft.value = data?.order?.description || "";
+  }
   modal.isOpen = true;
 };
 
@@ -121,6 +126,24 @@ const closeModal = () => {
   modal.type = null;
   modal.data = null;
   modal.currentIndex = 0;
+  noteDraft.value = "";
+};
+
+const truncateDescription = (text, max = 30) => {
+  if (!text) return "";
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+};
+
+const saveNoteFromModal = () => {
+  if (!modal.data?.order) return;
+  const updatedText = noteDraft.value?.trim();
+  if (!updatedText) {
+    alert("備考を入力してください。");
+    return;
+  }
+  modal.data.order.description = updatedText;
+  changeMessage(modal.data.order);
+  closeModal();
 };
 
 // 画像パスを取得
@@ -188,6 +211,71 @@ const getDeliveryFiles = (order) => {
   }
   
   return files;
+};
+
+const formatDate = (value) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("ja-JP");
+};
+
+const formatDateTime = (value) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
+const orderRequestStatusLabel = (status) => {
+  const value = Number(status);
+  if (value === 1) return "待ち";
+  if (value === 2) return "承認";
+  if (value === 3) return "却下";
+  if (value === 4) return "却下再依頼待ち";
+  if (value === 5) return "確認中";
+  if (value === 6) return "差戻対応";
+  return "依頼";
+};
+
+const buildApprovalModalData = (order) => {
+  const approvalDocument = order.document_id
+    ? {
+        document_id: order.document_id,
+        user_name: order.order_user,
+        evalution_date: order.document_evalution_date,
+        desire_delivery_date: order.desire_delivery_date,
+        supplier_name: order.com_name,
+        price: order.price,
+        quantity: order.quantity,
+        calc_price: order.calc_price,
+        name: order.name,
+        s_name: order.s_name,
+        title: order.document_title,
+        content: order.document_content,
+        main_reason: order.document_main_reason,
+        sub_reason: order.document_sub_reason,
+        approvals: order.order_request_approvals ?? [],
+        document_images: order.document_images ?? [],
+      }
+    : null;
+
+  return {
+    order,
+    document: approvalDocument,
+    file_path: order.file_path
+      ? `https://akioka.cloud/${order.file_path}`
+      : order.order_request_file_path
+      ? `https://akioka.cloud/${order.order_request_file_path}`
+      : null,
+  };
 };
 
 // 前の納品書に移動
@@ -587,6 +675,9 @@ const handleAdminLoginSuccess = (loginData) => {
   console.log("管理者ログイン成功:", loginData);
   is_login.value = true;
   current_admin_user.value = loginData.user;
+  localStorage.setItem("user_name", loginData.user.name);
+  localStorage.setItem("user_role", "共通担当者");
+  window.dispatchEvent(new CustomEvent("shared-login-changed"));
   // 選択されたユーザー情報をログに出力
   console.log("選択された管理者:", loginData.user.name);
 };
@@ -596,6 +687,9 @@ const handleAdminLogout = () => {
   is_login.value = false;
   pwd.value = "";
   current_admin_user.value = null;
+  localStorage.removeItem("user_name");
+  localStorage.removeItem("user_role");
+  window.dispatchEvent(new CustomEvent("shared-login-changed"));
 };
 
 // 従来のメソッド（後方互換性のため保持）
@@ -606,6 +700,7 @@ const login = () => {
 };
 
 const getInitialOrders = (reset) => {
+  if (isSearchLoading.value) return;
   // ローディング開始
   isSearchLoading.value = true;
 
@@ -848,25 +943,26 @@ const deleteInitialOrder = (order) => {
             :top="'発注一覧'"
             :sub="'発注情報の確認・管理ができます。'"
           />
-
-          <!-- Admin Login Component -->
-          <UserLogin
-            :users="admin_users"
-            title="管理者ログイン"
-            role="管理者"
-            helpText="管理者権限で品名・品番・数量の編集が可能です"
-            storageKey="user_id"
-            @login="handleAdminLoginSuccess"
-            @logout="handleAdminLogout"
-          />
         </div>
       </div>
 
+      <div v-if="!is_login" class="login-section mb-8">
+        <UserLogin
+          :users="admin_users"
+          title="共通ログイン"
+          role="共通担当者"
+          helpText="編集権限が必要な場合はログインしてください"
+          storageKey="user_id"
+          @login="handleAdminLoginSuccess"
+          @logout="handleAdminLogout"
+        />
+      </div>
+
       <!-- Search and Filter Section -->
-      <div class="search-section mb-8">
+      <div class="search-section mb-8" :class="{ 'is-collapsed': isFilterCollapsed }">
         <div class="search-card">
           <div class="search-header">
-            <h2 class="search-title">
+            <h2 class="search-title" v-show="!isFilterCollapsed">
               <svg
                 class="w-5 h-5 mr-2"
                 fill="none"
@@ -882,9 +978,25 @@ const deleteInitialOrder = (order) => {
               </svg>
               検索・フィルター
             </h2>
+            <button
+              type="button"
+              class="collapse-icon-btn"
+              @click="isFilterCollapsed = !isFilterCollapsed"
+              :title="isFilterCollapsed ? 'フィルターを展開' : 'フィルターを折りたたむ'"
+            >
+              <svg
+                class="h-4 w-4 transition-transform"
+                :class="{ 'rotate-180': isFilterCollapsed }"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
           </div>
 
-          <div class="search-content">
+          <div class="search-content" v-show="!isFilterCollapsed">
             <!-- Sort Controls -->
             <div class="sort-section">
               <label class="sort-label">並び順</label>
@@ -1435,12 +1547,12 @@ const deleteInitialOrder = (order) => {
                   納入場所
                 </th>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  class="sticky-col sticky-col--supplier px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                 >
                   注文先
                 </th>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  class="sticky-col sticky-col--name px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   style="
                     border-radius: 10px 0 0 10px;
                     background-color: #ffabab;
@@ -1449,7 +1561,7 @@ const deleteInitialOrder = (order) => {
                   品名
                 </th>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                  class="sticky-col sticky-col--sname px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                   style="background-color: rgb(255 188 188)"
                 >
                   品番
@@ -1502,7 +1614,7 @@ const deleteInitialOrder = (order) => {
                   金額
                 </th>
                 <th
-                  class="w-1/5 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  class="w-40 px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                 >
                   備考
                 </th>
@@ -1521,6 +1633,11 @@ const deleteInitialOrder = (order) => {
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                 >
                   稟議書
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  詳細
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1545,7 +1662,7 @@ const deleteInitialOrder = (order) => {
                 v-for="order in initial_orders.data"
                 :key="order.id"
                 :class="{
-                  'transition duration-300 hover:scale-[1.01] hover:z-10 hover:shadow-lg hover:bg-yellow-100 hover:font-bold hover:border-2 hover:border-yellow-300': true,
+                  'transition-colors duration-200 hover:bg-yellow-100': true,
                   'bg-green-100': order.order_complete_flg === 1,
                   'bg-blue-100': order.order_complete_flg === 2,
                   'bg-white': !order.order_complete_flg || order.order_complete_flg === 0,
@@ -1617,10 +1734,10 @@ const deleteInitialOrder = (order) => {
 
                   <span v-else>{{ order.deli_location }}</span>
                 </td>
-                <td class="px-4 py-3 text-lg text-gray-900">
+                <td class="sticky-col-cell sticky-col-cell--supplier px-4 py-3 text-lg text-gray-900">
                   {{ order.com_name }}
                 </td>
-                <td class="px-4 py-3 text-lg text-gray-900">
+                <td class="sticky-col-cell sticky-col-cell--name px-4 py-3 text-lg text-gray-900">
                   <input
                     v-if="is_login"
                     @change="
@@ -1635,7 +1752,7 @@ const deleteInitialOrder = (order) => {
 
                   <span v-else>{{ order.name }}</span>
                 </td>
-                <td class="px-4 py-3 text-lg text-gray-900">
+                <td class="sticky-col-cell sticky-col-cell--sname px-4 py-3 text-lg text-gray-900">
                   <input
                     v-if="is_login"
                     @change="
@@ -1777,7 +1894,7 @@ const deleteInitialOrder = (order) => {
                   {{ order.calc_price.toLocaleString() }}
                   <span class="text-xs text-gray-600">円</span>
                 </td>
-                <td class="min-w-md ml-2 px-4 py-3 text-lg text-gray-900">
+                <td class="w-44 max-w-[176px] ml-2 px-3 py-3 text-base text-gray-900">
                   <input
                     v-if="is_login"
                     type="text"
@@ -1785,7 +1902,45 @@ const deleteInitialOrder = (order) => {
                     v-model="order.description"
                     @change="changeMessage(order)"
                   />
-                  <span v-else>{{ order.description }}</span>
+                  <template v-else>
+                    <div
+                      v-if="order.description"
+                      class="group relative inline-flex cursor-pointer items-center text-amber-600"
+                    >
+                      <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 8h10M7 12h7m-7 4h4m6 4l-4-4H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-1v4z"
+                        />
+                      </svg>
+                      <div
+                        class="pointer-events-none absolute left-1/2 top-full z-40 mt-2 hidden w-72 -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs leading-relaxed text-white shadow-xl group-hover:block"
+                      >
+                        {{ order.description }}
+                      </div>
+                      <span class="ml-2 max-w-[240px] truncate text-sm text-gray-700">
+                        {{ truncateDescription(order.description, 30) }}
+                      </span>
+                    </div>
+                    <button
+                      v-else
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100"
+                      @click="openModal('note', { order })"
+                    >
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-1 0v14m-7-7h14" />
+                      </svg>
+                      備考登録
+                    </button>
+                  </template>
                 </td>
 
                 <td
@@ -1829,9 +1984,19 @@ const deleteInitialOrder = (order) => {
                   <button
                     v-if="order.file_path || order.document_id"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                    @click="openModal('approval', { order: order, document: order.document_id ? { document_id: order.document_id, user_name: order.order_user, evalution_date: order.document_evalution_date, desire_delivery_date: order.desire_delivery_date, supplier_name: order.com_name, price: order.price, quantity: order.quantity, calc_price: order.calc_price, name: order.name, s_name: order.s_name, title: order.document_title, content: order.document_content, main_reason: order.document_main_reason, sub_reason: order.document_sub_reason, approvals: order.order_request_approvals } : null, file_path: order.file_path ? `https://akioka.cloud/${order.file_path}` : null })"
+                    @click="openModal('approval', buildApprovalModalData(order))"
                   >
                     稟議書
+                  </button>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    @click="openModal('detail', { order: order, approval: buildApprovalModalData(order) })"
+                  >
+                    詳細確認
                   </button>
                 </td>
                 <td
@@ -1982,7 +2147,11 @@ const deleteInitialOrder = (order) => {
           class="modal-overlay"
           @click.self="closeModal"
         >
-          <div class="modal-container" @click.stop>
+          <div
+            class="modal-container"
+            :class="{ 'modal-container--wide': modal.type === 'detail' }"
+            @click.stop
+          >
             <!-- モーダルヘッダー -->
             <div class="modal-header">
               <h3 class="modal-title">
@@ -1990,6 +2159,8 @@ const deleteInitialOrder = (order) => {
                 <span v-else-if="modal.type === 'purchase'">発注書</span>
                 <span v-else-if="modal.type === 'delivery'">納品書</span>
                 <span v-else-if="modal.type === 'approval'">稟議書</span>
+                <span v-else-if="modal.type === 'detail'">発注詳細</span>
+                <span v-else-if="modal.type === 'note'">備考登録</span>
               </h3>
               <button
                 @click="closeModal"
@@ -2162,6 +2333,235 @@ const deleteInitialOrder = (order) => {
                   <ApprovalDocument :approval_document="modal.data.document" />
                 </div>
               </div>
+
+              <!-- 詳細表示 -->
+              <div
+                v-else-if="modal.type === 'detail' && modal.data?.order"
+                class="space-y-6 text-sm text-gray-800"
+              >
+                <div class="grid gap-4 md:grid-cols-2">
+                  <section class="rounded-lg border border-gray-200 bg-white p-4">
+                    <h4 class="mb-3 border-b border-gray-200 pb-2 font-semibold">
+                      発注情報
+                    </h4>
+                    <dl class="grid grid-cols-[9rem_1fr] gap-y-2 gap-x-3">
+                      <dt class="text-gray-500">注文No</dt>
+                      <dd>{{ modal.data.order.order_no ?? "-" }}</dd>
+                      <dt class="text-gray-500">注文日</dt>
+                      <dd>{{ formatDate(modal.data.order.order_date) }}</dd>
+                      <dt class="text-gray-500">納入希望日</dt>
+                      <dd>{{ formatDate(modal.data.order.desire_delivery_date) }}</dd>
+                      <dt class="text-gray-500">納入予定日</dt>
+                      <dd>{{ formatDate(modal.data.order.expected_delivery_date) }}</dd>
+                      <dt class="text-gray-500">納入日</dt>
+                      <dd>{{ formatDate(modal.data.order.delivery_date) }}</dd>
+                      <dt class="text-gray-500">注文先</dt>
+                      <dd>{{ modal.data.order.com_name ?? "-" }}</dd>
+                      <dt class="text-gray-500">TEL / FAX</dt>
+                      <dd>
+                        {{ modal.data.order.tel ?? "-" }} / {{ modal.data.order.fax ?? "-" }}
+                      </dd>
+                      <dt class="text-gray-500">担当者</dt>
+                      <dd>{{ modal.data.order.manage_user_name ?? "-" }}</dd>
+                      <dt class="text-gray-500">依頼者</dt>
+                      <dd>{{ modal.data.order.order_user ?? "-" }}</dd>
+                    </dl>
+                  </section>
+
+                  <section class="rounded-lg border border-gray-200 bg-white p-4">
+                    <h4 class="mb-3 border-b border-gray-200 pb-2 font-semibold">
+                      品目・金額
+                    </h4>
+                    <div class="mb-3 flex items-start gap-3">
+                      <img
+                        :src="getImagePath(modal.data.order.img_path)"
+                        alt=""
+                        class="h-20 w-20 rounded border border-gray-200 object-contain bg-gray-50"
+                      />
+                      <div>
+                        <p class="font-semibold">{{ modal.data.order.name ?? "-" }}</p>
+                        <p class="text-gray-600">品番: {{ modal.data.order.s_name ?? "-" }}</p>
+                        <p class="text-gray-600">工程:
+                          {{
+                            modal.data.order.stock_processes_order_request_code
+                              ? `${modal.data.order.stock_processes_order_request_code}:${modal.data.order.stock_processes_order_request_name}`
+                              : modal.data.order.stock_processes_base_code
+                              ? `${modal.data.order.stock_processes_base_code}:${modal.data.order.stock_processes_base_name}`
+                              : "-"
+                          }}
+                        </p>
+                      </div>
+                    </div>
+                    <dl class="grid grid-cols-[9rem_1fr] gap-y-2 gap-x-3">
+                      <dt class="text-gray-500">単価</dt>
+                      <dd>{{ Number(modal.data.order.price ?? 0).toLocaleString() }}</dd>
+                      <dt class="text-gray-500">数量</dt>
+                      <dd>{{ modal.data.order.quantity ?? "-" }}</dd>
+                      <dt class="text-gray-500">単位</dt>
+                      <dd>{{ modal.data.order.order_unit ?? "-" }}</dd>
+                      <dt class="text-gray-500">送料</dt>
+                      <dd>{{ modal.data.order.postage ? Number(modal.data.order.postage).toLocaleString() : "-" }}</dd>
+                      <dt class="text-gray-500">金額</dt>
+                      <dd>{{ Number(modal.data.order.calc_price ?? 0).toLocaleString() }} 円</dd>
+                      <dt class="text-gray-500">備考</dt>
+                      <dd class="whitespace-pre-wrap">{{ modal.data.order.description || "-" }}</dd>
+                    </dl>
+                  </section>
+                </div>
+
+                <section class="rounded-lg border border-gray-200 bg-white p-4">
+                  <h4 class="mb-3 border-b border-gray-200 pb-2 font-semibold">
+                    発注依頼情報
+                  </h4>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <dl class="grid grid-cols-[9rem_1fr] gap-y-2 gap-x-3">
+                      <dt class="text-gray-500">発注依頼ID</dt>
+                      <dd>{{ modal.data.order.order_request_id ?? "-" }}</dd>
+                      <dt class="text-gray-500">依頼ステータス</dt>
+                      <dd>{{ orderRequestStatusLabel(modal.data.order.order_request_accept_flg) }}</dd>
+                      <dt class="text-gray-500">新規品フラグ</dt>
+                      <dd>{{ Number(modal.data.order.order_request_new_stock_flg) ? "新規品" : "既存品" }}</dd>
+                      <dt class="text-gray-500">依頼LT</dt>
+                      <dd>{{ modal.data.order.order_request_lead_time ? `${modal.data.order.order_request_lead_time}日` : "-" }}</dd>
+                      <dt class="text-gray-500">依頼希望納期</dt>
+                      <dd>{{ formatDate(modal.data.order.order_request_desire_delivery_date) }}</dd>
+                    </dl>
+                    <dl class="grid grid-cols-[9rem_1fr] gap-y-2 gap-x-3">
+                      <dt class="text-gray-500">依頼コメント</dt>
+                      <dd class="whitespace-pre-wrap">{{ modal.data.order.order_request_description || "-" }}</dd>
+                      <dt class="text-gray-500">発注者コメント</dt>
+                      <dd class="whitespace-pre-wrap">{{ modal.data.order.order_request_sub_description || "-" }}</dd>
+                    </dl>
+                  </div>
+                </section>
+
+                <section class="rounded-lg border border-gray-200 bg-white p-4">
+                  <h4 class="mb-3 border-b border-gray-200 pb-2 font-semibold">
+                    帳票・稟議書
+                  </h4>
+                  <div class="grid gap-4 lg:grid-cols-2">
+                    <div class="rounded border border-gray-200 p-3">
+                      <h5 class="mb-2 font-medium">発注書</h5>
+                      <div v-if="!modal.data.order.url" class="space-y-3">
+                        <Purchase
+                          :current_month_holidays="props.current_month_holidays"
+                          :next_month_holidays="props.next_month_holidays"
+                          :orders="[modal.data.order]"
+                          :admin_user="current_admin_user"
+                          @update-delivery-date="handleDeliveryDateUpdate"
+                        />
+                      </div>
+                      <div v-else>
+                        <a
+                          :href="modal.data.order.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-blue-600 underline hover:text-blue-800"
+                        >
+                          ネット注文URLを開く
+                        </a>
+                      </div>
+                    </div>
+
+                    <div class="rounded border border-gray-200 p-3">
+                      <h5 class="mb-2 font-medium">納品書</h5>
+                      <div
+                        v-if="getDeliveryFiles(modal.data.order).length"
+                        class="space-y-2"
+                      >
+                        <div
+                          v-for="(file, idx) in getDeliveryFiles(modal.data.order)"
+                          :key="file.id ?? idx"
+                          class="rounded border border-gray-200 bg-gray-50 p-2"
+                        >
+                          <p class="mb-1 text-xs text-gray-500">
+                            {{ idx + 1 }}件目
+                            <span v-if="file.delivery_date">
+                              / 納品日: {{ formatDate(file.delivery_date) }}
+                            </span>
+                          </p>
+                          <a
+                            :href="file.path"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-blue-600 underline hover:text-blue-800"
+                          >
+                            納品書を開く
+                          </a>
+                        </div>
+                      </div>
+                      <p v-else class="text-gray-500">納品書データはありません。</p>
+                    </div>
+                  </div>
+
+                  <div class="mt-4">
+                    <h5 class="mb-2 font-medium">稟議書</h5>
+                    <iframe
+                      v-if="modal.data.approval?.file_path"
+                      :src="modal.data.approval.file_path"
+                      class="h-[55vh] w-full rounded border border-gray-200"
+                    />
+                    <ApprovalDocument
+                      v-else-if="modal.data.approval?.document"
+                      :approval_document="modal.data.approval.document"
+                    />
+                    <p v-else class="text-gray-500">稟議書データはありません。</p>
+                  </div>
+                  <div class="mt-4">
+                    <h5 class="mb-2 font-medium">承認履歴</h5>
+                    <div v-if="modal.data.order.order_request_approvals?.length" class="space-y-2">
+                      <div
+                        v-for="approval in modal.data.order.order_request_approvals"
+                        :key="approval.id"
+                        class="rounded border border-gray-200 p-3"
+                      >
+                        <p class="font-medium">
+                          {{ approval.user_name }} - {{ approval.status === 1 ? "承認" : approval.status === 2 ? "却下" : "未処理" }}
+                        </p>
+                        <p class="text-xs text-gray-500">{{ formatDateTime(approval.updated_at || approval.created_at) }}</p>
+                        <p class="mt-1 whitespace-pre-wrap text-sm">{{ approval.comment || "コメントなし" }}</p>
+                      </div>
+                    </div>
+                    <p v-else class="text-gray-500">承認履歴はありません。</p>
+                  </div>
+                </section>
+              </div>
+
+              <div
+                v-else-if="modal.type === 'note' && modal.data?.order"
+                class="space-y-4 text-sm text-gray-800"
+              >
+                <div class="rounded-lg border border-gray-200 bg-white p-4">
+                  <p class="mb-2 font-semibold text-gray-700">
+                    注文No: {{ modal.data.order.order_no ?? "-" }}
+                  </p>
+                  <p class="mb-3 text-xs text-gray-500">
+                    品名: {{ modal.data.order.name ?? "-" }}
+                  </p>
+                  <textarea
+                    v-model="noteDraft"
+                    rows="5"
+                    class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    placeholder="備考を入力してください"
+                  ></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    class="rounded bg-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+                    @click="closeModal"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                    @click="saveNoteFromModal"
+                  >
+                    保存
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2186,14 +2586,34 @@ const deleteInitialOrder = (order) => {
 
 // Search Section
 .search-section {
+  @apply sticky top-6 self-start;
+  width: 340px;
+  float: left;
+  margin-right: 1.5rem;
+  transition: width 0.2s ease;
+
+  &.is-collapsed {
+    width: 72px;
+  }
+
   .search-card {
-    @apply bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+    @apply rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+    background-color: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #dbe7ff;
+    box-shadow:
+      0 10px 30px rgba(15, 23, 42, 0.08),
+      0 2px 6px rgba(37, 99, 235, 0.08);
 
     .search-header {
-      @apply p-6 bg-gray-50 border-b border-gray-100;
+      @apply p-6 bg-gray-50 border-b border-gray-100 flex items-center justify-between;
 
       .search-title {
         @apply text-xl font-semibold text-gray-800 flex items-center;
+      }
+
+      .collapse-icon-btn {
+        @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-blue-50 hover:text-blue-700;
       }
     }
 
@@ -2221,19 +2641,25 @@ const deleteInitialOrder = (order) => {
       }
 
       .filter-grid {
-        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6;
+        @apply grid grid-cols-1 gap-3 mb-5;
 
         .filter-item {
+          @apply rounded-xl border border-slate-200 p-3;
+          background-color: #ffffff;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+
           .filter-label {
-            @apply block text-sm font-medium text-gray-700 mb-2;
+            @apply block text-xs font-semibold tracking-wide text-slate-600 mb-1.5;
           }
 
           .filter-input {
-            @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+            @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-800;
+            @apply focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white;
           }
 
           .filter-select {
-            @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white;
+            @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-800;
+            @apply focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white;
           }
 
           .input-with-icon {
@@ -2250,7 +2676,7 @@ const deleteInitialOrder = (order) => {
 
           &.date-range {
             .date-range-inputs {
-              @apply flex items-center gap-2;
+              @apply grid grid-cols-[1fr_auto_1fr] items-center gap-2;
 
               .date-input {
                 @apply flex-1;
@@ -2283,8 +2709,17 @@ const deleteInitialOrder = (order) => {
   }
 }
 
+.search-section.is-collapsed + .stats-section,
+.search-section.is-collapsed ~ .table-controls,
+.search-section.is-collapsed ~ .modern-table-container {
+  margin-left: 96px;
+  transition: margin-left 0.2s ease;
+}
+
 // Statistics Section
 .stats-section {
+  margin-left: 364px;
+  transition: margin-left 0.2s ease;
   .stats-header {
     .stats-title {
       @apply text-2xl font-bold text-gray-800 flex items-center;
@@ -2295,7 +2730,8 @@ const deleteInitialOrder = (order) => {
     @apply grid grid-cols-1 md:grid-cols-3 gap-6;
 
     .stat-card {
-      @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300;
+      @apply rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300;
+      background-color: #ffffff;
 
       .stat-header {
         @apply flex items-start gap-4 mb-4;
@@ -2360,11 +2796,9 @@ const deleteInitialOrder = (order) => {
 
 // Table Section
 .table-controls {
+  margin-left: 364px;
+  transition: margin-left 0.2s ease;
   @apply flex items-center justify-between;
-
-  .controls-left {
-    // Pagination styles will be inherited from Pagination component
-  }
 
   .controls-right {
     .batch-order-btn {
@@ -2374,13 +2808,33 @@ const deleteInitialOrder = (order) => {
 }
 
 .modern-table-container {
-  @apply bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+  margin-left: 364px;
+  transition: margin-left 0.2s ease;
+  @apply rounded-xl shadow-lg border border-gray-100 overflow-hidden;
+  background-color: #ffffff;
 
   .table-wrapper {
     @apply overflow-x-auto;
 
     .modern-table {
       @apply w-full min-w-max;
+
+      .sticky-col {
+        position: sticky;
+        z-index: 30;
+      }
+
+      .sticky-col--supplier {
+        left: 0;
+      }
+
+      .sticky-col--name {
+        left: 260px;
+      }
+
+      .sticky-col--sname {
+        left: 520px;
+      }
 
       thead {
         @apply bg-gray-50;
@@ -2399,7 +2853,33 @@ const deleteInitialOrder = (order) => {
       }
 
       tbody {
-        @apply bg-white divide-y divide-gray-200;
+        @apply divide-y divide-gray-200;
+        background-color: #ffffff;
+
+        .sticky-col-cell {
+          position: sticky;
+          z-index: 20;
+          background-color: #fff;
+        }
+
+        .sticky-col-cell--supplier {
+          left: 0;
+          min-width: 260px;
+        }
+
+        .sticky-col-cell--name {
+          left: 260px;
+          min-width: 260px;
+          box-shadow: inset 1px 0 0 rgba(148, 163, 184, 0.35);
+        }
+
+        .sticky-col-cell--sname {
+          left: 520px;
+          min-width: 260px;
+          box-shadow:
+            inset 1px 0 0 rgba(148, 163, 184, 0.35),
+            4px 0 8px -4px rgba(15, 23, 42, 0.25);
+        }
 
         tr {
           &.bg-green-50 {
@@ -2407,8 +2887,26 @@ const deleteInitialOrder = (order) => {
 
           }
 
+          &.bg-green-100 {
+            .sticky-col-cell {
+              background-color: #dcfce7;
+            }
+          }
+
+          &.bg-blue-100 {
+            .sticky-col-cell {
+              background-color: #dbeafe;
+            }
+          }
+
+          &.bg-white {
+            .sticky-col-cell {
+              background-color: #ffffff;
+            }
+          }
+
           td {
-            @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+            @apply px-4 py-3 whitespace-nowrap text-[13px] text-gray-900;
 
             input,
             select,
@@ -2436,6 +2934,18 @@ const deleteInitialOrder = (order) => {
 
 // Responsive Design
 @media (max-width: 1024px) {
+  .search-section {
+    float: none;
+    width: auto;
+    margin-right: 0;
+  }
+
+  .stats-section,
+  .table-controls,
+  .modern-table-container {
+    margin-left: 0;
+  }
+
   .header-content {
     @apply flex-col gap-6;
   }
@@ -2492,6 +3002,13 @@ const deleteInitialOrder = (order) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.modal-container--wide {
+  width: 96vw;
+  max-width: 1600px;
+  height: 92vh;
+  max-height: 96vh;
 }
 
 // モーダルヘッダー

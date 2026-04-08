@@ -38,6 +38,7 @@ Route::get('/stocks/create', [StockController::class, 'create_stocks'])->name('s
 
 Route::get('/stocks/taking', [StockController::class, 'stock_taking'])->name('stock.stocks.taking');
 Route::get('/stocks/inventory/records', [StockController::class, 'getInventoryOperationRecords'])->name('stock.stocks.getInventoryOperationRecords');
+Route::get('/dashboard/summary', [StockController::class, 'dashboardSummary'])->name('stock.dashboard.summary');
 // 対象の日付の入出庫データを取得
 Route::get('/stocks/inventory/records/date', [StockController::class, 'getInventoryOperationRecordsByDate'])->name('stock.stocks.getInventoryOperationRecordsByDate');
 

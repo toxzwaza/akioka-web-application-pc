@@ -2,8 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
+use App\Models\Log;
+use App\Models\LunchOrder;
+use App\Models\NotifyQueue;
+use App\Models\OrderRequest;
+use App\Models\Stock;
+use App\Models\StockStorage;
 use App\Models\User;
 use App\Services\Method;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,9 +20,55 @@ class MainController extends Controller
     //
     public function index()
     {
-        return Inertia::render('Home');
+        $today = Carbon::today()->format('Y-m-d');
 
-        // return view('home');
+        $stocksCount = Stock::where('del_flg', 0)->count();
+
+        $orderRequestsPending = OrderRequest::where('del_flg', 0)
+            ->where('accept_flg', 1)
+            ->count();
+
+        $lowStockLocations = StockStorage::query()
+            ->where('reorder_point', '>', 0)
+            ->whereColumn('quantity', '<=', 'reorder_point')
+            ->count();
+
+        $lunchTodayCount = LunchOrder::query()
+            ->whereDate('date', $today)
+            ->where('order_flg', 1)
+            ->count();
+
+        $announcements = Announcement::query()
+            ->activeForDate($today)
+            ->orderByDesc('display_order')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get(['id', 'title', 'content', 'type', 'start_date', 'end_date']);
+
+        $recentNotifications = NotifyQueue::query()
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get(['id', 'title', 'msg', 'url', 'created_at']);
+
+        $recentLogs = Log::query()
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id', 'device_name', 'service_name', 'level', 'message', 'created_at']);
+
+        return Inertia::render('Home', [
+            'dashboard' => [
+                'stats' => [
+                    'stocks_count' => $stocksCount,
+                    'order_requests_pending' => $orderRequestsPending,
+                    'low_stock_locations' => $lowStockLocations,
+                    'lunch_today_count' => $lunchTodayCount,
+                ],
+                'announcements' => $announcements,
+                'recent_notifications' => $recentNotifications,
+                'recent_logs' => $recentLogs,
+                'today_label' => now()->format('Y年n月j日'),
+            ],
+        ]);
     }
     public function login()
     {

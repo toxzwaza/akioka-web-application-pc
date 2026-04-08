@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DeliveryInitialOrder extends Pivot
+class DeliveryInitialOrder extends Model
 {
-    use HasFactory;
-    
     protected $table = 'delivery_initial_order';
 
-    protected $fillable = [
-        'delivery_id',
-        'initial_order_id',
-    ];
+    protected $guarded = [];
+
+    public function delivery(): BelongsTo
+    {
+        return $this->belongsTo(Delivery::class, 'delivery_id');
+    }
+
+    public function initialOrder(): BelongsTo
+    {
+        return $this->belongsTo(InitialOrder::class, 'initial_order_id');
+    }
 }

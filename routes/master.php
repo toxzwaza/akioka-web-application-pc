@@ -8,16 +8,16 @@ use Illuminate\Support\Facades\Route;
 
 // 基幹マスタ管理
 Route::get('/', [MasterController::class, 'index'])->name('master');
-Route::get('/users', [MasterController::class, 'users'])->name('master.users');
+Route::get('/users', fn () => redirect()->route('master', ['tab' => 'list']))->name('master.users');
 Route::get('/akioka-users', [MasterController::class, 'akioka_users'])->name('master.akioka-users');
 Route::get('/calender', [MasterController::class, 'calender'])->name('master.calender');
 Route::get('/get/holidays', [MasterController::class, 'get_holidays'])->name('master.get.holidays');
 Route::post('/store/holiday', [MasterController::class, 'store_holiday'])->name('master.store.holiday');
 
-Route::get('/create/users', [MasterController::class, 'create_user'])->name('master.create.user');
+Route::get('/create/users', fn () => redirect()->route('master', ['tab' => 'user']))->name('master.create.user');
 Route::post('/store/users', [MasterController::class, 'store_user'])->name('master.store.users');
 
-Route::get('/create/groups', [MasterController::class, 'create_group'])->name('master.create.group');
+Route::get('/create/groups', fn () => redirect()->route('master', ['tab' => 'group']))->name('master.create.group');
 Route::post('/store/groups', [MasterController::class, 'store_group'])->name('master.store.groups');
 
 Route::get('/show/users/{user_id}', [MasterController::class, 'show_user'])->name('master.show.user');

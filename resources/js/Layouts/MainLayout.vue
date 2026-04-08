@@ -1,14 +1,48 @@
 <script setup>
 import { Head, Link } from "@inertiajs/vue3";
 import Message from "@/Components/Message.vue";
-import { ref } from "vue";
+import { reactive, ref, onMounted, onBeforeUnmount } from "vue";
 
 const props = defineProps({
   title: String,
   p_none: Boolean,
 });
 
+/** FAX・サイネージ・動画・お問い合わせなど現状未使用モジュールの導線。true にすると再表示。 */
+const showUnusedModuleNav = false;
+
 const sub_nav_close = ref(false);
+
+const sharedLogin = reactive({
+  user_id: null,
+  user_name: null,
+  user_role: null,
+});
+
+const syncSharedLogin = () => {
+  sharedLogin.user_id = localStorage.getItem("user_id");
+  sharedLogin.user_name = localStorage.getItem("user_name");
+  sharedLogin.user_role = localStorage.getItem("user_role");
+};
+
+const clearSharedLogin = () => {
+  localStorage.removeItem("user_id");
+  localStorage.removeItem("user_name");
+  localStorage.removeItem("user_role");
+  window.dispatchEvent(new CustomEvent("shared-login-changed"));
+  syncSharedLogin();
+};
+
+onMounted(() => {
+  syncSharedLogin();
+  window.addEventListener("storage", syncSharedLogin);
+  window.addEventListener("shared-login-changed", syncSharedLogin);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("storage", syncSharedLogin);
+  window.removeEventListener("shared-login-changed", syncSharedLogin);
+});
 </script>
 <template>
   <Head :title="props.title" />
@@ -44,6 +78,15 @@ const sub_nav_close = ref(false);
           ><span class="mr-1 material-symbols-outlined"> list_alt </span
           >在庫管理</a
         >
+        <a
+          :href="route('delivery-signage.index')"
+          :class="{
+            'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
+            'bg-blue-600 font-bold': route().current().includes('delivery-signage'),
+          }"
+          ><span class="mr-1 material-symbols-outlined"> tv </span
+          >納品サイネージ管理</a
+        >
         <!-- <a href="route('order')" class="mr-5 hover:text-gray-900 flex justify-center {{ Route::is('order*') ? 'font-bold text-gray-900' : ''}}"><span class="mr-1 material-symbols-outlined">
             toc
           </span>発注管理</a> -->
@@ -58,6 +101,7 @@ const sub_nav_close = ref(false);
         >
 
         <a
+          v-if="showUnusedModuleNav"
           :href="route('movie2')"
           :class="{
             'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
@@ -70,6 +114,7 @@ const sub_nav_close = ref(false);
 
         <!-- FAX設定 -->
         <a
+          v-if="showUnusedModuleNav"
           :href="route('fax')"
           :class="{
             'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
@@ -82,6 +127,7 @@ const sub_nav_close = ref(false);
 
         <!-- サイネージシステム -->
         <a
+          v-if="showUnusedModuleNav"
           :href="route('signage.home')"
           :class="{
             'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
@@ -94,6 +140,7 @@ const sub_nav_close = ref(false);
 
         <!-- 問い合わせ管理システム -->
         <a
+          v-if="showUnusedModuleNav"
           :href="route('contact.home')"
           :class="{
             'flex justify-center mt-4 lg:mt-0 text-gray-100 hover:text-white mr-4 py-2 px-3 rounded': true,
@@ -137,6 +184,22 @@ const sub_nav_close = ref(false);
           リモート接続
         </a> -->
       </nav>
+      <div class="flex items-center gap-3 text-sm text-gray-100">
+        <template v-if="sharedLogin.user_id">
+          <div class="rounded-lg bg-gray-800/70 px-3 py-2">
+            <p class="font-semibold">{{ sharedLogin.user_name || "ログイン中" }}</p>
+            <p class="text-xs text-gray-300">{{ sharedLogin.user_role || "担当者" }}</p>
+          </div>
+          <button
+            type="button"
+            class="rounded bg-red-600 px-3 py-2 font-semibold hover:bg-red-700"
+            @click="clearSharedLogin"
+          >
+            ログアウト
+          </button>
+        </template>
+        <p v-else class="rounded-lg bg-gray-800/70 px-3 py-2 text-xs">未ログイン</p>
+      </div>
     </div>
   </header>
 
@@ -162,45 +225,17 @@ const sub_nav_close = ref(false);
       <div v-if="!sub_nav_close" class="sub_nav_container">
         <template v-if="route().current().startsWith('master')">
           <Link
-            :href="route('master.create.user')"
+            :href="route('master')"
             :class="{
               '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
-              'bg-white text-gray-900':
-                route().current() != 'master.create.user',
-              'bg-blue-500 text-white':
-                route().current() == 'master.create.user',
+              'bg-white text-gray-900': route().current() != 'master',
+              'bg-blue-500 text-white': route().current() == 'master',
             }"
           >
             <span class="text-gray-100 mr-1 material-symbols-outlined">
-              edit_square </span
-            >従業員登録</Link
-          >
-          <Link
-            :href="route('master.create.group')"
-            :class="{
-              '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
-              'bg-white text-gray-900':
-                route().current() != 'master.create.group',
-              'bg-blue-500 text-white':
-                route().current() == 'master.create.group',
-            }"
-          >
-            <span class="text-gray-100 mr-1 material-symbols-outlined">
-              edit_square </span
-            >部署登録</Link
-          >
-          <Link
-            :href="route('master.users')"
-            :class="{
-              '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
-              'bg-white text-gray-900': route().current() != 'master.users',
-              'bg-blue-500 text-white': route().current() == 'master.users',
-            }"
-          >
-            <span class="text-gray-100 mr-1 material-symbols-outlined">
-              list_alt
+              groups
             </span>
-            全従業員参照</Link
+            従業員・部署</Link
           >
           <Link
             :href="route('master.calender')"
@@ -438,7 +473,11 @@ const sub_nav_close = ref(false);
           >
         </template>
 
-        <template v-else-if="route().current().startsWith('movie')">
+        <template
+          v-else-if="
+            showUnusedModuleNav && route().current().startsWith('movie')
+          "
+        >
           <Link
             :class="{
               '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
@@ -498,7 +537,11 @@ const sub_nav_close = ref(false);
             動画タグ追加</Link
           >
         </template>
-        <template v-else-if="route().current().startsWith('fax')">
+        <template
+          v-else-if="
+            showUnusedModuleNav && route().current().startsWith('fax')
+          "
+        >
           <Link
             :class="{
               '  hover:bg-gray-100 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700 me-2': true,
@@ -604,9 +647,6 @@ const sub_nav_close = ref(false);
   </main>
 </template>
 <style lang="scss" scoped>
-#header-layout {
-}
-
 .gFont {
   font-family: "Noto Sans JP";
   font-optical-sizing: auto;

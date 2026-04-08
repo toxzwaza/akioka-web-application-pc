@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockRequest extends Model
 {
-    use HasFactory;
+    protected $guarded = [];
+
+    public function stock(): BelongsTo
+    {
+        return $this->belongsTo(Stock::class, 'stock_id');
+    }
 }

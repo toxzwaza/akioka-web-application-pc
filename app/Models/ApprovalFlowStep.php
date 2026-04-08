@@ -2,30 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApprovalFlowStep extends Model
 {
-    use HasFactory;
+    protected $guarded = [];
 
-    protected $fillable = [
-        'approval_flow_id',
-        'step_order',
-        'approver_user_id',
-        'is_required'
-    ];
-
-    protected $casts = [
-        'is_required' => 'boolean'
-    ];
-
-    public function approvalFlow()
+    public function approvalFlow(): BelongsTo
     {
-        return $this->belongsTo(ApprovalFlow::class);
+        return $this->belongsTo(ApprovalFlow::class, 'approval_flow_id');
     }
 
-    public function approver()
+    public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approver_user_id');
     }

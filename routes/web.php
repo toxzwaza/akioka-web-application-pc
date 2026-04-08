@@ -5,6 +5,7 @@ use App\Http\Controllers\CalcProductController;
 use App\Http\Controllers\CalcProductTabletController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactKeywordController;
+use App\Http\Controllers\DeliverySignageController;
 use App\Http\Controllers\FaxController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\LogController;
@@ -101,6 +102,17 @@ Route::get('file', [FileController::class, 'index'])->name('file');
 // テスト用
 Route::get('/signage/test', [SignageController::class, 'test'])->name('signage.test');
 
+// 納品サイネージ管理
+Route::get('/delivery-signage', [DeliverySignageController::class, 'index'])->name('delivery-signage.index');
+Route::get('/delivery-signage/data', [DeliverySignageController::class, 'data'])->name('delivery-signage.data');
+Route::get('/delivery-signage/signage-data', [DeliverySignageController::class, 'signageData'])->name('delivery-signage.signage-data');
+Route::post('/delivery-signage/manual', [DeliverySignageController::class, 'storeManual'])->name('delivery-signage.manual.store');
+Route::put('/delivery-signage/manual/{id}', [DeliverySignageController::class, 'updateManual'])->name('delivery-signage.manual.update');
+Route::delete('/delivery-signage/manual/{id}', [DeliverySignageController::class, 'deleteManual'])->name('delivery-signage.manual.delete');
+Route::post('/delivery-signage/reorder', [DeliverySignageController::class, 'reorder'])->name('delivery-signage.reorder');
+Route::post('/delivery-signage/{id}/receipt', [DeliverySignageController::class, 'receipt'])->name('delivery-signage.receipt');
+Route::post('/delivery-signage/{id}/receive-toggle', [DeliverySignageController::class, 'toggleReceive'])->name('delivery-signage.toggle-receive');
+
 // サイネージ用PDFの追加・一覧表示
 Route::get('/signage', [SignageController::class, 'index'])->name('signage.home');
 Route::post('/signage/store', [SignageController::class, 'store'])->name('signage.store');
@@ -113,6 +125,7 @@ Route::get('/signage/content/safety', [SignageContentController::class, 'safety'
 Route::get('/signage/content/inspectionCraneColor', [SignageContentController::class, 'inspectionCraneColor'])->name('signage.content.inspectionCraneColor');
 // --納品状況--
 Route::get('/signage/content/stockDeliveryList', [SignageContentController::class, 'stockDeliveryList'])->name('signage.content.stockDeliveryList');
+Route::get('/signage/content/delivery', [SignageContentController::class, 'delivery'])->name('signage.content.delivery');
 Route::get('/stock/tablet/getDeliveryOrders', [StockTabletController::class, 'getDeliveryOrders'])->name('stock.tablet.getDeliveryOrders');
 // 役職者のスケジュール表示
 Route::get('/signage/content/schedule', [SignageContentController::class, 'schedule']);

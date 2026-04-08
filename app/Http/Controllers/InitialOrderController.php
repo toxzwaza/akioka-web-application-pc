@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\Helper;
 use App\Models\Classification;
+use App\Models\DocumentImage;
 use App\Models\Group;
 use App\Models\Holiday;
 use App\Models\InitialOrder;
@@ -53,6 +54,14 @@ class InitialOrderController extends Controller
             'suppliers.fax',
             'users.name as manage_user_name',
             'order_requests.id as order_request_id',
+            'order_requests.accept_flg as order_request_accept_flg',
+            'order_requests.new_stock_flg as order_request_new_stock_flg',
+            'order_requests.description as order_request_description',
+            'order_requests.sub_description as order_request_sub_description',
+            'order_requests.file_path as order_request_file_path',
+            'order_requests.file_path_sub as order_request_file_path_sub',
+            'order_requests.lead_time as order_request_lead_time',
+            'order_requests.desire_delivery_date as order_request_desire_delivery_date',
             'order_request_stock_processes.code as stock_processes_order_request_code',
             'order_request_stock_processes.name as stock_processes_order_request_name',
             'stock_processes_base.code as stock_processes_base_code',
@@ -150,13 +159,29 @@ class InitialOrderController extends Controller
         // 承認者を取得
         foreach ($initial_orders as $initial_order) {
             $order_request_approvals = OrderRequestApproval::select(
-                'order_request_approvals.created_at',
+                'order_request_approvals.id',
+                'users.id as user_id',
                 'users.name as user_name',
+                'order_request_approvals.status',
+                'order_request_approvals.final_flg',
+                'order_request_approvals.comment',
+                'order_request_approvals.updated_at',
+                'order_request_approvals.created_at'
             )
                 ->join('users', 'users.id', 'order_request_approvals.user_id')
                 ->where('order_request_id', $initial_order->order_request_id)->get();
 
             $initial_order->order_request_approvals = $order_request_approvals;
+
+            // 稟議書画像を付与（ApprovalDocumentで利用）
+            $initial_order->document_images = [];
+            if ($initial_order->document_id) {
+                $document_images = DocumentImage::select('image_path')
+                    ->where('document_id', $initial_order->document_id)
+                    ->where('extension', '!=', 'pdf')
+                    ->get();
+                $initial_order->document_images = $document_images;
+            }
         }
 
 

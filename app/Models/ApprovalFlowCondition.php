@@ -2,22 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApprovalFlowCondition extends Model
 {
-    use HasFactory;
+    protected $guarded = [];
 
-    protected $fillable = [
-        'approval_flow_id',
-        'condition_type',
-        'operator',
-        'condition_value'
-    ];
-
-    public function approvalFlow()
+    public function approvalFlow(): BelongsTo
     {
-        return $this->belongsTo(ApprovalFlow::class);
+        return $this->belongsTo(ApprovalFlow::class, 'approval_flow_id');
     }
 }

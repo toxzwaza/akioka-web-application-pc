@@ -2,57 +2,50 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Stock extends Model
 {
-    use HasFactory;
+    protected $guarded = [];
 
-    public function stockSuppliers()
+    public function orderRequests(): HasMany
     {
-        return $this->hasMany(StockSupplier::class);
+        return $this->hasMany(OrderRequest::class, 'stock_id');
     }
 
-    public function classification()
+    public function stockImages(): HasMany
     {
-        return $this->belongsTo(Classification::class);
+        return $this->hasMany(StockImage::class, 'stock_id');
     }
 
-    // メインの取引先を取得
-    public function getMainSupplierAttribute()
+    public function documentStocks(): HasMany
     {
-        $suppliers = $this->stockSuppliers;
-        
-        if ($suppliers->count() === 1) {
-            return $suppliers->first();
-        }
-        
-        // 複数ある場合はmain_flgが1のものを取得
-        $mainSupplier = $suppliers->where('main_flg', 1)->first();
-        
-        // main_flgが1のものがない場合は最初のものを返す
-        return $mainSupplier ?: $suppliers->first();
+        return $this->hasMany(DocumentStock::class, 'stock_id');
     }
 
-    // メインの取引先名を取得
-    public function getMainSupplierNameAttribute()
+    public function stockSupplierPrices(): HasMany
     {
-        $mainSupplier = $this->main_supplier;
-        return $mainSupplier ? $mainSupplier->supplier->name : null;
+        return $this->hasMany(StockSupplierPrice::class, 'stock_id');
     }
 
-    // メインの取引先IDを取得
-    public function getMainSupplierIdAttribute()
+    public function objectRequests(): HasMany
     {
-        $mainSupplier = $this->main_supplier;
-        return $mainSupplier ? $mainSupplier->supplier->id : null;
+        return $this->hasMany(ObjectRequest::class, 'stock_id');
     }
 
-    // メインの取引先番号を取得
-    public function getMainSupplierNoAttribute()
+    public function productAliases(): HasMany
     {
-        $mainSupplier = $this->main_supplier;
-        return $mainSupplier ? $mainSupplier->supplier->supplier_no : null;
+        return $this->hasMany(ProductAlias::class, 'stock_id');
+    }
+
+    public function stockRequests(): HasMany
+    {
+        return $this->hasMany(StockRequest::class, 'stock_id');
+    }
+
+    public function stockRequestOrders(): HasMany
+    {
+        return $this->hasMany(StockRequestOrder::class, 'stock_id');
     }
 }

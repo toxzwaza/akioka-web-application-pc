@@ -2,41 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Classification;
 use App\Models\Group;
 use App\Models\Holiday;
 use App\Models\Position;
 use App\Models\Process;
 use App\Models\User;
-use App\Services\Method;
 use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class MasterController extends Controller
 {
-    //
-    public function index() {
-
-        return Inertia::render('Master/Home');
-    }
-
-
-    // ユーザー作成
-    public function create_user()
+    public function index()
     {
-        $groups = Group::all();
-        $positions = Position::all();
-        $processes = Process::all();
+        $tab = request()->query('tab');
+        $initialTab = in_array($tab, ['group', 'user', 'list'], true) ? $tab : 'list';
 
-
-        return Inertia::render('Master/Users/Create', ['groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
-    }
-
-
-    public function users()
-    {
-        $users  = User::select('users.id', 'users.name', 'users.group_id', 'users.position_id', 'users.process_id', 'users.gender_flg', 'users.email', 'users.emp_no', 'groups.name as group_name', 'positions.name as position_name', 'processes.name as process_name')
+        $users = User::select('users.id', 'users.name', 'users.group_id', 'users.position_id', 'users.process_id', 'users.gender_flg', 'users.email', 'users.emp_no', 'groups.name as group_name', 'positions.name as position_name', 'processes.name as process_name')
             ->leftJoin('groups', 'groups.id', 'users.group_id')
             ->leftJoin('positions', 'positions.id', 'users.position_id')
             ->leftJoin('processes', 'processes.id', 'users.process_id')
@@ -44,17 +26,22 @@ class MasterController extends Controller
             ->where('del_flg', 0)
             ->get();
 
-        // 部署一覧
-        $groups  = Group::all();
-        // 工程一覧
-        $processes  = Process::all();
-        // 役職一覧
-        $positions  = Position::all();
+        $groups = Group::all();
+        $processes = Process::all();
+        $positions = Position::all();
 
-        return Inertia::render('Master/Users/Index', ['users' => $users, 'groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
+        return Inertia::render('Master/Home', [
+            'users' => $users,
+            'groups' => $groups,
+            'processes' => $processes,
+            'positions' => $positions,
+            'initialTab' => $initialTab,
+            'stats' => [
+                'user_count' => User::where('del_flg', 0)->count(),
+                'group_count' => Group::count(),
+            ],
+        ]);
     }
-
-
 
 
     public function store_user(Request $request)
@@ -116,12 +103,6 @@ class MasterController extends Controller
         $processes = Process::all();
 
         return Inertia::render('Master/Users/Show', ['user' => $user, 'groups' => $groups, 'processes' => $processes, 'positions' => $positions]);
-    }
-
-    // 部署作成
-    public function create_group()
-    {
-        return Inertia::render('Master/Groups/Create');
     }
 
     public function store_group(Request $request)

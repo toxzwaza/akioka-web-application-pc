@@ -25,6 +25,7 @@ use App\Services\Method;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 use function Avifinfo\read;
@@ -188,6 +189,149 @@ class StockController extends Controller
 
 
         return response()->json($inventory_operation_records);
+    }
+
+    // 在庫ダッシュボード要約データを取得
+    public function dashboardSummary(Request $request)
+    {
+        $days = (int) $request->query('days', 30);
+        $days = max(7, min(90, $days));
+        $today = now()->startOfDay();
+        $startDate = $today->copy()->subDays($days - 1);
+        $monthStart = now()->startOfMonth();
+        $cacheKey = "stock_dashboard_summary_{$days}";
+
+        $payload = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($today, $startDate, $monthStart) {
+            $kpi = [
+                'total_stocks' => Stock::where('del_flg', 0)->where('not_stock_flg', 0)->count(),
+                'low_stock_count' => StockStorage::query()
+                    ->join('stocks', 'stocks.id', '=', 'stock_storages.stock_id')
+                    ->where('stocks.del_flg', 0)
+                    ->where('stocks.not_stock_flg', 0)
+                    ->where('stock_storages.reorder_point', '>', 0)
+                    ->whereColumn('stock_storages.quantity', '<=', 'stock_storages.reorder_point')
+                    ->count(),
+                'pending_order_requests' => OrderRequest::query()
+                    ->where('del_flg', 0)
+                    ->where('accept_flg', 1)
+                    ->count(),
+                'month_initial_order_sum' => (float) InitialOrder::query()
+                    ->where('del_flg', 0)
+                    ->whereBetween('order_date', [$monthStart, now()->endOfMonth()])
+                    ->sum('calc_price'),
+                'month_initial_order_count' => InitialOrder::query()
+                    ->where('del_flg', 0)
+                    ->whereBetween('order_date', [$monthStart, now()->endOfMonth()])
+                    ->count(),
+            ];
+
+            $dailyOperations = InventoryOperationRecord::query()
+                ->selectRaw('DATE(created_at) as date')
+                ->selectRaw('SUM(CASE WHEN inventory_operation_id = 2 THEN 1 ELSE 0 END) as outbound_count')
+                ->selectRaw('SUM(CASE WHEN inventory_operation_id = 8 THEN 1 ELSE 0 END) as inbound_count')
+                ->whereBetween('created_at', [$startDate, $today->copy()->endOfDay()])
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->keyBy('date');
+
+            $dailyTrend = [];
+            for ($cursor = $startDate->copy(); $cursor->lte($today); $cursor->addDay()) {
+                $key = $cursor->format('Y-m-d');
+                $row = $dailyOperations->get($key);
+                $dailyTrend[] = [
+                    'date' => $key,
+                    'label' => $cursor->format('n/j'),
+                    'inbound_count' => (int) ($row->inbound_count ?? 0),
+                    'outbound_count' => (int) ($row->outbound_count ?? 0),
+                ];
+            }
+
+            $monthlyOrders = InitialOrder::query()
+                ->selectRaw("DATE_FORMAT(order_date, '%Y-%m') as month")
+                ->selectRaw('COUNT(*) as order_count')
+                ->selectRaw('COALESCE(SUM(calc_price), 0) as order_sum')
+                ->where('del_flg', 0)
+                ->where('order_date', '>=', now()->copy()->subMonths(5)->startOfMonth())
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            $lowStockAlerts = StockStorage::query()
+                ->select(
+                    'stocks.id as stock_id',
+                    'stocks.name as stock_name',
+                    'stock_storages.quantity',
+                    'stock_storages.reorder_point',
+                    'locations.name as location_name',
+                    'storage_addresses.address'
+                )
+                ->join('stocks', 'stocks.id', '=', 'stock_storages.stock_id')
+                ->leftJoin('storage_addresses', 'storage_addresses.id', '=', 'stock_storages.storage_address_id')
+                ->leftJoin('locations', 'locations.id', '=', 'storage_addresses.location_id')
+                ->where('stocks.del_flg', 0)
+                ->where('stocks.not_stock_flg', 0)
+                ->where('stock_storages.reorder_point', '>', 0)
+                ->whereColumn('stock_storages.quantity', '<=', 'stock_storages.reorder_point')
+                ->orderByRaw('(stock_storages.reorder_point - stock_storages.quantity) DESC')
+                ->limit(8)
+                ->get();
+
+            $overdueRequests = OrderRequest::query()
+                ->select('order_requests.id', 'order_requests.stock_id', 'order_requests.desire_delivery_date', 'stocks.name as stock_name')
+                ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
+                ->where('order_requests.del_flg', 0)
+                ->whereNotNull('order_requests.desire_delivery_date')
+                ->whereDate('order_requests.desire_delivery_date', '<', now()->toDateString())
+                ->where(function ($query) {
+                    $query->whereNull('order_requests.status')
+                        ->orWhere('order_requests.status', '!=', 2);
+                })
+                ->orderBy('order_requests.desire_delivery_date')
+                ->limit(8)
+                ->get();
+
+            $topOutboundStocks = InventoryOperationRecord::query()
+                ->select('stocks.id as stock_id', 'stocks.name as stock_name')
+                ->selectRaw('SUM(inventory_operation_records.quantity) as total_quantity')
+                ->join('stocks', 'stocks.id', '=', 'inventory_operation_records.stock_id')
+                ->where('inventory_operation_records.inventory_operation_id', 2)
+                ->whereBetween('inventory_operation_records.created_at', [$startDate, $today->copy()->endOfDay()])
+                ->groupBy('stocks.id', 'stocks.name')
+                ->orderByDesc('total_quantity')
+                ->limit(10)
+                ->get();
+
+            $topSuppliers = InitialOrder::query()
+                ->select('suppliers.id as supplier_id', 'suppliers.name as supplier_name')
+                ->selectRaw('COALESCE(SUM(initial_orders.calc_price), 0) as total_amount')
+                ->leftJoin('suppliers', 'suppliers.id', '=', 'initial_orders.supplier_id')
+                ->where('initial_orders.del_flg', 0)
+                ->whereBetween('initial_orders.order_date', [$monthStart, now()->endOfMonth()])
+                ->groupBy('suppliers.id', 'suppliers.name')
+                ->orderByDesc('total_amount')
+                ->limit(5)
+                ->get();
+
+            return [
+                'kpi' => $kpi,
+                'trends' => [
+                    'daily_operations' => $dailyTrend,
+                    'monthly_orders' => $monthlyOrders,
+                ],
+                'alerts' => [
+                    'low_stocks' => $lowStockAlerts,
+                    'overdue_requests' => $overdueRequests,
+                ],
+                'rankings' => [
+                    'top_outbound_stocks' => $topOutboundStocks,
+                    'top_suppliers' => $topSuppliers,
+                ],
+                'updated_at' => now()->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        return response()->json($payload);
     }
 
 

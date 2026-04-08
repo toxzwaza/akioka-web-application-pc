@@ -2,15 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
-    use HasFactory;
-
-    public function processes()
-    {
-        return $this->belongsToMany(Process::class, 'location_processes');
-    }
+    protected $guarded = [];
 }
