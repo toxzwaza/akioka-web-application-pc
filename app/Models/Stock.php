@@ -3,11 +3,42 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Stock extends Model
 {
     protected $guarded = [];
+
+    public function stockSuppliers(): HasMany
+    {
+        return $this->hasMany(StockSupplier::class, 'stock_id');
+    }
+
+    public function classification(): BelongsTo
+    {
+        return $this->belongsTo(Classification::class, 'classification_id');
+    }
+
+    public function getMainSupplierAttribute()
+    {
+        return $this->stockSuppliers->firstWhere('main_flg', 1)?->supplier;
+    }
+
+    public function getMainSupplierNameAttribute()
+    {
+        return $this->mainSupplier?->name;
+    }
+
+    public function getMainSupplierIdAttribute()
+    {
+        return $this->mainSupplier?->id;
+    }
+
+    public function getMainSupplierNoAttribute()
+    {
+        return $this->mainSupplier?->supplier_no;
+    }
 
     public function orderRequests(): HasMany
     {

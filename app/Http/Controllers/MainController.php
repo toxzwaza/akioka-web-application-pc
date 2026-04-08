@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
-use App\Models\Log;
 use App\Models\LunchOrder;
-use App\Models\NotifyQueue;
 use App\Models\OrderRequest;
 use App\Models\Stock;
 use App\Models\StockStorage;
@@ -45,16 +43,6 @@ class MainController extends Controller
             ->limit(5)
             ->get(['id', 'title', 'content', 'type', 'start_date', 'end_date']);
 
-        $recentNotifications = NotifyQueue::query()
-            ->orderByDesc('id')
-            ->limit(5)
-            ->get(['id', 'title', 'msg', 'url', 'created_at']);
-
-        $recentLogs = Log::query()
-            ->orderByDesc('created_at')
-            ->limit(5)
-            ->get(['id', 'device_name', 'service_name', 'level', 'message', 'created_at']);
-
         return Inertia::render('Home', [
             'dashboard' => [
                 'stats' => [
@@ -64,8 +52,6 @@ class MainController extends Controller
                     'lunch_today_count' => $lunchTodayCount,
                 ],
                 'announcements' => $announcements,
-                'recent_notifications' => $recentNotifications,
-                'recent_logs' => $recentLogs,
                 'today_label' => now()->format('Y年n月j日'),
             ],
         ]);

@@ -12,10 +12,7 @@ const props = defineProps({
 
 const stats = computed(() => props.dashboard.stats ?? {});
 const announcements = computed(() => props.dashboard.announcements ?? []);
-const recentNotifications = computed(
-  () => props.dashboard.recent_notifications ?? []
-);
-const recentLogs = computed(() => props.dashboard.recent_logs ?? []);
+// 通知・ログは使用停止
 const todayLabel = computed(() => props.dashboard.today_label ?? "");
 
 function announcementTypeClass(type) {
@@ -38,20 +35,6 @@ function announcementBadgeClass(type) {
     default:
       return "bg-slate-200 text-slate-700";
   }
-}
-
-function logLevelClass(level) {
-  const n = Number(level);
-  if (n === 2) return "bg-red-100 text-red-800";
-  if (n === 1) return "bg-amber-100 text-amber-800";
-  return "bg-slate-100 text-slate-700";
-}
-
-function logLevelLabel(level) {
-  const n = Number(level);
-  if (n === 2) return "error";
-  if (n === 1) return "warn";
-  return "info";
 }
 
 /** ISO / Carbon 文字列を YYYY/MM/DD 表示用に短縮 */
@@ -139,18 +122,7 @@ const modules = computed(() => [
     href: route("master"),
     icon: "database",
   },
-  {
-    title: "通知",
-    desc: "通知キュー一覧",
-    href: route("notification.home"),
-    icon: "notifications",
-  },
-  {
-    title: "ログ",
-    desc: "システムログ",
-    href: route("log.home"),
-    icon: "history",
-  },
+  // 通知・ログは使用停止
 ]);
 </script>
 <template>
@@ -211,9 +183,9 @@ const modules = computed(() => [
             </Link>
           </div>
 
-          <!-- お知らせ + フィード -->
-          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-10">
-            <section class="lg:col-span-3 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <!-- お知らせ -->
+          <div class="mb-10">
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               <div
                 class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/80"
               >
@@ -254,105 +226,6 @@ const modules = computed(() => [
                 掲載中のお知らせはありません。
               </p>
             </section>
-
-            <div class="lg:col-span-2 flex flex-col gap-6">
-              <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-0">
-                <div
-                  class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80"
-                >
-                  <h2 class="text-sm font-semibold text-slate-800">
-                    最近の通知
-                  </h2>
-                  <Link
-                    :href="route('notification.home')"
-                    class="text-xs font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    一覧へ
-                  </Link>
-                </div>
-                <ul
-                  v-if="recentNotifications.length"
-                  class="divide-y divide-slate-100 max-h-72 overflow-y-auto"
-                >
-                  <li
-                    v-for="n in recentNotifications"
-                    :key="n.id"
-                    class="px-4 py-3 hover:bg-slate-50/80"
-                  >
-                    <a
-                      v-if="n.url"
-                      :href="n.url"
-                      class="block text-left w-full"
-                    >
-                      <p class="text-sm font-medium text-slate-900 line-clamp-2">
-                        {{ n.title }}
-                      </p>
-                      <p class="text-xs text-slate-500 mt-1">
-                        {{ formatDateTime(n.created_at) }}
-                      </p>
-                    </a>
-                    <div v-else>
-                      <p class="text-sm font-medium text-slate-900 line-clamp-2">
-                        {{ n.title }}
-                      </p>
-                      <p class="text-xs text-slate-500 mt-1">
-                        {{ formatDateTime(n.created_at) }}
-                      </p>
-                    </div>
-                  </li>
-                </ul>
-                <p v-else class="px-4 py-8 text-center text-sm text-slate-500">
-                  通知はまだありません。
-                </p>
-              </section>
-
-              <section class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-0">
-                <div
-                  class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80"
-                >
-                  <h2 class="text-sm font-semibold text-slate-800">
-                    最近のログ
-                  </h2>
-                  <Link
-                    :href="route('log.home')"
-                    class="text-xs font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    一覧へ
-                  </Link>
-                </div>
-                <ul
-                  v-if="recentLogs.length"
-                  class="divide-y divide-slate-100 max-h-72 overflow-y-auto"
-                >
-                  <li
-                    v-for="log in recentLogs"
-                    :key="log.id"
-                    class="px-4 py-3"
-                  >
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <span
-                        class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded"
-                        :class="logLevelClass(log.level)"
-                      >
-                        {{ logLevelLabel(log.level) }}
-                      </span>
-                      <span class="text-xs text-slate-500">
-                        {{ formatDateTime(log.created_at) }}
-                      </span>
-                    </div>
-                    <p class="text-xs text-slate-600 mt-1">
-                      {{ log.device_name }} / {{ log.service_name }}
-                    </p>
-                    <p class="text-sm text-slate-800 mt-1 line-clamp-2">
-                      {{ log.message }}
-                    </p>
-                  </li>
-                </ul>
-                <p v-else class="px-4 py-8 text-center text-sm text-slate-500">
-                  ログはまだありません。
-                </p>
-              </section>
-            </div>
           </div>
 
           <!-- モジュール -->
