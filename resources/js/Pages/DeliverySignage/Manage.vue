@@ -53,6 +53,19 @@ const createManualItem = async () => {
   }
 };
 
+const deleteManualItem = async (item) => {
+  if (!isManual(item)) return;
+  if (!window.confirm(`「${item.name || "この項目"}」を削除します。よろしいですか？`)) return;
+  errorMessage.value = "";
+  try {
+    await axios.delete(route("delivery-signage.manual.delete", item.item_id));
+    await loadItems();
+  } catch (error) {
+    errorMessage.value = "削除に失敗しました。";
+    console.error(error);
+  }
+};
+
 const onDragStart = (index) => {
   dragIndex.value = index;
 };
@@ -159,6 +172,7 @@ onMounted(async () => {
                   <th class="bg-gray-100 px-4 py-3 text-sm font-medium text-gray-900">注文者</th>
                   <th class="bg-gray-100 px-4 py-3 text-sm font-medium text-gray-900">品名</th>
                   <th class="bg-gray-100 px-4 py-3 text-sm font-medium text-gray-900">品番</th>
+                  <th class="w-24 bg-gray-100 px-4 py-3 text-sm font-medium text-gray-900">操作</th>
                 </tr>
               </thead>
               <tbody v-if="isLoading">
@@ -170,6 +184,7 @@ onMounted(async () => {
                   <td class="px-4 py-4"><div class="h-4 w-28 rounded bg-gray-200" /></td>
                   <td class="px-4 py-4"><div class="h-4 w-40 rounded bg-gray-200" /></td>
                   <td class="px-4 py-4"><div class="h-4 w-24 rounded bg-gray-200" /></td>
+                  <td class="px-4 py-4"><div class="h-4 w-16 rounded bg-gray-200" /></td>
                 </tr>
               </tbody>
               <tbody v-else>
@@ -189,9 +204,19 @@ onMounted(async () => {
                   <td class="px-4 py-3">{{ item.order_user }}</td>
                   <td class="px-4 py-3">{{ item.name }}</td>
                   <td class="px-4 py-3">{{ item.s_name }}</td>
+                  <td class="px-4 py-3 text-center">
+                    <button
+                      v-if="isManual(item)"
+                      type="button"
+                      class="rounded bg-red-500 px-3 py-1 text-xs font-semibold text-white hover:bg-red-600"
+                      @click="deleteManualItem(item)"
+                    >
+                      削除
+                    </button>
+                  </td>
                 </tr>
                 <tr v-if="!hasItems">
-                  <td colspan="7" class="px-4 py-8 text-center text-gray-500">表示対象データはありません。</td>
+                  <td colspan="8" class="px-4 py-8 text-center text-gray-500">表示対象データはありません。</td>
                 </tr>
               </tbody>
             </table>
