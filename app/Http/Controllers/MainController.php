@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Method;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class MainController extends Controller
@@ -20,16 +21,20 @@ class MainController extends Controller
     {
         $today = Carbon::today()->format('Y-m-d');
 
-        $stocksCount = Stock::where('del_flg', 0)->count();
+        $stocksCount = Cache::remember('dashboard.stocks_count', 300, function () {
+            return Stock::where('del_flg', 0)->count();
+        });
 
-        $orderRequestsPending = OrderRequest::where('del_flg', 0)
-            ->where('accept_flg', 1)
-            ->count();
+        $orderRequestsPending = Cache::remember('dashboard.order_requests_pending', 60, function () {
+            return OrderRequest::where('del_flg', 0)->where('accept_flg', 1)->count();
+        });
 
-        $lowStockLocations = StockStorage::query()
-            ->where('reorder_point', '>', 0)
-            ->whereColumn('quantity', '<=', 'reorder_point')
-            ->count();
+        $lowStockLocations = Cache::remember('dashboard.low_stock_locations', 300, function () {
+            return StockStorage::query()
+                ->where('reorder_point', '>', 0)
+                ->whereColumn('quantity', '<=', 'reorder_point')
+                ->count();
+        });
 
         $lunchTodayCount = LunchOrder::query()
             ->whereDate('date', $today)
@@ -58,7 +63,7 @@ class MainController extends Controller
     }
     public function login()
     {
-        $users = User::all();
+        $users = User::select('id', 'name', 'group_id')->where('del_flg', 0)->get();
         return view('login', compact('users'));
     }
     public function login_store(Request $request)

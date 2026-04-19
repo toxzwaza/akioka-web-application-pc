@@ -123,12 +123,35 @@ class OrderRequestController extends Controller
                 ->get();
 
 
+            // 承認情報を一括取得（N+1回避）
+            $orderRequestIds = $order_requests->pluck('id')->toArray();
+            $allApprovals = OrderRequestApproval::select('users.id as user_id', 'users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at', 'ora.order_request_id')
+                ->whereIn('order_request_id', $orderRequestIds)
+                ->join('users', 'users.id', '=', 'ora.user_id')
+                ->from('order_request_approvals as ora')
+                ->get()
+                ->groupBy('order_request_id');
+
+            // 稟議書情報を一括取得（N+1回避）
+            $documentIds = $order_requests->pluck('document_id')->filter()->unique()->toArray();
+            $allDocuments = !empty($documentIds) ? Document::whereIn('id', $documentIds)->get()->keyBy('id') : collect();
+            $allDocumentImages = !empty($documentIds) ? DocumentImage::select('document_id', 'image_path')
+                ->whereIn('document_id', $documentIds)
+                ->where('extension', '!=', 'pdf')
+                ->get()
+                ->groupBy('document_id') : collect();
+
+            // 取引先未設定の在庫IDを一括取得（N+1回避）
+            $stockIdsWithoutSupplier = $order_requests->where('supplier_id', null)->pluck('stock_id')->unique()->toArray();
+            $stockSuppliers = !empty($stockIdsWithoutSupplier) ? StockSupplier::select('suppliers.id', 'suppliers.name', 'stock_suppliers.lead_time', 'stock_suppliers.stock_id')
+                ->whereIn('stock_suppliers.stock_id', $stockIdsWithoutSupplier)
+                ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')
+                ->get()
+                ->keyBy('stock_id') : collect();
+
             foreach ($order_requests as $order_request) {
-                if (!$order_request->supplier_id) { //取引先を初期化
-                    $stock_supplier = StockSupplier::select('suppliers.id', 'suppliers.name', 'stock_suppliers.lead_time')->where('stock_id', $order_request->stock_id)
-                        ->join('suppliers', 'suppliers.id', 'stock_suppliers.supplier_id')->first();
-
-
+                if (!$order_request->supplier_id) {
+                    $stock_supplier = $stockSuppliers->get($order_request->stock_id);
                     if ($stock_supplier) {
                         $order_request->supplier_id = $stock_supplier->id;
                         $order_request->save();
@@ -136,27 +159,17 @@ class OrderRequestController extends Controller
                     }
                 }
 
-                // 承認状況を取得
-                $order_request_approvals = OrderRequestApproval::select('users.id as user_id', 'users.name', 'ora.status', 'ora.final_flg', 'ora.comment', 'ora.updated_at')
-                    ->where('order_request_id', $order_request->id)
-                    ->join('users', 'users.id', '=', 'ora.user_id')
-                    ->from('order_request_approvals as ora')
-                    ->get();
-                $order_request->order_request_approvals = $order_request_approvals;
+                $order_request->order_request_approvals = $allApprovals->get($order_request->id, collect());
 
                 if ($order_request->document_id) {
-                    $document = Document::find($order_request->document_id);
+                    $document = $allDocuments->get($order_request->document_id);
                     if ($document) {
                         $order_request->document_data = $document;
-                        $document_images = DocumentImage::select('image_path')
-                            ->where('document_id', $order_request->document_id)
-                            ->where('extension', '!=', 'pdf')
-                            ->get();
-                        $order_request->document_data->document_images = $document_images;
+                        $order_request->document_data->document_images = $allDocumentImages->get($order_request->document_id, collect());
                     }
                 }
 
-                // file_path_subを配列に変換（文字列の場合はJSONデコード）
+                // file_path_subを配列に変換
                 if ($order_request->file_path_sub) {
                     if (is_string($order_request->file_path_sub)) {
                         $decoded = json_decode($order_request->file_path_sub, true);

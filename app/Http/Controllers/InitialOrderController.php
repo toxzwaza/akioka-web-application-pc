@@ -156,32 +156,36 @@ class InitialOrderController extends Controller
             ->paginate(14)
             ->withQueryString();
 
-        // 承認者を取得
+        // 承認者・稟議書画像を一括取得（N+1回避）
+        $orderRequestIds = $initial_orders->getCollection()->pluck('order_request_id')->filter()->unique()->toArray();
+        $allApprovals = !empty($orderRequestIds) ? OrderRequestApproval::select(
+            'order_request_approvals.id',
+            'users.id as user_id',
+            'users.name as user_name',
+            'order_request_approvals.status',
+            'order_request_approvals.final_flg',
+            'order_request_approvals.comment',
+            'order_request_approvals.updated_at',
+            'order_request_approvals.created_at',
+            'order_request_approvals.order_request_id'
+        )
+            ->join('users', 'users.id', 'order_request_approvals.user_id')
+            ->whereIn('order_request_id', $orderRequestIds)
+            ->get()
+            ->groupBy('order_request_id') : collect();
+
+        $documentIds = $initial_orders->getCollection()->pluck('document_id')->filter()->unique()->toArray();
+        $allDocumentImages = !empty($documentIds) ? DocumentImage::select('document_id', 'image_path')
+            ->whereIn('document_id', $documentIds)
+            ->where('extension', '!=', 'pdf')
+            ->get()
+            ->groupBy('document_id') : collect();
+
         foreach ($initial_orders as $initial_order) {
-            $order_request_approvals = OrderRequestApproval::select(
-                'order_request_approvals.id',
-                'users.id as user_id',
-                'users.name as user_name',
-                'order_request_approvals.status',
-                'order_request_approvals.final_flg',
-                'order_request_approvals.comment',
-                'order_request_approvals.updated_at',
-                'order_request_approvals.created_at'
-            )
-                ->join('users', 'users.id', 'order_request_approvals.user_id')
-                ->where('order_request_id', $initial_order->order_request_id)->get();
-
-            $initial_order->order_request_approvals = $order_request_approvals;
-
-            // 稟議書画像を付与（ApprovalDocumentで利用）
-            $initial_order->document_images = [];
-            if ($initial_order->document_id) {
-                $document_images = DocumentImage::select('image_path')
-                    ->where('document_id', $initial_order->document_id)
-                    ->where('extension', '!=', 'pdf')
-                    ->get();
-                $initial_order->document_images = $document_images;
-            }
+            $initial_order->order_request_approvals = $allApprovals->get($initial_order->order_request_id, collect());
+            $initial_order->document_images = $initial_order->document_id
+                ? $allDocumentImages->get($initial_order->document_id, collect())
+                : collect();
         }
 
 
