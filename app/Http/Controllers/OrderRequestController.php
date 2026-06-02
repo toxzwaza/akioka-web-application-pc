@@ -58,6 +58,7 @@ class OrderRequestController extends Controller
                 'order_requests.id',
                 'order_requests.stock_id',
                 'order_requests.id as order_request_id',
+                'order_requests.user_id', //並び替え用（DISTINCT + ORDER BY のため SELECT に含める）
                 'order_requests.accept_flg',
                 'stocks.img_path',
                 'stocks.name',
@@ -255,7 +256,13 @@ class OrderRequestController extends Controller
                 $initial_order = new InitialOrder();
                 $initial_order->order_request_id = $order_request->id;
                 $initial_order->stock_id = $order_request->stock_id;
-                $initial_order->order_no = Helper::createOrderNo();
+                // 同じ発注依頼から過去に作成された発注があれば、最初に振られた注文Noを引き継ぐ
+                // （単価値上がり等で再承認 → 再発注した場合に注文Noを維持する）
+                $previous_order = InitialOrder::where('order_request_id', $order_request->id)
+                    ->whereNotNull('order_no')
+                    ->orderBy('id', 'asc')
+                    ->first();
+                $initial_order->order_no = $previous_order ? $previous_order->order_no : Helper::createOrderNo();
                 $initial_order->order_date = date('Y-m-d');
                 $initial_order->com_no = $supplier->supplier_no ?? '';
                 $initial_order->com_name = $supplier->name;

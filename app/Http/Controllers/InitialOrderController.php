@@ -497,8 +497,9 @@ class InitialOrderController extends Controller
                     $order_request->accept_flg = 0;
                     $order_request->save();
 
-                    // 発注データを削除
-                    $initial_order->delete();
+                    // 発注データを論理削除（注文Noを残し、再承認後の発注で引き継げるようにする）
+                    $initial_order->del_flg = 1;
+                    $initial_order->save();
 
                     // 再発注依頼を通知
                     $inventory_operation_record = new InventoryOperationRecord();
