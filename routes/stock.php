@@ -8,6 +8,7 @@ use App\Http\Controllers\PurchaseOrder;
 use App\Http\Controllers\RaspiController;
 use App\Http\Controllers\RetentionController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockAliasController;
 use App\Http\Controllers\StockExportController;
 use App\Http\Controllers\StockSupplierController;
 use App\Http\Controllers\StockSupplierPriceController;
@@ -26,6 +27,10 @@ Route::get('/', [StockController::class, 'index'])->name('stock');
 Route::get('/stocks', [StockController::class, 'stocks'])->name('stock.stocks');
 Route::get('/stocks/get', [StockController::class, 'getStocks'])->name('stock.getStocks');
 Route::get('/stocks/show/{stock_id}', [StockController::class, 'stock_show'])->name('stock.show.stocks');
+// 略名（stock_aliases）の登録・編集・削除
+Route::put('/stocks/alias/edit', [StockAliasController::class, 'edit'])->name('stock.editAlias');
+Route::post('/stocks/alias/create', [StockAliasController::class, 'create'])->name('stock.createAlias');
+Route::post('/stocks/alias/delete', [StockAliasController::class, 'delete'])->name('stock.deleteAlias');
 // 発注履歴取得
 Route::get('/stocks/initial-orders/get', [StockController::class, 'getInitialOrders'])->name('stock.getInitialOrders');
 Route::get('/stocks/stock-request/{stock_id}', [StockController::class, 'toggle_stock_request'])->name('stock.toggle.stock_request');

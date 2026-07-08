@@ -6,6 +6,7 @@ import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import { Chart, registerables } from "chart.js";
 import MainTitle from "@/Components/Title/MainTitle.vue";
+import EditAlias from "@/Components/Stock/EditAlias.vue";
 
 Chart.register(...registerables);
 
@@ -24,6 +25,7 @@ const props = defineProps({
   stock_processes: Array,
   stock_price_archive: Array,
   stock_supplier_prices: Array,
+  aliases: Array,
 });
 
 const initial_orders = ref([]);
@@ -648,6 +650,8 @@ onMounted(() => {
           <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <!-- 左カラム -->
             <div id="left_container" class="lg:col-span-2 space-y-6">
+          <!-- 略名登録ブロック -->
+          <EditAlias :aliases="props.aliases" :stock_id="props.stock.id" />
           <!-- 発注登録 -->
           <!-- <div class="bg-red-50 p-4"> -->
             <!-- <h3 class="text-lg font-bold dark:text-white mb-2">発注依頼登録</h3> -->
