@@ -70,6 +70,11 @@ class Stock extends Model
         return $this->hasMany(ProductAlias::class, 'stock_id');
     }
 
+    public function aliases(): HasMany
+    {
+        return $this->hasMany(StockAlias::class, 'stock_id');
+    }
+
     public function stockRequests(): HasMany
     {
         return $this->hasMany(StockRequest::class, 'stock_id');

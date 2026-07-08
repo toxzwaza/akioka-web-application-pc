@@ -12,6 +12,7 @@ use App\Models\OrderRequest;
 use App\Models\Process;
 use App\Models\RetainedStock;
 use App\Models\Stock;
+use App\Models\StockAlias;
 use App\Models\StockPriceArchive;
 use App\Models\StockProcess;
 use App\Models\StockRequest;
@@ -493,10 +494,14 @@ class StockController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
+        // 略名（stock_aliases）
+        $aliases = StockAlias::where('stock_id', $stock_id)->get();
+
         return Inertia::render(
             'Stock/Stocks/Show',
             [
                 'stock' => $stock,
+                'aliases' => $aliases,
                 'classifications' => $classifications,
                 'processes' => $processes,
                 'stock_storages' => $stock_storages,
