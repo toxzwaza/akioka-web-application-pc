@@ -1752,7 +1752,7 @@ onMounted(() => {
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        単位1
+                        発注単位
                       </label>
                       <input
                         type="text"
@@ -1763,7 +1763,7 @@ onMounted(() => {
                     </div>
                     <div>
                       <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        単位2
+                        在庫単位
                       </label>
                       <input
                         type="text"
