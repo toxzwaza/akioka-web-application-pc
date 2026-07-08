@@ -1424,145 +1424,6 @@ const deleteInitialOrder = (order) => {
         </div>
       </div>
 
-      <!-- Statistics Section -->
-      <div class="stats-section mb-8">
-        <div class="stats-header mb-6">
-          <h2 class="stats-title">
-            <svg
-              class="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              ></path>
-            </svg>
-            発注統計
-          </h2>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card search-stats">
-            <div class="stat-header">
-              <div class="stat-icon">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
-                </svg>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-title">検索結果</h3>
-                <p class="stat-subtitle">現在の検索条件</p>
-              </div>
-            </div>
-            <div class="stat-values">
-              <div class="stat-value-item">
-                <span class="stat-value">{{
-                  props.totals.total_order_count
-                }}</span>
-                <span class="stat-unit">件</span>
-              </div>
-              <div class="stat-amount">
-                {{
-                  Number(props.totals.total_calc_price_sum).toLocaleString()
-                }}円
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card monthly-stats">
-            <div class="stat-header">
-              <div class="stat-icon">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  ></path>
-                </svg>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-title">今月の発注</h3>
-                <p class="stat-subtitle">
-                  {{
-                    new Date().toLocaleDateString("ja-JP", {
-                      year: "numeric",
-                      month: "long",
-                    })
-                  }}
-                </p>
-              </div>
-            </div>
-            <div class="stat-values">
-              <div class="stat-value-item">
-                <span class="stat-value">{{
-                  props.totals.current_month_count
-                }}</span>
-                <span class="stat-unit">件</span>
-              </div>
-              <div class="stat-amount">
-                {{ Number(props.totals.current_month_sum).toLocaleString() }}円
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card performance-stats">
-            <div class="stat-header">
-              <div class="stat-icon">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  ></path>
-                </svg>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-title">平均単価</h3>
-                <p class="stat-subtitle">検索結果から算出</p>
-              </div>
-            </div>
-            <div class="stat-values">
-              <div class="stat-amount large">
-                {{
-                  props.totals.total_order_count > 0
-                    ? Math.round(
-                        props.totals.total_calc_price_sum /
-                          props.totals.total_order_count
-                      ).toLocaleString()
-                    : 0
-                }}円
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Table Controls -->
       <div class="table-controls mb-6">
         <div class="controls-left">
@@ -1609,7 +1470,7 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
                 >
-                  納入希望日
+                  納入日
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1671,7 +1532,7 @@ const deleteInitialOrder = (order) => {
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-500"
                   style="border-radius: 0 10px 10px 0"
                 >
-                  納入日
+                  納入希望日
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1774,14 +1635,14 @@ const deleteInitialOrder = (order) => {
                     name=""
                     id=""
                     class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    :value="order.desire_delivery_date"
+                    :value="order.delivery_date"
                     @change="
-                      updateDate('desired', order.id, $event.target.value)
+                      updateDate('delivery', order.id, $event.target.value)
                     "
                   />
                   <span v-else>{{
-                    order.desire_delivery_date
-                      ? new Date(order.desire_delivery_date).toLocaleDateString(
+                    order.delivery_date
+                      ? new Date(order.delivery_date).toLocaleDateString(
                           "ja-JP"
                         )
                       : "-"
@@ -1986,17 +1847,17 @@ const deleteInitialOrder = (order) => {
                   <input
                     v-if="is_login"
                     @change="
-                      updateDate('delivery', order.id, $event.target.value)
+                      updateDate('desired', order.id, $event.target.value)
                     "
                     type="date"
                     name=""
                     id=""
                     class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    :value="order.delivery_date"
+                    :value="order.desire_delivery_date"
                   />
                   <span v-else>{{
-                    order.delivery_date
-                      ? new Date(order.delivery_date).toLocaleDateString(
+                    order.desire_delivery_date
+                      ? new Date(order.desire_delivery_date).toLocaleDateString(
                           "ja-JP"
                         )
                       : "-"
