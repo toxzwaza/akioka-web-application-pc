@@ -959,14 +959,10 @@ const deleteInitialOrder = (order) => {
   <MainLayout :title="'発注一覧'">
     <template #content>
       <!-- Header Section -->
-      <div class="header-section mb-8">
-        <div class="header-content">
-          <MainTitle
-            :top="'発注一覧'"
-            :sub="'発注情報の確認・管理ができます。'"
-          />
-        </div>
-      </div>
+      <MainTitle
+        :top="'発注一覧'"
+        :sub="'発注情報の確認・管理ができます。'"
+      />
 
       <div v-if="!is_login" class="login-section mb-8">
         <UserLogin

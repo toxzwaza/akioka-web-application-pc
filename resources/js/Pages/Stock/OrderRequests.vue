@@ -1191,12 +1191,10 @@ onMounted(() => {
   <MainLayout :title="'発注依頼一覧'">
     <template #content>
       <!-- Header Section -->
-      <div class="header-section mb-8">
-        <MainTitle
-          :top="'発注依頼一覧'"
-          :sub="'発注依頼の承認・完了処理ができます。'"
-        />
-      </div>
+      <MainTitle
+        :top="'発注依頼一覧'"
+        :sub="'発注依頼の承認・完了処理ができます。'"
+      />
 
       <!-- Login Section -->
       <div v-if="!order_config.user_id" class="login-section mb-8">

@@ -1,24 +1,21 @@
 <script setup>
-const props = defineProps({
-  top: String,
-  sub: String,
+import PageHeader from "@/Components/UI/PageHeader.vue";
+
+/**
+ * 旧ページ見出し（indigoバー付き）の互換ラッパー。
+ * 見た目はデザインシステムの UI/PageHeader に委譲する。
+ * 新規画面は直接 UI/PageHeader を使うこと（本コンポーネントは既存画面の互換用）。
+ */
+defineProps({
+  top: { type: String, default: "" },
+  sub: { type: String, default: "" },
+  icon: { type: String, default: "" },
 });
 </script>
 <template>
-  <div :class="{'flex flex-wrap w-4/5 mb-10': true,  }">
-    <div class="w-full mb-6 lg:mb-0">
-      <h1
-        class="sm:text-3xl text-2xl font-medium title-font mb-2 text-gray-900"
-      >
-        {{ props.top }}
-      </h1>
-
-      <p class="w-full leading-relaxed text-gray-500 mb-2">
-        {{ props.sub }}
-      </p>
-      <div class="h-1 w-20 bg-indigo-500 rounded"></div>
-    </div>
-  </div>
+  <PageHeader :title="top" :subtitle="sub" :icon="icon">
+    <template v-if="$slots.actions" #actions>
+      <slot name="actions" />
+    </template>
+  </PageHeader>
 </template>
-<style scope lang="less">
-</style>
