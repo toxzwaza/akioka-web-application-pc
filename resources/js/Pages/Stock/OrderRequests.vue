@@ -1148,6 +1148,29 @@ const sendConfirmMessage = () => {
     });
 };
 
+// コメントモーダルの発注者コメント(sub_description)を更新（詳細モーダルと同様）
+const updateCommentSubDescription = (val) => {
+  const or = comment_modal.order_request;
+  if (!or || !or.id) return alert("エラーが発生しました。");
+  axios
+    .post(route("stock.updateSubDescription"), {
+      order_request_id: or.id,
+      sub_description: val,
+    })
+    .then((res) => {
+      if (res.data.status) {
+        or.sub_description = val;
+        alert("発注者コメントを更新しました。");
+      } else {
+        alert("発注者コメントの更新に失敗しました。");
+      }
+    })
+    .catch((e) => {
+      console.log(e);
+      alert("発注者コメントの更新に失敗しました。");
+    });
+};
+
 // 行クリックで詳細モーダルを開く（操作要素・コメントアイコンは除外）
 const handleRowClick = (order_request, event) => {
   if (
@@ -2229,11 +2252,13 @@ onMounted(() => {
                   <div class="text-xs font-semibold text-gray-500 mb-1">
                     発注者コメント
                   </div>
-                  <div
-                    class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
-                  >
-                    {{ comment_modal.order_request.sub_description || "（なし）" }}
-                  </div>
+                  <textarea
+                    rows="3"
+                    class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="コメントがある場合はこちらに記載してください。"
+                    :value="comment_modal.order_request.sub_description"
+                    @change="updateCommentSubDescription($event.target.value)"
+                  ></textarea>
                 </div>
               </div>
             </div>
