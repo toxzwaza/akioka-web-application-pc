@@ -1394,6 +1394,12 @@ onMounted(() => {
                     </th>
 
                     <th
+                      class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                    >
+                      コメント
+                    </th>
+
+                    <th
                       class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                     >
                       画像
@@ -1524,7 +1530,7 @@ onMounted(() => {
                       @click="toggleGroupVisibility(group.groupKey)"
                       class="group-header-row bg-indigo-50 border-t-4 border-indigo-500 cursor-pointer hover:bg-indigo-100 transition-colors"
                     >
-                      <td :colspan="25" class="px-4 py-3">
+                      <td :colspan="26" class="px-4 py-3">
                         <div class="flex items-center gap-3">
                           <svg
                             class="w-5 h-5 text-indigo-600 transition-transform"
@@ -1572,7 +1578,7 @@ onMounted(() => {
                       @click="toggleGroupVisibility(group.groupKey)"
                       class="group-header-row bg-orange-50 border-t-4 border-orange-500 cursor-pointer hover:bg-orange-100 transition-colors"
                     >
-                      <td :colspan="25" class="px-4 py-3">
+                      <td :colspan="26" class="px-4 py-3">
                         <div class="flex items-center gap-3">
                           <svg
                             class="w-5 h-5 text-orange-600 transition-transform"
@@ -1738,6 +1744,16 @@ onMounted(() => {
                       >
                     </td>
 
+                    <!-- コメント有無アイコン（詳細確認を開かずに確認可能） -->
+                    <td class="text-center">
+                      <span
+                        v-if="hasComment(order_request)"
+                        class="text-2xl cursor-help"
+                        :title="commentSummary(order_request)"
+                        >💬</span
+                      >
+                    </td>
+
                     <td class="img_container">
                       <img
                         :src="
@@ -1763,13 +1779,6 @@ onMounted(() => {
                       <span class="text-lg text-gray-900" v-else>{{
                         order_request.order_request_name
                       }}</span>
-                      <!-- コメント有無マーク（詳細確認を開かずに確認可能） -->
-                      <span
-                        v-if="hasComment(order_request)"
-                        class="inline-flex items-center gap-1 mt-1 ml-1 bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full cursor-help align-middle"
-                        :title="commentSummary(order_request)"
-                        >💬 コメントあり</span
-                      >
                     </td>
                     <td class="s_name px-4 py-4 text-lg text-gray-900">
                       {{
