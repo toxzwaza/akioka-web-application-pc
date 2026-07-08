@@ -1064,6 +1064,40 @@ const deleteInitialOrder = (order) => {
             <!-- Filter Grid -->
             <div class="filter-grid">
               <div class="filter-item">
+                <label class="filter-label">担当者</label>
+                <div class="input-with-icon">
+                  <svg
+                    class="input-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                  <input
+                    class="filter-input"
+                    type="text"
+                    placeholder="担当者で検索"
+                    v-model="user_search_text"
+                    list="users-list"
+                    @input="handleUserSearch"
+                  />
+                  <datalist id="users-list">
+                    <option
+                      v-for="user in props.users"
+                      :key="user.id"
+                      :value="user.name"
+                    >
+                    </option>
+                  </datalist>
+                </div>
+              </div>
+              <div class="filter-item">
                 <label class="filter-label">品名・品番</label>
                 <div class="input-with-icon">
                   <svg
@@ -1156,32 +1190,6 @@ const deleteInitialOrder = (order) => {
                 </div>
               </div>
               <div class="filter-item">
-                <label class="filter-label">部門（大区分）</label>
-                <select class="filter-select" v-model="form.group_id">
-                  <option value="0">すべての部門</option>
-                  <option
-                    v-for="group in props.groups"
-                    :key="group.id"
-                    :value="group.id"
-                  >
-                    {{ group.name }}
-                  </option>
-                </select>
-              </div>
-              <div class="filter-item">
-                <label class="filter-label">部門（中区分）</label>
-                <select class="filter-select" v-model="form.process_id">
-                  <option value="0">すべての部門</option>
-                  <option
-                    v-for="process in props.processes"
-                    :key="process.id"
-                    :value="process.id"
-                  >
-                    {{ process.name }}
-                  </option>
-                </select>
-              </div>
-              <div class="filter-item">
                 <label class="filter-label">依頼者</label>
                 <div class="input-with-icon">
                   <svg
@@ -1208,40 +1216,6 @@ const deleteInitialOrder = (order) => {
                   <datalist id="order-users-list">
                     <option
                       v-for="user in props.order_users"
-                      :key="user.id"
-                      :value="user.name"
-                    >
-                    </option>
-                  </datalist>
-                </div>
-              </div>
-              <div class="filter-item">
-                <label class="filter-label">担当者</label>
-                <div class="input-with-icon">
-                  <svg
-                    class="input-icon"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    ></path>
-                  </svg>
-                  <input
-                    class="filter-input"
-                    type="text"
-                    placeholder="担当者で検索"
-                    v-model="user_search_text"
-                    list="users-list"
-                    @input="handleUserSearch"
-                  />
-                  <datalist id="users-list">
-                    <option
-                      v-for="user in props.users"
                       :key="user.id"
                       :value="user.name"
                     >
@@ -1318,6 +1292,32 @@ const deleteInitialOrder = (order) => {
                     placeholder="終了日"
                   />
                 </div>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">部門（大区分）</label>
+                <select class="filter-select" v-model="form.group_id">
+                  <option value="0">すべての部門</option>
+                  <option
+                    v-for="group in props.groups"
+                    :key="group.id"
+                    :value="group.id"
+                  >
+                    {{ group.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">部門（中区分）</label>
+                <select class="filter-select" v-model="form.process_id">
+                  <option value="0">すべての部門</option>
+                  <option
+                    v-for="process in props.processes"
+                    :key="process.id"
+                    :value="process.id"
+                  >
+                    {{ process.name }}
+                  </option>
+                </select>
               </div>
             </div>
 
