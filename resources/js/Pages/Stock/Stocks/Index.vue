@@ -1,10 +1,16 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import FilterBar from "@/Components/UI/FilterBar.vue";
+import FormField from "@/Components/UI/FormField.vue";
+import Button from "@/Components/UI/Button.vue";
+import Table from "@/Components/UI/Table.vue";
+import TableHeaderCell from "@/Components/UI/TableHeaderCell.vue";
+import TableRow from "@/Components/UI/TableRow.vue";
+import TableDataCell from "@/Components/UI/TableDataCell.vue";
 import { onMounted, reactive, ref } from "vue";
-import { router, Link } from "@inertiajs/vue3";
-import axios from "axios";
-import MainTitle from "@/Components/Title/MainTitle.vue";
+import { router } from "@inertiajs/vue3";
 
 const props = defineProps({
   stocks: Object,
@@ -18,12 +24,11 @@ const form = reactive({
   supplier_name: null,
 });
 
+const sort = ref(null);
 const base_stocks = ref([]);
 const filter_stocks = ref([]);
 
 const getStocks = () => {
-  console.log(form);
-
   router.get(route("stock.stocks"), form);
 };
 const redirectStock = (stock_id) => {
@@ -31,8 +36,6 @@ const redirectStock = (stock_id) => {
 };
 
 onMounted(() => {
-  console.log(props.stocks);
-
   base_stocks.value = props.stocks.data;
   filter_stocks.value = props.stocks.data;
 
@@ -40,226 +43,118 @@ onMounted(() => {
   form.supplier_name = props.supplier_name;
 });
 </script>
+
 <template>
   <MainLayout :title="'在庫一覧'">
     <template #content>
-      <MainTitle
-        :top="'在庫一覧'"
-        :sub="'登録済みの在庫データの確認を行います。'"
+      <PageHeader
+        title="在庫一覧"
+        subtitle="登録済みの在庫データの確認を行います。"
       />
-      <section class="text-gray-600 body-font">
-        <div class="py-12 mx-auto">
-          <div class="flex flex-col text-center w-full mb-20"></div>
-          <div
-            id="sort_container"
-            class="my-8 flex items-start justify-between"
+
+      <FilterBar>
+        <FormField label="品名・品番から検索">
+          <input
+            v-model="form.keyword"
+            type="text"
+            placeholder="品名または品番"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+          />
+        </FormField>
+
+        <FormField label="手配先">
+          <select
+            v-model="form.supplier_name"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
           >
-            <div class="w-1/4">
-              <p class="mb-2 font-bold">並び替え</p>
-              <div class="button_container flex items-center justify-start">
-                <button
-                  :class="{
-                    'mr-4 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded': true,
-                  }"
-                >
-                  リセット
-                </button>
+            <option value="0">未選択</option>
+            <option
+              v-for="supplier in props.suppliers"
+              :key="supplier.id"
+              :value="supplier.name"
+            >
+              {{ supplier.name }}
+            </option>
+          </select>
+        </FormField>
 
-                <button
-                  :class="{
-                    'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                    'opacity-60': sort === 'new_order',
-                  }"
-                >
-                  新しい順
-                </button>
-                <button
-                  :class="{
-                    'mr-2 text-sm bg-blue-500  text-white font-bold py-2 px-4 rounded': true,
-                    'opacity-60': sort === 'old_order',
-                  }"
-                >
-                  古い順
-                </button>
-              </div>
-            </div>
-            <div class="mr-8">
-              <p class="mb-2 font-bold">検索</p>
-              <div class="button_container flex items-bottom justify-start">
-                <div class="w-62 mr-2">
-                  <label
-                    class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                    for="grid-last-name"
-                  >
-                    品名・品番から検索
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    type="text"
-                    name=""
-                    id=""
-                    v-model="form.keyword"
-                  />
-                </div>
+        <template #actions>
+          <Button variant="ghost" size="sm">リセット</Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            :class="{ 'opacity-60': sort === 'new_order' }"
+            >新しい順</Button
+          >
+          <Button
+            variant="secondary"
+            size="sm"
+            :class="{ 'opacity-60': sort === 'old_order' }"
+            >古い順</Button
+          >
+          <Button variant="primary" icon-left="search" @click="getStocks"
+            >検索</Button
+          >
+        </template>
+      </FilterBar>
 
-                <div class="button_container flex items-center justify-start">
-                  <div class="w-32 mr-2">
-                    <label
-                      class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
-                    >
-                      手配先
-                    </label>
-                    <select
-                      class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="order_user"
-                      id=""
-                      v-model="form.supplier_name"
-                    >
-                      <option value="0">未選択</option>
-                      <option
-                        v-for="supplier in props.suppliers"
-                        :key="supplier.id"
-                        :value="supplier.name"
-                      >
-                        {{ supplier.name }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  @click="getStocks"
-                  class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  検索
-                </button>
-              </div>
-            </div>
-          </div>
+      <div class="mb-4 flex justify-end">
+        <Pagination :links="props.stocks.links" />
+      </div>
 
-          <hr class="my-8" />
-          <div class="mb-8 flex justify-end">
-            <Pagination :links="props.stocks.links" />
-          </div>
+      <Table>
+        <thead>
+          <tr>
+            <TableHeaderCell>画像</TableHeaderCell>
+            <TableHeaderCell>ID</TableHeaderCell>
+            <TableHeaderCell>JANコード</TableHeaderCell>
+            <TableHeaderCell>品名</TableHeaderCell>
+            <TableHeaderCell>品番</TableHeaderCell>
+            <TableHeaderCell>納品先</TableHeaderCell>
+            <TableHeaderCell align="right">価格</TableHeaderCell>
+            <TableHeaderCell>カテゴリー</TableHeaderCell>
+            <TableHeaderCell>手配先No</TableHeaderCell>
+            <TableHeaderCell>手配先</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          <TableRow
+            v-for="stock in filter_stocks"
+            :key="stock.id"
+            class="cursor-pointer"
+            :class="{ 'opacity-60': stock.del_flg }"
+            @click="redirectStock(stock.id)"
+          >
+            <TableDataCell class="w-24">
+              <img
+                class="max-h-16 rounded"
+                :src="
+                  stock.img_path && stock.img_path.includes('https://')
+                    ? stock.img_path
+                    : 'https://akioka.cloud/' + stock.img_path
+                "
+                alt=""
+              />
+            </TableDataCell>
+            <TableDataCell nowrap>{{ stock.id }}</TableDataCell>
+            <TableDataCell nowrap>{{ stock.jan_code }}</TableDataCell>
+            <TableDataCell>{{ stock.name }}</TableDataCell>
+            <TableDataCell nowrap>{{ stock.s_name }}</TableDataCell>
+            <TableDataCell nowrap>{{ stock.deli_location }}</TableDataCell>
+            <TableDataCell align="right" nowrap>
+              {{ stock.price ? stock.price.toLocaleString() : "-" }}
+              <span class="text-xs text-content-muted">円</span>
+            </TableDataCell>
+            <TableDataCell nowrap>{{ stock.classification_name }}</TableDataCell>
+            <TableDataCell nowrap>{{ stock.supplier_no }}</TableDataCell>
+            <TableDataCell nowrap>{{ stock.supplier_name }}</TableDataCell>
+          </TableRow>
+        </tbody>
+      </Table>
 
-          <div class="w-full mx-auto overflow-auto">
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="whitespace-nowrap text-sm w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    画像
-                  </th>
-
-                  <th
-                    class="text-sm w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    ID
-                  </th>
-                  <th
-                    class="text-sm px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    JANコード
-                  </th>
-                  <th
-                    class="text-sm px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    品名
-                  </th>
-                  <th
-                    class="text-sm px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    品番
-                  </th>
-
-                  <th
-                    class="text-sm px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    納品先
-                  </th>
-                  <!-- <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100">備品カテゴリ</th> -->
-                  <th
-                    class="whitespace-nowrap w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    価格
-                  </th>
-                  <th
-                    class="whitespace-nowrap w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    カテゴリー
-                  </th>
-                  <th
-                    class="whitespace-nowrap w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    手配先No
-                  </th>
-                  <th
-                    class="whitespace-nowrap w-8 px-4 py-3 title-font tracking-wider font-medium text-gray-900 bg-gray-100"
-                  >
-                    手配先
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="stock in filter_stocks"
-                  :key="stock.id"
-                  :class="{
-                    'hover:bg-indigo-50 transition-all duration-100': true,
-                    'bg-gray-200': stock.del_flg,
-                  }"
-                  @click="redirectStock(stock.id)"
-                >
-                  <td class="w-24 px-4 py-6">
-                    <img
-                      :src="
-                        stock.img_path && stock.img_path.includes('https://')
-                          ? stock.img_path
-                          : 'https://akioka.cloud/' + stock.img_path
-                      "
-                      alt=""
-                    />
-                  </td>
-                  <td class="px-4 py-3 w-32">{{ stock.id }}</td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.jan_code }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-900">
-                    {{ stock.name }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.s_name }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.deli_location }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.price ? stock.price.toLocaleString() : "-" }}
-                    <span class="text-xs">円</span>
-                  </td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.classification_name }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.supplier_no }}
-                  </td>
-                  <td class="px-4 py-3 text-gray-900 w-32">
-                    {{ stock.supplier_name }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <hr class="my-8" />
-          <div class="mb-8 flex justify-end">
-            <Pagination :links="props.stocks.links" />
-          </div>
-        </div>
-      </section>
+      <div class="mt-4 flex justify-end">
+        <Pagination :links="props.stocks.links" />
+      </div>
     </template>
   </MainLayout>
 </template>
-<style scoped lang="scss">
-</style>
