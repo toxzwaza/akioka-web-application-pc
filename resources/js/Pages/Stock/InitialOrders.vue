@@ -38,6 +38,11 @@ const form = reactive({
   delivery_status: null,
   start_delivery_date: null,
   end_delivery_date: null,
+  // 🅒 追加フィルタ
+  order_no: null,
+  start_desire_delivery_date: null,
+  end_desire_delivery_date: null,
+  purchase_status: null,
 });
 
 // 稟議書OBJ
@@ -718,6 +723,10 @@ const getInitialOrders = (reset) => {
     form.delivery_status = null;
     form.start_delivery_date = null;
     form.end_delivery_date = null;
+    form.order_no = null;
+    form.start_desire_delivery_date = null;
+    form.end_desire_delivery_date = null;
+    form.purchase_status = null;
     // 検索テキストもクリア
     supplier_search_text.value = "";
     order_user_search_text.value = "";
@@ -748,6 +757,10 @@ const getInitialOrders = (reset) => {
       delivery_status: form.delivery_status,
       start_delivery_date: form.start_delivery_date,
       end_delivery_date: form.end_delivery_date,
+      order_no: form.order_no,
+      start_desire_delivery_date: form.start_desire_delivery_date,
+      end_desire_delivery_date: form.end_desire_delivery_date,
+      purchase_status: form.purchase_status,
     },
     {
       onFinish: () => {
@@ -823,6 +836,10 @@ onMounted(() => {
   form.delivery_status = params.get("delivery_status");
   form.start_delivery_date = params.get("start_delivery_date");
   form.end_delivery_date = params.get("end_delivery_date");
+  form.order_no = params.get("order_no");
+  form.start_desire_delivery_date = params.get("start_desire_delivery_date");
+  form.end_desire_delivery_date = params.get("end_desire_delivery_date");
+  form.purchase_status = params.get("purchase_status");
 
   // URLパラメータからIDが設定されている場合、対応するnameを検索テキストに設定
   if (form.supplier_id) {
@@ -1071,20 +1088,37 @@ const deleteInitialOrder = (order) => {
                 </div>
               </div>
               <div class="filter-item date-range">
-                <label class="filter-label">注文日</label>
+                <label class="filter-label">納期</label>
                 <div class="date-range-inputs">
                   <input
                     type="date"
                     class="filter-input date-input"
-                    v-model="form.start_order_date"
+                    v-model="form.start_desire_delivery_date"
                   />
                   <span class="date-separator">～</span>
                   <input
                     type="date"
                     class="filter-input date-input"
-                    v-model="form.end_order_date"
+                    v-model="form.end_desire_delivery_date"
                   />
                 </div>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">注文No</label>
+                <input
+                  type="text"
+                  class="filter-input"
+                  placeholder="注文Noで検索"
+                  v-model="form.order_no"
+                />
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">発注書</label>
+                <select class="filter-select" v-model="form.purchase_status">
+                  <option :value="null">すべて</option>
+                  <option value="issued">発行済</option>
+                  <option value="unissued">未発行</option>
+                </select>
               </div>
 
               <div class="filter-item">
