@@ -1106,6 +1106,71 @@ const commentSummary = (order_request) => {
   return parts.join("\n");
 };
 
+// コメント専用モーダル
+const comment_modal = reactive({
+  status: false,
+  order_request: null,
+  reply_text: "",
+});
+
+const openCommentModal = (order_request) => {
+  comment_modal.order_request = order_request;
+  comment_modal.reply_text = "";
+  comment_modal.status = true;
+};
+
+const closeCommentModal = () => {
+  comment_modal.status = false;
+  comment_modal.order_request = null;
+  comment_modal.reply_text = "";
+};
+
+// 返信を発注者備考(sub_description)に追記して保存
+const sendReply = () => {
+  const text = (comment_modal.reply_text || "").trim();
+  if (!text) return alert("返信内容を入力してください。");
+  if (!comment_modal.order_request) return;
+
+  const name = order_config.user_name || "未ログイン";
+  const now = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  const stamp = `${now.getFullYear()}/${p(now.getMonth() + 1)}/${p(
+    now.getDate()
+  )} ${p(now.getHours())}:${p(now.getMinutes())}`;
+  const line = `[${name} ${stamp}] ${text}`;
+  const current = comment_modal.order_request.sub_description || "";
+  const updated = current ? current + "\n" + line : line;
+
+  axios
+    .post(route("stock.updateSubDescription"), {
+      order_request_id: comment_modal.order_request.id,
+      sub_description: updated,
+    })
+    .then((res) => {
+      if (res.data.status) {
+        comment_modal.order_request.sub_description = updated;
+        comment_modal.reply_text = "";
+      } else {
+        alert("返信の保存に失敗しました。");
+      }
+    })
+    .catch((e) => {
+      console.log(e);
+      alert("返信の保存に失敗しました。");
+    });
+};
+
+// 行クリックで詳細モーダルを開く（操作要素・コメントアイコンは除外）
+const handleRowClick = (order_request, event) => {
+  if (
+    event.target.closest(
+      "button, input, select, textarea, a, .comment-icon-cell"
+    )
+  )
+    return;
+  openModal(order_request);
+};
+
 onMounted(() => {
   // デバイスID取得
   loginCheck();
@@ -1625,8 +1690,9 @@ onMounted(() => {
                       v-for="(order_request, itemIndex) in group.items"
                       :key="order_request.id"
                       v-show="group.document_id || group.isExistingGroup ? !groupVisibility[group.groupKey] : true"
+                      @click="handleRowClick(order_request, $event)"
                       :class="{
-                        'transition duration-300 border hover:bg-gray-300': true,
+                        'transition duration-300 border hover:bg-gray-300 cursor-pointer': true,
                         'bg-blue-50': order_request.select_flg,
                         'my-order-row': order_request.order_user_id == order_config.user_id,
                         'other-order-row': order_request.order_user_id != order_config.user_id && order_request.order_user_id,
@@ -1744,14 +1810,17 @@ onMounted(() => {
                       >
                     </td>
 
-                    <!-- コメント有無アイコン（詳細確認を開かずに確認可能） -->
-                    <td class="text-center">
-                      <span
+                    <!-- コメント有無アイコン（クリックでコメントモーダル） -->
+                    <td class="text-center comment-icon-cell">
+                      <button
                         v-if="hasComment(order_request)"
-                        class="text-2xl cursor-help"
-                        :title="commentSummary(order_request)"
-                        >💬</span
+                        type="button"
+                        class="text-2xl cursor-pointer hover:scale-125 transition-transform"
+                        title="コメントを表示"
+                        @click.stop="openCommentModal(order_request)"
                       >
+                        💬
+                      </button>
                     </td>
 
                     <td class="img_container">
@@ -2019,14 +2088,8 @@ onMounted(() => {
                     >
                       {{ order_request.stock_desc_memo }}
                     </td>
-                    <td class="w-32">
-                      <button
-                        @click="openModal(order_request)"
-                        class="text-sm bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded whitespace-nowrap"
-                      >
-                        詳細確認
-                      </button>
-                    </td>
+                    <!-- 詳細確認ボタンは廃止（行クリックで詳細モーダルを表示） -->
+                    <td class="w-32"></td>
 
                     <td class="w-32">
                       <button
@@ -2072,6 +2135,114 @@ onMounted(() => {
                   </template>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- コメント専用モーダル -->
+      <div
+        v-if="comment_modal.status && comment_modal.order_request"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3"
+        @click.self="closeCommentModal"
+      >
+        <div
+          class="bg-white w-full max-w-2xl max-h-[85vh] rounded-lg shadow-xl flex flex-col overflow-hidden"
+        >
+          <!-- ヘッダー -->
+          <div
+            class="px-5 py-3 border-b border-gray-200 flex justify-between items-center"
+          >
+            <h2 class="text-base font-semibold text-gray-900">
+              💬 コメント：{{
+                comment_modal.order_request.name ||
+                comment_modal.order_request.order_request_name
+              }}
+            </h2>
+            <button
+              type="button"
+              class="px-2 py-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+              @click="closeCommentModal"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- 本文（コメント一覧） -->
+          <div class="px-5 py-4 overflow-y-auto space-y-4">
+            <div>
+              <div class="text-xs font-semibold text-gray-500 mb-1">
+                依頼者コメント
+              </div>
+              <div
+                class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
+              >
+                {{ comment_modal.order_request.description || "（なし）" }}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-semibold text-gray-500 mb-1">
+                発注者コメント・返信履歴
+              </div>
+              <div
+                class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
+              >
+                {{ comment_modal.order_request.sub_description || "（なし）" }}
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-semibold text-gray-500 mb-1">
+                承認者コメント
+              </div>
+              <div
+                v-if="
+                  normalizeApprovals(
+                    comment_modal.order_request.order_request_approvals
+                  ).some((a) => a && a.comment)
+                "
+                class="space-y-2"
+              >
+                <div
+                  v-for="(a, i) in normalizeApprovals(
+                    comment_modal.order_request.order_request_approvals
+                  ).filter((a) => a && a.comment)"
+                  :key="i"
+                  class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3"
+                >
+                  <span class="font-semibold">{{ a.name || "承認者" }}：</span
+                  >{{ a.comment }}
+                </div>
+              </div>
+              <div
+                v-else
+                class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3"
+              >
+                （なし）
+              </div>
+            </div>
+          </div>
+
+          <!-- 返信フォーム -->
+          <div class="px-5 py-3 border-t border-gray-200 bg-gray-50">
+            <label class="block text-xs font-semibold text-gray-600 mb-1"
+              >返信（発注者コメントに追記されます）</label
+            >
+            <textarea
+              v-model="comment_modal.reply_text"
+              rows="2"
+              placeholder="返信内容を入力..."
+              class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-blue-500"
+            ></textarea>
+            <div class="flex justify-end mt-2">
+              <button
+                type="button"
+                class="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded"
+                @click="sendReply"
+              >
+                返信を送信
+              </button>
             </div>
           </div>
         </div>
