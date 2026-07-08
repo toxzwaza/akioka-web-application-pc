@@ -536,11 +536,7 @@ class InitialOrderController extends Controller
                 case 'price':
                     $initial_order->price = $val;
                     $initial_order->calc_price = $val * $initial_order->quantity;
-
-                    // マスタの単価も変更
-                    $stock = Stock::find($initial_order->stock_id);
-                    $stock->price = $val;
-                    $stock->save();
+                    // マスタ(stocks)の単価には反映しない（発注一覧での単価変更はその発注のみに適用）
                     break;
                 
                 case "quantity":
