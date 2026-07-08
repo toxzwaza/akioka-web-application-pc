@@ -1110,53 +1110,41 @@ const commentSummary = (order_request) => {
 const comment_modal = reactive({
   status: false,
   order_request: null,
-  reply_text: "",
 });
 
 const openCommentModal = (order_request) => {
   comment_modal.order_request = order_request;
-  comment_modal.reply_text = "";
   comment_modal.status = true;
 };
 
 const closeCommentModal = () => {
   comment_modal.status = false;
   comment_modal.order_request = null;
-  comment_modal.reply_text = "";
 };
 
-// 返信を発注者備考(sub_description)に追記して保存
-const sendReply = () => {
-  const text = (comment_modal.reply_text || "").trim();
-  if (!text) return alert("返信内容を入力してください。");
-  if (!comment_modal.order_request) return;
-
-  const name = order_config.user_name || "未ログイン";
-  const now = new Date();
-  const p = (n) => String(n).padStart(2, "0");
-  const stamp = `${now.getFullYear()}/${p(now.getMonth() + 1)}/${p(
-    now.getDate()
-  )} ${p(now.getHours())}:${p(now.getMinutes())}`;
-  const line = `[${name} ${stamp}] ${text}`;
-  const current = comment_modal.order_request.sub_description || "";
-  const updated = current ? current + "\n" + line : line;
-
+// 依頼者へ確認メッセージを送信（依頼元端末のTOP画面に表示される）
+const sendConfirmMessage = () => {
+  const or = comment_modal.order_request;
+  if (!or) return;
+  if (!or.message || !or.message.trim()) {
+    return alert("メッセージを入力してください。");
+  }
   axios
-    .post(route("stock.updateSubDescription"), {
-      order_request_id: comment_modal.order_request.id,
-      sub_description: updated,
+    .post(route("stock.sendDeviceMessage"), {
+      order_request_id: or.id,
+      message: or.message,
+      user_id: order_config.user_id,
     })
     .then((res) => {
       if (res.data.status) {
-        comment_modal.order_request.sub_description = updated;
-        comment_modal.reply_text = "";
+        alert("確認メッセージを送信しました。");
       } else {
-        alert("返信の保存に失敗しました。");
+        alert("メッセージの送信に失敗しました。");
       }
     })
     .catch((e) => {
       console.log(e);
-      alert("返信の保存に失敗しました。");
+      alert("メッセージの送信に失敗しました。");
     });
 };
 
@@ -2168,81 +2156,86 @@ onMounted(() => {
             </button>
           </div>
 
-          <!-- 本文（コメント一覧） -->
-          <div class="px-5 py-4 overflow-y-auto space-y-4">
+          <!-- 本文 -->
+          <div class="px-5 py-4 overflow-y-auto space-y-5">
+            <!-- ① 依頼者へ確認メッセージ -->
             <div>
-              <div class="text-xs font-semibold text-gray-500 mb-1">
-                依頼者コメント
-              </div>
-              <div
-                class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
-              >
-                {{ comment_modal.order_request.description || "（なし）" }}
-              </div>
-            </div>
-
-            <div>
-              <div class="text-xs font-semibold text-gray-500 mb-1">
-                発注者コメント・返信履歴
-              </div>
-              <div
-                class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
-              >
-                {{ comment_modal.order_request.sub_description || "（なし）" }}
-              </div>
-            </div>
-
-            <div>
-              <div class="text-xs font-semibold text-gray-500 mb-1">
-                承認者コメント
-              </div>
-              <div
-                v-if="
-                  normalizeApprovals(
-                    comment_modal.order_request.order_request_approvals
-                  ).some((a) => a && a.comment)
-                "
-                class="space-y-2"
-              >
-                <div
-                  v-for="(a, i) in normalizeApprovals(
-                    comment_modal.order_request.order_request_approvals
-                  ).filter((a) => a && a.comment)"
-                  :key="i"
-                  class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3"
+              <div class="text-xs font-semibold text-gray-600 mb-1">
+                依頼者へ確認メッセージ
+                <span class="text-red-500 font-normal"
+                  >（※依頼元端末のTOP画面に送信されます）</span
                 >
-                  <span class="font-semibold">{{ a.name || "承認者" }}：</span
-                  >{{ a.comment }}
+              </div>
+              <textarea
+                v-model="comment_modal.order_request.message"
+                rows="3"
+                placeholder="メッセージを入力してください。"
+                class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-blue-500"
+              ></textarea>
+              <div class="flex justify-end mt-2">
+                <button
+                  type="button"
+                  class="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded"
+                  @click="sendConfirmMessage"
+                >
+                  送信
+                </button>
+              </div>
+            </div>
+
+            <!-- ② 回答メッセージ -->
+            <div>
+              <div class="text-xs font-semibold text-gray-600 mb-1">
+                回答メッセージ
+              </div>
+              <textarea
+                :value="comment_modal.order_request.answer"
+                rows="3"
+                readonly
+                placeholder="回答がありません。"
+                class="w-full border border-gray-200 bg-gray-50 rounded p-2 text-sm text-gray-800"
+              ></textarea>
+              <p
+                class="text-right text-xs mt-1"
+                :class="
+                  comment_modal.order_request.read_flg
+                    ? 'text-gray-600'
+                    : 'text-gray-400'
+                "
+              >
+                {{ comment_modal.order_request.read_flg ? "確認済" : "未確認" }}
+              </p>
+            </div>
+
+            <!-- ③ 承認用 -->
+            <div>
+              <div
+                class="text-xs font-semibold text-gray-600 mb-2 border-b border-gray-200 pb-1"
+              >
+                承認用
+              </div>
+              <div class="space-y-3">
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 mb-1">
+                    依頼者コメント
+                  </div>
+                  <div
+                    class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
+                  >
+                    {{ comment_modal.order_request.description || "（なし）" }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-gray-500 mb-1">
+                    発注者コメント
+                  </div>
+                  <div
+                    class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3 whitespace-pre-line"
+                  >
+                    {{ comment_modal.order_request.sub_description || "（なし）" }}
+                  </div>
                 </div>
               </div>
-              <div
-                v-else
-                class="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded p-3"
-              >
-                （なし）
-              </div>
-            </div>
-          </div>
-
-          <!-- 返信フォーム -->
-          <div class="px-5 py-3 border-t border-gray-200 bg-gray-50">
-            <label class="block text-xs font-semibold text-gray-600 mb-1"
-              >返信（発注者コメントに追記されます）</label
-            >
-            <textarea
-              v-model="comment_modal.reply_text"
-              rows="2"
-              placeholder="返信内容を入力..."
-              class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-blue-500"
-            ></textarea>
-            <div class="flex justify-end mt-2">
-              <button
-                type="button"
-                class="bg-blue-500 hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded"
-                @click="sendReply"
-              >
-                返信を送信
-              </button>
             </div>
           </div>
         </div>
