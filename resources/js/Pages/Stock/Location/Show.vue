@@ -4,7 +4,15 @@ import Pagination from "@/Components/Pagination.vue";
 import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
-import MainTitle from "@/Components/Title/MainTitle.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import FormField from "@/Components/UI/FormField.vue";
+import Button from "@/Components/UI/Button.vue";
+import Badge from "@/Components/UI/Badge.vue";
+import Table from "@/Components/UI/Table.vue";
+import TableHeaderCell from "@/Components/UI/TableHeaderCell.vue";
+import TableRow from "@/Components/UI/TableRow.vue";
+import TableDataCell from "@/Components/UI/TableDataCell.vue";
 
 const props = defineProps({
   location: Object,
@@ -103,207 +111,144 @@ onMounted(() => {
 <template>
   <MainLayout :title="'格納先詳細'">
     <template #content>
-      <MainTitle
-        :top="'格納先詳細'"
-        :sub="'格納先・格納先アドレスの詳細確認と編集を行います。'"
+      <PageHeader
+        title="格納先詳細"
+        subtitle="格納先・格納先アドレスの詳細確認と編集を行います。"
       />
 
-      <section class="text-gray-600 body-font">
-        <div class="flex justify-between">
-          <form class="w-1/2 px-4">
-            <h2 class="font-bold mb-4 text-lg">格納先編集</h2>
-            <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-full px-3">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-password"
-                >
-                  格納先名
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  id="grid-password"
-                  type="text"
-                  placeholder="格納先名を入力してください"
-                  v-model="form.location.location_name"
-                />
-              </div>
-            </div>
-            <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-full px-3">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-password"
-                >
-                  管理部署選択
-                </label>
-                <span
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <SectionCard title="格納先編集">
+          <form class="space-y-6">
+            <FormField
+              label="格納先名"
+              id="location-name"
+              placeholder="格納先名を入力してください"
+              v-model="form.location.location_name"
+            />
+
+            <div>
+              <label class="block mb-1 text-sm font-medium text-content">
+                管理部署選択
+              </label>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
                   v-for="process in props.processes"
                   :key="process.id"
                   @click="process.select_flg = !process.select_flg"
-                  :class="{
-                    'inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1': true,
-                    'opacity-100': process.select_flg,
-                    'opacity-60': !process.select_flg,
-                  }"
+                  class="rounded-badge px-2.5 py-1 text-xs font-medium transition-colors"
+                  :class="
+                    process.select_flg
+                      ? 'bg-primary-600 text-content-inverse'
+                      : 'bg-surface-sunken text-content-muted hover:bg-surface-muted'
+                  "
                 >
                   {{ process.name }}
-                </span>
+                </button>
               </div>
             </div>
 
-            <button
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              @click.prevent="sendLocation"
-            >
-              編集
-            </button>
+            <Button variant="primary" @click.prevent="sendLocation">編集</Button>
           </form>
+        </SectionCard>
 
-          <form class="w-1/2 px-4">
-            <h2 :class="{'font-bold mb-4 text-lg' : true, 'text-green-500': form.address.id }">{{ form.address.id ? 'アドレス編集' : 'アドレス登録' }}</h2>
-            <div class="flex flex-wrap -mx-3 mb-6">
-              <div class="w-full md:w-1/4 px-3 mb-6 md:mb-0">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-city"
-                >
-                  <span class="text-red-500">*</span>棚
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="text"
-                  placeholder="A-Z"
-                  v-model="form.address.shelf"
-                />
-              </div>
-              <div class="w-full md:w-1/4 px-3 mb-6 md:mb-0">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-state"
-                >
-                  <span class="text-red-500">*</span>段
-                </label>
-                <div class="relative">
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    type="number"
-                    placeholder="0~9"
-                    v-model="form.address.row"
-                  />
-                </div>
-              </div>
-              <div class="w-full md:w-1/4 px-3 mb-6 md:mb-0">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-zip"
-                >
-                  列
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                  placeholder="0~9"
-                  v-model="form.address.col"
-                />
-              </div>
-              <div class="w-full md:w-1/4 px-3 mb-6 md:mb-0">
-                <label
-                  class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                  for="grid-zip"
-                >
-                  列の列
-                </label>
-                <input
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                  placeholder="0~9"
-                  v-model="form.address.sub_row"
-                />
-              </div>
+        <SectionCard :title="form.address.id ? 'アドレス編集' : 'アドレス登録'">
+          <form class="space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <FormField
+                label="棚"
+                required
+                type="text"
+                placeholder="A-Z"
+                v-model="form.address.shelf"
+              />
+              <FormField
+                label="段"
+                required
+                type="number"
+                placeholder="0~9"
+                v-model="form.address.row"
+              />
+              <FormField
+                label="列"
+                type="number"
+                placeholder="0~9"
+                v-model="form.address.col"
+              />
+              <FormField
+                label="列の列"
+                type="number"
+                placeholder="0~9"
+                v-model="form.address.sub_row"
+              />
             </div>
 
-            <button
-              :class="{ 'border bg-white hover:bg-blue-500 hover:text-white text-blue-500 font-bold py-2 px-4 rounded' : true , 'text-green-500': form.address.id, 'bg-green-500': form.address.id }"
-              @click.prevent="sendStorageAddress"
-            >
-              {{ form.address.id ? '編集' : '登録' }}
-            </button>
-            <button
-              :class="{ 'border bg-white hover:bg-blue-500 hover:text-white text-blue-500 font-bold py-2 px-4 rounded  ml-4' : true ,  }"
-              v-if="form.address.id"
-              @click.prevent="resetAddressForm"
-            >
-              新規登録へ戻る
-            </button>
+            <div class="flex items-center gap-3">
+              <Button
+                :variant="form.address.id ? 'primary' : 'outline'"
+                @click.prevent="sendStorageAddress"
+              >
+                {{ form.address.id ? '編集' : '登録' }}
+              </Button>
+              <Button
+                v-if="form.address.id"
+                variant="ghost"
+                @click.prevent="resetAddressForm"
+              >
+                新規登録へ戻る
+              </Button>
+            </div>
           </form>
-        </div>
+        </SectionCard>
+      </div>
 
-        <div class="container px-5 py-24 mx-auto">
-          <div class="lg:w-2/3 w-full mx-auto overflow-auto">
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    アドレスID
-                  </th>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    アドレス
-                  </th>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    格納済み在庫数
-                  </th>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    最終更新日
-                  </th>
-                  <th
-                    class="px-4 py-4 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                  >
-                    
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="storage_address in storage_addresses"
-                  :key="storage_address.id"
-                >
-                  <td class="px-4 py-3">{{ storage_address.id }}</td>
-                  <td class="px-4 py-3">{{ storage_address.address }}</td>
-                  <td class="px-4 py-3"><Link class="underline text-blue-500" :href="route('stock.stocks', {storage_address_id : storage_address.id })">{{ storage_address.stock_count }}</Link></td>
-
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    {{
-                      new Date(storage_address.updated_at).toLocaleDateString(
-                        "ja-JP",
-                        { year: "numeric", month: "2-digit", day: "2-digit" }
-                      )
-                    }}
-                  </td>
-                  <td class="px-4 py-3 text-lg text-gray-900">
-                    <button
-                      class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
-                      @click.prevent="editStorageAddress(storage_address)"
-                    >
-                      編集
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      <Table>
+        <thead>
+          <tr>
+            <TableHeaderCell>アドレスID</TableHeaderCell>
+            <TableHeaderCell>アドレス</TableHeaderCell>
+            <TableHeaderCell align="right">格納済み在庫数</TableHeaderCell>
+            <TableHeaderCell>最終更新日</TableHeaderCell>
+            <TableHeaderCell align="center">操作</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          <TableRow
+            v-for="storage_address in storage_addresses"
+            :key="storage_address.id"
+            :state="form.address.id === storage_address.id ? 'selected' : 'default'"
+          >
+            <TableDataCell nowrap>{{ storage_address.id }}</TableDataCell>
+            <TableDataCell>{{ storage_address.address }}</TableDataCell>
+            <TableDataCell align="right" nowrap>
+              <Link
+                class="text-primary-700 hover:underline"
+                :href="route('stock.stocks', { storage_address_id: storage_address.id })"
+                >{{ storage_address.stock_count }}</Link
+              >
+            </TableDataCell>
+            <TableDataCell nowrap>
+              {{
+                new Date(storage_address.updated_at).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+              }}
+            </TableDataCell>
+            <TableDataCell align="center" nowrap>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon-left="edit"
+                @click.prevent="editStorageAddress(storage_address)"
+              >
+                編集
+              </Button>
+            </TableDataCell>
+          </TableRow>
+        </tbody>
+      </Table>
     </template>
   </MainLayout>
 </template>
-<style scoped lang="scss">
-</style>

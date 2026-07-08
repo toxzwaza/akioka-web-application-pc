@@ -1,5 +1,12 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import Table from "@/Components/UI/Table.vue";
+import TableHeaderCell from "@/Components/UI/TableHeaderCell.vue";
+import TableRow from "@/Components/UI/TableRow.vue";
+import TableDataCell from "@/Components/UI/TableDataCell.vue";
+import Button from "@/Components/UI/Button.vue";
 import { ref, onMounted, reactive } from "vue";
 import { router } from "@inertiajs/vue3";
 
@@ -87,170 +94,111 @@ const addParam = (stock_id, el) => {
 <template>
   <MainLayout :title="'滞留品通達'">
     <template #content>
-      <section id="modal" class="text-gray-600 body-font">
-        <div class="container px-5 py-24 mx-auto">
-          <div class="flex flex-col text-center w-full mb-20">
-            <h1
-              class="sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900"
-            >
-              最終滞留品処遇決定
-            </h1>
-            <p
-              class="lg:w-2/3 mx-auto leading-relaxed text-base text-center mt-4"
-            >
-              滞留品の処遇を決定してください。<br />
+      <PageHeader
+        title="最終滞留品処遇決定"
+        subtitle="滞留品の処遇を決定してください。"
+      >
+        <template #actions>
+          <Button variant="primary" icon-left="check" @click="sendTreat">
+            確定する
+          </Button>
+        </template>
+      </PageHeader>
 
-              滞留品の処遇決定は、今後継続的(毎月)に行われますが、<br />本件以降は発注時に登録した管理部署の課長にのみ表示されることとなります。<br />
-
-              <span class="block mt-4 text-sm text-red-400"
-                >*今回全課長に送信しているのは、品証二階へ移動させた物品の管理部署が不明な為です。<br />
-                備品倉庫に継続的に置くことはできません。
-              </span>
-            </p>
-          </div>
-
-          <div id="button_container" class="text-right mb-4">
-            <button
-              @click="sendTreat"
-              class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
-            >
-              確定する
-            </button>
-          </div>
-
-          <div class="w-full mx-auto overflow-auto">
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    id
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    画像
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    品名
-                  </th>
-
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    一課
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    二課
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    品証
-                  </th>
-
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-red-900 text-sm bg-gray-100"
-                  >
-                    最終処遇
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="stock in props.retained_stocks" :key="stock.id">
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ stock.id }}
-                  </td>
-
-                  <td class="border-t-2 border-gray-200 py-2">
-                    <img
-                      @click="checkImg(stock.img_path)"
-                      class="w-16"
-                      :src="
-                        stock.img_path.includes('https')
-                          ? stock.img_path
-                          : '/' + stock.img_path
-                      "
-                      alt=""
-                    />
-                    <!-- 開発用 -->
-                    <!-- <img
-                      @click="checkImg(stock.img_path)"
-                      class="w-16"
-                      :src="
-                        stock.img_path.includes('https') ? stock.img_path : '/'
-                      "
-                      alt=""
-                    /> -->
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ stock.name }}
-                  </td>
-
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{
-                      stock.retain_lists.find((list) => list.user_id === 37)
-                        ?.treat_name
-                    }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{
-                      stock.retain_lists.find((list) => list.user_id === 84)
-                        ?.treat_name
-                    }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{
-                      stock.retain_lists.find((list) => list.user_id === 16)
-                        ?.treat_name
-                    }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    <select
-                      @change="addParam(stock.id, $event.target)"
-                      v-if="decisionTreat(stock.id, stock.retain_lists)"
-                      :class="{ 'treat_select border-2 border-red-500': true }"
-                    >
-                      <option selected value="1">廃棄</option>
-                      <option value="2">一課引き取り</option>
-                      <option value="3">二課引き取り</option>
-                      <option value="4">品証引き取り</option>
-                    </select>
-
-                    <select
-                      @change="addParam(stock.id, $event.target)"
-                      :class="{ treat_select: true }"
-                      v-else
-                    >
-                      <option value="0">未選択</option>
-                      <option value="1">廃棄</option>
-                      <option value="2">一課引き取り</option>
-                      <option value="3">二課引き取り</option>
-                      <option value="4">品証引き取り</option>
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      <SectionCard padding="md" class="mb-6">
+        <div class="space-y-3 text-sm text-content leading-relaxed">
+          <p>
+            滞留品の処遇決定は、今後継続的(毎月)に行われますが、本件以降は発注時に登録した管理部署の課長にのみ表示されることとなります。
+          </p>
+          <p class="text-xs text-error-600">
+            *今回全課長に送信しているのは、品証二階へ移動させた物品の管理部署が不明な為です。備品倉庫に継続的に置くことはできません。
+          </p>
         </div>
-      </section>
+      </SectionCard>
+
+      <Table>
+        <thead>
+          <tr>
+            <TableHeaderCell>id</TableHeaderCell>
+            <TableHeaderCell>画像</TableHeaderCell>
+            <TableHeaderCell>品名</TableHeaderCell>
+            <TableHeaderCell>一課</TableHeaderCell>
+            <TableHeaderCell>二課</TableHeaderCell>
+            <TableHeaderCell>品証</TableHeaderCell>
+            <TableHeaderCell>最終処遇</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          <TableRow v-for="stock in props.retained_stocks" :key="stock.id">
+            <TableDataCell nowrap>{{ stock.id }}</TableDataCell>
+            <TableDataCell>
+              <img
+                @click="checkImg(stock.img_path)"
+                class="w-16 rounded cursor-pointer"
+                :src="
+                  stock.img_path.includes('https')
+                    ? stock.img_path
+                    : '/' + stock.img_path
+                "
+                alt=""
+              />
+            </TableDataCell>
+            <TableDataCell>{{ stock.name }}</TableDataCell>
+            <TableDataCell>
+              {{
+                stock.retain_lists.find((list) => list.user_id === 37)
+                  ?.treat_name
+              }}
+            </TableDataCell>
+            <TableDataCell>
+              {{
+                stock.retain_lists.find((list) => list.user_id === 84)
+                  ?.treat_name
+              }}
+            </TableDataCell>
+            <TableDataCell>
+              {{
+                stock.retain_lists.find((list) => list.user_id === 16)
+                  ?.treat_name
+              }}
+            </TableDataCell>
+            <TableDataCell>
+              <select
+                @change="addParam(stock.id, $event.target)"
+                v-if="decisionTreat(stock.id, stock.retain_lists)"
+                :class="{
+                  'treat_select border-2 border-red-500 rounded-md shadow-sm text-sm focus:outline-none focus:border-primary-500 focus:ring-primary-500': true,
+                }"
+              >
+                <option selected value="1">廃棄</option>
+                <option value="2">一課引き取り</option>
+                <option value="3">二課引き取り</option>
+                <option value="4">品証引き取り</option>
+              </select>
+
+              <select
+                @change="addParam(stock.id, $event.target)"
+                :class="{
+                  'treat_select rounded-md border-border shadow-sm text-sm focus:outline-none focus:border-primary-500 focus:ring-primary-500': true,
+                }"
+                v-else
+              >
+                <option value="0">未選択</option>
+                <option value="1">廃棄</option>
+                <option value="2">一課引き取り</option>
+                <option value="3">二課引き取り</option>
+                <option value="4">品証引き取り</option>
+              </select>
+            </TableDataCell>
+          </TableRow>
+        </tbody>
+      </Table>
     </template>
   </MainLayout>
 
   <div v-if="modalImg.status" id="img_modal">
     <div @click="changeModal" id="img_container" class="">
-      <button
-        @click="changeModal"
-        class="bg-white hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
-      >
-        閉じる
-      </button>
+      <Button variant="secondary" @click="changeModal">閉じる</Button>
       <img :src="modalImg.imgPath" alt="" />
     </div>
   </div>

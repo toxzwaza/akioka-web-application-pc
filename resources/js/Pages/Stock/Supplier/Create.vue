@@ -2,7 +2,10 @@
 import MainLayout from "@/Layouts/MainLayout.vue";
 import { reactive, onMounted } from "vue";
 import axios from "axios";
-import MainTitle from "@/Components/Title/MainTitle.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import FormField from "@/Components/UI/FormField.vue";
+import Button from "@/Components/UI/Button.vue";
 
 const props = defineProps({
   supplier: Object,
@@ -70,174 +73,130 @@ onMounted(() => {
 <template>
   <MainLayout :title="'取引先'">
     <template #content>
-      <div>
-        <section class="text-gray-600 body-font">
-          <MainTitle
-            :top="'取引先'"
-            :sub="'取引先一覧の確認と登録を行います。必須項目を入力して、追加ボタンを押してください。'"
-          />
-          <div
-            class="container mx-auto flex px-5 md:flex-row flex-col items-start justify-center"
-          >
-            <div class="bg-white py-6 sm:py-8 lg:py-12">
-              <div class="mx-auto max-w-screen-2xl px-4 md:px-8">
-                <form class="mx-auto grid max-w-screen-md gap-4 sm:grid-cols-2">
-                  <div>
-                    <label
-                      for="supplier_no"
-                      class="mb-2 inline-block text-sm text-gray-800 sm:text-base"
-                      >取引先no</label
-                    >
-                    <input
-                      v-model="form.supplier_no"
-                      name="supplier_no"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
+      <PageHeader
+        :title="props.edit ? '取引先編集' : '取引先登録'"
+        subtitle="取引先の情報を入力します。必須項目を入力して、追加ボタンを押してください。"
+      />
 
-                  <div class="sm:col-span-2">
-                    <label
-                      for="name"
-                      class="mb-2 inline-block text-sm text-red-400 sm:text-base"
-                      >会社名*</label
-                    >
-                    <input
-                      v-model="form.name"
-                      name="name"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
+      <SectionCard title="取引先情報">
+        <form class="grid gap-4 sm:grid-cols-2">
+          <FormField label="取引先no" id="supplier_no">
+            <input
+              v-model="form.supplier_no"
+              id="supplier_no"
+              name="supplier_no"
+              class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </FormField>
 
-                  <div class="sm:col-span-2">
-                    <label
-                      for="rub_name"
-                      class="mb-2 inline-block text-sm text-gray-800 sm:text-base"
-                      >読み（ひらがな）</label
-                    >
-                    <input
-                      v-model="form.rub_name"
-                      name="rub_name"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
-
-                  <div class="">
-                    <label
-                      for="tel"
-                      class="mb-2 inline-block text-sm sm:text-base"
-                      >TEL</label
-                    >
-                    <input
-                      v-model="form.tel"
-                      name="tel"
-                      type="text"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
-                  <div class="">
-                    <label
-                      for="fax"
-                      class="mb-2 inline-block text-sm sm:text-base"
-                      >FAX</label
-                    >
-                    <input
-                      v-model="form.fax"
-                      name="fax"
-                      type="text"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
-
-                  <div class="sm:col-span-2">
-                    <label
-                      for="address"
-                      class="mb-2 inline-block text-sm text-gray-800 sm:text-base"
-                      >住所</label
-                    >
-                    <input
-                      v-model="form.address"
-                      name="address"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
-
-                  <div class="">
-                    <label
-                      for="p_code"
-                      class="mb-2 inline-block text-sm sm:text-base"
-                      >郵便番号</label
-                    >
-                    <input
-                      v-model="form.p_code"
-                      name="p_code"
-                      type="text"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
-
-                  <div class="">
-                    <label
-                      for="invoice_registration_number"
-                      class="mb-2 inline-block text-sm sm:text-base"
-                      >的確事業者番号</label
-                    >
-                    <input
-                      v-model="form.invoice_registration_number"
-                      name="invoice_registration_number"
-                      type="text"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      value=""
-                    />
-                  </div>
-
-                  <div class="sm:col-span-2">
-                    <label
-                      for="memo"
-                      class="mb-2 inline-block text-sm text-gray-800 sm:text-base"
-                      >メモ</label
-                    >
-                    <textarea
-                      v-model="form.memo"
-                      name="memo"
-                      class="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
-                      rows="4"
-                    ></textarea>
-                  </div>
-
-                  <div class="flex items-center justify-between sm:col-span-2">
-                    <button
-                      v-if="!props.edit"
-                      @click.prevent="createSupplier"
-                      class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-                    >
-                      追加
-                    </button>
-                    <button
-                      v-else
-                      @click.prevent="editSupplier"
-                      class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-                    >
-                      編集
-                    </button>
-
-                    <span class="text-sm text-gray-500">*Required</span>
-                  </div>
-                </form>
-                <!-- form - end -->
-              </div>
-            </div>
+          <div class="sm:col-span-2">
+            <FormField label="会社名" id="name" required>
+              <input
+                v-model="form.name"
+                id="name"
+                name="name"
+                class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </FormField>
           </div>
-        </section>
-      </div>
+
+          <div class="sm:col-span-2">
+            <FormField label="読み（ひらがな）" id="rub_name">
+              <input
+                v-model="form.rub_name"
+                id="rub_name"
+                name="rub_name"
+                class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </FormField>
+          </div>
+
+          <FormField label="TEL" id="tel">
+            <input
+              v-model="form.tel"
+              id="tel"
+              name="tel"
+              type="text"
+              class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </FormField>
+
+          <FormField label="FAX" id="fax">
+            <input
+              v-model="form.fax"
+              id="fax"
+              name="fax"
+              type="text"
+              class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </FormField>
+
+          <div class="sm:col-span-2">
+            <FormField label="住所" id="address">
+              <input
+                v-model="form.address"
+                id="address"
+                name="address"
+                class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </FormField>
+          </div>
+
+          <FormField label="郵便番号" id="p_code">
+            <input
+              v-model="form.p_code"
+              id="p_code"
+              name="p_code"
+              type="text"
+              class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </FormField>
+
+          <FormField label="的確事業者番号" id="invoice_registration_number">
+            <input
+              v-model="form.invoice_registration_number"
+              id="invoice_registration_number"
+              name="invoice_registration_number"
+              type="text"
+              class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </FormField>
+
+          <div class="sm:col-span-2">
+            <FormField label="メモ" id="memo">
+              <textarea
+                v-model="form.memo"
+                id="memo"
+                name="memo"
+                rows="4"
+                class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+              ></textarea>
+            </FormField>
+          </div>
+        </form>
+
+        <template #footer>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-content-muted">* は必須項目です</span>
+            <Button
+              v-if="!props.edit"
+              variant="primary"
+              icon-left="add"
+              @click.prevent="createSupplier"
+            >
+              追加
+            </Button>
+            <Button
+              v-else
+              variant="primary"
+              icon-left="save"
+              @click.prevent="editSupplier"
+            >
+              編集
+            </Button>
+          </div>
+        </template>
+      </SectionCard>
     </template>
   </MainLayout>
 </template>
-<style scoped lang="scss">
-</style>

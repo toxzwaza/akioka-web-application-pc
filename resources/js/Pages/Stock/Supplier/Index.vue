@@ -1,7 +1,15 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
-import MainTitle from "@/Components/Title/MainTitle.vue";
 import Pagination from "@/Components/Pagination.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import FilterBar from "@/Components/UI/FilterBar.vue";
+import FormField from "@/Components/UI/FormField.vue";
+import Button from "@/Components/UI/Button.vue";
+import Badge from "@/Components/UI/Badge.vue";
+import Table from "@/Components/UI/Table.vue";
+import TableHeaderCell from "@/Components/UI/TableHeaderCell.vue";
+import TableRow from "@/Components/UI/TableRow.vue";
+import TableDataCell from "@/Components/UI/TableDataCell.vue";
 import { onMounted, reactive } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 
@@ -61,207 +69,128 @@ const getStatusText = (delFlg) => {
 <template>
   <MainLayout :title="'取引先一覧'">
     <template #content>
-      <MainTitle
-        :top="'取引先'"
-        :sub="'取引先一覧の確認と登録を行います。必須項目を入力して、追加ボタンを押してください。'"
-      />
-      <div class="mt-4 mb-4 flex justify-end">
-        <Link
-          :href="route('stock.suppliers.create')"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          取引先追加
-        </Link>
-      </div>
-      <div class="mt-4 mb-4 p-4 bg-gray-50 rounded-lg">
-        <p class="mb-3 font-bold text-gray-700">検索・絞り込み</p>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              取引先名
-            </label>
-            <input
-              type="text"
-              v-model="form.name"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="取引先名で検索"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              ふり
-            </label>
-            <input
-              type="text"
-              v-model="form.rub_name"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="ふりで検索"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              電話番号
-            </label>
-            <input
-              type="text"
-              v-model="form.tel"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="電話番号で検索"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              FAX番号
-            </label>
-            <input
-              type="text"
-              v-model="form.fax"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="FAX番号で検索"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              郵便番号
-            </label>
-            <input
-              type="text"
-              v-model="form.p_code"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="郵便番号で検索"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              住所
-            </label>
-            <input
-              type="text"
-              v-model="form.address"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="住所で検索"
-            />
-          </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button
-            @click="searchSuppliers"
-            class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded"
+      <PageHeader
+        title="取引先一覧"
+        subtitle="取引先一覧の確認と登録を行います。必須項目を入力して、追加ボタンを押してください。"
+      >
+        <template #actions>
+          <Link :href="route('stock.suppliers.create')">
+            <Button variant="primary" icon-left="add">取引先追加</Button>
+          </Link>
+        </template>
+      </PageHeader>
+
+      <FilterBar>
+        <FormField label="取引先名">
+          <input
+            type="text"
+            v-model="form.name"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="取引先名で検索"
+          />
+        </FormField>
+        <FormField label="ふり">
+          <input
+            type="text"
+            v-model="form.rub_name"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="ふりで検索"
+          />
+        </FormField>
+        <FormField label="電話番号">
+          <input
+            type="text"
+            v-model="form.tel"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="電話番号で検索"
+          />
+        </FormField>
+        <FormField label="FAX番号">
+          <input
+            type="text"
+            v-model="form.fax"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="FAX番号で検索"
+          />
+        </FormField>
+        <FormField label="郵便番号">
+          <input
+            type="text"
+            v-model="form.p_code"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="郵便番号で検索"
+          />
+        </FormField>
+        <FormField label="住所">
+          <input
+            type="text"
+            v-model="form.address"
+            class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="住所で検索"
+          />
+        </FormField>
+
+        <template #actions>
+          <Button variant="ghost" @click="resetFilters">リセット</Button>
+          <Button variant="primary" icon-left="search" @click="searchSuppliers"
+            >検索</Button
           >
-            検索
-          </button>
-          <button
-            @click="resetFilters"
-            class="px-4 py-2 bg-gray-500 hover:bg-gray-700 text-white font-bold rounded"
+        </template>
+      </FilterBar>
+
+      <Table>
+        <thead>
+          <tr>
+            <TableHeaderCell>ID</TableHeaderCell>
+            <TableHeaderCell>取引先No</TableHeaderCell>
+            <TableHeaderCell>取引先名</TableHeaderCell>
+            <TableHeaderCell>ふり</TableHeaderCell>
+            <TableHeaderCell>電話番号</TableHeaderCell>
+            <TableHeaderCell>FAX番号</TableHeaderCell>
+            <TableHeaderCell>郵便番号</TableHeaderCell>
+            <TableHeaderCell>住所</TableHeaderCell>
+            <TableHeaderCell>メモ</TableHeaderCell>
+            <TableHeaderCell align="center">有効/無効</TableHeaderCell>
+            <TableHeaderCell>作成日時</TableHeaderCell>
+            <TableHeaderCell>更新日時</TableHeaderCell>
+            <TableHeaderCell>インボイス登録番号</TableHeaderCell>
+            <TableHeaderCell align="center">操作</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          <TableRow
+            v-for="supplier in suppliers.data"
+            :key="supplier.id"
+            :state="supplier.del_flg === 1 ? 'error' : 'default'"
           >
-            リセット
-          </button>
-        </div>
-      </div>
-      <div class="mt-4 overflow-x-auto">
-        <table class="table-auto w-full text-left whitespace-no-wrap">
-          <thead>
-            <tr>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">
-                ID
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                取引先No
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                取引先名
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                ふり
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                電話番号
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                FAX番号
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                郵便番号
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                住所
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                メモ
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                有効/無効
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                作成日時
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                更新日時
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">
-                インボイス登録番号
-              </th>
-              <th class="whitespace-nowrap px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">
-                操作
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="supplier in suppliers.data"
-              :key="supplier.id"
-            >
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.id }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.supplier_no ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.name ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.rub_name ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.tel ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.fax ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.p_code ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.address ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.memo ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
+            <TableDataCell nowrap>{{ supplier.id }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.supplier_no ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.name ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.rub_name ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.tel ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.fax ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.p_code ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.address ?? '-' }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.memo ?? '-' }}</TableDataCell>
+            <TableDataCell align="center" nowrap>
+              <Badge :variant="supplier.del_flg === 1 ? 'error' : 'success'">
                 {{ getStatusText(supplier.del_flg) }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ formatDate(supplier.created_at) }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ formatDate(supplier.updated_at) }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                {{ supplier.invoice_registration_number ?? '-' }}
-              </td>
-              <td class="whitespace-nowrap border-t-2 border-gray-200 px-4 py-4">
-                <Link
-                  :href="route('stock.suppliers.edit', supplier.id)"
-                  class="bg-yellow-500 hover:bg-yellow-700 text-white text-xs font-bold py-1 px-3 rounded"
+              </Badge>
+            </TableDataCell>
+            <TableDataCell nowrap>{{ formatDate(supplier.created_at) }}</TableDataCell>
+            <TableDataCell nowrap>{{ formatDate(supplier.updated_at) }}</TableDataCell>
+            <TableDataCell nowrap>{{ supplier.invoice_registration_number ?? '-' }}</TableDataCell>
+            <TableDataCell align="center" nowrap>
+              <Link :href="route('stock.suppliers.edit', supplier.id)">
+                <Button variant="secondary" size="sm" icon-left="edit"
+                  >編集</Button
                 >
-                  編集
-                </Link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </Link>
+            </TableDataCell>
+          </TableRow>
+        </tbody>
+      </Table>
+
       <div class="mt-4 flex justify-end">
         <Pagination :links="suppliers.links" />
       </div>

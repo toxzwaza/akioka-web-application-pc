@@ -1,5 +1,9 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import Button from "@/Components/UI/Button.vue";
+import Icon from "@/Components/UI/Icon.vue";
 import { onMounted , ref } from "vue"
 import axios from "axios"
 
@@ -35,67 +39,67 @@ onMounted(()=> {
 <template>
   <MainLayout :title="'在庫管理'">
     <template #content>
-      <h1 class="text-center text-xl font-bold text-gray-800 mb-12">
-        カメラ録画
-      </h1>
+      <PageHeader
+        title="カメラ録画"
+        subtitle="録画一覧から映像を選択して再生できます。"
+      />
 
-    <div class="flex justify-between items-start">
-              <section class="w-1/4 text-gray-600 body-font">
-        <div class="container mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- 録画一覧 -->
+        <SectionCard title="録画一覧" padding="none" class="lg:col-span-1">
+          <ul class="divide-y divide-border">
+            <li
+              v-for="movie in movies"
+              :key="movie.id"
+              class="flex items-center justify-between gap-3 px-4 py-3"
+              :class="videoUrl.includes(movie) ? 'bg-primary-50' : ''"
+            >
+              <span
+                class="flex items-center gap-2 text-sm min-w-0"
+                :class="videoUrl.includes(movie) ? 'font-bold text-primary-700' : 'text-content'"
+              >
+                <Icon
+                  v-if="videoUrl.includes(movie)"
+                  name="play_circle"
+                  size="sm"
+                  class="text-primary-600 shrink-0"
+                />
+                <span class="truncate">{{ movie }}</span>
+              </span>
+              <Button
+                variant="primary"
+                size="sm"
+                icon-left="play_arrow"
+                @click="selectWatchMovie(movie)"
+              >
+                視聴
+              </Button>
+            </li>
+          </ul>
+          <p
+            v-if="movies.length === 0"
+            class="px-4 py-8 text-center text-sm text-content-muted"
+          >
+            録画データがありません。
+          </p>
+        </SectionCard>
 
-          <div class="w-full mx-auto overflow-auto">
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    録画一覧
-                  </th>
-                  <th
-                    class="w-10 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"
-                  ></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="movie in movies" :key="movie.id">
-                  <td :class="{'px-4 py-3' : true , 'text-green-500 font-bold text-lg': videoUrl.includes(movie)}" >
-                    <span v-if="videoUrl.includes(movie)">
-                      <i class="fas fa-play-circle text-green-500"></i>
-                    </span>
-                    {{ movie }}
-                  </td>
-                  <td class="w-10 text-center px-4 py-3">
-                    <button @click="selectWatchMovie(movie)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm whitespace-nowrap">
-                    視聴  
-                  </button>
-                  </td>
-                </tr>
-                
-              </tbody>
-            </table>
-          </div>
-          
+        <!-- 再生プレイヤー -->
+        <div class="lg:col-span-2 bg-surface-base border border-border rounded-card shadow-card p-6">
+          <p class="mb-3 text-sm text-content-muted">再生中: {{ videoUrl }}</p>
+          <video
+            :key="videoKey"
+            controls
+            autoplay
+            width="640"
+            height="360"
+            class="h-full w-full rounded-md border border-border"
+          >
+            <source :src="videoUrl" type="video/mp4">
+            お使いのブラウザは動画再生に対応していません。
+          </video>
         </div>
-      </section>
-      <div class="w-2/3">
-          <p class="mb-2 ">再生中: {{ videoUrl }}</p>
-          <video 
-          :key="videoKey"
-          controls  
-          autoplay
-          width="640" 
-          height="360"
-          class="h-full w-full rounded-lg shadow-lg"
-        >
-        <source :src="videoUrl" type="video/mp4">
-        お使いのブラウザは動画再生に対応していません。
-      </video>
-
-        </div>
-
-    </div>
-
+      </div>
     </template>
   </MainLayout>
 </template>

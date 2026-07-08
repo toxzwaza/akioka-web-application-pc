@@ -1,5 +1,13 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import Table from "@/Components/UI/Table.vue";
+import TableHeaderCell from "@/Components/UI/TableHeaderCell.vue";
+import TableRow from "@/Components/UI/TableRow.vue";
+import TableDataCell from "@/Components/UI/TableDataCell.vue";
+import Badge from "@/Components/UI/Badge.vue";
+import Button from "@/Components/UI/Button.vue";
 import { ref, onMounted, reactive } from "vue";
 import { router } from "@inertiajs/vue3";
 
@@ -37,255 +45,159 @@ onMounted(() => {});
 <template>
   <MainLayout :title="'滞留品通達'">
     <template #content>
-      <section id="modal" class="text-gray-600 body-font">
-        <div class="container px-5 py-24 mx-auto">
-          <div class="flex flex-col text-center w-full mb-20">
-            <h1
-              class="sm:text-4xl text-3xl font-medium title-font mb-2 text-gray-900"
-            >
-              滞留品処遇決定
-            </h1>
-            <p
-              class="lg:w-2/3 mx-auto leading-relaxed text-base text-center mt-4"
-            >
-              滞留品の処遇を決定してください。<br />
-              以下の表のセレクトボックスより、<span
-                class="text-ls font-bold text-red-600"
-                >「廃棄」</span
-              >又は<span class="text-ls font-bold text-green-600"
-                >「現場引き取り」</span
-              >を選択してください。<br />
+      <PageHeader
+        title="滞留品処遇決定"
+        subtitle="滞留品の処遇を決定してください。"
+      />
 
-              滞留品の処遇決定は、今後継続的(毎月)に行われますが、<br />本件以降は発注時に登録した管理部署の課長にのみ表示されることとなります。<br />
-
-              <span class="block mt-4 text-sm text-red-400"
-                >*今回全課長に送信しているのは、品証二階へ移動させた物品の管理部署が不明な為です。<br />
-                備品倉庫に継続的に置くことはできません。
-              </span>
-            </p>
-          </div>
-          <div class="w-full mx-auto overflow-auto">
-            <h2 class="mb-4 font-bold text-gray-400 font-serif">
-              <span class="text-xl text-red-500 pr-2"
-                >{{ props.user_name }}
-              </span>
-              さんがログイン中。
-            </h2>
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    id
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    画像
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    品名
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    価格
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    個数
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    金額
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    処遇
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="stock in props.stocks" :key="stock.id">
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ stock.id }}
-                  </td>
-
-                  <td class="border-t-2 border-gray-200 py-2">
-                    <img
-                      @click="checkImg(stock.img_path)"
-                      class="w-16"
-                      :src="
-                        stock.img_path.includes('https')
-                          ? stock.img_path
-                          : '/' + stock.img_path
-                      "
-                      alt=""
-                    />
-                    <!-- 開発用 -->
-                    <!-- <img
-                      @click="checkImg(stock.img_path)"
-                      class="w-16"
-                      :src="
-                        stock.img_path.includes('https') ? stock.img_path : '/'
-                      "
-                      alt=""
-                    /> -->
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ stock.name }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    @ {{ stock.price }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ stock.quantity }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    = {{ (stock.price * stock.quantity).toLocaleString() }}円
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    <select
-                      class="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      name=""
-                      id="treatSelect"
-                      @change="changeSelect(stock.id, $event.target.value)"
-                    >
-                      <option value="0" class="text-gray-600">
-                        選択してください。
-                      </option>
-                      <option value="1" class="font-bold text-red-400">
-                        廃棄
-                      </option>
-                      <option value="2" class="font-bold text-green-400">
-                        現場引き取り
-                      </option>
-                      <!-- --- -->
-                      <hr class="my-2">
-                      <option value="3" class="font-bold text-orange-400">
-                        一課受け取り依頼
-                      </option>
-                      <option value="4" class="font-bold text-blue-400">
-                        二課受け取り依頼
-                      </option>
-                      <option value="5" class="font-bold text-purple-400">
-                        品証受け取り依頼
-                      </option>
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <h2 class="mt-16 mb-4 font-semibold text-xl">
-              滞留品 所在決定済み
-            </h2>
-            <table class="table-auto w-full text-left whitespace-no-wrap">
-              <thead>
-                <tr>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    id
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
-                  >
-                    画像
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    品名
-                  </th>
-
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    処遇
-                  </th>
-                  <th
-                    class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                  >
-                    決定者
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="retained_stock in props.retained_stocks"
-                  :key="retained_stock.id"
-                >
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ retained_stock.id }}
-                  </td>
-
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    <img
-                      @click="checkImg(retained_stock.img_path)"
-                      class="w-16"
-                      :src="
-                        retained_stock.img_path.includes('https')
-                          ? retained_stock.img_path
-                          : '/' + retained_stock.img_path
-                      "
-                      alt=""
-                    />
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ retained_stock.name }}
-                  </td>
-
-                  <td
-                    :class="{
-                      'border-t-2 border-gray-200 px-4 py-4 font-bold': true,
-                      'text-red-500': retained_stock.treat_id == 1,
-                      'text-green-500': retained_stock.treat_id == 2,
-                      'text-orange-500': retained_stock.treat_id == 3,
-                      'text-blue-500': retained_stock.treat_id == 4,
-                      'text-purple-500': retained_stock.treat_id == 5,
-                    }"
-                  >
-                    {{
-                      retained_stock.treat_id == 1
-                        ? "廃棄"
-                        : retained_stock.treat_id == 2
-                        ? "現場引き取り"
-                        : retained_stock.treat_id == 3
-                        ? "一課受け取り依頼"
-                        : retained_stock.treat_id == 4
-                        ? "二課受け取り依頼"
-                        : retained_stock.treat_id == 5
-                        ? "品証受け取り依頼"
-                        : ""
-                    }}
-                  </td>
-                  <td class="border-t-2 border-gray-200 px-4 py-4">
-                    {{ retained_stock.user_name }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      <SectionCard padding="md" class="mb-6">
+        <div class="space-y-3 text-sm text-content leading-relaxed">
+          <p>
+            以下の表のセレクトボックスより、<span
+              class="font-bold text-error-700"
+              >「廃棄」</span
+            >又は<span class="font-bold text-success-700"
+              >「現場引き取り」</span
+            >を選択してください。
+          </p>
+          <p>
+            滞留品の処遇決定は、今後継続的(毎月)に行われますが、本件以降は発注時に登録した管理部署の課長にのみ表示されることとなります。
+          </p>
+          <p class="text-xs text-error-600">
+            *今回全課長に送信しているのは、品証二階へ移動させた物品の管理部署が不明な為です。備品倉庫に継続的に置くことはできません。
+          </p>
         </div>
-      </section>
+      </SectionCard>
+
+      <div class="mb-4 flex items-center gap-1.5 text-sm text-content-muted">
+        <span class="font-semibold text-content">{{ props.user_name }}</span>
+        さんがログイン中。
+      </div>
+
+      <div class="mb-8">
+        <Table>
+          <thead>
+            <tr>
+              <TableHeaderCell>id</TableHeaderCell>
+              <TableHeaderCell>画像</TableHeaderCell>
+              <TableHeaderCell>品名</TableHeaderCell>
+              <TableHeaderCell align="right">価格</TableHeaderCell>
+              <TableHeaderCell align="right">個数</TableHeaderCell>
+              <TableHeaderCell align="right">金額</TableHeaderCell>
+              <TableHeaderCell>処遇</TableHeaderCell>
+            </tr>
+          </thead>
+          <tbody>
+            <TableRow v-for="stock in props.stocks" :key="stock.id">
+              <TableDataCell nowrap>{{ stock.id }}</TableDataCell>
+              <TableDataCell>
+                <img
+                  @click="checkImg(stock.img_path)"
+                  class="w-16 rounded cursor-pointer"
+                  :src="
+                    stock.img_path.includes('https')
+                      ? stock.img_path
+                      : '/' + stock.img_path
+                  "
+                  alt=""
+                />
+              </TableDataCell>
+              <TableDataCell>{{ stock.name }}</TableDataCell>
+              <TableDataCell align="right" nowrap>@ {{ stock.price }}</TableDataCell>
+              <TableDataCell align="right" nowrap>{{ stock.quantity }}</TableDataCell>
+              <TableDataCell align="right" nowrap>
+                = {{ (stock.price * stock.quantity).toLocaleString() }}円
+              </TableDataCell>
+              <TableDataCell>
+                <select
+                  class="rounded-md border-border shadow-sm text-sm focus:outline-none focus:border-primary-500 focus:ring-primary-500"
+                  name=""
+                  id="treatSelect"
+                  @change="changeSelect(stock.id, $event.target.value)"
+                >
+                  <option value="0">選択してください。</option>
+                  <option value="1">廃棄</option>
+                  <option value="2">現場引き取り</option>
+                  <hr class="my-2" />
+                  <option value="3">一課受け取り依頼</option>
+                  <option value="4">二課受け取り依頼</option>
+                  <option value="5">品証受け取り依頼</option>
+                </select>
+              </TableDataCell>
+            </TableRow>
+          </tbody>
+        </Table>
+      </div>
+
+      <h2 class="mb-4 text-base font-bold text-content">
+        滞留品 所在決定済み
+      </h2>
+      <Table>
+        <thead>
+          <tr>
+            <TableHeaderCell>id</TableHeaderCell>
+            <TableHeaderCell>画像</TableHeaderCell>
+            <TableHeaderCell>品名</TableHeaderCell>
+            <TableHeaderCell>処遇</TableHeaderCell>
+            <TableHeaderCell>決定者</TableHeaderCell>
+          </tr>
+        </thead>
+        <tbody>
+          <TableRow
+            v-for="retained_stock in props.retained_stocks"
+            :key="retained_stock.id"
+          >
+            <TableDataCell nowrap>{{ retained_stock.id }}</TableDataCell>
+            <TableDataCell>
+              <img
+                @click="checkImg(retained_stock.img_path)"
+                class="w-16 rounded cursor-pointer"
+                :src="
+                  retained_stock.img_path.includes('https')
+                    ? retained_stock.img_path
+                    : '/' + retained_stock.img_path
+                "
+                alt=""
+              />
+            </TableDataCell>
+            <TableDataCell>{{ retained_stock.name }}</TableDataCell>
+            <TableDataCell>
+              <Badge
+                :variant="
+                  {
+                    1: 'error',
+                    2: 'success',
+                    3: 'warning',
+                    4: 'info',
+                    5: 'primary',
+                  }[retained_stock.treat_id] || 'neutral'
+                "
+              >
+                {{
+                  retained_stock.treat_id == 1
+                    ? "廃棄"
+                    : retained_stock.treat_id == 2
+                    ? "現場引き取り"
+                    : retained_stock.treat_id == 3
+                    ? "一課受け取り依頼"
+                    : retained_stock.treat_id == 4
+                    ? "二課受け取り依頼"
+                    : retained_stock.treat_id == 5
+                    ? "品証受け取り依頼"
+                    : ""
+                }}
+              </Badge>
+            </TableDataCell>
+            <TableDataCell>{{ retained_stock.user_name }}</TableDataCell>
+          </TableRow>
+        </tbody>
+      </Table>
     </template>
   </MainLayout>
 
   <div v-if="modalImg.status" id="img_modal">
     <div @click="changeModal" id="img_container" class="">
-      <button
-        @click="changeModal"
-        class="bg-white hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
-      >
-        閉じる
-      </button>
+      <Button variant="secondary" @click="changeModal">閉じる</Button>
       <img :src="modalImg.imgPath" alt="" />
     </div>
   </div>
