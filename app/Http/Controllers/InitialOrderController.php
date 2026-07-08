@@ -42,6 +42,14 @@ class InitialOrderController extends Controller
         $delivery_status = $request->delivery_status;
         $start_delivery_date = $request->start_delivery_date;
         $end_delivery_date = $request->end_delivery_date;
+        // 🅒 追加フィルタ
+        $order_no = $request->order_no;
+        // 納期フィルタ：検索対象の日付列をチェックボックスで選択（デフォルト=納入日 delivery_date）
+        $nouki_start = $request->nouki_start;
+        $nouki_end = $request->nouki_end;
+        $nouki_targets_raw = $request->nouki_targets; // カンマ区切り文字列
+        $nouki_targets = $nouki_targets_raw ? explode(',', $nouki_targets_raw) : ['delivery_date'];
+        $purchase_status = $request->purchase_status;
 
         $query = InitialOrder::select(
             'initial_orders.*',
@@ -100,12 +108,40 @@ class InitialOrderController extends Controller
             });
         }
 
-        if ($start_order_date) {
-            $query->where('initial_orders.order_date', '>=', $start_order_date);
+        // 納期でのフィルタ（検索対象は納入希望日/納入予定日/納入日から選択・複数選択時はOR）
+        if ($nouki_start || $nouki_end) {
+            $allowed = ['desire_delivery_date', 'expected_delivery_date', 'delivery_date'];
+            $targets = array_values(array_intersect($nouki_targets, $allowed));
+            if (!empty($targets)) {
+                $query->where(function ($q) use ($targets, $nouki_start, $nouki_end) {
+                    foreach ($targets as $col) {
+                        $q->orWhere(function ($sub) use ($col, $nouki_start, $nouki_end) {
+                            if ($nouki_start) {
+                                $sub->where('initial_orders.' . $col, '>=', $nouki_start);
+                            }
+                            if ($nouki_end) {
+                                $sub->where('initial_orders.' . $col, '<=', $nouki_end);
+                            }
+                        });
+                    }
+                });
+            }
         }
 
-        if ($end_order_date) {
-            $query->where('initial_orders.order_date', '<=', $end_order_date);
+        // 注文Noでのフィルタ
+        if ($order_no) {
+            $query->where('initial_orders.order_no', 'like', '%' . $order_no . '%');
+        }
+
+        // 発注書の発行状態でのフィルタ
+        if ($purchase_status === 'issued') {
+            $query->whereNotNull('initial_orders.purchase_path')
+                ->where('initial_orders.purchase_path', '!=', '');
+        } elseif ($purchase_status === 'unissued') {
+            $query->where(function ($q) {
+                $q->whereNull('initial_orders.purchase_path')
+                    ->orWhere('initial_orders.purchase_path', '=', '');
+            });
         }
 
         if ($supplier_id) {
@@ -134,21 +170,19 @@ class InitialOrderController extends Controller
             $query->where('stocks.classification_id', $classification_id);
         }
 
-        // 納入日でのフィルタリング
+        // 納入状況でのフィルタリング
         if ($delivery_status === 'delivered') {
-            // 納入済みの場合
             $query->whereNotNull('initial_orders.delivery_date');
-            
-            // 期間指定がある場合
-            if ($start_delivery_date) {
-                $query->where('initial_orders.delivery_date', '>=', $start_delivery_date);
-            }
-            if ($end_delivery_date) {
-                $query->where('initial_orders.delivery_date', '<=', $end_delivery_date);
-            }
         } elseif ($delivery_status === 'undelivered') {
-            // 未納品の場合
             $query->whereNull('initial_orders.delivery_date');
+        }
+
+        // 納品日（納入日 delivery_date）期間フィルタ（納入状況に依存せず適用）
+        if ($start_delivery_date) {
+            $query->where('initial_orders.delivery_date', '>=', $start_delivery_date);
+        }
+        if ($end_delivery_date) {
+            $query->where('initial_orders.delivery_date', '<=', $end_delivery_date);
         }
 
         $initial_orders = $query->where('initial_orders.del_flg', 0)

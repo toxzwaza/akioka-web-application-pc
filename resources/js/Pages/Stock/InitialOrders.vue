@@ -38,6 +38,12 @@ const form = reactive({
   delivery_status: null,
   start_delivery_date: null,
   end_delivery_date: null,
+  // 🅒 追加フィルタ
+  order_no: null,
+  nouki_start: null,
+  nouki_end: null,
+  nouki_targets: ["delivery_date"], // 納期の検索対象（デフォルト=納入日）
+  purchase_status: null,
 });
 
 // 稟議書OBJ
@@ -718,6 +724,11 @@ const getInitialOrders = (reset) => {
     form.delivery_status = null;
     form.start_delivery_date = null;
     form.end_delivery_date = null;
+    form.order_no = null;
+    form.nouki_start = null;
+    form.nouki_end = null;
+    form.nouki_targets = ["delivery_date"];
+    form.purchase_status = null;
     // 検索テキストもクリア
     supplier_search_text.value = "";
     order_user_search_text.value = "";
@@ -748,6 +759,11 @@ const getInitialOrders = (reset) => {
       delivery_status: form.delivery_status,
       start_delivery_date: form.start_delivery_date,
       end_delivery_date: form.end_delivery_date,
+      order_no: form.order_no,
+      nouki_start: form.nouki_start,
+      nouki_end: form.nouki_end,
+      nouki_targets: form.nouki_targets.join(","),
+      purchase_status: form.purchase_status,
     },
     {
       onFinish: () => {
@@ -823,6 +839,12 @@ onMounted(() => {
   form.delivery_status = params.get("delivery_status");
   form.start_delivery_date = params.get("start_delivery_date");
   form.end_delivery_date = params.get("end_delivery_date");
+  form.order_no = params.get("order_no");
+  form.nouki_start = params.get("nouki_start");
+  form.nouki_end = params.get("nouki_end");
+  const noukiTargets = params.get("nouki_targets");
+  form.nouki_targets = noukiTargets ? noukiTargets.split(",") : ["delivery_date"];
+  form.purchase_status = params.get("purchase_status");
 
   // URLパラメータからIDが設定されている場合、対応するnameを検索テキストに設定
   if (form.supplier_id) {
@@ -1047,6 +1069,40 @@ const deleteInitialOrder = (order) => {
             <!-- Filter Grid -->
             <div class="filter-grid">
               <div class="filter-item">
+                <label class="filter-label">担当者</label>
+                <div class="input-with-icon">
+                  <svg
+                    class="input-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                  <input
+                    class="filter-input"
+                    type="text"
+                    placeholder="担当者で検索"
+                    v-model="user_search_text"
+                    list="users-list"
+                    @input="handleUserSearch"
+                  />
+                  <datalist id="users-list">
+                    <option
+                      v-for="user in props.users"
+                      :key="user.id"
+                      :value="user.name"
+                    >
+                    </option>
+                  </datalist>
+                </div>
+              </div>
+              <div class="filter-item">
                 <label class="filter-label">品名・品番</label>
                 <div class="input-with-icon">
                   <svg
@@ -1071,20 +1127,93 @@ const deleteInitialOrder = (order) => {
                 </div>
               </div>
               <div class="filter-item date-range">
-                <label class="filter-label">注文日</label>
+                <label class="filter-label">納期</label>
+                <div
+                  class="nouki-targets"
+                  style="
+                    display: flex;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                    margin-bottom: 6px;
+                    font-size: 12px;
+                  "
+                >
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      value="desire_delivery_date"
+                      v-model="form.nouki_targets"
+                    />
+                    納入希望日
+                  </label>
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      value="expected_delivery_date"
+                      v-model="form.nouki_targets"
+                    />
+                    納入予定日
+                  </label>
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      value="delivery_date"
+                      v-model="form.nouki_targets"
+                    />
+                    納入日
+                  </label>
+                </div>
                 <div class="date-range-inputs">
                   <input
                     type="date"
                     class="filter-input date-input"
-                    v-model="form.start_order_date"
+                    v-model="form.nouki_start"
                   />
                   <span class="date-separator">～</span>
                   <input
                     type="date"
                     class="filter-input date-input"
-                    v-model="form.end_order_date"
+                    v-model="form.nouki_end"
                   />
                 </div>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">注文No</label>
+                <input
+                  type="text"
+                  class="filter-input"
+                  placeholder="注文Noで検索"
+                  v-model="form.order_no"
+                />
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">発注書</label>
+                <select class="filter-select" v-model="form.purchase_status">
+                  <option :value="null">すべて</option>
+                  <option value="issued">発行済</option>
+                  <option value="unissued">未発行</option>
+                </select>
               </div>
 
               <div class="filter-item">
@@ -1122,32 +1251,6 @@ const deleteInitialOrder = (order) => {
                 </div>
               </div>
               <div class="filter-item">
-                <label class="filter-label">部門（大区分）</label>
-                <select class="filter-select" v-model="form.group_id">
-                  <option value="0">すべての部門</option>
-                  <option
-                    v-for="group in props.groups"
-                    :key="group.id"
-                    :value="group.id"
-                  >
-                    {{ group.name }}
-                  </option>
-                </select>
-              </div>
-              <div class="filter-item">
-                <label class="filter-label">部門（中区分）</label>
-                <select class="filter-select" v-model="form.process_id">
-                  <option value="0">すべての部門</option>
-                  <option
-                    v-for="process in props.processes"
-                    :key="process.id"
-                    :value="process.id"
-                  >
-                    {{ process.name }}
-                  </option>
-                </select>
-              </div>
-              <div class="filter-item">
                 <label class="filter-label">依頼者</label>
                 <div class="input-with-icon">
                   <svg
@@ -1174,40 +1277,6 @@ const deleteInitialOrder = (order) => {
                   <datalist id="order-users-list">
                     <option
                       v-for="user in props.order_users"
-                      :key="user.id"
-                      :value="user.name"
-                    >
-                    </option>
-                  </datalist>
-                </div>
-              </div>
-              <div class="filter-item">
-                <label class="filter-label">担当者</label>
-                <div class="input-with-icon">
-                  <svg
-                    class="input-icon"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    ></path>
-                  </svg>
-                  <input
-                    class="filter-input"
-                    type="text"
-                    placeholder="担当者で検索"
-                    v-model="user_search_text"
-                    list="users-list"
-                    @input="handleUserSearch"
-                  />
-                  <datalist id="users-list">
-                    <option
-                      v-for="user in props.users"
                       :key="user.id"
                       :value="user.name"
                     >
@@ -1285,6 +1354,32 @@ const deleteInitialOrder = (order) => {
                   />
                 </div>
               </div>
+              <div class="filter-item">
+                <label class="filter-label">部門（大区分）</label>
+                <select class="filter-select" v-model="form.group_id">
+                  <option value="0">すべての部門</option>
+                  <option
+                    v-for="group in props.groups"
+                    :key="group.id"
+                    :value="group.id"
+                  >
+                    {{ group.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">部門（中区分）</label>
+                <select class="filter-select" v-model="form.process_id">
+                  <option value="0">すべての部門</option>
+                  <option
+                    v-for="process in props.processes"
+                    :key="process.id"
+                    :value="process.id"
+                  >
+                    {{ process.name }}
+                  </option>
+                </select>
+              </div>
             </div>
 
             <!-- Action Buttons -->
@@ -1329,145 +1424,6 @@ const deleteInitialOrder = (order) => {
         </div>
       </div>
 
-      <!-- Statistics Section -->
-      <div class="stats-section mb-8">
-        <div class="stats-header mb-6">
-          <h2 class="stats-title">
-            <svg
-              class="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              ></path>
-            </svg>
-            発注統計
-          </h2>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card search-stats">
-            <div class="stat-header">
-              <div class="stat-icon">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
-                </svg>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-title">検索結果</h3>
-                <p class="stat-subtitle">現在の検索条件</p>
-              </div>
-            </div>
-            <div class="stat-values">
-              <div class="stat-value-item">
-                <span class="stat-value">{{
-                  props.totals.total_order_count
-                }}</span>
-                <span class="stat-unit">件</span>
-              </div>
-              <div class="stat-amount">
-                {{
-                  Number(props.totals.total_calc_price_sum).toLocaleString()
-                }}円
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card monthly-stats">
-            <div class="stat-header">
-              <div class="stat-icon">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  ></path>
-                </svg>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-title">今月の発注</h3>
-                <p class="stat-subtitle">
-                  {{
-                    new Date().toLocaleDateString("ja-JP", {
-                      year: "numeric",
-                      month: "long",
-                    })
-                  }}
-                </p>
-              </div>
-            </div>
-            <div class="stat-values">
-              <div class="stat-value-item">
-                <span class="stat-value">{{
-                  props.totals.current_month_count
-                }}</span>
-                <span class="stat-unit">件</span>
-              </div>
-              <div class="stat-amount">
-                {{ Number(props.totals.current_month_sum).toLocaleString() }}円
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card performance-stats">
-            <div class="stat-header">
-              <div class="stat-icon">
-                <svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  ></path>
-                </svg>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-title">平均単価</h3>
-                <p class="stat-subtitle">検索結果から算出</p>
-              </div>
-            </div>
-            <div class="stat-values">
-              <div class="stat-amount large">
-                {{
-                  props.totals.total_order_count > 0
-                    ? Math.round(
-                        props.totals.total_calc_price_sum /
-                          props.totals.total_order_count
-                      ).toLocaleString()
-                    : 0
-                }}円
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Table Controls -->
       <div class="table-controls mb-6">
         <div class="controls-left">
@@ -1507,14 +1463,24 @@ const deleteInitialOrder = (order) => {
             <thead>
               <tr>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
-                >
-                  選択
-                </th>
-                <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                 >
                   注文No
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
+                >
+                  納入日
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  発注書
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  FAX送信
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
@@ -1524,17 +1490,7 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                 >
-                  工程
-                </th>
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                >
                   注文依頼者
-                </th>
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                >
-                  担当者
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -1568,11 +1524,6 @@ const deleteInitialOrder = (order) => {
                 </th>
 
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
-                >
-                  納入希望日
-                </th>
-                <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-400"
                 >
                   納入予定日
@@ -1581,7 +1532,7 @@ const deleteInitialOrder = (order) => {
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-500"
                   style="border-radius: 0 10px 10px 0"
                 >
-                  納入日
+                  納入希望日
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1622,11 +1573,6 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                 >
-                  発注書
-                </th>
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                >
                   納品書
                 </th>
                 <th
@@ -1645,9 +1591,14 @@ const deleteInitialOrder = (order) => {
                   完了登録
                 </th>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                 >
-                  FAX送信
+                  担当者
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  工程
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1668,15 +1619,6 @@ const deleteInitialOrder = (order) => {
                   'bg-white': !order.order_complete_flg || order.order_complete_flg === 0,
                 }"
               >
-                <td class="text-center">
-                  <input
-                    type="checkbox"
-                    name=""
-                    id=""
-                    @change="handleSelect(order)"
-                    v-model="order.select_flg"
-                  />
-                </td>
                 <td
                   :class="{
                     'px-4 py-3': true,
@@ -1685,6 +1627,131 @@ const deleteInitialOrder = (order) => {
                   }"
                 >
                   {{ order.order_no }}
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.delivery_date"
+                    @change="
+                      updateDate('delivery', order.id, $event.target.value)
+                    "
+                  />
+                  <span v-else>{{
+                    order.delivery_date
+                      ? new Date(order.delivery_date).toLocaleDateString(
+                          "ja-JP"
+                        )
+                      : "-"
+                  }}</span>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    v-if="!order.url"
+                    @click="openModal('purchase', { orders: [order] })"
+                    :class="{
+                      ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
+                      'bg-green-500': order.purchase_path,
+                      'bg-gray-500': !order.purchase_path,
+                    }"
+                  >
+                    {{ order.purchase_path ? "発行済" : "未発行" }}
+                    <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
+                  </button>
+
+                  <a
+                    v-else
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    :href="order.url"
+                    target="blank"
+                    >URL</a
+                  >
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <span
+                    @click="order.fax_parameter_id && order.fax_parameter_status === 1 ? openFaxParameter(order.fax_parameter_id) : null"
+                    :class="{
+                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-all': true,
+                      'bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 hover:shadow-md': order.fax_parameter_id && order.fax_parameter_status === 1,
+                      'bg-yellow-100 text-yellow-800': order.fax_parameter_id && order.fax_parameter_status === 0,
+                      'bg-gray-100 text-gray-600': !order.fax_parameter_id,
+                    }"
+                  >
+                    <!-- 完了アイコン -->
+                    <svg
+                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <!-- 待機中アイコン -->
+                    <svg
+                      v-else-if="order.fax_parameter_id && order.fax_parameter_status === 0"
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <!-- 未送信アイコン -->
+                    <svg
+                      v-else
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    {{
+                      order.fax_parameter_id && order.fax_parameter_status === 1
+                        ? '完了'
+                        : order.fax_parameter_id && order.fax_parameter_status === 0
+                        ? '待機中'
+                        : '未送信'
+                    }}
+                    <!-- 外部リンクアイコン（完了時のみ表示） -->
+                    <svg
+                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
+                      class="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </span>
                 </td>
                 <td class="w-28">
                   <img
@@ -1697,20 +1764,8 @@ const deleteInitialOrder = (order) => {
                     alt=""
                   />
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-center">
-                  {{
-                    order.stock_processes_order_request_code
-                      ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
-                      : order.stock_processes_base_code
-                      ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
-                      : "-"
-                  }}
-                </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   {{ order.order_user }}
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                  {{ order.manage_user_name }}
                 </td>
                 <td class="px-4 py-3 text-lg text-gray-900">
                   {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
@@ -1771,26 +1826,6 @@ const deleteInitialOrder = (order) => {
                 <td class="px-4 py-3 text-lg text-gray-900">
                   <input
                     v-if="is_login"
-                    type="date"
-                    name=""
-                    id=""
-                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    :value="order.desire_delivery_date"
-                    @change="
-                      updateDate('desired', order.id, $event.target.value)
-                    "
-                  />
-                  <span v-else>{{
-                    order.desire_delivery_date
-                      ? new Date(order.desire_delivery_date).toLocaleDateString(
-                          "ja-JP"
-                        )
-                      : "-"
-                  }}</span>
-                </td>
-                <td class="px-4 py-3 text-lg text-gray-900">
-                  <input
-                    v-if="is_login"
                     @change="
                       updateDate('expected', order.id, $event.target.value)
                     "
@@ -1812,17 +1847,17 @@ const deleteInitialOrder = (order) => {
                   <input
                     v-if="is_login"
                     @change="
-                      updateDate('delivery', order.id, $event.target.value)
+                      updateDate('desired', order.id, $event.target.value)
                     "
                     type="date"
                     name=""
                     id=""
                     class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    :value="order.delivery_date"
+                    :value="order.desire_delivery_date"
                   />
                   <span v-else>{{
-                    order.delivery_date
-                      ? new Date(order.delivery_date).toLocaleDateString(
+                    order.desire_delivery_date
+                      ? new Date(order.desire_delivery_date).toLocaleDateString(
                           "ja-JP"
                         )
                       : "-"
@@ -1947,30 +1982,6 @@ const deleteInitialOrder = (order) => {
                   class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                 >
                   <button
-                    v-if="!order.url"
-                    @click="openModal('purchase', { orders: [order] })"
-                    :class="{
-                      ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
-                      'bg-green-500': order.purchase_path,
-                      'bg-gray-500': !order.purchase_path,
-                    }"
-                  >
-                    {{ order.purchase_path ? "発行済" : "未発行" }}
-                    <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
-                  </button>
-
-                  <a
-                    v-else
-                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                    :href="order.url"
-                    target="blank"
-                    >URL</a
-                  >
-                </td>
-                <td
-                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                >
-                  <button
                     v-if="(order.deliveries && order.deliveries.length > 0) || order.delifile_path || (order.delifile_paths && order.delifile_paths.length > 0)"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
                     @click="openModal('delivery', { order: order, files: getDeliveryFiles(order) })"
@@ -2037,86 +2048,17 @@ const deleteInitialOrder = (order) => {
                     <option class="" :value="2">返信済み</option>
                   </select>
                 </td>
-                <td
-                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                >
-                  <span
-                    @click="order.fax_parameter_id && order.fax_parameter_status === 1 ? openFaxParameter(order.fax_parameter_id) : null"
-                    :class="{
-                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-all': true,
-                      'bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 hover:shadow-md': order.fax_parameter_id && order.fax_parameter_status === 1,
-                      'bg-yellow-100 text-yellow-800': order.fax_parameter_id && order.fax_parameter_status === 0,
-                      'bg-gray-100 text-gray-600': !order.fax_parameter_id,
-                    }"
-                  >
-                    <!-- 完了アイコン -->
-                    <svg
-                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
-                      class="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <!-- 待機中アイコン -->
-                    <svg
-                      v-else-if="order.fax_parameter_id && order.fax_parameter_status === 0"
-                      class="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <!-- 未送信アイコン -->
-                    <svg
-                      v-else
-                      class="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                      />
-                    </svg>
-                    {{
-                      order.fax_parameter_id && order.fax_parameter_status === 1
-                        ? '完了'
-                        : order.fax_parameter_id && order.fax_parameter_status === 0
-                        ? '待機中'
-                        : '未送信'
-                    }}
-                    <!-- 外部リンクアイコン（完了時のみ表示） -->
-                    <svg
-                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
-                      class="w-3 h-3 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </span>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  {{ order.manage_user_name }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-center">
+                  {{
+                    order.stock_processes_order_request_code
+                      ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
+                      : order.stock_processes_base_code
+                      ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
+                      : "-"
+                  }}
                 </td>
                 <td
                   v-if="is_login"
