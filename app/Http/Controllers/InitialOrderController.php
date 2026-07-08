@@ -44,8 +44,11 @@ class InitialOrderController extends Controller
         $end_delivery_date = $request->end_delivery_date;
         // 🅒 追加フィルタ
         $order_no = $request->order_no;
-        $start_desire_delivery_date = $request->start_desire_delivery_date;
-        $end_desire_delivery_date = $request->end_desire_delivery_date;
+        // 納期フィルタ：検索対象の日付列をチェックボックスで選択（デフォルト=納入日 delivery_date）
+        $nouki_start = $request->nouki_start;
+        $nouki_end = $request->nouki_end;
+        $nouki_targets_raw = $request->nouki_targets; // カンマ区切り文字列
+        $nouki_targets = $nouki_targets_raw ? explode(',', $nouki_targets_raw) : ['delivery_date'];
         $purchase_status = $request->purchase_status;
 
         $query = InitialOrder::select(
@@ -105,12 +108,24 @@ class InitialOrderController extends Controller
             });
         }
 
-        // 納期（納入希望日 desire_delivery_date）でのフィルタ
-        if ($start_desire_delivery_date) {
-            $query->where('initial_orders.desire_delivery_date', '>=', $start_desire_delivery_date);
-        }
-        if ($end_desire_delivery_date) {
-            $query->where('initial_orders.desire_delivery_date', '<=', $end_desire_delivery_date);
+        // 納期でのフィルタ（検索対象は納入希望日/納入予定日/納入日から選択・複数選択時はOR）
+        if ($nouki_start || $nouki_end) {
+            $allowed = ['desire_delivery_date', 'expected_delivery_date', 'delivery_date'];
+            $targets = array_values(array_intersect($nouki_targets, $allowed));
+            if (!empty($targets)) {
+                $query->where(function ($q) use ($targets, $nouki_start, $nouki_end) {
+                    foreach ($targets as $col) {
+                        $q->orWhere(function ($sub) use ($col, $nouki_start, $nouki_end) {
+                            if ($nouki_start) {
+                                $sub->where('initial_orders.' . $col, '>=', $nouki_start);
+                            }
+                            if ($nouki_end) {
+                                $sub->where('initial_orders.' . $col, '<=', $nouki_end);
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         // 注文Noでのフィルタ

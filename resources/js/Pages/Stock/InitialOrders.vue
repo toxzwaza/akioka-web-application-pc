@@ -40,8 +40,9 @@ const form = reactive({
   end_delivery_date: null,
   // 🅒 追加フィルタ
   order_no: null,
-  start_desire_delivery_date: null,
-  end_desire_delivery_date: null,
+  nouki_start: null,
+  nouki_end: null,
+  nouki_targets: ["delivery_date"], // 納期の検索対象（デフォルト=納入日）
   purchase_status: null,
 });
 
@@ -724,8 +725,9 @@ const getInitialOrders = (reset) => {
     form.start_delivery_date = null;
     form.end_delivery_date = null;
     form.order_no = null;
-    form.start_desire_delivery_date = null;
-    form.end_desire_delivery_date = null;
+    form.nouki_start = null;
+    form.nouki_end = null;
+    form.nouki_targets = ["delivery_date"];
     form.purchase_status = null;
     // 検索テキストもクリア
     supplier_search_text.value = "";
@@ -758,8 +760,9 @@ const getInitialOrders = (reset) => {
       start_delivery_date: form.start_delivery_date,
       end_delivery_date: form.end_delivery_date,
       order_no: form.order_no,
-      start_desire_delivery_date: form.start_desire_delivery_date,
-      end_desire_delivery_date: form.end_desire_delivery_date,
+      nouki_start: form.nouki_start,
+      nouki_end: form.nouki_end,
+      nouki_targets: form.nouki_targets.join(","),
       purchase_status: form.purchase_status,
     },
     {
@@ -837,8 +840,10 @@ onMounted(() => {
   form.start_delivery_date = params.get("start_delivery_date");
   form.end_delivery_date = params.get("end_delivery_date");
   form.order_no = params.get("order_no");
-  form.start_desire_delivery_date = params.get("start_desire_delivery_date");
-  form.end_desire_delivery_date = params.get("end_desire_delivery_date");
+  form.nouki_start = params.get("nouki_start");
+  form.nouki_end = params.get("nouki_end");
+  const noukiTargets = params.get("nouki_targets");
+  form.nouki_targets = noukiTargets ? noukiTargets.split(",") : ["delivery_date"];
   form.purchase_status = params.get("purchase_status");
 
   // URLパラメータからIDが設定されている場合、対応するnameを検索テキストに設定
@@ -1123,17 +1128,73 @@ const deleteInitialOrder = (order) => {
               </div>
               <div class="filter-item date-range">
                 <label class="filter-label">納期</label>
+                <div
+                  class="nouki-targets"
+                  style="
+                    display: flex;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                    margin-bottom: 6px;
+                    font-size: 12px;
+                  "
+                >
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      value="desire_delivery_date"
+                      v-model="form.nouki_targets"
+                    />
+                    納入希望日
+                  </label>
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      value="expected_delivery_date"
+                      v-model="form.nouki_targets"
+                    />
+                    納入予定日
+                  </label>
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      value="delivery_date"
+                      v-model="form.nouki_targets"
+                    />
+                    納入日
+                  </label>
+                </div>
                 <div class="date-range-inputs">
                   <input
                     type="date"
                     class="filter-input date-input"
-                    v-model="form.start_desire_delivery_date"
+                    v-model="form.nouki_start"
                   />
                   <span class="date-separator">～</span>
                   <input
                     type="date"
                     class="filter-input date-input"
-                    v-model="form.end_desire_delivery_date"
+                    v-model="form.nouki_end"
                   />
                 </div>
               </div>
