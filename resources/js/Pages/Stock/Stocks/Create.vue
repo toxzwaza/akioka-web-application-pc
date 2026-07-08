@@ -3,7 +3,12 @@ import MainLayout from "@/Layouts/MainLayout.vue";
 import { onMounted, reactive, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import axios from "axios";
-import MainTitle from "@/Components/Title/MainTitle.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import Card from "@/Components/UI/Card.vue";
+import FormField from "@/Components/UI/FormField.vue";
+import Button from "@/Components/UI/Button.vue";
+import Icon from "@/Components/UI/Icon.vue";
 
 const props = defineProps({
   classifications: Array,
@@ -118,424 +123,338 @@ onMounted(() => {
 <template>
   <MainLayout :title="'在庫追加'">
     <template #content>
-      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
-          <!-- ヘッダーセクション -->
-          <div class="mb-8 space-y-4">
-            <MainTitle
-              :top="'在庫追加'"
-              :sub="'在庫を登録を行います。必須項目を入力して、新規登録ボタンを押してください。作成した物品データは在庫一覧より確認できます。'"
-            />
-          </div>
+      <PageHeader
+        title="在庫追加"
+        subtitle="在庫を登録を行います。必須項目を入力して、新規登録ボタンを押してください。作成した物品データは在庫一覧より確認できます。"
+      />
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- 左カラム - 画像プレビュー -->
-            <div class="lg:col-span-1">
-              <div class="bg-white rounded-2xl shadow-xl p-6 sticky top-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  画像プレビュー
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 左カラム - 画像プレビュー -->
+        <div class="lg:col-span-1">
+          <Card class="sticky top-6">
+            <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+              <Icon name="image" class="text-primary-600" />
+              画像プレビュー
+            </h3>
+            <div class="aspect-square bg-surface-sunken rounded-card overflow-hidden border border-border flex items-center justify-center">
+              <img
+                v-if="form.img_path"
+                :src="form.img_path"
+                alt="商品画像"
+                class="w-full h-full object-contain"
+              />
+              <div v-else class="text-center text-content-subtle px-4">
+                <Icon name="image" size="xl" class="mb-2" />
+                <p class="text-sm">画像URLを入力すると<br />ここにプレビューされます</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <!-- 右カラム - フォーム -->
+        <div class="lg:col-span-2">
+          <SectionCard title="在庫情報">
+            <form class="space-y-6">
+              <!-- 基本情報セクション -->
+              <div class="border-b border-border pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="info" class="text-primary-600" />
+                  基本情報
                 </h3>
-                <div class="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 flex items-center justify-center">
-                  <img
-                    v-if="form.img_path"
-                    :src="form.img_path"
-                    alt="商品画像"
-                    class="w-full h-full object-contain"
-                  />
-                  <div v-else class="text-center text-gray-400">
-                    <svg class="w-24 h-24 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p class="text-sm">画像URLを入力すると<br/>ここにプレビューされます</p>
+
+                <div class="space-y-4">
+                  <!-- 品名 -->
+                  <FormField label="品名" id="name" required :error="!form.name ? '品名は必須です' : ''">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      id="name"
+                      type="text"
+                      placeholder="品名を入力してください"
+                      v-model="form.name"
+                    />
+                  </FormField>
+
+                  <!-- 品番 -->
+                  <FormField label="品番" id="s_name">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      id="s_name"
+                      type="text"
+                      placeholder="品番を入力してください"
+                      v-model="form.s_name"
+                    />
+                  </FormField>
+
+                  <!-- JANコード -->
+                  <FormField label="JANコード" id="jan_code">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      id="jan_code"
+                      type="text"
+                      placeholder="JANコードを入力してください"
+                      v-model="form.jan_code"
+                    />
+                  </FormField>
+
+                  <!-- 適確事業者番号 -->
+                  <FormField label="適確事業者番号">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      type="text"
+                      placeholder="適確事業者番号を入力してください"
+                      v-model="form.purchase_identification_number"
+                    />
+                  </FormField>
+                </div>
+              </div>
+
+              <!-- 画像・URLセクション -->
+              <div class="border-b border-border pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="link" class="text-primary-600" />
+                  画像・URL情報
+                </h3>
+
+                <div class="space-y-4">
+                  <!-- 画像URL -->
+                  <FormField>
+                    <template #default>
+                      <label class="block mb-1 text-sm font-medium text-content">
+                        画像URL
+                        <span class="ml-2 text-content-muted text-xs font-normal">※インターネットの画像を使用する場合コチラから設定</span>
+                      </label>
+                      <input
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        type="text"
+                        placeholder="https://example.com/image.jpg"
+                        v-model="form.img_path"
+                      />
+                    </template>
+                  </FormField>
+
+                  <!-- 購買用URL -->
+                  <FormField label="購買用URL">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      type="text"
+                      placeholder="https://example.com/product"
+                      v-model="form.url"
+                    />
+                  </FormField>
+                </div>
+              </div>
+
+              <!-- 価格情報セクション -->
+              <div class="border-b border-border pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="payments" class="text-primary-600" />
+                  価格情報
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- 価格 -->
+                  <FormField label="価格" required :error="!form.price ? '価格は必須です' : ''">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      type="number"
+                      placeholder="0"
+                      v-model="form.price"
+                    />
+                  </FormField>
+
+                  <!-- 税区分 -->
+                  <FormField label="税区分" required>
+                    <select
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      v-model="form.tax_included"
+                    >
+                      <option value="0">税抜き</option>
+                      <option value="1">税込み</option>
+                    </select>
+                  </FormField>
+                </div>
+              </div>
+
+              <!-- 単位情報セクション -->
+              <div class="border-b border-border pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="straighten" class="text-primary-600" />
+                  単位情報
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- 発注単位 -->
+                  <FormField label="発注単位">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      type="text"
+                      placeholder="個"
+                      v-model="form.solo_unit"
+                    />
+                  </FormField>
+
+                  <!-- 在庫単位 -->
+                  <FormField label="在庫単位">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      type="text"
+                      placeholder="箱"
+                      v-model="form.org_unit"
+                    />
+                  </FormField>
+
+                  <!-- 換算値 -->
+                  <FormField>
+                    <template #default>
+                      <label class="block mb-1 text-sm font-medium text-content">
+                        換算値
+                        <span class="ml-2 text-content-muted text-xs font-normal">※納品時の数量登録</span>
+                      </label>
+                      <input
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        type="number"
+                        placeholder="0"
+                        v-model="form.quantity_per_org"
+                      />
+                    </template>
+                  </FormField>
+                </div>
+              </div>
+
+              <!-- 備考・納品書設定セクション -->
+              <div class="border-b border-border pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="description" class="text-primary-600" />
+                  備考・納品書設定
+                </h3>
+
+                <div class="space-y-4">
+                  <!-- 備考 -->
+                  <FormField label="備考">
+                    <textarea
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500 resize-none"
+                      rows="3"
+                      placeholder="備考を入力してください"
+                      v-model="form.desc_memo"
+                    ></textarea>
+                  </FormField>
+                </div>
+              </div>
+
+              <!-- カテゴリ・配送情報セクション -->
+              <div class="pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="sell" class="text-primary-600" />
+                  カテゴリ・配送情報
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- 備品カテゴリ -->
+                  <FormField label="備品カテゴリ" required :error="!form.classification_id ? '備品カテゴリは必須です' : ''">
+                    <select
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      @change="handleClassification"
+                      v-model="form.classification_id"
+                    >
+                      <option value="0">未選択</option>
+                      <option
+                        v-for="classification in classifications"
+                        :key="classification.id"
+                        :value="classification.id"
+                      >
+                        {{ classification.name }}
+                      </option>
+                    </select>
+                  </FormField>
+
+                  <!-- 配送先 -->
+                  <FormField label="配送先">
+                    <input
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                      type="text"
+                      placeholder="配送先を入力"
+                      v-model="form.deli_location"
+                    />
+                  </FormField>
+
+                  <!-- 工程 -->
+                  <FormField required :error="!form.stock_process_id ? '工程は必須です' : ''">
+                    <template #default>
+                      <label class="block mb-1 text-sm font-medium text-content">
+                        工程<span class="text-error-600 ml-0.5">*</span>
+                        <span class="ml-1 text-xs font-normal text-content-muted">(※発注依頼時工程選択のデフォルト値)</span>
+                      </label>
+                      <select
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        v-model="form.stock_process_id"
+                      >
+                        <option value="0">未選択</option>
+                        <option
+                          v-for="stock_process in props.stock_processes"
+                          :key="stock_process.id"
+                          :value="stock_process.id"
+                        >
+                          {{ stock_process.name }}
+                        </option>
+                      </select>
+                    </template>
+                  </FormField>
+                </div>
+              </div>
+
+              <!-- 納品書金額表示セクション -->
+              <div class="pb-6">
+                <h3 class="text-base font-bold text-content mb-4 flex items-center gap-2">
+                  <Icon name="receipt_long" class="text-primary-600" />
+                  納品書金額表示設定
+                </h3>
+
+                <div>
+                  <label class="block text-sm font-medium text-content mb-3">
+                    納品書金額表示
+                    <span class="ml-2 text-content-muted text-xs font-normal">
+                      ※原材料・副資材の場合、自動で「非表示」が選択されます
+                    </span>
+                  </label>
+                  <div class="flex gap-6">
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        class="w-5 h-5 text-primary-600 focus:ring-primary-500 focus:ring-2"
+                        :value="0"
+                        v-model="form.show_price_on_invoice"
+                        @change="handleInvoiceDisplayChange"
+                      />
+                      <span class="ml-3 text-sm font-medium text-content">表示</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        class="w-5 h-5 text-primary-600 focus:ring-primary-500 focus:ring-2"
+                        :value="1"
+                        v-model="form.show_price_on_invoice"
+                        @change="handleInvoiceDisplayChange"
+                      />
+                      <span class="ml-3 text-sm font-medium text-content">非表示</span>
+                    </label>
                   </div>
                 </div>
               </div>
-            </div>
+            </form>
 
-            <!-- 右カラム - フォーム -->
-            <div class="lg:col-span-2">
-              <div class="bg-white rounded-2xl shadow-xl p-8">
-                <form class="space-y-6">
-                  <!-- 基本情報セクション -->
-                  <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      基本情報
-                    </h3>
-                    
-                    <div class="space-y-4">
-                      <!-- 品名 -->
-                      <div>
-                        <label
-                          :class="{
-                            'block text-sm font-semibold mb-2': true,
-                            'text-red-600': !form.name,
-                            'text-gray-700': form.name,
-                          }"
-                          for="name"
-                        >
-                          <span class="text-red-500">*</span> 品名
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          id="name"
-                          type="text"
-                          placeholder="品名を入力してください"
-                          v-model="form.name"
-                        />
-                      </div>
-
-                      <!-- 品番 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2" for="s_name">
-                          品番
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          id="s_name"
-                          type="text"
-                          placeholder="品番を入力してください"
-                          v-model="form.s_name"
-                        />
-                      </div>
-
-                      <!-- JANコード -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2" for="jan_code">
-                          JANコード
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          id="jan_code"
-                          type="text"
-                          placeholder="JANコードを入力してください"
-                          v-model="form.jan_code"
-                        />
-                      </div>
-
-                      <!-- 適確事業者番号 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          適確事業者番号
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="text"
-                          placeholder="適確事業者番号を入力してください"
-                          v-model="form.purchase_identification_number"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 画像・URLセクション -->
-                  <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      画像・URL情報
-                    </h3>
-
-                    <div class="space-y-4">
-                      <!-- 画像URL -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          画像URL
-                          <span class="ml-2 text-red-500 text-xs font-normal">※インターネットの画像を使用する場合コチラから設定</span>
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="text"
-                          placeholder="https://example.com/image.jpg"
-                          v-model="form.img_path"
-                        />
-                      </div>
-
-                      <!-- 購買用URL -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          購買用URL
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="text"
-                          placeholder="https://example.com/product"
-                          v-model="form.url"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 価格情報セクション -->
-                  <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      価格情報
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <!-- 価格 -->
-                      <div>
-                        <label
-                          :class="{
-                            'block text-sm font-semibold mb-2': true,
-                            'text-red-600': !form.price,
-                            'text-gray-700': form.price,
-                          }"
-                        >
-                          <span class="text-red-500">*</span> 価格
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="number"
-                          placeholder="0"
-                          v-model="form.price"
-                        />
-                      </div>
-
-                      <!-- 税区分 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          <span class="text-red-500">*</span> 税区分
-                        </label>
-                        <select
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none bg-white"
-                          v-model="form.tax_included"
-                        >
-                          <option value="0">税抜き</option>
-                          <option value="1">税込み</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 単位情報セクション -->
-                  <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                      </svg>
-                      単位情報
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <!-- 発注単位 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          発注単位
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="text"
-                          placeholder="個"
-                          v-model="form.solo_unit"
-                        />
-                      </div>
-
-                      <!-- 在庫単位 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          在庫単位
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="text"
-                          placeholder="箱"
-                          v-model="form.org_unit"
-                        />
-                      </div>
-
-                      <!-- 換算値 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          換算値
-                          <span class="ml-2 text-gray-500 text-xs font-normal">※納品時の数量登録</span>
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="number"
-                          placeholder="0"
-                          v-model="form.quantity_per_org"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 備考・納品書設定セクション -->
-                  <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      備考・納品書設定
-                    </h3>
-
-                    <div class="space-y-4">
-                      <!-- 備考 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          備考
-                        </label>
-                        <textarea
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none resize-none"
-                          rows="3"
-                          placeholder="備考を入力してください"
-                          v-model="form.desc_memo"
-                        ></textarea>
-                      </div>
-
-
-                    </div>
-                  </div>
-
-                  <!-- カテゴリ・配送情報セクション -->
-                  <div class="pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                      カテゴリ・配送情報
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <!-- 備品カテゴリ -->
-                      <div>
-                        <label
-                          :class="{
-                            'block text-sm font-semibold mb-2': true,
-                            'text-red-600': !form.classification_id,
-                            'text-gray-700': form.classification_id,
-                          }"
-                        >
-                          <span class="text-red-500">*</span> 備品カテゴリ
-                        </label>
-                        <select
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none bg-white"
-                          @change="handleClassification"
-                          v-model="form.classification_id"
-                        >
-                          <option value="0">未選択</option>
-                          <option
-                            v-for="classification in classifications"
-                            :key="classification.id"
-                            :value="classification.id"
-                          >
-                            {{ classification.name }}
-                          </option>
-                        </select>
-                      </div>
-
-                      <!-- 配送先 -->
-                      <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          配送先
-                        </label>
-                        <input
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                          type="text"
-                          placeholder="配送先を入力"
-                          v-model="form.deli_location"
-                        />
-                      </div>
-
-                      <!-- 工程 -->
-                      <div>
-                        <label
-                          :class="{
-                            'block text-sm font-semibold mb-2': true,
-                            'text-red-600': !form.stock_process_id,
-                            'text-gray-700': form.stock_process_id,
-                          }"
-                        >
-                          <span class="text-red-500">*</span> 工程
-                          <span class="ml-1 text-xs font-normal text-gray-500">(※発注依頼時工程選択のデフォルト値)</span>
-                        </label>
-                        <select
-                          class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none bg-white"
-                          v-model="form.stock_process_id"
-                        >
-                          <option value="0">未選択</option>
-                          <option
-                            v-for="stock_process in props.stock_processes"
-                            :key="stock_process.id"
-                            :value="stock_process.id"
-                          >
-                            {{ stock_process.name }}
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 納品書金額表示セクション -->
-                  <div class="pb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      納品書金額表示設定
-                    </h3>
-
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-3">
-                        納品書金額表示
-                        <span class="ml-2 text-gray-500 text-xs font-normal">
-                          ※原材料・副資材の場合、自動で「非表示」が選択されます
-                        </span>
-                      </label>
-                      <div class="flex gap-6">
-                        <label class="inline-flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            class="w-5 h-5 text-blue-600 focus:ring-blue-500 focus:ring-2"
-                            :value="0"
-                            v-model="form.show_price_on_invoice"
-                            @change="handleInvoiceDisplayChange"
-                          />
-                          <span class="ml-3 text-sm font-medium text-gray-700">表示</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            class="w-5 h-5 text-blue-600 focus:ring-blue-500 focus:ring-2"
-                            :value="1"
-                            v-model="form.show_price_on_invoice"
-                            @change="handleInvoiceDisplayChange"
-                          />
-                          <span class="ml-3 text-sm font-medium text-gray-700">非表示</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- アクションボタン -->
-                  <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                    <button
-                      @click.prevent="createStock"
-                      class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-8 rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
-                      新規登録
-                    </button>
-
-                    <span class="text-sm text-red-500 font-semibold">
-                      <span class="text-red-500">*</span> は必須項目です
-                    </span>
-                  </div>
-                </form>
+            <template #footer>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-content-muted">* は必須項目です</span>
+                <Button
+                  variant="primary"
+                  icon-left="add"
+                  @click.prevent="createStock"
+                >
+                  新規登録
+                </Button>
               </div>
-            </div>
-          </div>
+            </template>
+          </SectionCard>
         </div>
       </div>
     </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
+import Button from "@/Components/UI/Button.vue";
 
 const props = defineProps({
   order_request: Object,
@@ -25,26 +26,24 @@ onMounted(() => {
 <template>
   <div v-if="!print_status" class="m-8">
     <div>
-      <p class="mb-4">
+      <p class="mb-4 text-sm text-content">
         注文書内容が正しいことを確認し、以下の<span
-          class="font-bold text-blue-500"
+          class="font-bold text-primary-700"
           >発注ボタン</span
         >からFAXを送信してください。
       </p>
     </div>
 
-    <button
-      @click="faxPurchaseOrder"
-      class="mr-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    >
-      発注
-    </button>
-    <Link
-      class="inline-block bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-      :href="route('stock.order_requests')"
-    >
-      発注依頼一覧へ戻る
-    </Link>
+    <div class="flex items-center gap-3">
+      <Button variant="primary" icon-left="send" @click="faxPurchaseOrder">
+        発注
+      </Button>
+      <Link :href="route('stock.order_requests')">
+        <Button variant="secondary" icon-left="arrow_back">
+          発注依頼一覧へ戻る
+        </Button>
+      </Link>
+    </div>
   </div>
 
   <div id="purchase_container" class="p-4">
@@ -103,14 +102,14 @@ onMounted(() => {
       <table class="table-auto w-full">
         <thead>
           <tr>
-            <th class="px-4 py-2 text-gray-700">品名</th>
-            <th class="px-4 py-2 text-gray-700">品番</th>
-            <th class="px-4 py-2 text-gray-700">納入場所</th>
-            <th class="px-4 py-2 text-gray-700">納入希望日</th>
-            <th class="px-4 py-2 text-gray-700">数量</th>
-            <th class="px-4 py-2 text-gray-700">単価</th>
-            <th class="px-4 py-2 text-gray-700">金額(税抜価格)</th>
-            <th class="px-4 py-2 text-gray-700">注文指示者</th>
+            <th class="px-4 py-2 text-content">品名</th>
+            <th class="px-4 py-2 text-content">品番</th>
+            <th class="px-4 py-2 text-content">納入場所</th>
+            <th class="px-4 py-2 text-content">納入希望日</th>
+            <th class="px-4 py-2 text-content">数量</th>
+            <th class="px-4 py-2 text-content">単価</th>
+            <th class="px-4 py-2 text-content">金額(税抜価格)</th>
+            <th class="px-4 py-2 text-content">注文指示者</th>
           </tr>
         </thead>
         <tbody>
@@ -144,7 +143,7 @@ onMounted(() => {
               {{ props.order_request.request_user_name }}
             </td>
           </tr>
-          <tr class="bg-gray-100">
+          <tr class="bg-surface-sunken">
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
@@ -164,7 +163,7 @@ onMounted(() => {
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
           </tr>
-          <tr class="bg-gray-100">
+          <tr class="bg-surface-sunken">
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
@@ -184,7 +183,7 @@ onMounted(() => {
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
           </tr>
-          <tr class="bg-gray-100">
+          <tr class="bg-surface-sunken">
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>
             <td class="text-center border px-4 py-5"></td>

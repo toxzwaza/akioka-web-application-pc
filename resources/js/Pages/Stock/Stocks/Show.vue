@@ -5,8 +5,17 @@ import { onMounted, reactive, ref } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import { Chart, registerables } from "chart.js";
-import MainTitle from "@/Components/Title/MainTitle.vue";
 import EditAlias from "@/Components/Stock/EditAlias.vue";
+import PageHeader from "@/Components/UI/PageHeader.vue";
+import SectionCard from "@/Components/UI/SectionCard.vue";
+import Button from "@/Components/UI/Button.vue";
+import FormField from "@/Components/UI/FormField.vue";
+import Table from "@/Components/UI/Table.vue";
+import TableHeaderCell from "@/Components/UI/TableHeaderCell.vue";
+import TableRow from "@/Components/UI/TableRow.vue";
+import TableDataCell from "@/Components/UI/TableDataCell.vue";
+import Badge from "@/Components/UI/Badge.vue";
+import Icon from "@/Components/UI/Icon.vue";
 
 Chart.register(...registerables);
 
@@ -611,33 +620,27 @@ onMounted(() => {
 <template>
   <MainLayout :title="'在庫詳細'">
     <template #content>
-      <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
+      <div class="container mx-auto">
           <!-- ヘッダーセクション -->
-          <div class="mb-8 space-y-4">
-            <MainTitle
-              :top="'在庫詳細'"
-              :sub="'物品データ閲覧・変更及び手配先や格納先の紐づけを行います。'"
-            />
-            
-            <!-- アクションボタン -->
-            <div class="flex items-center gap-4">
+          <PageHeader
+            title="在庫詳細"
+            subtitle="物品データ閲覧・変更及び手配先や格納先の紐づけを行います。"
+          >
+            <template #actions>
               <Link
                 :href="route('stock.stocks.create', { stock_id: props.stock.id })"
-                class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                複製して在庫追加
+                <Button variant="primary" icon-left="content_copy">
+                  複製して在庫追加
+                </Button>
               </Link>
-            </div>
-          </div>
+            </template>
+          </PageHeader>
 
           <!-- iframeセクション -->
           <div
             v-if="props.stock.url && props.stock.url.includes('askul')"
-            class="mb-8 bg-white rounded-2xl shadow-xl overflow-hidden"
+            class="mb-6 bg-surface-base border border-border rounded-card shadow-card overflow-hidden"
           >
             <iframe
               id="stock_iframe"
@@ -647,7 +650,7 @@ onMounted(() => {
             ></iframe>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <!-- 左カラム -->
             <div id="left_container" class="lg:col-span-2 space-y-6">
           <!-- 略名登録ブロック -->
@@ -1014,30 +1017,12 @@ onMounted(() => {
           <!-- </div> -->
 
               <!-- 手配先設定 -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                  <div class="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-gray-800">手配先設定</h3>
-                </div>
-
+              <SectionCard title="手配先設定">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label
-                      :class="{
-                        'block text-sm font-semibold mb-2 transition-colors': true,
-                        'text-red-500': !form.stock_supplier_supplier_id,
-                        'text-gray-700': form.stock_supplier_supplier_id
-                      }"
-                    >
-                      *手配先
-                    </label>
+                  <FormField label="手配先" required :error="!form.stock_supplier_supplier_id ? '手配先を選択してください' : ''">
                     <select
                       v-model="form.stock_supplier_supplier_id"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                     >
                       <option value="">未選択</option>
                       <option
@@ -1052,144 +1037,103 @@ onMounted(() => {
                         }}
                       </option>
                     </select>
-                  </div>
-                  <div>
-                    <label
-                      :class="{
-                        'block text-sm font-semibold mb-2 transition-colors': true,
-                        'text-red-500': !form.stock_supplier_lead_time,
-                        'text-gray-700': form.stock_supplier_lead_time
-                      }"
-                    >
-                      *リードタイム
-                    </label>
+                  </FormField>
+                  <FormField label="リードタイム" required :error="!form.stock_supplier_lead_time ? 'リードタイムを入力してください' : ''">
                     <input
                       type="number"
                       v-model="form.stock_supplier_lead_time"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       placeholder="日数を入力"
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 <div class="flex justify-center mb-6">
-                  <button
-                    @click.prevent="createStockSupplier"
-                    class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-purple-500/30 transition-all duration-300 hover:scale-105"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                  <Button variant="primary" icon-left="add" @click.prevent="createStockSupplier">
                     登録
-                  </button>
+                  </Button>
                 </div>
 
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-6"></div>
+                <div class="border-t border-border my-6"></div>
 
-                <div class="overflow-x-auto">
-                  <table class="w-full min-w-max">
-                    <thead>
-                      <tr class="border-b-2 border-gray-200">
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">手配先</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">リードタイム</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">送料</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                      <tr
-                        v-for="stock_supplier in props.stock_suppliers"
-                        :key="stock_supplier.id"
-                        class="hover:bg-purple-50 transition-colors duration-200"
-                      >
-                        <td class="px-3 py-3">
-                          <div class="flex items-center gap-2">
-                            <button
-                              @click="updateStockSupplier('delete', stock_supplier)"
-                              class="text-red-500 hover:text-red-700 hover:scale-110 transition-all duration-200 flex-shrink-0"
+                <Table>
+                  <thead>
+                    <tr>
+                      <TableHeaderCell>手配先</TableHeaderCell>
+                      <TableHeaderCell>リードタイム</TableHeaderCell>
+                      <TableHeaderCell>送料</TableHeaderCell>
+                      <TableHeaderCell>操作</TableHeaderCell>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <TableRow
+                      v-for="stock_supplier in props.stock_suppliers"
+                      :key="stock_supplier.id"
+                      :state="stock_supplier.main_flg ? 'success' : 'default'"
+                    >
+                      <TableDataCell nowrap>
+                        <div class="flex items-center gap-2">
+                          <button
+                            @click="updateStockSupplier('delete', stock_supplier)"
+                            class="text-error-600 hover:text-error-700 transition-colors flex-shrink-0"
+                          >
+                            <Icon name="delete" size="sm" />
+                          </button>
+                          <div class="min-w-0">
+                            <Badge
+                              v-if="stock_supplier.main_flg"
+                              variant="success"
+                              class="mb-1"
                             >
-                              <i class="fas fa-trash-alt"></i>
-                            </button>
-                            <div class="min-w-0">
-                              <span
-                                v-if="stock_supplier.main_flg"
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 mb-1 whitespace-nowrap"
-                              >
-                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
-                                適用中
-                              </span>
-                              <p class="font-medium text-gray-900 text-sm whitespace-nowrap">{{ stock_supplier.name }}</p>
-                            </div>
+                              <span class="w-1.5 h-1.5 bg-success-600 rounded-full"></span>
+                              適用中
+                            </Badge>
+                            <p class="font-medium text-content text-sm whitespace-nowrap">{{ stock_supplier.name }}</p>
                           </div>
-                        </td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="number"
-                            v-model="stock_supplier.lead_time"
-                            class="w-20 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all duration-200 outline-none text-sm"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="number"
-                            v-model="stock_supplier.postage"
-                            class="w-20 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all duration-200 outline-none text-sm"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <div class="flex flex-col gap-2">
-                            <button
-                              @click="updateStockSupplier('save', stock_supplier)"
-                              class="inline-flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg text-xs transition-all duration-200 hover:scale-105 whitespace-nowrap"
-                            >
-                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                              保存
-                            </button>
-                            <button
-                              v-if="!stock_supplier.main_flg"
-                              @click="changeStockSupplierMainFlg(stock_supplier.stock_supplier_id)"
-                              class="inline-flex items-center justify-center gap-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg text-xs transition-all duration-200 hover:scale-105 whitespace-nowrap"
-                            >
-                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              適用変更
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                        </div>
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="number"
+                          v-model="stock_supplier.lead_time"
+                          class="w-20 text-center rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="number"
+                          v-model="stock_supplier.postage"
+                          class="w-20 text-center rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <div class="flex flex-col gap-2">
+                          <Button variant="primary" size="sm" icon-left="check" @click="updateStockSupplier('save', stock_supplier)">
+                            保存
+                          </Button>
+                          <Button
+                            v-if="!stock_supplier.main_flg"
+                            variant="secondary"
+                            size="sm"
+                            icon-left="task_alt"
+                            @click="changeStockSupplierMainFlg(stock_supplier.stock_supplier_id)"
+                          >
+                            適用変更
+                          </Button>
+                        </div>
+                      </TableDataCell>
+                    </TableRow>
+                  </tbody>
+                </Table>
+              </SectionCard>
 
               <!-- 手配先価格設定 -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                  <div class="p-2 bg-gradient-to-br from-rose-500 to-pink-500 rounded-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-gray-800">手配先価格設定</h3>
-                </div>
-
+              <SectionCard title="手配先価格設定">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label
-                      :class="{
-                        'block text-sm font-semibold mb-2 transition-colors': true,
-                        'text-red-500': !form.price_stock_supplier_id,
-                        'text-gray-700': form.price_stock_supplier_id
-                      }"
-                    >
-                      *手配先
-                    </label>
+                  <FormField label="手配先" required :error="!form.price_stock_supplier_id ? '手配先を選択してください' : ''">
                     <select
                       v-model="form.price_stock_supplier_id"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:ring-4 focus:ring-rose-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                     >
                       <option value="">未選択</option>
                       <option
@@ -1200,187 +1144,128 @@ onMounted(() => {
                         {{ stock_supplier.name }}
                       </option>
                     </select>
-                  </div>
-                  <div>
-                    <label
-                      :class="{
-                        'block text-sm font-semibold mb-2 transition-colors': true,
-                        'text-red-500': !form.price_value,
-                        'text-gray-700': form.price_value
-                      }"
-                    >
-                      *価格
-                    </label>
+                  </FormField>
+                  <FormField label="価格" required :error="!form.price_value ? '価格を入力してください' : ''">
                     <input
                       type="number"
                       v-model="form.price_value"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:ring-4 focus:ring-rose-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       placeholder="価格を入力"
                       step="0.01"
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label
-                      :class="{
-                        'block text-sm font-semibold mb-2 transition-colors': true,
-                        'text-red-500': !form.price_start_date,
-                        'text-gray-700': form.price_start_date
-                      }"
-                    >
-                      *適用開始日
-                    </label>
+                  <FormField label="適用開始日" required :error="!form.price_start_date ? '適用開始日を入力してください' : ''">
                     <input
                       type="date"
                       v-model="form.price_start_date"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:ring-4 focus:ring-rose-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                     />
-                  </div>
+                  </FormField>
                   <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <label class="block mb-1 text-sm font-medium text-content">
                       適用終了日
-                      <span class="ml-1 text-xs font-normal text-gray-500">※未入力の場合は無期限</span>
+                      <span class="ml-1 text-xs font-normal text-content-muted">※未入力の場合は無期限</span>
                     </label>
                     <input
                       type="date"
                       v-model="form.price_end_date"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:ring-4 focus:ring-rose-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                     />
                   </div>
                 </div>
 
                 <div class="flex justify-center mb-6">
-                  <button
-                    @click.prevent="createStockSupplierPrice"
-                    class="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-rose-500/30 transition-all duration-300 hover:scale-105"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                  <Button variant="primary" icon-left="add" @click.prevent="createStockSupplierPrice">
                     登録
-                  </button>
+                  </Button>
                 </div>
 
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-6"></div>
+                <div class="border-t border-border my-6"></div>
 
-                <div class="overflow-x-auto">
-                  <table class="w-full min-w-max">
-                    <thead>
-                      <tr class="border-b-2 border-gray-200">
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">手配先</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">価格</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">適用開始日</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">適用終了日</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">状態</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                      <tr
-                        v-for="price in props.stock_supplier_prices"
-                        :key="price.id"
-                        class="hover:bg-rose-50 transition-colors duration-200"
-                      >
-                        <td class="px-3 py-3 font-medium text-gray-900 text-sm whitespace-nowrap">
-                          {{ price.stock_supplier?.supplier?.name || '-' }}
-                        </td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="number"
-                            v-model="price.price"
-                            class="w-24 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-rose-500 focus:ring-2 focus:ring-rose-100 transition-all duration-200 outline-none text-sm"
-                            step="0.01"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="date"
-                            :value="formatDate(price.start_date)"
-                            @input="price.start_date = $event.target.value"
-                            class="w-36 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-rose-500 focus:ring-2 focus:ring-rose-100 transition-all duration-200 outline-none text-xs"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="date"
-                            :value="formatDate(price.end_date)"
-                            @input="price.end_date = $event.target.value"
-                            class="w-36 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-rose-500 focus:ring-2 focus:ring-rose-100 transition-all duration-200 outline-none text-xs"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <button
-                            v-if="price.active_flg !== 2"
-                            @click="updateStockSupplierPrice('toggle', price)"
-                            :class="{
-                              'px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap': true,
-                              'bg-green-100 text-green-800 hover:bg-green-200': price.active_flg === 1,
-                              'bg-gray-100 text-gray-800 hover:bg-gray-200': price.active_flg === 0
-                            }"
-                          >
+                <Table>
+                  <thead>
+                    <tr>
+                      <TableHeaderCell>手配先</TableHeaderCell>
+                      <TableHeaderCell>価格</TableHeaderCell>
+                      <TableHeaderCell>適用開始日</TableHeaderCell>
+                      <TableHeaderCell>適用終了日</TableHeaderCell>
+                      <TableHeaderCell>状態</TableHeaderCell>
+                      <TableHeaderCell>操作</TableHeaderCell>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <TableRow
+                      v-for="price in props.stock_supplier_prices"
+                      :key="price.id"
+                    >
+                      <TableDataCell nowrap>
+                        <span class="font-medium">{{ price.stock_supplier?.supplier?.name || '-' }}</span>
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="number"
+                          v-model="price.price"
+                          class="w-24 text-center rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                          step="0.01"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="date"
+                          :value="formatDate(price.start_date)"
+                          @input="price.start_date = $event.target.value"
+                          class="w-36 text-center rounded-md border-border shadow-sm text-xs focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="date"
+                          :value="formatDate(price.end_date)"
+                          @input="price.end_date = $event.target.value"
+                          class="w-36 text-center rounded-md border-border shadow-sm text-xs focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <button
+                          v-if="price.active_flg !== 2"
+                          @click="updateStockSupplierPrice('toggle', price)"
+                        >
+                          <Badge :variant="price.active_flg === 1 ? 'success' : 'neutral'">
                             {{ price.active_flg === 1 ? '適用待ち' : '適用済み' }}
-                          </button>
-                          <span
-                            v-else
-                            class="px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap bg-blue-100 text-blue-800"
+                          </Badge>
+                        </button>
+                        <Badge v-else variant="info">適用済み</Badge>
+                      </TableDataCell>
+                      <TableDataCell>
+                        <div class="flex flex-col gap-2">
+                          <Button variant="primary" size="sm" icon-left="check" @click="updateStockSupplierPrice('save', price)">
+                            保存
+                          </Button>
+                          <button
+                            @click="updateStockSupplierPrice('delete', price)"
+                            class="text-error-600 hover:text-error-700 transition-colors"
                           >
-                            適用済み
-                          </span>
-                        </td>
-                        <td class="px-3 py-3">
-                          <div class="flex flex-col gap-2">
-                            <button
-                              @click="updateStockSupplierPrice('save', price)"
-                              class="inline-flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg text-xs transition-all duration-200 hover:scale-105 whitespace-nowrap"
-                            >
-                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                              保存
-                            </button>
-                            <button
-                              @click="updateStockSupplierPrice('delete', price)"
-                              class="text-red-500 hover:text-red-700 hover:scale-110 transition-all duration-200"
-                            >
-                              <i class="fas fa-trash-alt"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                            <Icon name="delete" size="sm" />
+                          </button>
+                        </div>
+                      </TableDataCell>
+                    </TableRow>
+                  </tbody>
+                </Table>
+              </SectionCard>
 
               <!-- 格納先設定 -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                  <div class="p-2 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-gray-800">格納先設定</h3>
-                </div>
-
+              <SectionCard title="格納先設定">
                 <form action="" class="mb-6">
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div>
-                      <label
-                        :class="{
-                          'block text-sm font-semibold mb-2 transition-colors': true,
-                          'text-red-500': !form.location_id,
-                          'text-gray-700': form.location_id
-                        }"
-                      >
-                        *倉庫
-                      </label>
+                    <FormField label="倉庫" required :error="!form.location_id ? '倉庫を選択してください' : ''">
                       <select
                         v-model="form.location_id"
                         @change="handleLocation($event.target.value)"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="0">未選択</option>
                         <option
@@ -1391,21 +1276,12 @@ onMounted(() => {
                           {{ location.name }}
                         </option>
                       </select>
-                    </div>
+                    </FormField>
 
-                    <div>
-                      <label
-                        :class="{
-                          'block text-sm font-semibold mb-2 transition-colors': true,
-                          'text-red-500': !form.storage_address_id,
-                          'text-gray-700': form.storage_address_id
-                        }"
-                      >
-                        *アドレス
-                      </label>
+                    <FormField label="アドレス" required :error="!form.storage_address_id ? 'アドレスを選択してください' : ''">
                       <select
                         v-model="form.storage_address_id"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="0">未選択</option>
                         <option
@@ -1416,183 +1292,136 @@ onMounted(() => {
                           {{ address.address }}
                         </option>
                       </select>
-                    </div>
-                    
-                    <div>
-                      <label
-                        :class="{
-                          'block text-sm font-semibold mb-2 transition-colors': true,
-                          'text-red-500': !form.stock_storage_quantity,
-                          'text-gray-700': form.stock_storage_quantity
-                        }"
-                      >
-                        *数量
-                      </label>
+                    </FormField>
+
+                    <FormField label="数量" required :error="!form.stock_storage_quantity ? '数量を入力してください' : ''">
                       <input
                         type="number"
                         v-model="form.stock_storage_quantity"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="数量を入力"
                       />
-                    </div>
+                    </FormField>
                   </div>
 
                   <div class="flex justify-center mb-6">
-                    <button
-                      @click="createStockStorage"
-                      class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:scale-105"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
+                    <Button variant="primary" icon-left="add" @click="createStockStorage">
                       登録
-                    </button>
+                    </Button>
                   </div>
                 </form>
 
-                <div class="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-6"></div>
+                <div class="border-t border-border my-6"></div>
 
-                <div class="overflow-x-auto">
-                  <table class="w-full min-w-max">
-                    <thead>
-                      <tr class="border-b-2 border-gray-200">
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">倉庫</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">アドレス</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">個数</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">発注点</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                      <tr
-                        v-for="stock_storage in props.stock_storages"
-                        :key="stock_storage.stock_storage_id"
-                        class="hover:bg-indigo-50 transition-colors duration-200"
-                      >
-                        <td class="px-3 py-3 font-medium text-gray-900 text-sm whitespace-nowrap">
-                          {{ stock_storage.location_name }}
-                        </td>
-                        <td class="px-3 py-3 text-gray-700 text-sm whitespace-nowrap">{{ stock_storage.address }}</td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="number"
-                            v-model="stock_storage.quantity"
-                            class="w-20 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 outline-none text-sm"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <input
-                            type="number"
-                            v-model="stock_storage.reorder_point"
-                            class="w-20 px-2 py-2 text-center bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 outline-none text-sm"
-                          />
-                        </td>
-                        <td class="px-3 py-3">
-                          <div class="flex flex-col gap-2">
-                            <button
-                              @click="updateStockStorage('save', stock_storage)"
-                              class="inline-flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg text-xs transition-all duration-200 hover:scale-105 whitespace-nowrap"
-                            >
-                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                              保存
-                            </button>
-                            <button
-                              @click="updateStockStorage('delete', stock_storage)"
-                              class="text-red-500 hover:text-red-700 hover:scale-110 transition-all duration-200 text-center"
-                            >
-                              <i class="fas fa-trash-alt"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                <Table>
+                  <thead>
+                    <tr>
+                      <TableHeaderCell>倉庫</TableHeaderCell>
+                      <TableHeaderCell>アドレス</TableHeaderCell>
+                      <TableHeaderCell>個数</TableHeaderCell>
+                      <TableHeaderCell>発注点</TableHeaderCell>
+                      <TableHeaderCell>操作</TableHeaderCell>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <TableRow
+                      v-for="stock_storage in props.stock_storages"
+                      :key="stock_storage.stock_storage_id"
+                    >
+                      <TableDataCell nowrap>
+                        <span class="font-medium">{{ stock_storage.location_name }}</span>
+                      </TableDataCell>
+                      <TableDataCell nowrap>
+                        <span class="text-content-muted">{{ stock_storage.address }}</span>
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="number"
+                          v-model="stock_storage.quantity"
+                          class="w-20 text-center rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <input
+                          type="number"
+                          v-model="stock_storage.reorder_point"
+                          class="w-20 text-center rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      </TableDataCell>
+                      <TableDataCell>
+                        <div class="flex flex-col gap-2">
+                          <Button variant="primary" size="sm" icon-left="check" @click="updateStockStorage('save', stock_storage)">
+                            保存
+                          </Button>
+                          <button
+                            @click="updateStockStorage('delete', stock_storage)"
+                            class="text-error-600 hover:text-error-700 transition-colors text-center"
+                          >
+                            <Icon name="delete" size="sm" />
+                          </button>
+                        </div>
+                      </TableDataCell>
+                    </TableRow>
+                  </tbody>
+                </Table>
+              </SectionCard>
 
               <!-- 現場依頼物品設定 -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                  <div class="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-gray-800">現場依頼物品設定</h3>
-                </div>
-
+              <SectionCard title="現場依頼物品設定">
                 <div v-if="stock.stock_request_id" class="space-y-4">
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        表示名
-                      </label>
+                    <FormField label="表示名">
                       <input
                         type="text"
                         v-model="form.alias"
                         @change="updateStockRequest('alias')"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="表示名を入力"
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        表示順
-                      </label>
+                    </FormField>
+                    <FormField label="表示順">
                       <input
                         type="number"
                         v-model="form.orderNumber"
                         @change="updateStockRequest('orderNumber')"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="順番を入力"
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        単位
-                      </label>
+                    </FormField>
+                    <FormField label="単位">
                       <input
                         type="text"
                         v-model="form.orderUnit"
                         @change="updateStockRequest('unit')"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="単位を入力"
                       />
-                    </div>
+                    </FormField>
                   </div>
 
-                  <button
-                    @click="toggleStockRequest"
-                    class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 hover:scale-102 shadow-lg shadow-blue-500/30"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <Button variant="primary" icon-left="task_alt" block @click="toggleStockRequest">
                     設定済
-                  </button>
+                  </Button>
                 </div>
 
-                <button
+                <Button
                   v-else
+                  variant="secondary"
+                  icon-left="warning"
+                  block
                   @click="toggleStockRequest"
-                  class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 hover:scale-102"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
                   未設定
-                </button>
-              </div>
+                </Button>
+              </SectionCard>
             </div>
 
             <!-- 右カラム -->
             <div id="right_container" class="lg:col-span-3 space-y-6">
               <!-- 画像カード -->
-              <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <div class="bg-surface-base border border-border rounded-card shadow-card overflow-hidden">
                 <img
-                  class="w-full h-80 object-contain p-6 bg-gradient-to-br from-gray-50 to-gray-100"
+                  class="w-full h-80 object-contain p-6 bg-surface-muted"
                   :src="
                     stock.img_path && stock.img_path.includes('https://')
                       ? stock.img_path
@@ -1603,188 +1432,134 @@ onMounted(() => {
               </div>
 
               <!-- 在庫情報フォーム -->
-              <div class="bg-white rounded-2xl shadow-lg p-6">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                  <div class="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <h3 class="text-xl font-bold text-gray-800">在庫基本情報</h3>
-                </div>
-
+              <SectionCard title="在庫基本情報">
                 <form class="space-y-6">
                   <!-- ID -->
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                      ID
-                    </label>
+                  <FormField label="ID">
                     <input
                       type="number"
                       v-model="form.stock_id"
-                      class="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-500 cursor-not-allowed outline-none"
+                      class="w-full rounded-md border-border shadow-sm text-sm bg-surface-sunken text-content-subtle cursor-not-allowed"
                       disabled
                     />
-                  </div>
+                  </FormField>
 
                   <!-- 品名 -->
-                  <div>
-                    <label
-                      :class="{
-                        'block text-sm font-semibold mb-2 transition-colors': true,
-                        'text-red-500': !form.name,
-                        'text-gray-700': form.name
-                      }"
-                    >
-                      *品名
-                    </label>
+                  <FormField label="品名" required :error="!form.name ? '品名を入力してください' : ''">
                     <input
                       type="text"
                       v-model="form.name"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       placeholder="品名を入力"
                     />
-                  </div>
+                  </FormField>
 
                   <!-- 品番 -->
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                      品番
-                    </label>
+                  <FormField label="品番">
                     <input
                       type="text"
                       v-model="form.s_name"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       placeholder="品番を入力"
                     />
-                  </div>
+                  </FormField>
 
                   <!-- JANコード -->
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                      JANコード
-                    </label>
+                  <FormField label="JANコード">
                     <input
                       type="text"
                       v-model="form.jan_code"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       placeholder="JANコードを入力"
                     />
-                  </div>
+                  </FormField>
 
                   <!-- URL -->
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        画像URL
-                      </label>
+                    <FormField label="画像URL">
                       <input
                         type="text"
                         v-model="form.img_path"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="https://****"
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        購買用URL
-                      </label>
+                    </FormField>
+                    <FormField label="購買用URL">
                       <input
                         type="text"
                         v-model="form.url"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="https://****"
                       />
-                    </div>
+                    </FormField>
                   </div>
 
                   <!-- 適確事業者番号 -->
-                  <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                      適確事業者番号
-                    </label>
+                  <FormField label="適確事業者番号">
                     <input
                       type="text"
                       v-model="form.purchase_identification_number"
-                      class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                      class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       placeholder="適確事業者番号を入力"
                     />
-                  </div>
+                  </FormField>
 
                   <!-- 価格・税区分 -->
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        :class="{
-                          'block text-sm font-semibold mb-2 transition-colors': true,
-                          'text-red-500': !form.price,
-                          'text-gray-700': form.price
-                        }"
-                      >
-                        *価格
-                      </label>
+                    <FormField label="価格" required :error="!form.price ? '価格を入力してください' : ''">
                       <input
                         type="number"
                         v-model="form.price"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="価格を入力"
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        *税区分
-                      </label>
+                    </FormField>
+                    <FormField label="税区分" required>
                       <select
                         v-model="form.tax_included"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="0">税抜き</option>
                         <option value="1">税込み</option>
                       </select>
-                    </div>
+                    </FormField>
                   </div>
 
                   <!-- 価格推移グラフ -->
                   <div
                     v-if="props.stock_price_archive && props.stock_price_archive.length > 0"
-                    class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-blue-100"
+                    class="bg-surface-muted p-6 rounded-card border border-border"
                   >
                     <canvas ref="chartRef"></canvas>
                   </div>
 
                   <!-- 単位 -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        発注単位
-                      </label>
+                    <FormField label="発注単位">
                       <input
                         type="text"
                         v-model="form.solo_unit"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="個"
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        在庫単位
-                      </label>
+                    </FormField>
+                    <FormField label="在庫単位">
                       <input
                         type="text"
                         v-model="form.org_unit"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="箱"
                       />
-                    </div>
+                    </FormField>
                     <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
+                      <label class="block mb-1 text-sm font-medium text-content">
                         換算値
-                        <span class="ml-1 text-xs text-gray-500 font-normal">※納品時の数量登録</span>
+                        <span class="ml-1 text-xs text-content-muted font-normal">※納品時の数量登録</span>
                       </label>
                       <input
                         type="number"
                         v-model="form.quantity_per_org"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="換算値を入力"
                       />
                     </div>
@@ -1792,20 +1567,11 @@ onMounted(() => {
 
                   <!-- カテゴリ・配送先・工程 -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label
-                        :class="{
-                          'block text-sm font-semibold mb-2 transition-colors': true,
-                          'text-red-500': !form.classification_id,
-                          'text-gray-700': form.classification_id
-                        }"
-                      >
-                        *備品カテゴリ
-                      </label>
+                    <FormField label="備品カテゴリ" required :error="!form.classification_id ? '備品カテゴリを選択してください' : ''">
                       <select
                         v-model="form.classification_id"
                         @change="handleClassification"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="0">未選択</option>
                         <option
@@ -1816,26 +1582,23 @@ onMounted(() => {
                           {{ classification.name }}
                         </option>
                       </select>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        配送先
-                      </label>
+                    </FormField>
+                    <FormField label="配送先">
                       <input
                         type="text"
                         v-model="form.deli_location"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="配送先を入力"
                       />
-                    </div>
+                    </FormField>
                     <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
+                      <label class="block mb-1 text-sm font-medium text-content">
                         工程
-                        <span class="ml-1 text-xs text-gray-500 font-normal">※発注依頼時デフォルト値</span>
+                        <span class="ml-1 text-xs text-content-muted font-normal">※発注依頼時デフォルト値</span>
                       </label>
                       <select
                         v-model="form.stock_process_id"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="0">未選択</option>
                         <option
@@ -1851,80 +1614,61 @@ onMounted(() => {
 
                   <!-- 稟議申請・備考・表示フラグ -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        稟議申請時発注先名
-                      </label>
+                    <FormField label="稟議申請時発注先名">
                       <input
                         type="text"
                         v-model="form.approval_supplier_name"
-                        class="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-500 cursor-not-allowed outline-none"
+                        class="w-full rounded-md border-border shadow-sm text-sm bg-surface-sunken text-content-subtle cursor-not-allowed"
                         disabled
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        備考
-                      </label>
+                    </FormField>
+                    <FormField label="備考">
                       <input
                         type="text"
                         v-model="form.desc_memo"
-                        class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-200 outline-none hover:border-gray-300"
+                        class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
                         placeholder="備考を入力"
                       />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        納品書金額表示
-                      </label>
+                    </FormField>
+                    <FormField label="納品書金額表示">
                       <select
                         v-model="form.show_price_on_invoice"
                         :class="{
-                          'w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 transition-all duration-200 outline-none hover:border-gray-300 font-semibold': true,
-                          'text-green-600 focus:border-green-500 focus:ring-green-100': !form.show_price_on_invoice,
-                          'text-red-600 focus:border-red-500 focus:ring-red-100': form.show_price_on_invoice
+                          'w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500 font-semibold': true,
+                          'text-success-700': !form.show_price_on_invoice,
+                          'text-error-700': form.show_price_on_invoice
                         }"
                       >
-                        <option class="text-green-600" value="0">表示</option>
-                        <option class="text-red-600" value="1">非表示</option>
+                        <option class="text-success-700" value="0">表示</option>
+                        <option class="text-error-700" value="1">非表示</option>
                       </select>
-                    </div>
+                    </FormField>
                   </div>
-                  <div class="w-full">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                      ステータス
-                    </label>
+                  <FormField label="ステータス">
                     <select
                       v-model="form.del_flg"
                       :class="{
-                        'text-center w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 transition-all duration-200 outline-none hover:border-gray-300 font-semibold': true,
-                        'text-green-600 focus:border-green-500 focus:ring-green-100': !form.del_flg,
-                        'text-red-600 focus:border-red-500 focus:ring-red-100': form.del_flg
+                        'text-center w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500 font-semibold': true,
+                        'text-success-700': !form.del_flg,
+                        'text-error-700': form.del_flg
                       }"
                     >
-                      <option class="text-green-600" value="0">有効</option>
-                      <option class="text-red-600" value="1">無効</option>
+                      <option class="text-success-700" value="0">有効</option>
+                      <option class="text-error-700" value="1">無効</option>
                     </select>
-                  </div>
+                  </FormField>
 
                   <!-- 変更ボタン -->
                   <div class="flex justify-center pt-4">
-                    <button
-                      @click.prevent="editStock"
-                      class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 px-12 rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:scale-105 text-lg"
-                    >
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
+                    <Button variant="primary" size="lg" icon-left="check" @click.prevent="editStock">
                       変更を保存
-                    </button>
+                    </Button>
                   </div>
                 </form>
-              </div>
+              </SectionCard>
             </div>
           </div>
         </div>
-      </div>
     </template>
   </MainLayout>
 </template>
@@ -1963,7 +1707,9 @@ onMounted(() => {
 
 /* フェードインアニメーション */
 #left_container > div,
-#right_container > div {
+#left_container > section,
+#right_container > div,
+#right_container > section {
   animation: fadeIn 0.5s ease-out;
 }
 
