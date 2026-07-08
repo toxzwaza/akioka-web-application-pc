@@ -1078,6 +1078,34 @@ const setDeviceId = async (device_id, order_request_id) => {
   }
 };
 
+// order_request_approvals を配列に正規化
+const normalizeApprovals = (approvals) => {
+  if (!approvals) return [];
+  return Array.isArray(approvals) ? approvals : Object.values(approvals);
+};
+
+// 依頼者・発注者・承認者のコメントが入力されているか
+const hasComment = (order_request) => {
+  if (order_request.description) return true;
+  if (order_request.sub_description) return true;
+  return normalizeApprovals(order_request.order_request_approvals).some(
+    (a) => a && a.comment
+  );
+};
+
+// コメント内容のツールチップ用サマリ
+const commentSummary = (order_request) => {
+  const parts = [];
+  if (order_request.description)
+    parts.push("【依頼者】" + order_request.description);
+  if (order_request.sub_description)
+    parts.push("【発注者】" + order_request.sub_description);
+  normalizeApprovals(order_request.order_request_approvals).forEach((a) => {
+    if (a && a.comment) parts.push("【" + (a.name || "承認者") + "】" + a.comment);
+  });
+  return parts.join("\n");
+};
+
 onMounted(() => {
   // デバイスID取得
   loginCheck();
@@ -1735,6 +1763,13 @@ onMounted(() => {
                       <span class="text-lg text-gray-900" v-else>{{
                         order_request.order_request_name
                       }}</span>
+                      <!-- コメント有無マーク（詳細確認を開かずに確認可能） -->
+                      <span
+                        v-if="hasComment(order_request)"
+                        class="inline-flex items-center gap-1 mt-1 ml-1 bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full cursor-help align-middle"
+                        :title="commentSummary(order_request)"
+                        >💬 コメントあり</span
+                      >
                     </td>
                     <td class="s_name px-4 py-4 text-lg text-gray-900">
                       {{
