@@ -1602,14 +1602,24 @@ const deleteInitialOrder = (order) => {
             <thead>
               <tr>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
-                >
-                  選択
-                </th>
-                <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl"
                 >
                   注文No
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
+                >
+                  納入希望日
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  発注書
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
+                  FAX送信
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl whitespace-nowrap"
@@ -1619,17 +1629,7 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                 >
-                  工程
-                </th>
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                >
                   注文依頼者
-                </th>
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
-                >
-                  担当者
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
@@ -1662,11 +1662,6 @@ const deleteInitialOrder = (order) => {
                   品番
                 </th>
 
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-300"
-                >
-                  納入希望日
-                </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-400"
                 >
@@ -1717,11 +1712,6 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                 >
-                  発注書
-                </th>
-                <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                >
                   納品書
                 </th>
                 <th
@@ -1740,9 +1730,14 @@ const deleteInitialOrder = (order) => {
                   完了登録
                 </th>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                 >
-                  FAX送信
+                  担当者
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
+                >
+                  工程
                 </th>
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
@@ -1763,15 +1758,6 @@ const deleteInitialOrder = (order) => {
                   'bg-white': !order.order_complete_flg || order.order_complete_flg === 0,
                 }"
               >
-                <td class="text-center">
-                  <input
-                    type="checkbox"
-                    name=""
-                    id=""
-                    @change="handleSelect(order)"
-                    v-model="order.select_flg"
-                  />
-                </td>
                 <td
                   :class="{
                     'px-4 py-3': true,
@@ -1780,6 +1766,131 @@ const deleteInitialOrder = (order) => {
                   }"
                 >
                   {{ order.order_no }}
+                </td>
+                <td class="px-4 py-3 text-lg text-gray-900">
+                  <input
+                    v-if="is_login"
+                    type="date"
+                    name=""
+                    id=""
+                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    :value="order.desire_delivery_date"
+                    @change="
+                      updateDate('desired', order.id, $event.target.value)
+                    "
+                  />
+                  <span v-else>{{
+                    order.desire_delivery_date
+                      ? new Date(order.desire_delivery_date).toLocaleDateString(
+                          "ja-JP"
+                        )
+                      : "-"
+                  }}</span>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <button
+                    v-if="!order.url"
+                    @click="openModal('purchase', { orders: [order] })"
+                    :class="{
+                      ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
+                      'bg-green-500': order.purchase_path,
+                      'bg-gray-500': !order.purchase_path,
+                    }"
+                  >
+                    {{ order.purchase_path ? "発行済" : "未発行" }}
+                    <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
+                  </button>
+
+                  <a
+                    v-else
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
+                    :href="order.url"
+                    target="blank"
+                    >URL</a
+                  >
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <span
+                    @click="order.fax_parameter_id && order.fax_parameter_status === 1 ? openFaxParameter(order.fax_parameter_id) : null"
+                    :class="{
+                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-all': true,
+                      'bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 hover:shadow-md': order.fax_parameter_id && order.fax_parameter_status === 1,
+                      'bg-yellow-100 text-yellow-800': order.fax_parameter_id && order.fax_parameter_status === 0,
+                      'bg-gray-100 text-gray-600': !order.fax_parameter_id,
+                    }"
+                  >
+                    <!-- 完了アイコン -->
+                    <svg
+                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <!-- 待機中アイコン -->
+                    <svg
+                      v-else-if="order.fax_parameter_id && order.fax_parameter_status === 0"
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <!-- 未送信アイコン -->
+                    <svg
+                      v-else
+                      class="w-3 h-3 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    {{
+                      order.fax_parameter_id && order.fax_parameter_status === 1
+                        ? '完了'
+                        : order.fax_parameter_id && order.fax_parameter_status === 0
+                        ? '待機中'
+                        : '未送信'
+                    }}
+                    <!-- 外部リンクアイコン（完了時のみ表示） -->
+                    <svg
+                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
+                      class="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </span>
                 </td>
                 <td class="w-28">
                   <img
@@ -1792,20 +1903,8 @@ const deleteInitialOrder = (order) => {
                     alt=""
                   />
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-center">
-                  {{
-                    order.stock_processes_order_request_code
-                      ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
-                      : order.stock_processes_base_code
-                      ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
-                      : "-"
-                  }}
-                </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   {{ order.order_user }}
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                  {{ order.manage_user_name }}
                 </td>
                 <td class="px-4 py-3 text-lg text-gray-900">
                   {{ new Date(order.order_date).toLocaleDateString("ja-JP") }}
@@ -1863,26 +1962,6 @@ const deleteInitialOrder = (order) => {
                   <span v-else>{{ order.s_name }}</span>
                 </td>
 
-                <td class="px-4 py-3 text-lg text-gray-900">
-                  <input
-                    v-if="is_login"
-                    type="date"
-                    name=""
-                    id=""
-                    class="appearance-none block w-64 bg-gray-100 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    :value="order.desire_delivery_date"
-                    @change="
-                      updateDate('desired', order.id, $event.target.value)
-                    "
-                  />
-                  <span v-else>{{
-                    order.desire_delivery_date
-                      ? new Date(order.desire_delivery_date).toLocaleDateString(
-                          "ja-JP"
-                        )
-                      : "-"
-                  }}</span>
-                </td>
                 <td class="px-4 py-3 text-lg text-gray-900">
                   <input
                     v-if="is_login"
@@ -2042,30 +2121,6 @@ const deleteInitialOrder = (order) => {
                   class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
                 >
                   <button
-                    v-if="!order.url"
-                    @click="openModal('purchase', { orders: [order] })"
-                    :class="{
-                      ' hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs': true,
-                      'bg-green-500': order.purchase_path,
-                      'bg-gray-500': !order.purchase_path,
-                    }"
-                  >
-                    {{ order.purchase_path ? "発行済" : "未発行" }}
-                    <i v-if="order.purchase_path" class="ml-2 fas fa-check"></i>
-                  </button>
-
-                  <a
-                    v-else
-                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
-                    :href="order.url"
-                    target="blank"
-                    >URL</a
-                  >
-                </td>
-                <td
-                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                >
-                  <button
                     v-if="(order.deliveries && order.deliveries.length > 0) || order.delifile_path || (order.delifile_paths && order.delifile_paths.length > 0)"
                     class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-xs"
                     @click="openModal('delivery', { order: order, files: getDeliveryFiles(order) })"
@@ -2132,86 +2187,17 @@ const deleteInitialOrder = (order) => {
                     <option class="" :value="2">返信済み</option>
                   </select>
                 </td>
-                <td
-                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                >
-                  <span
-                    @click="order.fax_parameter_id && order.fax_parameter_status === 1 ? openFaxParameter(order.fax_parameter_id) : null"
-                    :class="{
-                      'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-all': true,
-                      'bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 hover:shadow-md': order.fax_parameter_id && order.fax_parameter_status === 1,
-                      'bg-yellow-100 text-yellow-800': order.fax_parameter_id && order.fax_parameter_status === 0,
-                      'bg-gray-100 text-gray-600': !order.fax_parameter_id,
-                    }"
-                  >
-                    <!-- 完了アイコン -->
-                    <svg
-                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
-                      class="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <!-- 待機中アイコン -->
-                    <svg
-                      v-else-if="order.fax_parameter_id && order.fax_parameter_status === 0"
-                      class="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <!-- 未送信アイコン -->
-                    <svg
-                      v-else
-                      class="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                      />
-                    </svg>
-                    {{
-                      order.fax_parameter_id && order.fax_parameter_status === 1
-                        ? '完了'
-                        : order.fax_parameter_id && order.fax_parameter_status === 0
-                        ? '待機中'
-                        : '未送信'
-                    }}
-                    <!-- 外部リンクアイコン（完了時のみ表示） -->
-                    <svg
-                      v-if="order.fax_parameter_id && order.fax_parameter_status === 1"
-                      class="w-3 h-3 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </span>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  {{ order.manage_user_name }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-center">
+                  {{
+                    order.stock_processes_order_request_code
+                      ? `${order.stock_processes_order_request_code}:${order.stock_processes_order_request_name}`
+                      : order.stock_processes_base_code
+                      ? `${order.stock_processes_base_code}:${order.stock_processes_base_name}`
+                      : "-"
+                  }}
                 </td>
                 <td
                   v-if="is_login"
