@@ -327,10 +327,10 @@ onMounted(() => {
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <!-- 単位1 -->
+                      <!-- 発注単位 -->
                       <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          単位1
+                          発注単位
                         </label>
                         <input
                           class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
@@ -340,10 +340,10 @@ onMounted(() => {
                         />
                       </div>
 
-                      <!-- 単位2 -->
+                      <!-- 在庫単位 -->
                       <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                          単位2
+                          在庫単位
                         </label>
                         <input
                           class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
