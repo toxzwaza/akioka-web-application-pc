@@ -1,7 +1,7 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
-import { onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 import Purchase from "@/Components/Purchase.vue";
@@ -10,6 +10,9 @@ import { getImgPath } from "@/Helper/Method";
 import ApprovalDocument from "@/Components/Accept/ApprovalDocument.vue";
 import SearchLoading from "@/Components/Loading/SearchLoading.vue";
 import UserLogin from "@/Components/Auth/UserLogin.vue";
+import ModalShell from "@/Components/UI/ModalShell.vue";
+import Button from "@/Components/UI/Button.vue";
+import Icon from "@/Components/UI/Icon.vue";
 
 const props = defineProps({
   initial_orders: Object,
@@ -70,12 +73,36 @@ const is_login = ref(false);
 const pwd = ref("");
 const isSearchLoading = ref(false);
 const current_admin_user = ref(null);
-const isFilterCollapsed = ref(false);
+// 絞り込みモーダルの表示状態
+const showFilterModal = ref(false);
 
 // 検索テキスト用のref
 const supplier_search_text = ref("");
 const order_user_search_text = ref("");
 const user_search_text = ref("");
+
+// 自動検索（即時反映）の制御用。初期化中は抑止しておく
+let suppressAutoSearch = true;
+let autoSearchTimer = null;
+
+// 適用中の絞り込み条件数（トリガーのバッジ表示用）
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (form.keyword) count++;
+  if (form.order_no) count++;
+  if (form.purchase_status) count++;
+  if (form.classification_id && form.classification_id != 0) count++;
+  if (form.group_id && form.group_id != 0) count++;
+  if (form.process_id && form.process_id != 0) count++;
+  if (form.delivery_status) count++;
+  if (form.start_delivery_date || form.end_delivery_date) count++;
+  if (form.nouki_start || form.nouki_end) count++;
+  if (user_search_text.value) count++;
+  if (supplier_search_text.value) count++;
+  if (order_user_search_text.value) count++;
+  if (form.order_by && form.order_by !== "desc") count++;
+  return count;
+});
 
 // モーダル状態管理（シンプル化）
 const modal = reactive({
@@ -706,11 +733,12 @@ const login = () => {
 };
 
 const getInitialOrders = (reset) => {
-  if (isSearchLoading.value) return;
   // ローディング開始
   isSearchLoading.value = true;
 
   if (reset === "reset") {
+    // リセット中は自動検索watcherの多重発火を抑止
+    suppressAutoSearch = true;
     form.order_by = null;
     form.keyword = null;
     form.start_order_date = null;
@@ -766,19 +794,77 @@ const getInitialOrders = (reset) => {
       purchase_status: form.purchase_status,
     },
     {
+      // 即時反映のため、状態・スクロール位置を保持し履歴も汚さない
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
       onFinish: () => {
+        // 自動検索の抑止を解除
+        suppressAutoSearch = false;
         // ページ遷移完了後にローディングを停止
         setTimeout(() => {
           isSearchLoading.value = false;
-        }, 500); // 少し遅延を入れて自然な感じにする
+        }, 300);
       },
       onError: () => {
+        suppressAutoSearch = false;
         // エラー時もローディングを停止
         isSearchLoading.value = false;
       },
     }
   );
 };
+
+// ===== 絞り込み条件の即時反映（検索ボタン不要） =====
+// 条件変更をデバウンスして自動的に検索を実行する
+const scheduleAutoSearch = () => {
+  if (suppressAutoSearch) return;
+  if (autoSearchTimer) clearTimeout(autoSearchTimer);
+  autoSearchTimer = setTimeout(() => {
+    getInitialOrders();
+  }, 350);
+};
+
+watch(
+  () => [
+    form.order_by,
+    form.keyword,
+    form.order_no,
+    form.purchase_status,
+    form.classification_id,
+    form.group_id,
+    form.process_id,
+    form.delivery_status,
+    form.start_delivery_date,
+    form.end_delivery_date,
+    form.nouki_start,
+    form.nouki_end,
+    form.nouki_targets,
+    user_search_text.value,
+    supplier_search_text.value,
+    order_user_search_text.value,
+  ],
+  scheduleAutoSearch,
+  { deep: true }
+);
+
+// preserveState 中は onMounted が再実行されないため、
+// 検索結果（props.initial_orders）の変化をローカルの一覧へ反映する
+watch(
+  () => props.initial_orders,
+  (val) => {
+    if (!val) return;
+    const mapped = (val.data || []).map((order) => ({
+      ...order,
+      order_complete_flg: order.order_complete_flg
+        ? Number(order.order_complete_flg)
+        : null,
+    }));
+    initial_orders.value.data = mapped;
+    initial_orders.value.links = val.links;
+    base_initial_orders.value = mapped.map((order) => ({ ...order }));
+  }
+);
 
 // 発注完了登録
 const orderComplete = (order, value) => {
@@ -884,6 +970,11 @@ onMounted(() => {
       isSearchLoading.value = false;
     }, 300);
   });
+
+  // 初期化に伴うwatcher発火が収まった後に自動検索を有効化
+  nextTick(() => {
+    suppressAutoSearch = false;
+  });
 });
 
 // 納品書更新
@@ -977,44 +1068,31 @@ const deleteInitialOrder = (order) => {
       </div>
 
       <!-- Search and Filter Section -->
-      <div class="search-section mb-8" :class="{ 'is-collapsed': isFilterCollapsed }">
-        <div class="search-card">
-          <div class="search-header">
-            <h2 class="search-title" v-show="!isFilterCollapsed">
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
-              検索・フィルター
-            </h2>
-            <button
-              type="button"
-              class="collapse-icon-btn"
-              @click="isFilterCollapsed = !isFilterCollapsed"
-              :title="isFilterCollapsed ? 'フィルターを展開' : 'フィルターを折りたたむ'"
-            >
-              <svg
-                class="h-4 w-4 transition-transform"
-                :class="{ 'rotate-180': isFilterCollapsed }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
+      <!-- 絞り込みツールバー（デフォルトは検索アイコンのみ） -->
+      <div class="filter-toolbar mb-6">
+        <button
+          type="button"
+          class="filter-trigger"
+          :class="{ 'is-active': activeFilterCount > 0 }"
+          title="絞り込み"
+          aria-label="絞り込み"
+          @click="showFilterModal = true"
+        >
+          <Icon name="search" size="md" />
+          <span v-if="activeFilterCount > 0" class="filter-trigger__badge">
+            {{ activeFilterCount }}
+          </span>
+        </button>
+      </div>
 
-          <div class="search-content" v-show="!isFilterCollapsed">
+      <!-- 絞り込みモーダル（条件変更は即時反映） -->
+      <ModalShell
+        :show="showFilterModal"
+        title="絞り込み"
+        max-width="3xl"
+        @close="showFilterModal = false"
+      >
+        <div class="filter-modal">
             <!-- Sort Controls -->
             <div class="sort-section">
               <label class="sort-label">並び順</label>
@@ -1378,47 +1456,21 @@ const deleteInitialOrder = (order) => {
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="search-actions">
-              <button @click="getInitialOrders()" class="action-btn primary">
-                <svg
-                  class="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
-                </svg>
-                検索
-              </button>
-              <button
-                @click="getInitialOrders('reset')"
-                class="action-btn secondary"
-              >
-                <svg
-                  class="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  ></path>
-                </svg>
-                リセット
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
+
+          <template #footer>
+            <Button
+              variant="ghost"
+              icon-left="restart_alt"
+              @click="getInitialOrders('reset')"
+            >
+              条件をクリア
+            </Button>
+            <Button variant="primary" @click="showFilterModal = false">
+              閉じる
+            </Button>
+          </template>
+        </ModalShell>
 
       <!-- Table Controls -->
       <div class="table-controls mb-6">
@@ -2522,141 +2574,99 @@ const deleteInitialOrder = (order) => {
   }
 }
 
-// Search Section
-.search-section {
-  @apply sticky top-6 self-start;
-  width: 340px;
-  float: left;
-  margin-right: 1.5rem;
-  transition: width 0.2s ease;
+// 絞り込みツールバー（テーブル上部のトリガー）
+.filter-toolbar {
+  @apply flex items-center justify-end gap-3;
+}
 
-  &.is-collapsed {
-    width: 72px;
+// 絞り込みトリガー（デフォルトは検索アイコンのみ）
+.filter-trigger {
+  @apply relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors;
+  @apply hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600;
+
+  &.is-active {
+    @apply border-blue-500 bg-blue-50 text-blue-600;
   }
 
-  .search-card {
-    @apply rounded-xl shadow-lg border border-gray-100 overflow-hidden;
-    background-color: #ffffff;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    border: 1px solid #dbe7ff;
-    box-shadow:
-      0 10px 30px rgba(15, 23, 42, 0.08),
-      0 2px 6px rgba(37, 99, 235, 0.08);
-
-    .search-header {
-      @apply p-6 bg-gray-50 border-b border-gray-100 flex items-center justify-between;
-
-      .search-title {
-        @apply text-xl font-semibold text-gray-800 flex items-center;
-      }
-
-      .collapse-icon-btn {
-        @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-blue-50 hover:text-blue-700;
-      }
-    }
-
-    .search-content {
-      @apply p-6;
-
-      .sort-section {
-        @apply mb-6;
-
-        .sort-label {
-          @apply block text-sm font-medium text-gray-700 mb-3;
-        }
-
-        .sort-buttons {
-          @apply flex gap-2;
-
-          .sort-btn {
-            @apply flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200;
-
-            &.active {
-              @apply bg-blue-600 text-white border-blue-600;
-            }
-          }
-        }
-      }
-
-      .filter-grid {
-        @apply grid grid-cols-1 gap-3 mb-5;
-
-        .filter-item {
-          @apply rounded-xl border border-slate-200 p-3;
-          background-color: #ffffff;
-          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-
-          .filter-label {
-            @apply block text-xs font-semibold tracking-wide text-slate-600 mb-1.5;
-          }
-
-          .filter-input {
-            @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-800;
-            @apply focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white;
-          }
-
-          .filter-select {
-            @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-800;
-            @apply focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white;
-          }
-
-          .input-with-icon {
-            @apply relative;
-
-            .input-icon {
-              @apply absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400;
-            }
-
-            .filter-input {
-              @apply pl-10;
-            }
-          }
-
-          &.date-range {
-            .date-range-inputs {
-              @apply grid grid-cols-[1fr_auto_1fr] items-center gap-2;
-
-              .date-input {
-                @apply flex-1;
-              }
-
-              .date-separator {
-                @apply text-gray-500 font-medium;
-              }
-            }
-          }
-        }
-      }
-
-      .search-actions {
-        @apply flex gap-3 justify-end;
-
-        .action-btn {
-          @apply flex items-center px-6 py-2 rounded-lg font-medium transition-colors duration-200;
-
-          &.primary {
-            @apply bg-blue-600 hover:bg-blue-700 text-white;
-          }
-
-          &.secondary {
-            @apply bg-gray-100 hover:bg-gray-200 text-gray-700;
-          }
-        }
-      }
-    }
+  .filter-trigger__badge {
+    @apply absolute -right-1.5 -top-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1 text-xs font-bold leading-none text-white;
   }
 }
 
-.search-section.is-collapsed + .stats-section,
-.search-section.is-collapsed ~ .table-controls,
-.search-section.is-collapsed ~ .modern-table-container {
-  margin-left: 96px;
-  transition: margin-left 0.2s ease;
+// 絞り込みモーダル内（teleport されるため非ネストで定義）
+.filter-modal {
+  .sort-section {
+    @apply mb-6;
+
+    .sort-label {
+      @apply block text-sm font-medium text-gray-700 mb-3;
+    }
+
+    .sort-buttons {
+      @apply flex gap-2;
+
+      .sort-btn {
+        @apply flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200;
+
+        &.active {
+          @apply bg-blue-600 text-white border-blue-600;
+        }
+      }
+    }
+  }
+
+  .filter-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+
+    .filter-item {
+      .filter-label {
+        @apply block text-xs font-semibold tracking-wide text-slate-600 mb-1.5;
+      }
+
+      .filter-input {
+        @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-800;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white;
+      }
+
+      .filter-select {
+        @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-800;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white;
+      }
+
+      .input-with-icon {
+        @apply relative;
+
+        .input-icon {
+          @apply absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400;
+        }
+
+        .filter-input {
+          @apply pl-10;
+        }
+      }
+
+      &.date-range {
+        @apply sm:col-span-2;
+
+        .date-range-inputs {
+          @apply grid grid-cols-[1fr_auto_1fr] items-center gap-2;
+
+          .date-input {
+            @apply flex-1;
+          }
+
+          .date-separator {
+            @apply text-gray-500 font-medium;
+          }
+        }
+      }
+    }
+  }
 }
 
 // Statistics Section
 .stats-section {
-  margin-left: 364px;
+  margin-left: 0;
   transition: margin-left 0.2s ease;
   .stats-header {
     .stats-title {
@@ -2734,7 +2744,7 @@ const deleteInitialOrder = (order) => {
 
 // Table Section
 .table-controls {
-  margin-left: 364px;
+  margin-left: 0;
   transition: margin-left 0.2s ease;
   @apply flex items-center justify-between;
 
@@ -2746,7 +2756,7 @@ const deleteInitialOrder = (order) => {
 }
 
 .modern-table-container {
-  margin-left: 364px;
+  margin-left: 0;
   transition: margin-left 0.2s ease;
   @apply rounded-xl shadow-lg border border-gray-100 overflow-hidden;
   background-color: #ffffff;
@@ -2872,12 +2882,6 @@ const deleteInitialOrder = (order) => {
 
 // Responsive Design
 @media (max-width: 1024px) {
-  .search-section {
-    float: none;
-    width: auto;
-    margin-right: 0;
-  }
-
   .stats-section,
   .table-controls,
   .modern-table-container {
@@ -2902,10 +2906,6 @@ const deleteInitialOrder = (order) => {
 }
 
 @media (max-width: 768px) {
-  .search-actions {
-    @apply flex-col;
-  }
-
   .stats-grid {
     @apply grid-cols-1;
   }
