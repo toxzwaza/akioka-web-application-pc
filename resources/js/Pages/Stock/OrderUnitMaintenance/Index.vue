@@ -63,11 +63,12 @@ buildRows();
 watch(() => props.stocks, buildRows);
 
 // 行の状態判定（一致 / 不一致 / 未設定 / 実績なし）
+// 在庫の「発注単位」は solo_unit（詳細画面・発注作成処理と同じ参照先）
 const rowStatus = (row) => {
-  const org = (row.org_unit ?? "").trim();
+  const current = (row.solo_unit ?? "").trim();
   if (row.order_units.length === 0) return "none";
-  if (!org) return "unset";
-  const mismatch = row.order_units.some((u) => u.order_unit !== org);
+  if (!current) return "unset";
+  const mismatch = row.order_units.some((u) => u.order_unit !== current);
   return mismatch ? "mismatch" : "match";
 };
 
@@ -120,7 +121,7 @@ const updating = ref(false);
 const bulkUpdate = () => {
   const items = selectedRows.value
     .filter((r) => (r.apply_unit ?? "").trim() !== "")
-    .map((r) => ({ stock_id: r.id, org_unit: r.apply_unit.trim() }));
+    .map((r) => ({ stock_id: r.id, solo_unit: r.apply_unit.trim() }));
 
   if (items.length === 0) {
     alert("更新対象がありません。行を選択し、適用する単位を入力してください。");
@@ -353,10 +354,16 @@ const formatDate = (val) => {
                   <p class="text-xs text-content-muted">{{ row.s_name }}</p>
                 </TableDataCell>
                 <TableDataCell nowrap>
-                  <span v-if="(row.org_unit ?? '').trim()">{{
-                    row.org_unit
+                  <span v-if="(row.solo_unit ?? '').trim()">{{
+                    row.solo_unit
                   }}</span>
                   <Badge v-else variant="warning" size="sm">未設定</Badge>
+                  <p
+                    v-if="(row.org_unit ?? '').trim()"
+                    class="mt-0.5 text-xs text-content-muted"
+                  >
+                    在庫単位: {{ row.org_unit }}
+                  </p>
                 </TableDataCell>
                 <TableDataCell>
                   <div
@@ -369,7 +376,7 @@ const formatDate = (val) => {
                       type="button"
                       class="inline-flex items-center gap-1 rounded-badge border px-2 py-0.5 text-xs transition-colors"
                       :class="
-                        u.order_unit === (row.org_unit ?? '').trim()
+                        u.order_unit === (row.solo_unit ?? '').trim()
                           ? 'border-success-100 bg-success-50 text-success-700'
                           : 'border-error-100 bg-error-50 text-error-700 hover:bg-error-100'
                       "

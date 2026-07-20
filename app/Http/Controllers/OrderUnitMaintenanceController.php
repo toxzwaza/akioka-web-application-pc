@@ -13,8 +13,11 @@ class OrderUnitMaintenanceController extends Controller
 {
     /**
      * 発注単位整備
-     * 在庫の発注単位（stocks.org_unit）と発注実績の単位（initial_orders.order_unit）を
+     * 在庫の発注単位（stocks.solo_unit）と発注実績の単位（initial_orders.order_unit）を
      * 比較する一覧を表示する。
+     * ※ カラムコメント上は org_unit が「発注単位」だが、画面（Stocks/Show）および
+     *   発注作成処理（OrderRequestController::createInitialOrder）では solo_unit が
+     *   「発注単位」として扱われているため、本画面も solo_unit を対象とする。
      */
     public function index(Request $request)
     {
@@ -59,11 +62,11 @@ class OrderUnitMaintenanceController extends Controller
                     ->whereColumn('initial_orders.stock_id', 'stocks.id')
                     ->whereNotNull('initial_orders.order_unit')
                     ->where('initial_orders.order_unit', '<>', '')
-                    ->whereRaw("NOT (initial_orders.order_unit <=> COALESCE(NULLIF(stocks.org_unit, ''), NULL))");
+                    ->whereRaw("NOT (initial_orders.order_unit <=> COALESCE(NULLIF(stocks.solo_unit, ''), NULL))");
             });
         } elseif ($unit_status === 'unset') {
             $query->where(function ($q) {
-                $q->whereNull('stocks.org_unit')->orWhere('stocks.org_unit', '');
+                $q->whereNull('stocks.solo_unit')->orWhere('stocks.solo_unit', '');
             });
         }
 
@@ -116,7 +119,7 @@ class OrderUnitMaintenanceController extends Controller
     }
 
     /**
-     * 在庫の発注単位（stocks.org_unit）を一括で上書きする
+     * 在庫の発注単位（stocks.solo_unit）を一括で上書きする
      */
     public function bulkUpdate(Request $request)
     {
@@ -124,13 +127,13 @@ class OrderUnitMaintenanceController extends Controller
             $validated = $request->validate([
                 'items' => 'required|array|min:1',
                 'items.*.stock_id' => 'required|integer|exists:stocks,id',
-                'items.*.org_unit' => 'required|string|max:255',
+                'items.*.solo_unit' => 'required|string|max:255',
             ]);
 
             DB::transaction(function () use ($validated) {
                 foreach ($validated['items'] as $item) {
                     Stock::where('id', $item['stock_id'])
-                        ->update(['org_unit' => trim($item['org_unit'])]);
+                        ->update(['solo_unit' => trim($item['solo_unit'])]);
                 }
             });
 
