@@ -99,6 +99,12 @@ const modules = computed(() => [
     icon: "shopping_cart",
   },
   {
+    title: "発注単位整備",
+    desc: "発注単位と実績単位の比較・統一",
+    href: route("stock.orderUnitMaintenance"),
+    icon: "rule",
+  },
+  {
     title: "弁当注文",
     desc: "注文・予約・履歴",
     href: route("lunch.order"),
