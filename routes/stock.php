@@ -18,6 +18,7 @@ use App\Http\Controllers\TemperatureAndHumidity;
 use App\Http\Controllers\CameraController;
 use App\Http\Controllers\InitialOrderController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\OrderUnitMaintenanceController;
 use App\Http\Controllers\StockCountController;
 use App\Http\Controllers\SupplierController;
 
@@ -85,6 +86,10 @@ Route::post('/initial-order/send-device-message', [InitialOrderController::class
 // Route::post('/initial-orders/update/expected-delivery-date', [StockController::class, 'update_expected_delivery_date'])->name('stock.update_expected_delivery_date');
 // Route::post('/initial-orders/update/delivery-date', [StockController::class, 'update_delivery_date'])->name('stock.update_delivery_date');
 
+
+// 発注単位整備
+Route::get('/order-unit-maintenance', [OrderUnitMaintenanceController::class, 'index'])->name('stock.orderUnitMaintenance');
+Route::post('/order-unit-maintenance/bulk-update', [OrderUnitMaintenanceController::class, 'bulkUpdate'])->name('stock.orderUnitMaintenance.bulkUpdate');
 
 // 発注依頼一覧
 Route::get('/order-requests', [OrderRequestController::class, 'index'])->name('stock.order_requests');
