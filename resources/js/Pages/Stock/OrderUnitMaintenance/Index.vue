@@ -12,7 +12,7 @@ import TableDataCell from "@/Components/UI/TableDataCell.vue";
 import Badge from "@/Components/UI/Badge.vue";
 import Button from "@/Components/UI/Button.vue";
 import { computed, reactive, ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, Link } from "@inertiajs/vue3";
 import axios from "axios";
 
 const props = defineProps({
@@ -343,7 +343,13 @@ const formatDate = (val) => {
                 </TableDataCell>
                 <TableDataCell nowrap>{{ row.stock_no || "-" }}</TableDataCell>
                 <TableDataCell>
-                  <p class="font-medium text-content">{{ row.name }}</p>
+                  <Link
+                    :href="route('stock.show.stocks', { stock_id: row.id })"
+                    class="font-medium text-primary-700 hover:underline"
+                    title="在庫詳細画面へ移動"
+                  >
+                    {{ row.name }}
+                  </Link>
                   <p class="text-xs text-content-muted">{{ row.s_name }}</p>
                 </TableDataCell>
                 <TableDataCell nowrap>
