@@ -50,6 +50,7 @@ Route::get('/stocks/inventory/records/date', [StockController::class, 'getInvent
 
 // 発注関連
 Route::get('/initial-order', [InitialOrderController::class, 'index'])->name('stock.initialOrders');
+Route::get('/initial-order/csv', [InitialOrderController::class, 'exportCsv'])->name('stock.initialOrders.csv');
 Route::get('/initial-order/create', [InitialOrderController::class, 'create'])->name('stock.create.initialOrders');
 // 発注依頼
 Route::delete('/initial-order/delete', [InitialOrderController::class, 'delete'])->name('stock.delete.initialOrders');

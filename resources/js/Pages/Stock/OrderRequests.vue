@@ -1394,36 +1394,6 @@ onMounted(() => {
                 />
               </div>
 
-              <!-- 工程 -->
-              <div class="form-group filter-field">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  工程
-                </label>
-                <select
-                  v-model="searchFilters.stock_process_id"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">すべて</option>
-                  <option
-                    v-for="stock_process in stock_processes"
-                    :key="stock_process.id"
-                    :value="stock_process.id"
-                  >
-                    {{ stock_process.name }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- 希望納期 -->
-              <div class="form-group filter-field date-range-field">
-                <label>希望納期</label>
-                <div class="date-inputs">
-                  <input v-model="searchFilters.desire_delivery_date_from" type="date" />
-                  <span>〜</span>
-                  <input v-model="searchFilters.desire_delivery_date_to" type="date" />
-                </div>
-              </div>
-
               <!-- 発注先 -->
               <div class="form-group filter-field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -1442,6 +1412,16 @@ onMounted(() => {
                     {{ supplier.name }}
                   </option>
                 </select>
+              </div>
+
+              <!-- 希望納期 -->
+              <div class="form-group filter-field date-range-field">
+                <label>希望納期</label>
+                <div class="date-inputs">
+                  <input v-model="searchFilters.desire_delivery_date_from" type="date" />
+                  <span>〜</span>
+                  <input v-model="searchFilters.desire_delivery_date_to" type="date" />
+                </div>
               </div>
 
               <!-- 発注依頼日時 -->
@@ -1470,6 +1450,26 @@ onMounted(() => {
                     :value="user.id"
                   >
                     {{ user.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 工程 -->
+              <div class="form-group filter-field">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  工程
+                </label>
+                <select
+                  v-model="searchFilters.stock_process_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">すべて</option>
+                  <option
+                    v-for="stock_process in stock_processes"
+                    :key="stock_process.id"
+                    :value="stock_process.id"
+                  >
+                    {{ stock_process.name }}
                   </option>
                 </select>
               </div>
@@ -3021,12 +3021,12 @@ onMounted(() => {
               }
 
               td {
-                @apply px-4 py-3 whitespace-nowrap text-sm text-content;
+                @apply px-4 py-2 whitespace-nowrap text-sm text-content;
 
                 input,
                 select,
                 textarea {
-                  @apply px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent;
+                  @apply px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent;
                 }
 
                 button {

@@ -35,7 +35,25 @@ const props = defineProps({
   stock_price_archive: Array,
   stock_supplier_prices: Array,
   aliases: Array,
+  prev_stock_id: [Number, String],
+  next_stock_id: [Number, String],
+  nav_filter: Object,
 });
+
+// 一覧の絞り込み条件を保持したまま前後の在庫詳細へ遷移
+const goToStock = (stock_id) => {
+  if (!stock_id) return;
+  const params = new URLSearchParams();
+  if (props.nav_filter?.keyword) params.append("keyword", props.nav_filter.keyword);
+  if (props.nav_filter?.supplier_name)
+    params.append("supplier_name", props.nav_filter.supplier_name);
+  if (props.nav_filter?.storage_address_id)
+    params.append("storage_address_id", props.nav_filter.storage_address_id);
+  const query = params.toString();
+  window.location.href =
+    route("stock.show.stocks", { stock_id: stock_id }) +
+    (query ? `?${query}` : "");
+};
 
 const initial_orders = ref([]);
 const select_storage_addresses = ref([]);
@@ -627,13 +645,31 @@ onMounted(() => {
             subtitle="物品データ閲覧・変更及び手配先や格納先の紐づけを行います。"
           >
             <template #actions>
-              <Link
-                :href="route('stock.stocks.create', { stock_id: props.stock.id })"
-              >
-                <Button variant="primary" icon-left="content_copy">
-                  複製して在庫追加
+              <div class="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  icon-left="chevron_left"
+                  :disabled="!props.prev_stock_id"
+                  @click="goToStock(props.prev_stock_id)"
+                >
+                  前へ
                 </Button>
-              </Link>
+                <Button
+                  variant="secondary"
+                  icon-right="chevron_right"
+                  :disabled="!props.next_stock_id"
+                  @click="goToStock(props.next_stock_id)"
+                >
+                  次へ
+                </Button>
+                <Link
+                  :href="route('stock.stocks.create', { stock_id: props.stock.id })"
+                >
+                  <Button variant="primary" icon-left="content_copy">
+                    複製して在庫追加
+                  </Button>
+                </Link>
+              </div>
             </template>
           </PageHeader>
 

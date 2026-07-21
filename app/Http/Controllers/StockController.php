@@ -354,8 +354,9 @@ class StockController extends Controller
         with(['stockSuppliers.supplier', 'classification'])
             ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
             ->leftJoin('classifications', 'classifications.id', 'stocks.classification_id')
-            ->orderBy('stocks.updated_at', 'desc');
-        
+            ->orderBy('stocks.updated_at', 'desc')
+            ->orderBy('stocks.id', 'desc');
+
         if ($storage_address_id) {
             $stocks->where('stock_storages.storage_address_id', $storage_address_id);
         }
@@ -386,7 +387,7 @@ class StockController extends Controller
         });
 
 
-        return Inertia::render('Stock/Stocks/Index', ['stocks' => $stocks, 'suppliers' => $suppliers, 'supplier_name' => $supplier_name, 'keyword' => $keyword]);
+        return Inertia::render('Stock/Stocks/Index', ['stocks' => $stocks, 'suppliers' => $suppliers, 'supplier_name' => $supplier_name, 'keyword' => $keyword, 'storage_address_id' => $storage_address_id]);
     }
 
     public function getStocks(Request $request)
@@ -451,11 +452,56 @@ class StockController extends Controller
 
 
     // 在庫編集
-    public function stock_show($stock_id)
+    public function stock_show(Request $request, $stock_id)
     {
         $stock = Stock::select('stocks.*', 'stock_requests.id as stock_request_id', 'stock_requests.orderNumber', 'stock_requests.alias', 'stock_requests.unit as orderUnit')
             ->leftJoin('stock_requests', 'stock_requests.stock_id', 'stocks.id')->where('stocks.id', $stock_id)
             ->first();
+
+        // 一覧の絞り込み条件・並び順を踏襲して前後の在庫IDを算出（ページまたぎ対応）
+        $keyword = $request->keyword;
+        $supplier_name = $request->supplier_name;
+        $storage_address_id = $request->storage_address_id;
+
+        $nav_query = Stock::query()
+            ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
+            ->orderBy('stocks.updated_at', 'desc')
+            ->orderBy('stocks.id', 'desc');
+
+        if ($storage_address_id) {
+            $nav_query->where('stock_storages.storage_address_id', $storage_address_id);
+        }
+        if ($keyword) {
+            $nav_query->where(function ($query) use ($keyword) {
+                $query->where('stocks.name', 'like', "%{$keyword}%")
+                    ->orWhere('stocks.s_name', 'like', "%{$keyword}%");
+            });
+        }
+        if ($supplier_name) {
+            $nav_query->whereHas('stockSuppliers.supplier', function ($query) use ($supplier_name) {
+                $query->where('suppliers.name', $supplier_name);
+            });
+        }
+
+        $ordered_ids = $nav_query->pluck('stocks.id')->unique()->values();
+        $position = $ordered_ids->search((int) $stock_id);
+
+        $prev_stock_id = null;
+        $next_stock_id = null;
+        if ($position !== false) {
+            if ($position > 0) {
+                $prev_stock_id = $ordered_ids[$position - 1];
+            }
+            if ($position < $ordered_ids->count() - 1) {
+                $next_stock_id = $ordered_ids[$position + 1];
+            }
+        }
+
+        $nav_filter = [
+            'keyword' => $keyword,
+            'supplier_name' => $supplier_name,
+            'storage_address_id' => $storage_address_id,
+        ];
 
         $classifications = Classification::all();
         $processes = Process::all();
@@ -514,7 +560,10 @@ class StockController extends Controller
                 'initial_order' => $initial_order,
                 'stock_processes' => $stock_processes,
                 'stock_price_archive' => $stock_price_archive,
-                'stock_supplier_prices' => $stock_supplier_prices
+                'stock_supplier_prices' => $stock_supplier_prices,
+                'prev_stock_id' => $prev_stock_id,
+                'next_stock_id' => $next_stock_id,
+                'nav_filter' => $nav_filter,
             ]
         );
     }

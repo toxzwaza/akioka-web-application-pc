@@ -17,6 +17,7 @@ const props = defineProps({
   suppliers: Array,
   supplier_name: String,
   keyword: String,
+  storage_address_id: [String, Number],
 });
 
 const form = reactive({
@@ -32,7 +33,16 @@ const getStocks = () => {
   router.get(route("stock.stocks"), form);
 };
 const redirectStock = (stock_id) => {
-  window.location.href = route("stock.show.stocks", { stock_id: stock_id });
+  // 現在表示中の一覧の絞り込み条件を詳細画面へ引き継ぐ（前後遷移用）
+  const params = new URLSearchParams();
+  if (props.keyword) params.append("keyword", props.keyword);
+  if (props.supplier_name) params.append("supplier_name", props.supplier_name);
+  if (props.storage_address_id)
+    params.append("storage_address_id", props.storage_address_id);
+  const query = params.toString();
+  window.location.href =
+    route("stock.show.stocks", { stock_id: stock_id }) +
+    (query ? `?${query}` : "");
 };
 
 onMounted(() => {
@@ -63,19 +73,20 @@ onMounted(() => {
         </FormField>
 
         <FormField label="手配先">
-          <select
+          <input
             v-model="form.supplier_name"
+            list="supplier_options"
+            type="text"
+            placeholder="選択または入力"
             class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
-          >
-            <option value="0">未選択</option>
+          />
+          <datalist id="supplier_options">
             <option
               v-for="supplier in props.suppliers"
               :key="supplier.id"
               :value="supplier.name"
-            >
-              {{ supplier.name }}
-            </option>
-          </select>
+            />
+          </datalist>
         </FormField>
 
         <template #actions>

@@ -76,6 +76,84 @@ const current_admin_user = ref(null);
 // 絞り込みモーダルの表示状態
 const showFilterModal = ref(false);
 
+// ===== CSVダウンロード =====
+// バックエンド csvColumnDefinitions() と key・表示順を一致させること
+const csvColumns = [
+  { key: "order_no", label: "注文No" },
+  { key: "order_date", label: "注文日" },
+  { key: "delivery_date", label: "納入日" },
+  { key: "expected_delivery_date", label: "納入予定日" },
+  { key: "desire_delivery_date", label: "納入希望日" },
+  { key: "order_user", label: "注文依頼者" },
+  { key: "manage_user_name", label: "担当者" },
+  { key: "com_name", label: "注文先" },
+  { key: "name", label: "品名" },
+  { key: "s_name", label: "品番" },
+  { key: "deli_location", label: "納入場所" },
+  { key: "process", label: "工程" },
+  { key: "lead_time", label: "LT" },
+  { key: "price", label: "単価" },
+  { key: "postage", label: "送料" },
+  { key: "quantity", label: "数量" },
+  { key: "order_unit", label: "単位" },
+  { key: "calc_price", label: "金額" },
+  { key: "description", label: "備考" },
+  { key: "purchase_status", label: "発注書" },
+  { key: "delivery_status", label: "納入状況" },
+];
+const showCsvModal = ref(false);
+// デフォルトは全列チェック
+const selectedCsvColumns = ref(csvColumns.map((c) => c.key));
+const isAllCsvColumnsSelected = computed(
+  () => selectedCsvColumns.value.length === csvColumns.length
+);
+const openCsvModal = () => {
+  showCsvModal.value = true;
+};
+const toggleAllCsvColumns = (checked) => {
+  selectedCsvColumns.value = checked ? csvColumns.map((c) => c.key) : [];
+};
+const downloadCsv = () => {
+  if (selectedCsvColumns.value.length === 0) {
+    alert("出力する列を1つ以上選択してください。");
+    return;
+  }
+  // 入力テキストから ID を解決（検索処理と同様）
+  handleSupplierSearch();
+  handleOrderUserSearch();
+  handleUserSearch();
+
+  const params = new URLSearchParams();
+  const add = (key, value) => {
+    if (value !== null && value !== undefined && value !== "") {
+      params.append(key, value);
+    }
+  };
+  add("order_by", form.order_by);
+  add("keyword", form.keyword);
+  add("start_order_date", form.start_order_date);
+  add("end_order_date", form.end_order_date);
+  add("supplier_id", form.supplier_id);
+  add("order_user_id", form.order_user_id);
+  add("user_id", form.user_id);
+  add("group_id", form.group_id);
+  add("process_id", form.process_id);
+  add("classification_id", form.classification_id);
+  add("delivery_status", form.delivery_status);
+  add("start_delivery_date", form.start_delivery_date);
+  add("end_delivery_date", form.end_delivery_date);
+  add("order_no", form.order_no);
+  add("nouki_start", form.nouki_start);
+  add("nouki_end", form.nouki_end);
+  add("nouki_targets", (form.nouki_targets || []).join(","));
+  add("purchase_status", form.purchase_status);
+  add("columns", selectedCsvColumns.value.join(","));
+
+  const url = route("stock.initialOrders.csv") + "?" + params.toString();
+  window.location.href = url;
+  showCsvModal.value = false;
+};
+
 // 検索テキスト用のref
 const supplier_search_text = ref("");
 const order_user_search_text = ref("");
@@ -89,6 +167,7 @@ let autoSearchTimer = null;
 const activeFilterCount = computed(() => {
   let count = 0;
   if (form.keyword) count++;
+  if (form.start_order_date || form.end_order_date) count++;
   if (form.order_no) count++;
   if (form.purchase_status) count++;
   if (form.classification_id && form.classification_id != 0) count++;
@@ -829,6 +908,8 @@ watch(
   () => [
     form.order_by,
     form.keyword,
+    form.start_order_date,
+    form.end_order_date,
     form.order_no,
     form.purchase_status,
     form.classification_id,
@@ -1083,6 +1164,15 @@ const deleteInitialOrder = (order) => {
             {{ activeFilterCount }}
           </span>
         </button>
+        <button
+          type="button"
+          class="filter-trigger csv-trigger"
+          title="CSVダウンロード"
+          aria-label="CSVダウンロード"
+          @click="openCsvModal"
+        >
+          <Icon name="download" size="md" />
+        </button>
       </div>
 
       <!-- 絞り込みモーダル（条件変更は即時反映） -->
@@ -1197,6 +1287,24 @@ const deleteInitialOrder = (order) => {
                     type="text"
                     placeholder="品名または品番で検索"
                     v-model="form.keyword"
+                  />
+                </div>
+              </div>
+              <div class="filter-item date-range">
+                <label class="filter-label">注文日</label>
+                <div class="date-range-inputs">
+                  <input
+                    type="date"
+                    class="filter-input date-input"
+                    v-model="form.start_order_date"
+                    placeholder="開始日"
+                  />
+                  <span class="date-separator">～</span>
+                  <input
+                    type="date"
+                    class="filter-input date-input"
+                    v-model="form.end_order_date"
+                    placeholder="終了日"
                   />
                 </div>
               </div>
@@ -1471,6 +1579,70 @@ const deleteInitialOrder = (order) => {
             </Button>
           </template>
         </ModalShell>
+
+      <!-- CSVダウンロードモーダル（出力列を選択） -->
+      <ModalShell
+        :show="showCsvModal"
+        title="CSVダウンロード"
+        max-width="2xl"
+        @close="showCsvModal = false"
+      >
+        <div class="csv-modal">
+          <p class="csv-modal__desc">
+            現在の絞り込み条件に一致する
+            <span class="font-semibold text-gray-900">全件</span>
+            を出力します。出力する列を選択してください。
+          </p>
+
+          <div class="csv-modal__toolbar">
+            <label class="csv-check-all">
+              <input
+                type="checkbox"
+                :checked="isAllCsvColumnsSelected"
+                @change="toggleAllCsvColumns($event.target.checked)"
+              />
+              <span>すべて選択</span>
+            </label>
+            <span class="csv-modal__count">
+              {{ selectedCsvColumns.length }} / {{ csvColumns.length }} 列
+            </span>
+          </div>
+
+          <div class="csv-column-grid">
+            <label
+              v-for="col in csvColumns"
+              :key="col.key"
+              class="csv-column-item"
+            >
+              <input
+                type="checkbox"
+                :value="col.key"
+                v-model="selectedCsvColumns"
+              />
+              <span>{{ col.label }}</span>
+            </label>
+          </div>
+        </div>
+
+        <template #footer>
+          <span class="mr-auto text-sm text-gray-500">
+            選択列
+            <span class="font-semibold text-gray-800">{{ selectedCsvColumns.length }}</span>
+            列
+          </span>
+          <Button variant="ghost" @click="showCsvModal = false">
+            キャンセル
+          </Button>
+          <Button
+            variant="primary"
+            icon-left="download"
+            :disabled="selectedCsvColumns.length === 0"
+            @click="downloadCsv"
+          >
+            ダウンロード
+          </Button>
+        </template>
+      </ModalShell>
 
       <!-- Table Controls -->
       <div class="table-controls mb-6">
@@ -2593,6 +2765,46 @@ const deleteInitialOrder = (order) => {
   }
 }
 
+// CSVダウンロードトリガー（緑アクセント）
+.csv-trigger {
+  @apply hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600;
+}
+
+// CSVダウンロードモーダル（teleport されるため非ネストで定義）
+.csv-modal {
+  .csv-modal__desc {
+    @apply mb-4 text-sm text-gray-600;
+  }
+
+  .csv-modal__toolbar {
+    @apply mb-3 flex items-center justify-between border-b border-gray-200 pb-3;
+  }
+
+  .csv-check-all {
+    @apply inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700;
+
+    input {
+      @apply h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500;
+    }
+  }
+
+  .csv-modal__count {
+    @apply text-xs font-medium text-gray-500;
+  }
+
+  .csv-column-grid {
+    @apply grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3;
+  }
+
+  .csv-column-item {
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50;
+
+    input {
+      @apply h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500;
+    }
+  }
+}
+
 // 絞り込みモーダル内（teleport されるため非ネストで定義）
 .filter-modal {
   .sort-section {
@@ -2854,12 +3066,12 @@ const deleteInitialOrder = (order) => {
           }
 
           td {
-            @apply px-4 py-3 whitespace-nowrap text-[13px] text-gray-900;
+            @apply px-4 py-2 whitespace-nowrap text-[13px] text-gray-900;
 
             input,
             select,
             textarea {
-              @apply w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent;
+              @apply w-full px-2 py-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent;
             }
 
             button {

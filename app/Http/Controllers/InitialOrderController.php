@@ -29,6 +29,23 @@ class InitialOrderController extends Controller
     //
     public function index(Request $request)
     {
+        // 一覧・CSV出力で共通の絞り込みクエリを構築（del_flg 未適用）
+        $query = $this->buildInitialOrderQuery($request);
+
+        $initial_orders = $query->where('initial_orders.del_flg', 0)
+            ->with('deliveries') // 納品書リレーションをロード
+            ->paginate(14)
+            ->withQueryString();
+
+        return $this->renderInitialOrderIndex($request, $query, $initial_orders);
+    }
+
+    /**
+     * 発注一覧の絞り込みクエリを構築する（index / CSV出力で共通利用）。
+     * del_flg の絞り込みは呼び出し側で適用する。
+     */
+    private function buildInitialOrderQuery(Request $request)
+    {
         $keyword = $request->keyword;
         $order_by = $request->order_by ?? 'desc';
         $start_order_date = $request->start_order_date;
@@ -185,11 +202,22 @@ class InitialOrderController extends Controller
             $query->where('initial_orders.delivery_date', '<=', $end_delivery_date);
         }
 
-        $initial_orders = $query->where('initial_orders.del_flg', 0)
-            ->with('deliveries') // 納品書リレーションをロード
-            ->paginate(14)
-            ->withQueryString();
+        // 注文日期間フィルタ
+        if ($start_order_date) {
+            $query->where('initial_orders.order_date', '>=', $start_order_date);
+        }
+        if ($end_order_date) {
+            $query->where('initial_orders.order_date', '<=', $end_order_date);
+        }
 
+        return $query;
+    }
+
+    /**
+     * 発注一覧（Inertia）を描画する。
+     */
+    private function renderInitialOrderIndex(Request $request, $query, $initial_orders)
+    {
         // 承認者・稟議書画像を一括取得（N+1回避）
         $orderRequestIds = $initial_orders->getCollection()->pluck('order_request_id')->filter()->unique()->toArray();
         $allApprovals = !empty($orderRequestIds) ? OrderRequestApproval::select(
@@ -285,6 +313,91 @@ class InitialOrderController extends Controller
             'groups' => $groups,
             'processes' => $processes,
             'classifications' => $classifications
+        ]);
+    }
+
+    /**
+     * CSV出力で選択可能な列の定義（表示順）。
+     * key => ['label' => ヘッダー名, 'value' => 行の値を返すクロージャ]
+     */
+    private function csvColumnDefinitions()
+    {
+        $date = function ($v) {
+            if (!$v) return '';
+            try {
+                return \Illuminate\Support\Carbon::parse($v)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return (string) $v;
+            }
+        };
+
+        return [
+            'order_no'               => ['label' => '注文No',     'value' => fn($o) => $o->order_no],
+            'order_date'             => ['label' => '注文日',     'value' => fn($o) => $date($o->order_date)],
+            'delivery_date'          => ['label' => '納入日',     'value' => fn($o) => $date($o->delivery_date)],
+            'expected_delivery_date' => ['label' => '納入予定日', 'value' => fn($o) => $date($o->expected_delivery_date)],
+            'desire_delivery_date'   => ['label' => '納入希望日', 'value' => fn($o) => $date($o->desire_delivery_date)],
+            'order_user'             => ['label' => '注文依頼者', 'value' => fn($o) => $o->order_user],
+            'manage_user_name'       => ['label' => '担当者',     'value' => fn($o) => $o->manage_user_name],
+            'com_name'               => ['label' => '注文先',     'value' => fn($o) => $o->com_name],
+            'name'                   => ['label' => '品名',       'value' => fn($o) => $o->name],
+            's_name'                 => ['label' => '品番',       'value' => fn($o) => $o->s_name],
+            'deli_location'          => ['label' => '納入場所',   'value' => fn($o) => $o->deli_location],
+            'process'                => ['label' => '工程',       'value' => fn($o) => $o->stock_processes_order_request_name ?: $o->stock_processes_base_name],
+            'lead_time'              => ['label' => 'LT',         'value' => fn($o) => $o->lead_time ?? $o->base_lead_time],
+            'price'                  => ['label' => '単価',       'value' => fn($o) => $o->price],
+            'postage'                => ['label' => '送料',       'value' => fn($o) => $o->postage],
+            'quantity'               => ['label' => '数量',       'value' => fn($o) => $o->quantity],
+            'order_unit'             => ['label' => '単位',       'value' => fn($o) => $o->order_unit],
+            'calc_price'             => ['label' => '金額',       'value' => fn($o) => $o->calc_price],
+            'description'            => ['label' => '備考',       'value' => fn($o) => $o->description],
+            'purchase_status'        => ['label' => '発注書',     'value' => fn($o) => $o->purchase_path ? '発行済' : '未発行'],
+            'delivery_status'        => ['label' => '納入状況',   'value' => fn($o) => $o->delivery_date ? '納入済み' : '未納品'],
+        ];
+    }
+
+    /**
+     * 絞り込み後の発注一覧をCSVで出力する（選択された列のみ）。
+     * 絞り込み条件は index と同じクエリビルダーを共用する。
+     */
+    public function exportCsv(Request $request)
+    {
+        $orders = $this->buildInitialOrderQuery($request)
+            ->where('initial_orders.del_flg', 0)
+            ->get();
+
+        // 出力対象の列（未指定なら全列）
+        $selected = $request->columns ? explode(',', $request->columns) : [];
+        $definitions = $this->csvColumnDefinitions();
+        $columns = collect($definitions)->filter(function ($def, $key) use ($selected) {
+            return empty($selected) || in_array($key, $selected, true);
+        });
+
+        $filename = '発注一覧_' . date('Ymd_His') . '.csv';
+        // 日本語ファイル名の文字化け対策（RFC 5987）：ASCIIフォールバック + UTF-8エンコード名
+        $fallback_filename = 'order_list_' . date('Ymd_His') . '.csv';
+        $encoded_filename = rawurlencode($filename);
+
+        $callback = function () use ($orders, $columns) {
+            $out = fopen('php://output', 'w');
+            // Excelでの文字化け防止のため UTF-8 BOM を付与
+            fwrite($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            // ヘッダー行
+            fputcsv($out, $columns->pluck('label')->toArray());
+            // データ行
+            foreach ($orders as $order) {
+                $row = [];
+                foreach ($columns as $def) {
+                    $row[] = $def['value']($order);
+                }
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fallback_filename}\"; filename*=UTF-8''{$encoded_filename}",
         ]);
     }
 

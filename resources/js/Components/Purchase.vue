@@ -12,7 +12,8 @@ const props = defineProps({
 });
 
 const shortest = ref(false);
-const description = ref("");
+const description = ref(""); //注文書備考
+const delivery_description = ref(""); //納品書備考
 const calc_postage = ref(0); //送料合計
 
 // 社員表示
@@ -325,16 +326,50 @@ onMounted(() => {
   </div>
 
   <div v-else>
-    <div class="mx-auto mb-6" id="description_area">
-      <span class="font-bold text-gray-700">注文書備考入力エリア</span>
-      <textarea
-        class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        name=""
-        id=""
-        cols="30"
-        rows="10"
-        v-model="description"
-      ></textarea>
+    <div class="mx-auto mb-6" id="description_wrapper">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <!-- 注文書備考 -->
+        <div
+          class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm transition-shadow focus-within:shadow-md"
+        >
+          <div
+            class="flex items-center gap-2 border-b border-blue-100 bg-blue-50 px-4 py-2.5"
+          >
+            <span class="h-4 w-1.5 rounded-full bg-blue-500"></span>
+            <span class="text-sm font-semibold text-blue-900">注文書 備考</span>
+            <span class="ml-auto text-[11px] font-medium text-blue-500">
+              注文書に印字されます
+            </span>
+          </div>
+          <textarea
+            class="block w-full resize-none border-0 bg-white p-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400"
+            rows="7"
+            placeholder="注文書に印字する備考を入力してください"
+            v-model="description"
+          ></textarea>
+        </div>
+
+        <!-- 納品書備考 -->
+        <div
+          class="overflow-hidden rounded-xl border border-emerald-200 bg-white shadow-sm transition-shadow focus-within:shadow-md"
+        >
+          <div
+            class="flex items-center gap-2 border-b border-emerald-100 bg-emerald-50 px-4 py-2.5"
+          >
+            <span class="h-4 w-1.5 rounded-full bg-emerald-500"></span>
+            <span class="text-sm font-semibold text-emerald-900">納品書 備考</span>
+            <span class="ml-auto text-[11px] font-medium text-emerald-500">
+              納品書に印字されます
+            </span>
+          </div>
+          <textarea
+            class="block w-full resize-none border-0 bg-white p-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-400"
+            rows="7"
+            placeholder="納品書に印字する備考を入力してください"
+            v-model="delivery_description"
+          ></textarea>
+        </div>
+      </div>
     </div>
 
     <div class="flex justify-center gap-2 mb-6">
@@ -698,7 +733,7 @@ onMounted(() => {
             <div class="text font-bold text-xs">
               備考
 
-              <p></p>
+              <p v-html="delivery_description ? delivery_description.replace(/\n/g, '<br>') : ''"></p>
             </div>
           </div>
 
@@ -719,8 +754,9 @@ onMounted(() => {
   </div>
 </template>
 <style scoped lang="scss">
-#description_area {
+#description_wrapper {
   width: 210mm;
+  max-width: 100%;
 }
 
 #purchase_container {
