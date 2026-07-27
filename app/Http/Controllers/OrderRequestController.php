@@ -470,6 +470,41 @@ class OrderRequestController extends Controller
     }
 
     /**
+     * 発注書画像を同一オリジンで中継する。
+     * purchase_pathは旧ドメイン(sub.akioka-sub.com)と新ドメイン(akioka-sub.cloud)が
+     * 混在しており（2サーバーがDBを共有）、ブラウザのcanvasから直接読むと
+     * CORS制約や別サーバー404で失敗するため、サーバー側で取得して返す。
+     */
+    public function fetchImage(Request $request)
+    {
+        $url = (string) $request->query('url', '');
+
+        // SSRF対策：許可ホスト＋/storage/配下のみ中継する
+        $allowedHosts = ['sub.akioka-sub.com', 'akioka-sub.cloud'];
+        $parts = parse_url($url);
+        if (
+            !$parts
+            || !in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+            || !in_array($parts['host'] ?? '', $allowedHosts, true)
+            || !str_starts_with($parts['path'] ?? '', '/storage/')
+        ) {
+            return response()->json(['status' => false, 'message' => '許可されていないURLです'], 400);
+        }
+
+        try {
+            $res = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
+            if (!$res->successful()) {
+                return response()->json(['status' => false, 'message' => '画像の取得に失敗しました(' . $res->status() . ')'], 502);
+            }
+            $contentType = $res->header('Content-Type') ?: 'image/png';
+
+            return response($res->body(), 200)->header('Content-Type', $contentType);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * FAX送信用の2ページPDF（発注書＋固定案内）を保存する。
      * savePDFと異なりDBのpurchase_pathは更新せず、FAX送信の file_url 専用に保存する。
      */

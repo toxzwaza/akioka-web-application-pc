@@ -7,19 +7,11 @@ import QRCode from "qrcode";
 // FAX2ページ目に添付する固定案内画像
 const FAX_NOTICE_IMAGE_URL = "/img/fax/order_fax_notice.png";
 
-// 別ドメイン（旧URL等）の画像も現在のオリジン経由で読み込む
-// ※canvasのCORS制約対策。storageは同一サーバーで配信されている前提
-const toSameOriginUrl = (url) => {
-  try {
-    const u = new URL(url, window.location.href);
-    if (u.origin !== window.location.origin) {
-      return window.location.origin + u.pathname + u.search;
-    }
-    return u.href;
-  } catch (e) {
-    return url;
-  }
-};
+// 発注書画像はバックエンドの中継エンドポイント経由で読み込む
+// ※purchase_pathは旧・新ドメインが混在し別サーバーにファイルがある場合が
+//   あるため、直接読むとcanvasのCORS制約や404で失敗する
+const toProxyImageUrl = (url) =>
+  `/order-request/fetch-image?url=${encodeURIComponent(url)}`;
 
 // 2ページ目の案内を送付するか（デフォルト：送付する）
 const includeNotice = ref(true);
@@ -62,7 +54,7 @@ const buildFaxPdf = async (purchasePath) => {
   // 静的importするとjsPDFがページチャンクに合成されViteのmanifestを壊すため動的import
   const { jsPDF } = await import("jspdf");
   const [orderImg, noticeImg] = await Promise.all([
-    loadImage(toSameOriginUrl(purchasePath)),
+    loadImage(toProxyImageUrl(purchasePath)),
     loadImage(FAX_NOTICE_IMAGE_URL),
   ]);
 
