@@ -515,7 +515,18 @@ class OrderRequestController extends Controller
             $filename = $request->input('filename');
 
             // Base64データからPDFバイナリを取得
-            $pdfBinary = base64_decode(preg_replace('#^data:application/pdf;base64,#i', '', $pdfData));
+            // ※jsPDFのdatauristringは data:application/pdf;filename=generated.pdf;base64,... の
+            //   形式のため、最初のカンマまでを一律プレフィックスとして除去する
+            $commaPos = strpos($pdfData, ',');
+            $base64 = $commaPos !== false ? substr($pdfData, $commaPos + 1) : $pdfData;
+            $pdfBinary = base64_decode($base64, true);
+
+            if ($pdfBinary === false || !str_starts_with($pdfBinary, '%PDF')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'PDFデータのデコードに失敗しました'
+                ], 422);
+            }
 
             // public/faxディレクトリに保存
             Storage::disk('public')->put('fax/' . $filename, $pdfBinary);
