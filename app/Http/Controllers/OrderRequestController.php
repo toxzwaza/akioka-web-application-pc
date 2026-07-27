@@ -469,6 +469,35 @@ class OrderRequestController extends Controller
         }
     }
 
+    /**
+     * FAX送信用の2ページPDF（発注書＋固定案内）を保存する。
+     * savePDFと異なりDBのpurchase_pathは更新せず、FAX送信の file_url 専用に保存する。
+     */
+    public function saveFaxPdf(Request $request)
+    {
+        try {
+            $pdfData = $request->input('pdfData');
+            $filename = $request->input('filename');
+
+            // Base64データからPDFバイナリを取得
+            $pdfBinary = base64_decode(preg_replace('#^data:application/pdf;base64,#i', '', $pdfData));
+
+            // public/faxディレクトリに保存
+            Storage::disk('public')->put('fax/' . $filename, $pdfBinary);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'FAX PDF saved successfully',
+                'path' => config('app.url') . '/storage/fax/' . $filename
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     // 発注依頼一覧から
     public function storeApprovalDocument(Request $request)
     {

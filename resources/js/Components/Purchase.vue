@@ -3,6 +3,69 @@ import { watch, ref, onMounted, computed } from "vue";
 import domtoimage from "dom-to-image";
 import axios from "axios";
 import QRCode from "qrcode";
+import { jsPDF } from "jspdf";
+
+// FAX2ページ目に添付する固定案内画像
+const FAX_NOTICE_IMAGE_URL = "/img/fax/order_fax_notice.png";
+
+// 2ページ目の案内を送付するか（デフォルト：送付する）
+const includeNotice = ref(true);
+
+// 画像URLを読み込み、dataURLと元サイズ(px)を返す
+const loadImage = (url) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d").drawImage(img, 0, 0);
+      resolve({
+        dataUrl: canvas.toDataURL("image/png"),
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+
+// A4縦ページに画像をアスペクト比維持で中央配置して描画
+const addImageFitA4 = (pdf, image, addPage) => {
+  if (addPage) pdf.addPage();
+  const pageW = pdf.internal.pageSize.getWidth(); // 210mm
+  const pageH = pdf.internal.pageSize.getHeight(); // 297mm
+  const ratio = Math.min(pageW / image.width, pageH / image.height);
+  const w = image.width * ratio;
+  const h = image.height * ratio;
+  const x = (pageW - w) / 2;
+  const y = (pageH - h) / 2;
+  pdf.addImage(image.dataUrl, "PNG", x, y, w, h);
+};
+
+// 発注書PNG＋固定案内の2ページPDFを生成し、保存先URLを返す
+const buildFaxPdf = async (purchasePath) => {
+  const [orderImg, noticeImg] = await Promise.all([
+    loadImage(purchasePath),
+    loadImage(FAX_NOTICE_IMAGE_URL),
+  ]);
+
+  const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  addImageFitA4(pdf, orderImg, false); // 1ページ目：発注書
+  addImageFitA4(pdf, noticeImg, true); // 2ページ目：案内
+
+  const pdfBase64 = pdf.output("datauristring");
+  const filename = `${Date.now()}.pdf`;
+  const res = await axios.post("/order-request/save-fax-pdf", {
+    pdfData: pdfBase64,
+    filename: filename,
+  });
+  if (!res.data.status) {
+    throw new Error(res.data.message || "FAX用PDFの生成に失敗しました");
+  }
+  return res.data.path;
+};
 
 const props = defineProps({
   current_month_holidays: Array,
@@ -24,7 +87,7 @@ const reCreatePurchasePath = (order) => {
 };
 
 // FAX送信
-const sendFax = (order) => {
+const sendFax = async (order) => {
   let fax_number = null;
   let file_url = null;
   let request_user = props.admin_user.name; //依頼者
@@ -44,16 +107,29 @@ const sendFax = (order) => {
   }
 
   console.log(order);
-  
+
   // FAX番号が存在しない場合はエラー表示
   if (!order.fax) {
     alert("FAX番号が登録されていません。");
     return;
   }
-  
+
   const cleanFaxNumber = order.fax.replace(/-/g, "");
   fax_number = cleanFaxNumber;
-  file_url = order.purchase_path;
+
+  if (includeNotice.value) {
+    try {
+      // 発注書＋固定案内の2ページPDFを生成し、そのURLをFAX送信ファイルとする
+      file_url = await buildFaxPdf(order.purchase_path);
+    } catch (error) {
+      console.error("FAX用PDF生成エラー:", error);
+      alert("FAX用PDFの生成に失敗しました");
+      return;
+    }
+  } else {
+    // 案内なし：従来どおり発注書PNGをそのまま送信
+    file_url = order.purchase_path;
+  }
 
   console.log(
     fax_number,
@@ -314,6 +390,19 @@ onMounted(() => {
         </svg>
         発注書FAX送信
       </button>
+
+      <label
+        class="inline-flex items-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer select-none hover:bg-gray-50"
+      >
+        <input
+          type="checkbox"
+          v-model="includeNotice"
+          class="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+        />
+        <span class="text-sm font-semibold text-gray-700">
+          2ページ目に案内を添付する
+        </span>
+      </label>
     </div>
 
     <div class="flex justify-center items-center bg-gray-50 rounded-lg p-4 shadow-inner">
@@ -322,6 +411,20 @@ onMounted(() => {
         :src="orders[0].purchase_path"
         alt="発注書"
       />
+    </div>
+
+    <!-- 2ページ目：案内プレビュー -->
+    <div v-if="includeNotice" class="mt-4">
+      <p class="mb-2 text-sm font-semibold text-gray-600 text-center">
+        2ページ目（案内）
+      </p>
+      <div class="flex justify-center items-center bg-gray-50 rounded-lg p-4 shadow-inner">
+        <img
+          class="w-full max-w-4xl h-auto object-contain rounded-lg shadow-lg"
+          :src="FAX_NOTICE_IMAGE_URL"
+          alt="FAX案内（2ページ目）"
+        />
+      </div>
     </div>
   </div>
 
