@@ -3,10 +3,23 @@ import { watch, ref, onMounted, computed } from "vue";
 import domtoimage from "dom-to-image";
 import axios from "axios";
 import QRCode from "qrcode";
-import { jsPDF } from "jspdf";
 
 // FAX2ページ目に添付する固定案内画像
 const FAX_NOTICE_IMAGE_URL = "/img/fax/order_fax_notice.png";
+
+// 別ドメイン（旧URL等）の画像も現在のオリジン経由で読み込む
+// ※canvasのCORS制約対策。storageは同一サーバーで配信されている前提
+const toSameOriginUrl = (url) => {
+  try {
+    const u = new URL(url, window.location.href);
+    if (u.origin !== window.location.origin) {
+      return window.location.origin + u.pathname + u.search;
+    }
+    return u.href;
+  } catch (e) {
+    return url;
+  }
+};
 
 // 2ページ目の案内を送付するか（デフォルト：送付する）
 const includeNotice = ref(true);
@@ -46,8 +59,10 @@ const addImageFitA4 = (pdf, image, addPage) => {
 
 // 発注書PNG＋固定案内の2ページPDFを生成し、保存先URLを返す
 const buildFaxPdf = async (purchasePath) => {
+  // 静的importするとjsPDFがページチャンクに合成されViteのmanifestを壊すため動的import
+  const { jsPDF } = await import("jspdf");
   const [orderImg, noticeImg] = await Promise.all([
-    loadImage(purchasePath),
+    loadImage(toSameOriginUrl(purchasePath)),
     loadImage(FAX_NOTICE_IMAGE_URL),
   ]);
 
