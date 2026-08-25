@@ -136,8 +136,8 @@ class StockSupplierPriceController extends Controller
 
     /**
      * 有効フラグを切り替え
-     * 0: 無効 ⇔ 1: 有効 を切り替え
-     * 2: 適用済み の場合は 1: 有効 に変更
+     * 0: 無効 ⇔ 1: 適用待ち を切り替え
+     * 2: 適用済み は変更不可（再適用は新しい価格を登録して行う）
      */
     public function toggleActive(Request $request)
     {
@@ -147,16 +147,17 @@ class StockSupplierPriceController extends Controller
             ]);
 
             $price = StockSupplierPrice::findOrFail($validated['id']);
-            
-            // 状態の切り替え
-            if ($price->active_flg == 0) {
-                $price->active_flg = 1; // 無効 → 有効
-            } elseif ($price->active_flg == 1) {
-                $price->active_flg = 0; // 有効 → 無効
-            } elseif ($price->active_flg == 2) {
-                $price->active_flg = 1; // 適用済み → 有効
+
+            if ($price->active_flg == 2) {
+                return response()->json([
+                    'status' => false,
+                    'message' => '適用済みの価格は変更できません。価格を変える場合は新しい価格を登録してください。',
+                ]);
             }
-            
+
+            // 0: 無効 ⇔ 1: 適用待ち
+            $price->active_flg = $price->active_flg == 0 ? 1 : 0;
+
             $price->save();
 
             return response()->json([

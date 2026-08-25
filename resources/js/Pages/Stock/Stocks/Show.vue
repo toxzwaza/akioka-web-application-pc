@@ -1270,7 +1270,7 @@ onMounted(() => {
                           @click="updateStockSupplierPrice('toggle', price)"
                         >
                           <Badge :variant="price.active_flg === 1 ? 'success' : 'neutral'">
-                            {{ price.active_flg === 1 ? '適用待ち' : '適用済み' }}
+                            {{ price.active_flg === 1 ? '適用待ち' : '無効' }}
                           </Badge>
                         </button>
                         <Badge v-else variant="info">適用済み</Badge>
