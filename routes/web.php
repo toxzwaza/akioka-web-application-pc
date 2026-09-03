@@ -167,8 +167,6 @@ Route::get('/export/RaspiData', [TemperatureAndHumidity::class, 'export_data'])-
 
 
 Route::post('/order-request/save-pdf', [OrderRequestController::class, 'savePDF'])->name('order-request.save-pdf');
-Route::post('/order-request/save-fax-pdf', [OrderRequestController::class, 'saveFaxPdf'])->name('order-request.save-fax-pdf');
-Route::get('/order-request/fetch-image', [OrderRequestController::class, 'fetchImage'])->name('order-request.fetch-image');
 
 // 一時アプリ
 Route::get('/task', [TaskController::class, 'index'])->name('task.home');
