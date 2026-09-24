@@ -224,7 +224,37 @@ const createInitialOrder = () => {
       alert("エラーが発生しました。");
     });
 };
-const createStockStorage = () => {};
+const createStockStorage = () => {
+  if (!form.location_id || form.location_id == "0") {
+    return alert("倉庫を選択してください。");
+  }
+  if (!form.storage_address_id || form.storage_address_id == "0") {
+    return alert("アドレスを選択してください。");
+  }
+  if (!form.stock_storage_quantity && form.stock_storage_quantity !== 0) {
+    return alert("数量を入力してください。");
+  }
+
+  axios
+    .post(route("stock.stock_storage.create"), {
+      stock_id: form.stock_id,
+      storage_address_id: form.storage_address_id,
+      quantity: form.stock_storage_quantity,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("格納先を登録しました。");
+        window.location.reload();
+      } else {
+        alert(res.data.msg || "格納先の登録に失敗しました。");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      alert("エラーが発生しました。");
+    });
+};
 const createStockSupplier = () => {
   if (
     !form.stock_id ||

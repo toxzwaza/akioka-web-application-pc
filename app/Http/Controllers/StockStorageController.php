@@ -48,6 +48,42 @@ class StockStorageController extends Controller
         return response()->json(['status' => $status]);
     }
 
+    // 在庫と格納先アドレスの紐づけを新規登録（同一物品×同一アドレスが既にある場合は数量を加算）
+    public function create(Request $request)
+    {
+        $status = true;
+        $msg = "";
+
+        $stock_id = $request->stock_id;
+        $storage_address_id = $request->storage_address_id;
+        $quantity = $request->quantity;
+
+        try {
+            if (!($stock_id && $storage_address_id) || $quantity === null || $quantity === '') {
+                throw new Exception('アドレスと数量を入力して再度お試しください。');
+            }
+
+            $stock_storage = StockStorage::where('stock_id', $stock_id)
+                ->where('storage_address_id', $storage_address_id)
+                ->first();
+
+            if (!$stock_storage) {
+                $stock_storage = new StockStorage();
+                $stock_storage->stock_id = $stock_id;
+                $stock_storage->storage_address_id = $storage_address_id;
+                $stock_storage->quantity = $quantity;
+            } else {
+                $stock_storage->quantity = $stock_storage->quantity + $quantity;
+            }
+            $stock_storage->save();
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
     public function update(Request $request)
     {
         $stock_storage_id = $request->stock_storage_id;

@@ -1862,9 +1862,7 @@ onMounted(() => {
                       />
                       <span v-else>
                         {{
-                          new Date(
-                            order_request.desire_delivery_date
-                          ).toLocaleDateString("ja-JP")
+                          formatModalDateOnly(order_request.desire_delivery_date)
                         }}
                       </span>
                     </td>
@@ -1997,11 +1995,7 @@ onMounted(() => {
                       }}
                     </td>
                     <td class="px-4 py-4 text-lg text-gray-900">
-                      {{
-                        new Date(order_request.digest_date).toLocaleDateString(
-                          "ja-JP"
-                        )
-                      }}
+                      {{ formatModalDateOnly(order_request.digest_date) }}
                     </td>
 
                     <td
