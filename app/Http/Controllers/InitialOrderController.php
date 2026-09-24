@@ -67,6 +67,7 @@ class InitialOrderController extends Controller
         $nouki_targets_raw = $request->nouki_targets; // カンマ区切り文字列
         $nouki_targets = $nouki_targets_raw ? explode(',', $nouki_targets_raw) : ['delivery_date'];
         $purchase_status = $request->purchase_status;
+        $order_complete = $request->order_complete;
 
         $query = InitialOrder::select(
             'initial_orders.*',
@@ -148,6 +149,19 @@ class InitialOrderController extends Controller
         // 注文Noでのフィルタ
         if ($order_no) {
             $query->where('initial_orders.order_no', 'like', '%' . $order_no . '%');
+        }
+
+        // 完了登録（0:未完了 1:発注済み 2:返信済み）でのフィルタ
+        if ($order_complete !== null && $order_complete !== '') {
+            if ($order_complete == 0) {
+                // 未設定(NULL)の過去データも未完了として扱う
+                $query->where(function ($q) {
+                    $q->whereNull('initial_orders.order_complete_flg')
+                        ->orWhere('initial_orders.order_complete_flg', 0);
+                });
+            } else {
+                $query->where('initial_orders.order_complete_flg', $order_complete);
+            }
         }
 
         // 発注書の発行状態でのフィルタ
@@ -446,6 +460,8 @@ class InitialOrderController extends Controller
         $calc_price = $request->calc_price;
         $stock_storage_id = $request->stock_storage_id;
         $postage = $request->postage;
+        $desire_delivery_date = $request->desire_delivery_date;
+        $digest_date = $request->digest_date;
 
         $upload_file = $request->file('upload_file');
 
@@ -484,6 +500,8 @@ class InitialOrderController extends Controller
                 $order_request->new_stock_flg = 1;
                 $order_request->postage = $postage;
                 $order_request->stock_process_id = $order_stock_process_id;
+                $order_request->desire_delivery_date = $desire_delivery_date;
+                $order_request->digest_date = $digest_date;
                 $order_request->save();
 
                 // 稟議書がある場合
@@ -510,9 +528,20 @@ class InitialOrderController extends Controller
                 $stock_supplier->save();
             } else {
 
+                // 発注依頼の対象格納先を解決（未指定時は先頭の格納先にフォールバック）
+                // ※発注点更新の対象は画面で明示された$stock_storage_idのままとし、ここでは変更しない
+                $order_storage_id = $stock_storage_id;
+                if (!$order_storage_id) {
+                    $first_storage = StockStorage::where('stock_id', $stock_id)->first();
+                    if ($first_storage) {
+                        $order_storage_id = $first_storage->id;
+                    }
+                }
+
                 // 発注依頼データを作成
                 $order_request = new OrderRequest();
                 $order_request->stock_id = $stock_id;
+                $order_request->stock_storage_id = $order_storage_id ?: null;
                 $order_request->request_user_id = $order_user;
                 $order_request->user_id = $user_id;
                 $order_request->supplier_id = $supplier_id;
@@ -524,6 +553,8 @@ class InitialOrderController extends Controller
                 $order_request->new_stock_flg = 0;
                 $order_request->postage = $postage;
                 $order_request->stock_process_id = $order_stock_process_id;
+                $order_request->desire_delivery_date = $desire_delivery_date;
+                $order_request->digest_date = $digest_date;
                 $order_request->save();
             }
 

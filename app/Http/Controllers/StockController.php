@@ -352,13 +352,13 @@ class StockController extends Controller
 
         $stocks = Stock::select('stocks.*', 'classifications.name as classification_name')->
         with(['stockSuppliers.supplier', 'classification'])
-            ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
             ->leftJoin('classifications', 'classifications.id', 'stocks.classification_id')
             ->orderBy('stocks.updated_at', 'desc')
             ->orderBy('stocks.id', 'desc');
 
         if ($storage_address_id) {
-            $stocks->where('stock_storages.storage_address_id', $storage_address_id);
+            // 複数格納先の物品が行重複しないよう、JOINではなくサブクエリで絞り込む
+            $stocks->whereIn('stocks.id', StockStorage::select('stock_id')->where('storage_address_id', $storage_address_id));
         }
 
         if ($keyword) {

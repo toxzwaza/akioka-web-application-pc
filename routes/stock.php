@@ -163,7 +163,7 @@ Route::get('/storage-addresses/print', [StockController::class, 'print'])->name(
 
 Route::post('/stock-storage/update', [StockStorageController::class, 'update'])->name('stock.stock_storage.update');
 Route::delete('/stock-storage/delete', [StockStorageController::class, 'delete'])->name('stock.stock_storage.delete');
-// Route::post('/stock-storage/create', [StockController::class, 'create_stock_storage'])->name('stock.stock_storage.create');
+Route::post('/stock-storage/create', [StockStorageController::class, 'create'])->name('stock.stock_storage.create');
 
 // Route::get('/suppliers/add', [StockController::class, 'stock_add_supplier'])->name('stock.stocks.add_supplier');
 // Route::post('/suppliers/store', [StockController::class, 'store_stock_suppliers'])->name('stock.store.stock_suppliers');

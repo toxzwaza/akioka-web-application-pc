@@ -47,6 +47,7 @@ const form = reactive({
   nouki_end: null,
   nouki_targets: ["delivery_date"], // 納期の検索対象（デフォルト=納入日）
   purchase_status: null,
+  order_complete: null, // 完了登録（0:未完了 1:発注済み 2:返信済み）
 });
 
 // 稟議書OBJ
@@ -147,6 +148,7 @@ const downloadCsv = () => {
   add("nouki_end", form.nouki_end);
   add("nouki_targets", (form.nouki_targets || []).join(","));
   add("purchase_status", form.purchase_status);
+  add("order_complete", form.order_complete);
   add("columns", selectedCsvColumns.value.join(","));
 
   const url = route("stock.initialOrders.csv") + "?" + params.toString();
@@ -170,6 +172,7 @@ const activeFilterCount = computed(() => {
   if (form.start_order_date || form.end_order_date) count++;
   if (form.order_no) count++;
   if (form.purchase_status) count++;
+  if (form.order_complete !== null && form.order_complete !== "") count++;
   if (form.classification_id && form.classification_id != 0) count++;
   if (form.group_id && form.group_id != 0) count++;
   if (form.process_id && form.process_id != 0) count++;
@@ -836,6 +839,7 @@ const getInitialOrders = (reset) => {
     form.nouki_end = null;
     form.nouki_targets = ["delivery_date"];
     form.purchase_status = null;
+    form.order_complete = null;
     // 検索テキストもクリア
     supplier_search_text.value = "";
     order_user_search_text.value = "";
@@ -871,6 +875,7 @@ const getInitialOrders = (reset) => {
       nouki_end: form.nouki_end,
       nouki_targets: form.nouki_targets.join(","),
       purchase_status: form.purchase_status,
+      order_complete: form.order_complete,
     },
     {
       // 即時反映のため、状態・スクロール位置を保持し履歴も汚さない
@@ -912,6 +917,7 @@ watch(
     form.end_order_date,
     form.order_no,
     form.purchase_status,
+    form.order_complete,
     form.classification_id,
     form.group_id,
     form.process_id,
@@ -1012,6 +1018,7 @@ onMounted(() => {
   const noukiTargets = params.get("nouki_targets");
   form.nouki_targets = noukiTargets ? noukiTargets.split(",") : ["delivery_date"];
   form.purchase_status = params.get("purchase_status");
+  form.order_complete = params.get("order_complete");
 
   // URLパラメータからIDが設定されている場合、対応するnameを検索テキストに設定
   if (form.supplier_id) {
@@ -1397,6 +1404,15 @@ const deleteInitialOrder = (order) => {
                   <option value="unissued">未発行</option>
                 </select>
               </div>
+              <div class="filter-item">
+                <label class="filter-label">完了登録</label>
+                <select class="filter-select" v-model="form.order_complete">
+                  <option :value="null">すべて</option>
+                  <option value="0">未完了</option>
+                  <option value="1">発注済み</option>
+                  <option value="2">返信済み</option>
+                </select>
+              </div>
 
               <div class="filter-item">
                 <label class="filter-label">注文先</label>
@@ -1695,6 +1711,11 @@ const deleteInitialOrder = (order) => {
                 <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
                 >
+                  完了登録
+                </th>
+                <th
+                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
+                >
                   発注書
                 </th>
                 <th
@@ -1806,11 +1827,6 @@ const deleteInitialOrder = (order) => {
                   詳細
                 </th>
                 <th
-                  class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 whitespace-nowrap"
-                >
-                  完了登録
-                </th>
-                <th
                   class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100"
                 >
                   担当者
@@ -1867,6 +1883,44 @@ const deleteInitialOrder = (order) => {
                         )
                       : "-"
                   }}</span>
+                </td>
+                <td
+                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
+                >
+                  <!-- <button
+                    @click="orderComplete(order)"
+                    :class="{
+                      ' text-white font-bold py-2 px-4 rounded text-xs': true,
+                      'bg-green-500 hover:bg-green-700':
+                        order.order_complete_flg,
+                      'bg-gray-500 hover:bg-gray-700':
+                        !order.order_complete_flg,
+                    }"
+                  >
+                    <span v-if="order.order_complete_flg"
+                      >完了済<i class="ml-2 fas fa-check"></i
+                    ></span>
+                    <span v-else>未完了</span>
+                  </button> -->
+
+                  <select
+                    name=""
+                    v-model="order.order_complete_flg"
+                    @change="orderComplete(order, $event.target.value)"
+                    :class="{
+                      ' font-bold py-2 px-4 rounded text-xs': true,
+                      'text-white bg-green-500':
+                        order.order_complete_flg === 1,
+                      'text-white bg-blue-500':
+                        order.order_complete_flg === 2,
+                      'bg-gray-200 text-gray-700':
+                        !order.order_complete_flg || order.order_complete_flg === 0,
+                    }"
+                  >
+                    <option class="" :value="0">未完了</option>
+                    <option class="" :value="1">発注済み</option>
+                    <option class="" :value="2">返信済み</option>
+                  </select>
                 </td>
                 <td
                   class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
@@ -2229,44 +2283,6 @@ const deleteInitialOrder = (order) => {
                   >
                     詳細確認
                   </button>
-                </td>
-                <td
-                  class="ml-2 px-4 py-3 text-lg text-gray-900 whitespace-nowrap"
-                >
-                  <!-- <button
-                    @click="orderComplete(order)"
-                    :class="{
-                      ' text-white font-bold py-2 px-4 rounded text-xs': true,
-                      'bg-green-500 hover:bg-green-700':
-                        order.order_complete_flg,
-                      'bg-gray-500 hover:bg-gray-700':
-                        !order.order_complete_flg,
-                    }"
-                  >
-                    <span v-if="order.order_complete_flg"
-                      >完了済<i class="ml-2 fas fa-check"></i
-                    ></span>
-                    <span v-else>未完了</span>
-                  </button> -->
-
-                  <select
-                    name=""
-                    v-model="order.order_complete_flg"
-                    @change="orderComplete(order, $event.target.value)"
-                    :class="{
-                      ' font-bold py-2 px-4 rounded text-xs': true,
-                      'text-white bg-green-500':
-                        order.order_complete_flg === 1,
-                      'text-white bg-blue-500':
-                        order.order_complete_flg === 2,
-                      'bg-gray-200 text-gray-700':
-                        !order.order_complete_flg || order.order_complete_flg === 0,
-                    }"
-                  >
-                    <option class="" :value="0">未完了</option>
-                    <option class="" :value="1">発注済み</option>
-                    <option class="" :value="2">返信済み</option>
-                  </select>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   {{ order.manage_user_name }}

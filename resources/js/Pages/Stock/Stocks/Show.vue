@@ -90,6 +90,8 @@ const form = reactive({
   calc_price: null,
   postage: null,
   order_stock_process_id: 0,
+  desire_delivery_date: null,
+  digest_date: null,
 
   location_id: 0,
   storage_address_id: 0,
@@ -183,42 +185,101 @@ const createInitialOrder = () => {
   if (
     !form.order_user ||
     !form.user_id ||
+    form.user_id == "0" ||
     !form.supplier_id ||
     !form.lead_time ||
     !form.quantity ||
     !form.calc_price ||
     !form.unit ||
     !form.order_price ||
-    !form.order_stock_process_id
+    !form.order_stock_process_id ||
+    form.order_stock_process_id == "0"
   ) {
     return alert("必須項目が入力されていません。");
   }
 
-  // 在庫追加と発注登録
+  // 格納先がある物品は依頼対象の格納先を必須とする
+  if (
+    props.stock_storages &&
+    props.stock_storages.length > 0 &&
+    (!form.stock_storage_id || form.stock_storage_id == "0")
+  ) {
+    return alert("格納先を選択してください。");
+  }
+
+  // 発注依頼を登録
   axios
     .post(route("stock.store.initialOrders"), form)
     .then((res) => {
       console.log(res.data);
       if (res.data.status) {
-        if (confirm("発注登録が完了しました。続けて発注登録を行いますか？")) {
-          window.location.reload();
-        } else {
-          window.location.href = route("stock");
-        }
+        alert("発注依頼を登録しました。");
+        window.location.reload();
+      } else {
+        alert("発注依頼の登録に失敗しました。");
       }
     })
     .catch((error) => {
       console.log(error);
+      alert("エラーが発生しました。");
     });
 };
-const createStockStorage = () => {};
+const createStockStorage = () => {
+  if (!form.location_id || form.location_id == "0") {
+    return alert("倉庫を選択してください。");
+  }
+  if (!form.storage_address_id || form.storage_address_id == "0") {
+    return alert("アドレスを選択してください。");
+  }
+  if (!form.stock_storage_quantity && form.stock_storage_quantity !== 0) {
+    return alert("数量を入力してください。");
+  }
+
+  axios
+    .post(route("stock.stock_storage.create"), {
+      stock_id: form.stock_id,
+      storage_address_id: form.storage_address_id,
+      quantity: form.stock_storage_quantity,
+    })
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.status) {
+        alert("格納先を登録しました。");
+        window.location.reload();
+      } else {
+        alert(res.data.msg || "格納先の登録に失敗しました。");
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      alert("エラーが発生しました。");
+    });
+};
+// 手配先のテキスト入力（datalist）用。入力テキストから取引先IDを解決する
+const stock_supplier_search_text = ref("");
+
+const resolveStockSupplierId = () => {
+  const text = stock_supplier_search_text.value.trim();
+  if (!text) {
+    form.stock_supplier_supplier_id = null;
+    return;
+  }
+  // 完全一致を優先し、なければ部分一致で解決
+  let supplier = props.suppliers.find((s) => s.name === text);
+  if (!supplier) {
+    supplier = props.suppliers.find((s) => s.name && s.name.includes(text));
+  }
+  form.stock_supplier_supplier_id = supplier ? supplier.id : null;
+};
+
 const createStockSupplier = () => {
-  if (
-    !form.stock_id ||
-    !form.stock_supplier_supplier_id ||
-    !form.stock_supplier_lead_time
-  ) {
+  resolveStockSupplierId();
+
+  if (!form.stock_id || !form.stock_supplier_lead_time) {
     return alert("必須入力項目が入力されていません。");
+  }
+  if (!form.stock_supplier_supplier_id) {
+    return alert("手配先が見つかりません。候補から選択してください。");
   }
 
   axios
@@ -691,388 +752,222 @@ onMounted(() => {
             <div id="left_container" class="lg:col-span-2 space-y-6">
           <!-- 略名登録ブロック -->
           <EditAlias :aliases="props.aliases" :stock_id="props.stock.id" />
-          <!-- 発注登録 -->
-          <!-- <div class="bg-red-50 p-4"> -->
-            <!-- <h3 class="text-lg font-bold dark:text-white mb-2">発注依頼登録</h3> -->
-            <!-- <div v-if="props.stock_suppliers.length > 0">
-              <p
-                v-if="props.initial_order != null"
-                class="text-gray-700 mb-3 text-sm"
-              >
-                ※直近の発注データをセットしています。必要に応じて変更してください。
-              </p>
-              <div class="flex flex-wrap -mx-3 mb-6">
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.order_user,
-                    }"
-                    for="order_user"
+          <!-- 発注依頼ブロック -->
+          <SectionCard title="発注依頼">
+            <p
+              v-if="props.initial_order != null"
+              class="text-sm text-content-subtle mb-4"
+            >
+              ※直近の発注データをセットしています。必要に応じて変更してください。
+            </p>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <FormField label="注文依頼者" id="order_request_user" required>
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_user"
+                  type="text"
+                  list="order_request_users"
+                  v-model="form.order_user"
+                />
+                <datalist id="order_request_users">
+                  <option
+                    v-for="user in props.users"
+                    :key="user.id"
+                    :value="user.id"
                   >
-                    *注文依頼者
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    list="users"
-                    v-model="form.order_user"
-                    id="order_user"
-                  />
-                  <datalist id="users">
-                    <option value="0">未選択</option>
-                    <option
-                      v-for="user in props.users"
-                      :key="user.id"
-                      :value="user.id"
-                    >
-                      {{ user.name }}
-                    </option>
-                  </datalist>
-                </div>
+                    {{ user.name }}
+                  </option>
+                </datalist>
+              </FormField>
 
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.user_id,
-                    }"
-                  >
-                    *発注者
-                  </label>
-                  <select
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    v-model="form.user_id"
-                  >
-                    <option value="0">未選択</option>
-                    <option
-                      v-for="user in props.admin_users"
-                      :key="user.id"
-                      :value="user.id"
-                    >
-                      {{ user.name }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div class="flex flex-wrap -mx-3 mb-6">
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.supplier_id,
-                    }"
-                    for="name"
-                  >
-                    *手配先
-                  </label>
-                  <select
-                    :class="{
-                      'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
-                    }"
-                    id="name"
-                    v-model="form.supplier_id"
-                  >
-                    <option value="">未選択</option>
-                    <option
-                      v-for="supplier in props.stock_suppliers"
-                      :key="supplier.id"
-                      :value="supplier.id"
-                    >
-                      {{
-                        supplier.supplier_no != ""
-                          ? `${supplier.supplier_no} : ${supplier.name}`
-                          : supplier.name
-                      }}
-                    </option>
-                  </select>
-                </div>
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.lead_time,
-                    }"
-                    for="name"
-                  >
-                    *リードタイム
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id="name"
-                    type="number"
-                    placeholder=""
-                    v-model="form.lead_time"
-                  />
-                </div>
-              </div>
-              <div class="flex flex-wrap -mx-3 mb-6">
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.quantity,
-                    }"
-                    for="name"
-                  >
-                    *数量
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id="name"
-                    type="number"
-                    placeholder=""
-                    v-model="form.quantity"
-                    @change="form.calc_price = form.order_price * form.quantity"
-                  />
-                </div>
-
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.unit,
-                    }"
-                    for="s_name"
-                  >
-                    *単位
-                  </label>
-
-                  <select
-                    name=""
-                    id=""
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    v-model="form.unit"
-                  >
-                    <option
-                      v-if="props.stock.solo_unit"
-                      :value="props.stock.solo_unit"
-                    >
-                      {{ props.stock.solo_unit }}
-                    </option>
-                    <option
-                      v-if="props.stock.org_unit"
-                      :value="props.stock.org_unit"
-                    >
-                      {{ props.stock.org_unit }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div class="flex flex-wrap -mx-3 mb-6">
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.order_price,
-                    }"
-                    for="name"
-                  >
-                    *単価 (変更可)
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id="s_name"
-                    type="number"
-                    placeholder=""
-                    v-model="form.order_price"
-                    @change="form.calc_price = form.order_price * form.quantity"
-                  />
-                </div>
-
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500': !form.calc_price,
-                    }"
-                    for="s_name"
-                  >
-                    *金額
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id="s_name"
-                    type="number"
-                    placeholder=""
-                    v-model="form.calc_price"
-                  />
-                </div>
-              </div>
-              <div class="flex flex-wrap -mx-3 mb-6">
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                      'text-red-500':
-                        !form.order_stock_process_id ||
-                        form.order_stock_process_id == '0',
-                    }"
-                    for="name"
-                  >
-                    工程
-                  </label>
-                  <select
-                    name=""
-                    id=""
-                    :class="{
-                      'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
-                    }"
-                    v-model="form.order_stock_process_id"
-                  >
-                    <option value="0">未選択</option>
-                    <option
-                      v-for="stock_process in props.stock_processes"
-                      :key="stock_process.id"
-                      :value="stock_process.id"
-                    >
-                      {{ stock_process.name }}
-                    </option>
-                  </select>
-                </div>
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    }"
-                    for="s_name"
-                  >
-                    送料(※その他費用)
-                  </label>
-                  <input
-                    class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id="s_name"
-                    type="number"
-                    placeholder=""
-                    v-model="form.postage"
-                  />
-                </div>
-              </div>
-              <div class="flex flex-wrap -mx-3 mb-6">
-                <div class="w-1/2 px-3">
-                  <label
-                    :class="{
-                      'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2': true,
-                    }"
-                    for="name"
-                  >
-                    想定格納場所(※発注点更新用)
-                  </label>
-                  <select
-                    :class="{
-                      'appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500': true,
-                    }"
-                    id="name"
-                    v-model="form.stock_storage_id"
-                  >
-                    <option value="0">未選択</option>
-                    <option
-                      v-for="stock_storage in props.stock_storages"
-                      :key="stock_storage.stock_storage_id"
-                      :value="stock_storage.stock_storage_id"
-                    >
-                      {{
-                        `${stock_storage.location_name}:${stock_storage.address}`
-                      }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-center sm:col-span-2">
-                <button
-                  @click="createInitialOrder"
-                  class="inline-block rounded-lg bg-red-500 px-8 py-3 text-center font-semibold text-white outline-none ring-red-300 transition duration-100 hover:bg-red-600 focus-visible:ring active:bg-red-700 text-xs"
+              <FormField label="発注者" id="order_request_user_id" required>
+                <select
+                  id="order_request_user_id"
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  v-model="form.user_id"
                 >
-                  登録
-                </button>
-              </div>
-            </div> -->
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="user in props.admin_users"
+                    :key="user.id"
+                    :value="user.id"
+                  >
+                    {{ user.name }}
+                  </option>
+                </select>
+              </FormField>
 
+              <FormField label="手配先" id="order_request_supplier" required>
+                <select
+                  id="order_request_supplier"
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  v-model="form.supplier_id"
+                >
+                  <option value="">未選択</option>
+                  <option
+                    v-for="supplier in props.stock_suppliers"
+                    :key="supplier.id"
+                    :value="supplier.id"
+                  >
+                    {{
+                      supplier.supplier_no != ""
+                        ? `${supplier.supplier_no} : ${supplier.name}`
+                        : supplier.name
+                    }}
+                  </option>
+                </select>
+              </FormField>
 
-            <!-- 発注履歴を表示 -->
-            <!-- <details id="initial_order_details" class="mt-8">
-              <summary
-                @click="getInitialOrders"
-                class="cursor-pointer text-blue-500"
-              >
-                発注履歴を表示
-              </summary>
-              <div class="mt-2">
-                <table id="initial_order_table" class="min-w-full bg-white">
-                  <thead>
-                    <tr>
-                      <th class="px-4 py-4 text-gray-700">ステータス</th>
-                      <th class="px-4 py-4 text-gray-700">数量</th>
-                      <th class="px-4 py-4 text-gray-700">価格</th>
-                      <th class="px-4 py-4 text-gray-700">金額</th>
-                      <th class="px-4 py-4 text-gray-700">発注依頼者</th>
-                      <th class="px-4 py-4 text-gray-700">発注日</th>
-                      <th class="px-4 py-4 text-gray-700">納品日</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="order in initial_orders" :key="order.id">
-                      <td
-                        class="px-4 py-4 text-center font-bold"
-                        :class="{
-                          'text-green-500': order.receive_flg,
-                          'text-red-500': !order.receive_flg,
-                        }"
-                      >
-                        {{ order.receive_flg ? "済" : "未" }}
-                      </td>
-                      <td class="px-4 py-4 text-gray-500">
-                        {{ order.quantity }}
-                      </td>
-                      <td class="px-4 py-4 text-gray-500">
-                        {{ order.price.toLocaleString() }}
-                      </td>
-                      <td class="px-4 py-4 text-gray-500">
-                        {{ order.calc_price.toLocaleString() }}
-                      </td>
-                      <td class="px-4 py-4 text-gray-500">
-                        {{ order.order_user }}
-                      </td>
-                      <td class="px-4 py-4 text-gray-500">
-                        {{
-                          new Date(order.order_date).toLocaleDateString("ja-JP")
-                        }}
-                      </td>
-                      <td class="px-4 py-4 text-gray-500">
-                        {{
-                          new Date(order.delivery_date).toLocaleDateString(
-                            "ja-JP"
-                          )
-                        }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </details> -->
-          <!-- </div> -->
+              <FormField label="リードタイム" id="order_request_lead_time" required>
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_lead_time"
+                  type="number"
+                  v-model="form.lead_time"
+                />
+              </FormField>
+
+              <FormField label="数量" id="order_request_quantity" required>
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_quantity"
+                  type="number"
+                  v-model="form.quantity"
+                  @change="form.calc_price = form.order_price * form.quantity"
+                />
+              </FormField>
+
+              <FormField label="単位" id="order_request_unit" required>
+                <select
+                  id="order_request_unit"
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  v-model="form.unit"
+                >
+                  <option
+                    v-if="props.stock.solo_unit"
+                    :value="props.stock.solo_unit"
+                  >
+                    {{ props.stock.solo_unit }}
+                  </option>
+                  <option
+                    v-if="props.stock.org_unit"
+                    :value="props.stock.org_unit"
+                  >
+                    {{ props.stock.org_unit }}
+                  </option>
+                </select>
+              </FormField>
+
+              <FormField label="単価 (変更可)" id="order_request_price" required>
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_price"
+                  type="number"
+                  v-model="form.order_price"
+                  @change="form.calc_price = form.order_price * form.quantity"
+                />
+              </FormField>
+
+              <FormField label="金額" id="order_request_calc_price" required>
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_calc_price"
+                  type="number"
+                  v-model="form.calc_price"
+                />
+              </FormField>
+
+              <FormField label="工程" id="order_request_process" required>
+                <select
+                  id="order_request_process"
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  v-model="form.order_stock_process_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="stock_process in props.stock_processes"
+                    :key="stock_process.id"
+                    :value="stock_process.id"
+                  >
+                    {{ stock_process.name }}
+                  </option>
+                </select>
+              </FormField>
+
+              <FormField label="送料 (※その他費用)" id="order_request_postage">
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_postage"
+                  type="number"
+                  v-model="form.postage"
+                />
+              </FormField>
+
+              <FormField label="希望納期" id="order_request_desire_delivery_date">
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_desire_delivery_date"
+                  type="date"
+                  v-model="form.desire_delivery_date"
+                />
+              </FormField>
+
+              <FormField label="消化予定日" id="order_request_digest_date">
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_digest_date"
+                  type="date"
+                  v-model="form.digest_date"
+                />
+              </FormField>
+
+              <FormField label="格納先" id="order_request_storage" required>
+                <select
+                  id="order_request_storage"
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  v-model="form.stock_storage_id"
+                >
+                  <option value="0">未選択</option>
+                  <option
+                    v-for="stock_storage in props.stock_storages"
+                    :key="stock_storage.stock_storage_id"
+                    :value="stock_storage.stock_storage_id"
+                  >
+                    {{
+                      `${stock_storage.location_name}:${stock_storage.address}`
+                    }}
+                  </option>
+                </select>
+              </FormField>
+            </div>
+
+            <div class="flex justify-end mt-6">
+              <Button variant="primary" icon-left="shopping_cart" @click="createInitialOrder">
+                発注依頼を登録
+              </Button>
+            </div>
+          </SectionCard>
 
               <!-- 手配先設定 -->
               <SectionCard title="手配先設定">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <FormField label="手配先" required :error="!form.stock_supplier_supplier_id ? '手配先を選択してください' : ''">
-                    <select
-                      v-model="form.stock_supplier_supplier_id"
+                  <FormField label="手配先" required :error="!stock_supplier_search_text ? '手配先を入力してください' : ''">
+                    <input
+                      type="text"
+                      v-model="stock_supplier_search_text"
+                      list="stock_supplier_suppliers"
                       class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
-                    >
-                      <option value="">未選択</option>
+                      placeholder="手配先名で検索"
+                    />
+                    <datalist id="stock_supplier_suppliers">
                       <option
                         v-for="supplier in props.suppliers"
                         :key="supplier.id"
-                        :value="supplier.id"
+                        :value="supplier.name"
                       >
-                        {{
-                          supplier.supplier_no != "" || supplier.supplier_no != null
-                            ? `${supplier.supplier_no} : ${supplier.name}`
-                            : supplier.name
-                        }}
+                        {{ supplier.supplier_no ? `${supplier.supplier_no} : ${supplier.name}` : "" }}
                       </option>
-                    </select>
+                    </datalist>
                   </FormField>
                   <FormField label="リードタイム" required :error="!form.stock_supplier_lead_time ? 'リードタイムを入力してください' : ''">
                     <input
