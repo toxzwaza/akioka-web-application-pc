@@ -67,6 +67,7 @@ class InitialOrderController extends Controller
         $nouki_targets_raw = $request->nouki_targets; // カンマ区切り文字列
         $nouki_targets = $nouki_targets_raw ? explode(',', $nouki_targets_raw) : ['delivery_date'];
         $purchase_status = $request->purchase_status;
+        $order_complete = $request->order_complete;
 
         $query = InitialOrder::select(
             'initial_orders.*',
@@ -148,6 +149,19 @@ class InitialOrderController extends Controller
         // 注文Noでのフィルタ
         if ($order_no) {
             $query->where('initial_orders.order_no', 'like', '%' . $order_no . '%');
+        }
+
+        // 完了登録（0:未完了 1:発注済み 2:返信済み）でのフィルタ
+        if ($order_complete !== null && $order_complete !== '') {
+            if ($order_complete == 0) {
+                // 未設定(NULL)の過去データも未完了として扱う
+                $query->where(function ($q) {
+                    $q->whereNull('initial_orders.order_complete_flg')
+                        ->orWhere('initial_orders.order_complete_flg', 0);
+                });
+            } else {
+                $query->where('initial_orders.order_complete_flg', $order_complete);
+            }
         }
 
         // 発注書の発行状態でのフィルタ
