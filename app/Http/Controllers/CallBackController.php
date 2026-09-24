@@ -22,6 +22,13 @@ class CallBackController extends Controller
         try {
             if ($flg == 'initial_order_id') {
                 $initial_order = InitialOrder::find($value);
+
+                // FAX送信完了時に完了登録を「発注済み」へ自動更新（「返信済み」からは降格させない）
+                if (!$initial_order->order_complete_flg) {
+                    $initial_order->order_complete_flg = 1;
+                    $initial_order->save();
+                }
+
                 $notify_queue = new NotifyQueue();
                 $notify_queue->title = 'FAX送信完了';
                 $notify_queue->msg = '品名: ' . $initial_order->name . "\n" .
