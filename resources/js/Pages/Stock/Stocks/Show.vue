@@ -255,13 +255,31 @@ const createStockStorage = () => {
       alert("エラーが発生しました。");
     });
 };
+// 手配先のテキスト入力（datalist）用。入力テキストから取引先IDを解決する
+const stock_supplier_search_text = ref("");
+
+const resolveStockSupplierId = () => {
+  const text = stock_supplier_search_text.value.trim();
+  if (!text) {
+    form.stock_supplier_supplier_id = null;
+    return;
+  }
+  // 完全一致を優先し、なければ部分一致で解決
+  let supplier = props.suppliers.find((s) => s.name === text);
+  if (!supplier) {
+    supplier = props.suppliers.find((s) => s.name && s.name.includes(text));
+  }
+  form.stock_supplier_supplier_id = supplier ? supplier.id : null;
+};
+
 const createStockSupplier = () => {
-  if (
-    !form.stock_id ||
-    !form.stock_supplier_supplier_id ||
-    !form.stock_supplier_lead_time
-  ) {
+  resolveStockSupplierId();
+
+  if (!form.stock_id || !form.stock_supplier_lead_time) {
     return alert("必須入力項目が入力されていません。");
+  }
+  if (!form.stock_supplier_supplier_id) {
+    return alert("手配先が見つかりません。候補から選択してください。");
   }
 
   axios
@@ -933,24 +951,23 @@ onMounted(() => {
               <!-- 手配先設定 -->
               <SectionCard title="手配先設定">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <FormField label="手配先" required :error="!form.stock_supplier_supplier_id ? '手配先を選択してください' : ''">
-                    <select
-                      v-model="form.stock_supplier_supplier_id"
+                  <FormField label="手配先" required :error="!stock_supplier_search_text ? '手配先を入力してください' : ''">
+                    <input
+                      type="text"
+                      v-model="stock_supplier_search_text"
+                      list="stock_supplier_suppliers"
                       class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
-                    >
-                      <option value="">未選択</option>
+                      placeholder="手配先名で検索"
+                    />
+                    <datalist id="stock_supplier_suppliers">
                       <option
                         v-for="supplier in props.suppliers"
                         :key="supplier.id"
-                        :value="supplier.id"
+                        :value="supplier.name"
                       >
-                        {{
-                          supplier.supplier_no != "" || supplier.supplier_no != null
-                            ? `${supplier.supplier_no} : ${supplier.name}`
-                            : supplier.name
-                        }}
+                        {{ supplier.supplier_no ? `${supplier.supplier_no} : ${supplier.name}` : "" }}
                       </option>
-                    </select>
+                    </datalist>
                   </FormField>
                   <FormField label="リードタイム" required :error="!form.stock_supplier_lead_time ? 'リードタイムを入力してください' : ''">
                     <input
