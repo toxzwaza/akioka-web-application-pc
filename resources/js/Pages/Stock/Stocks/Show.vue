@@ -90,6 +90,8 @@ const form = reactive({
   calc_price: null,
   postage: null,
   order_stock_process_id: 0,
+  desire_delivery_date: null,
+  digest_date: null,
 
   location_id: 0,
   storage_address_id: 0,
@@ -850,6 +852,24 @@ onMounted(() => {
                   id="order_request_postage"
                   type="number"
                   v-model="form.postage"
+                />
+              </FormField>
+
+              <FormField label="希望納期" id="order_request_desire_delivery_date">
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_desire_delivery_date"
+                  type="date"
+                  v-model="form.desire_delivery_date"
+                />
+              </FormField>
+
+              <FormField label="消化予定日" id="order_request_digest_date">
+                <input
+                  class="w-full rounded-md border-border shadow-sm text-sm focus:border-primary-500 focus:ring-primary-500"
+                  id="order_request_digest_date"
+                  type="date"
+                  v-model="form.digest_date"
                 />
               </FormField>
 

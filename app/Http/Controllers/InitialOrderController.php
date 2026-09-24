@@ -446,6 +446,8 @@ class InitialOrderController extends Controller
         $calc_price = $request->calc_price;
         $stock_storage_id = $request->stock_storage_id;
         $postage = $request->postage;
+        $desire_delivery_date = $request->desire_delivery_date;
+        $digest_date = $request->digest_date;
 
         $upload_file = $request->file('upload_file');
 
@@ -484,6 +486,8 @@ class InitialOrderController extends Controller
                 $order_request->new_stock_flg = 1;
                 $order_request->postage = $postage;
                 $order_request->stock_process_id = $order_stock_process_id;
+                $order_request->desire_delivery_date = $desire_delivery_date;
+                $order_request->digest_date = $digest_date;
                 $order_request->save();
 
                 // 稟議書がある場合
@@ -535,6 +539,8 @@ class InitialOrderController extends Controller
                 $order_request->new_stock_flg = 0;
                 $order_request->postage = $postage;
                 $order_request->stock_process_id = $order_stock_process_id;
+                $order_request->desire_delivery_date = $desire_delivery_date;
+                $order_request->digest_date = $digest_date;
                 $order_request->save();
             }
 
