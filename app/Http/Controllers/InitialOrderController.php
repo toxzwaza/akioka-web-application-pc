@@ -510,9 +510,20 @@ class InitialOrderController extends Controller
                 $stock_supplier->save();
             } else {
 
+                // 発注依頼の対象格納先を解決（未指定時は先頭の格納先にフォールバック）
+                // ※発注点更新の対象は画面で明示された$stock_storage_idのままとし、ここでは変更しない
+                $order_storage_id = $stock_storage_id;
+                if (!$order_storage_id) {
+                    $first_storage = StockStorage::where('stock_id', $stock_id)->first();
+                    if ($first_storage) {
+                        $order_storage_id = $first_storage->id;
+                    }
+                }
+
                 // 発注依頼データを作成
                 $order_request = new OrderRequest();
                 $order_request->stock_id = $stock_id;
+                $order_request->stock_storage_id = $order_storage_id ?: null;
                 $order_request->request_user_id = $order_user;
                 $order_request->user_id = $user_id;
                 $order_request->supplier_id = $supplier_id;
