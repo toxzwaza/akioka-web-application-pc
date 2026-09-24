@@ -41,7 +41,8 @@ export const subNav = {
     ],
     stock: [
         { label: '在庫追加', icon: 'edit_square', route: 'stock.stocks.create', component: 'a', match: 'exact' },
-        { label: '新規品発注', icon: 'edit_square', route: 'stock.create.initialOrders', component: 'Link', match: 'exact' },
+        // 新規品発注は運用上使用しないため非表示（発注依頼は在庫詳細画面から行う）
+        // { label: '新規品発注', icon: 'edit_square', route: 'stock.create.initialOrders', component: 'Link', match: 'exact' },
         { label: '取引先', icon: 'edit_square', route: 'stock.suppliers', component: 'a', match: 'exact' },
         { label: '格納先追加', icon: 'edit_square', route: 'stock.locations', component: 'a', match: 'exact' },
         { label: '在庫一覧', icon: 'list_alt', route: 'stock.stocks', component: 'a', match: 'exact' },
