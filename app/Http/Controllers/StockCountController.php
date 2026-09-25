@@ -140,7 +140,7 @@ class StockCountController extends Controller
                 }, $row);
             };
 
-            fputcsv($out, $toSjis(['発注先名', '品名', '品番', 'メモ', '価格', '単位１', '単位２', '換算値', '更新日時']));
+            fputcsv($out, $toSjis(['発注先名', '品名', '品番', 'メモ', '価格', '発注単位', '在庫単位', '換算値', '更新日時']));
             foreach ($stocks as $stock) {
                 fputcsv($out, $toSjis([
                     $stock->supplier_name,
