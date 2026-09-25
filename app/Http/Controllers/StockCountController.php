@@ -148,9 +148,10 @@ class StockCountController extends Controller
                     $stock->s_name,
                     $stock->memo,
                     $stock->price,
-                    $stock->solo_unit,
+                    // 発注単位=org_unit(まとめ買い)・在庫単位=solo_unit(バラ)。例: 軍手 org=ダース/solo=双
+                    $stock->org_unit,
                     // 在庫単位が未設定の場合は発注単位で補完
-                    $stock->org_unit ?: $stock->solo_unit,
+                    $stock->solo_unit ?: $stock->org_unit,
                     $stock->quantity_per_org,
                     $stock->updated_at,
                 ]));
