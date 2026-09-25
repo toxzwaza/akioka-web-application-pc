@@ -149,7 +149,8 @@ class StockCountController extends Controller
                     $stock->memo,
                     $stock->price,
                     $stock->solo_unit,
-                    $stock->org_unit,
+                    // 在庫単位が未設定の場合は発注単位で補完
+                    $stock->org_unit ?: $stock->solo_unit,
                     $stock->quantity_per_org,
                     $stock->updated_at,
                 ]));
