@@ -188,7 +188,10 @@ Route::get('/suppliers/edit/{supplier_id}', [SupplierController::class, 'edit'])
 Route::get('/locations/create', [StockController::class, 'store_location'])->name('stock.locations.create');
 
 // 棚卸用
+Route::get('/stock-count', [StockCountController::class, 'index'])->name('stock.stock_count.index');
 Route::get('/stock-count/export', [StockCountController::class, 'export_data'])->name('stock.stock_count.export');
+Route::get('/stock-count/export-csv', [StockCountController::class, 'export_csv'])->name('stock.stock_count.export_csv');
+Route::get('/stock-count/export-master-csv', [StockCountController::class, 'export_stock_master_csv'])->name('stock.stock_count.export_master_csv');
 Route::get('/storage-address/export', [StockCountController::class, 'export_storage_address_data'])->name('stock.storage_address.export');
 
 // 在庫・サプライヤー情報エクスポート

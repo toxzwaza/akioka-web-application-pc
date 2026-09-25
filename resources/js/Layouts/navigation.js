@@ -49,7 +49,7 @@ export const subNav = {
         { label: '発注依頼一覧', icon: 'list_alt', route: 'stock.order_requests', component: 'Link', match: 'exact' },
         { label: '発注一覧', icon: 'list_alt', route: 'stock.initialOrders', component: 'Link', match: 'exact' },
         { label: '滞留品', icon: 'list_alt', route: 'stock.retentions', component: 'Link', match: 'exact' },
-        { label: '棚卸し', icon: 'list_alt', route: 'stock.stocks.taking', component: 'Link', match: 'exact' },
+        { label: '棚卸しデータ出力', icon: 'download', route: 'stock.stock_count.index', component: 'Link', match: 'exact' },
     ],
     lunch: [
         { label: '当日発注書', icon: 'description', route: 'lunch.order', component: 'Link', match: 'exact' },
