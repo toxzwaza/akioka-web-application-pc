@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StorageAddress;
 use Illuminate\Http\Request;
@@ -39,27 +40,24 @@ class StockCountController extends Controller
         return response()->json($storage_address_data);
     }
 
-    // 棚卸しデータをCSV形式で出力（export_dataと同じデータに倉庫・アドレス名を付与）
+    // 棚卸しデータをCSV形式で出力（export_dataと同じ項目構成。格納先未登録の物品も含む）
     public function export_csv()
     {
-        $rows = StockStorage::select(
-            'locations.name as location_name',
-            'storage_addresses.address',
-            'stock_storages.storage_address_id',
-            'stock_storages.id as stock_storage_id',
+        $rows = Stock::select(
             'stocks.id as stock_id',
             'stocks.name',
             'stocks.s_name',
             'stocks.img_path',
-            'stock_storages.quantity'
+            'stock_storages.id as stock_storage_id',
+            'stock_storages.quantity',
+            'stock_storages.storage_address_id'
         )
-            ->join('stocks', 'stocks.id', 'stock_storages.stock_id')
-            ->join('storage_addresses', 'storage_addresses.id', 'stock_storages.storage_address_id')
-            ->join('locations', 'locations.id', 'storage_addresses.location_id')
+            ->leftJoin('stock_storages', 'stock_storages.stock_id', 'stocks.id')
             ->where('stocks.del_flg', 0)
-            ->orderBy('locations.name', 'asc')
-            ->orderBy('storage_addresses.address', 'asc')
-            ->orderBy('stocks.name', 'asc')
+            // 格納先登録済みをアドレスID順で先に、未登録の物品を末尾にまとめる
+            ->orderByRaw('stock_storages.storage_address_id IS NULL asc')
+            ->orderBy('stock_storages.storage_address_id', 'asc')
+            ->orderBy('stocks.id', 'asc')
             ->get();
 
         $filename = 'stock_count_' . date('Ymd_His') . '.csv';
@@ -68,22 +66,20 @@ class StockCountController extends Controller
             $out = fopen('php://output', 'w');
             // BOM付きUTF-8（Excelで文字化けさせないため）
             fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($out, ['倉庫', 'アドレス', '品名', '品番', '在庫数', '物品ID', '格納先在庫ID', '格納先アドレスID', '画像URL']);
+            fputcsv($out, ['物品ID', '品名', '品番', '画像URL', '格納先在庫ID', '在庫数', '格納先アドレスID']);
             foreach ($rows as $row) {
                 $img_path = $row->img_path;
                 if ($img_path && strpos($img_path, 'http') === false) {
                     $img_path = 'https://akioka.cloud/' . $img_path;
                 }
                 fputcsv($out, [
-                    $row->location_name,
-                    $row->address,
+                    $row->stock_id,
                     $row->name,
                     $row->s_name,
-                    $row->quantity,
-                    $row->stock_id,
-                    $row->stock_storage_id,
-                    $row->storage_address_id,
                     $img_path,
+                    $row->stock_storage_id,
+                    $row->quantity,
+                    $row->storage_address_id,
                 ]);
             }
             fclose($out);
