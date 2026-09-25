@@ -6,10 +6,17 @@ use App\Models\Stock;
 use App\Models\StockStorage;
 use App\Models\StorageAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class StockCountController extends Controller
 {
-    //
+    // 棚卸しデータ出力ページ
+    public function index()
+    {
+        return Inertia::render('Stock/StockCount/Index');
+    }
+
     public function export_data()
     {
         $stock_storage_data = StockStorage::select('stock_id', 'stocks.name', 'stocks.s_name', 'stocks.img_path', 'stock_storages.id as stock_storage_id', 'quantity', 'storage_address_id')
@@ -84,5 +91,70 @@ class StockCountController extends Controller
             }
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    // 物品マスタ（手配先・単価付き）をCSV形式で出力（Shift_JIS・Windows Excel向け）
+    // 手配先はmain_flg=1を優先し、なければ最初の1件を採用して1物品=1行にする
+    public function export_stock_master_csv()
+    {
+        $stocks = Stock::select(
+            'suppliers.name as supplier_name',
+            'stocks.name',
+            'stocks.s_name',
+            'stocks.memo',
+            'stocks.price',
+            'stocks.solo_unit',
+            'stocks.org_unit',
+            'stocks.quantity_per_org',
+            'stocks.updated_at'
+        )
+            ->join(DB::raw('(
+                SELECT ss1.*
+                FROM stock_suppliers ss1
+                INNER JOIN (
+                    SELECT stock_id,
+                           COALESCE(MAX(CASE WHEN main_flg = 1 THEN id END), MIN(id)) as selected_id
+                    FROM stock_suppliers
+                    GROUP BY stock_id
+                ) ss2 ON ss1.id = ss2.selected_id
+            ) as prioritized_stock_suppliers'), 'prioritized_stock_suppliers.stock_id', '=', 'stocks.id')
+            ->join('suppliers', 'suppliers.id', '=', 'prioritized_stock_suppliers.supplier_id')
+            ->where('stocks.del_flg', 0)
+            ->whereNotNull('stocks.price')
+            ->orderBy('suppliers.name', 'asc')
+            ->orderBy('stocks.name', 'asc')
+            ->get();
+
+        $filename = 'stocks_' . date('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($stocks) {
+            $out = fopen('php://output', 'w');
+
+            // Windows版Excelでの文字化けを防ぐため、CSVはSJIS-winで出力する
+            $toSjis = function (array $row): array {
+                return array_map(function ($value) {
+                    if ($value === null) {
+                        return '';
+                    }
+                    return mb_convert_encoding((string) $value, 'SJIS-win', 'UTF-8');
+                }, $row);
+            };
+
+            fputcsv($out, $toSjis(['発注先名', '品名', '品番', 'メモ', '価格', '単位１', '単位２', '換算値', '更新日時']));
+            foreach ($stocks as $stock) {
+                fputcsv($out, $toSjis([
+                    $stock->supplier_name,
+                    $stock->name,
+                    $stock->s_name,
+                    $stock->memo,
+                    $stock->price,
+                    $stock->solo_unit,
+                    $stock->org_unit,
+                    $stock->quantity_per_org,
+                    $stock->updated_at,
+                ]));
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=Shift_JIS']);
     }
 }
