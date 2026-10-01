@@ -1,19 +1,50 @@
 <script setup>
 import MainLayout from "@/Layouts/MainLayout.vue";
-import { onMounted, ref, reactive } from "vue";
+import { computed, ref, reactive } from "vue";
 import { router } from "@inertiajs/vue3";
 
 import axios from "axios";
 import MainTitle from "@/Components/Title/MainTitle.vue";
 
+// タイムゾーンのずれを避けるためローカル日付で整形する
+const formatDate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+// 対象月（この月の20日が締め日。期間は前月21日～対象月20日）
+const targetMonth = ref(
+  new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+);
+
 const form = reactive({
-  start_date: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 22)
-    .toISOString()
-    .split("T")[0],
-  finish_date: new Date(new Date().getFullYear(), new Date().getMonth(), 21)
-    .toISOString()
-    .split("T")[0],
+  start_date: "",
+  finish_date: "",
 });
+
+const applyPeriod = () => {
+  const y = targetMonth.value.getFullYear();
+  const m = targetMonth.value.getMonth();
+  form.start_date = formatDate(new Date(y, m - 1, 21));
+  form.finish_date = formatDate(new Date(y, m, 20));
+};
+applyPeriod();
+
+const moveMonth = (delta) => {
+  targetMonth.value = new Date(
+    targetMonth.value.getFullYear(),
+    targetMonth.value.getMonth() + delta,
+    1
+  );
+  applyPeriod();
+};
+
+const targetMonthLabel = computed(
+  () =>
+    `${targetMonth.value.getFullYear()}年${targetMonth.value.getMonth() + 1}月分`
+);
 
 const exportData = () => {
   if (!form.start_date || !form.finish_date) {
@@ -64,8 +95,25 @@ const exportData = () => {
       />
       <form class="w-2/3 mx-auto">
         <p class="text-gray-600 mb-4 text-sm">
-          先月20日～今月21日をデフォルト値に設定しています。適宜変更して、エクスポートしてください。
+          前月21日～当月20日をデフォルト値に設定しています。適宜変更して、エクスポートしてください。
         </p>
+        <div class="flex items-center justify-center gap-4 mb-6">
+          <button
+            @click.prevent="moveMonth(-1)"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded"
+          >
+            ← 前月
+          </button>
+          <p class="text-lg font-bold text-gray-700 w-32 text-center">
+            {{ targetMonthLabel }}
+          </p>
+          <button
+            @click.prevent="moveMonth(1)"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded"
+          >
+            次月 →
+          </button>
+        </div>
         <div class="flex flex-wrap items-center justify-between -mx-3 mb-6">
           <div class="w-2/5 px-3 mb-6 md:mb-0">
             <label

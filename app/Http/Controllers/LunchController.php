@@ -239,35 +239,18 @@ class LunchController extends Controller
         $start_date = $request->start_date;
         $finish_date = $request->finish_date;
 
-        $monthOrders = LunchOrder::select('user_id', 'users.name as user_name', 'users.dispatch_flg', 'users.part_flg')
+        $monthOrders = LunchOrder::select('user_id', 'users.emp_no', 'users.name as user_name', 'users.dispatch_flg', 'users.part_flg')
+            ->selectRaw('SUM(CASE WHEN lunch_id = 1 AND order_flg = 1 THEN 1 ELSE 0 END) as lunch_count')
             ->join('users', 'users.id', 'lunch_orders.user_id')
-            ->distinct()
             ->whereDate('date', '>=', $start_date)
             ->whereDate('date', '<=', $finish_date)
-            ->orderBy('dispatch_flg', 'asc')
-            ->orderby('part_flg', 'asc')
-            ->orderby('users.id', 'asc')
+            ->groupBy('user_id', 'users.emp_no', 'users.name', 'users.dispatch_flg', 'users.part_flg')
+            ->orderBy('users.emp_no', 'asc')
             ->get();
 
-        $calc_lunch_count = 0;
-        $calc_side_dish_count = 0;
-
         foreach ($monthOrders as $monthOrder) {
-            $lunch_count = LunchOrder::whereDate('date', '>=', $start_date)
-                ->whereDate('date', '<=', $finish_date)
-                ->where('user_id', $monthOrder->user_id)
-                ->where('lunch_id', '1')
-                ->where('order_flg', '1')
-                ->count();
-
-
-
-            $monthOrder->lunch_count = $lunch_count;
-            $monthOrder->calc = ($lunch_count * 360);
-
-            if (!$monthOrder->dispatch_flg) {
-                $calc_lunch_count += $lunch_count;
-            }
+            $monthOrder->lunch_count = (int) $monthOrder->lunch_count;
+            $monthOrder->calc = ($monthOrder->lunch_count * 360);
 
             if ($monthOrder->dispatch_flg) {
                 $monthOrder->attribute = '派遣・非常勤';
@@ -287,7 +270,7 @@ class LunchController extends Controller
             "Expires" => "0"
         ];
 
-        $columns = ['名前', '社員属性', '弁当個数', '合計金額'];
+        $columns = ['社員番号', '名前', '社員属性', '弁当個数', '合計金額'];
         $callback = function () use ($monthOrders, $columns) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF"); // BOMを追加
@@ -295,6 +278,7 @@ class LunchController extends Controller
 
             foreach ($monthOrders as $monthOrder) {
                 fputcsv($file, [
+                    $monthOrder->emp_no,
                     $monthOrder->user_name,
                     $monthOrder->attribute,
                     $monthOrder->lunch_count,
