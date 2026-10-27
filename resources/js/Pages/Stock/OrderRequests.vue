@@ -754,7 +754,7 @@ const updateQuantityPriceCalcPricePostage = (flg, order_request) => {
     case "unit":
       if (
         confirm(
-          "単位が変更されました。設定された単位を[単位１]に設定しますか？"
+          "単位が変更されました。設定された単位をマスタの発注単位に設定しますか？"
         )
       ) {
         master.solo_unit = true;
