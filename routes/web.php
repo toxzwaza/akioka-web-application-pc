@@ -22,7 +22,6 @@ use App\Http\Controllers\SignageContentController;
 use App\Http\Controllers\SignageController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockTabletController;
-use App\Http\Controllers\TestController;
 use App\Models\RaspiData;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemperatureAndHumidity;
@@ -31,9 +30,6 @@ use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\LabelController;
 
-Route::get('/test', [TestController::class, 'test'])->name('test');
-Route::get('/storage_address/test', [TestController::class, 'storage_address_test'])->name('storage_address.test');
-Route::get('/suppliers/test', [TestController::class, 'supplier_test'])->name('supplier.test');
 
 
 Route::get('login', [MainController::class, 'login'])->name('login');
