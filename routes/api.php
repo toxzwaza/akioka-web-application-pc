@@ -25,8 +25,6 @@ Route::get('/lunch/rotate-duty', [LunchController::class, 'rotateDuty'])->name('
 
 // 物品発注可能状況確認待ち取得
 Route::get('/stock/urlStocks', [StockController::class, 'urlStocks']);
-// 価格変更を行う
-Route::post('/stock/price/store', [StockController::class, 'priceStore']);
 
 // FAXサーバー連携API（Bearerトークン必須）
 Route::middleware('fax.token')->prefix('fax')->group(function () {

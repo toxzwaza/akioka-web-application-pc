@@ -3,7 +3,6 @@ use App\Http\Controllers\StockTabletController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/stock/test', [StockTabletController::class, 'test']);
 // 納品タブレット画面
 Route::get('/stock/receive', [StockTabletController::class, 'index'])->name('stock.tablet.receive');
 Route::get('/stock/getInitialOrders', [StockTabletController::class, 'getInitialOrders'])->name('stock.tablet.getInitialOrders');

@@ -50,7 +50,7 @@ class Helper
     }
 
     // Teamsより通知
-    public static function sendNotify($notify_users, $message)
+    public static function sendNotify($notify_users, $message, $link = null)
     {
 
         $client = new Client();
@@ -59,7 +59,8 @@ class Helper
         $response = $client->post($url, [
             'form_params' => [
                 'notify_users' => $notify_users,
-                'message' => $message
+                'message' => $message,
+                'url' => $link,
             ]
         ]);
 
@@ -220,7 +221,7 @@ class Helper
 
     public static function getAccessToken()
     {
-        $keyFilePath = storage_path('app/public/firebase/firebase-credentials.json');
+        $keyFilePath = storage_path('app/firebase/firebase-credentials.json');
         $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
 
         $credentials = new ServiceAccountCredentials($scopes, $keyFilePath);
