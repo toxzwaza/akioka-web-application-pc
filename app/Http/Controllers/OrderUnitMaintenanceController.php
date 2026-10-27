@@ -15,9 +15,8 @@ class OrderUnitMaintenanceController extends Controller
      * 発注単位整備
      * 在庫の発注単位（stocks.solo_unit）と発注実績の単位（initial_orders.order_unit）を
      * 比較する一覧を表示する。
-     * ※ カラムコメント上は org_unit が「発注単位」だが、画面（Stocks/Show）および
-     *   発注作成処理（OrderRequestController::createInitialOrder）では solo_unit が
-     *   「発注単位」として扱われているため、本画面も solo_unit を対象とする。
+     * ※ 単位の定義は solo_unit=発注単位・org_unit=在庫単位（両アプリ共通。
+     *   2026_10_27_100000_update_stocks_unit_comments でカラムコメントも統一）
      */
     public function index(Request $request)
     {
