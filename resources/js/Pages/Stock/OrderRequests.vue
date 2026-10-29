@@ -17,6 +17,7 @@ const props = defineProps({
   user_id: Number,
   devices: Array,
   stock_processes: Array,
+  suppliers: { type: Array, default: () => [] },
   file_base_url: { type: String, default: "https://akioka.cloud" },
 });
 // 稟議書ファイル（storage/order_request/...）の表示用URL
@@ -70,6 +71,65 @@ const editSupplier = (order_request) => {
       });
   }
   console.log(order_request);
+};
+
+// 手配先登録モーダル（在庫の手配先マスタにも反映）
+const supplier_modal = reactive({
+  show: false,
+  order_request: null,
+  search_text: "",
+  lead_time: null,
+  saving: false,
+});
+
+const openSupplierModal = (order_request) => {
+  supplier_modal.order_request = order_request;
+  supplier_modal.search_text = "";
+  supplier_modal.lead_time = null;
+  supplier_modal.show = true;
+};
+
+// 入力した手配先名から手配先を特定（完全一致を優先し、なければ部分一致）
+const resolveModalSupplier = () => {
+  const text = supplier_modal.search_text.trim();
+  if (!text) return null;
+  return (
+    props.suppliers.find((s) => s.name === text) ??
+    props.suppliers.find((s) => s.name && s.name.includes(text)) ??
+    null
+  );
+};
+
+const registerSupplier = async () => {
+  const supplier = resolveModalSupplier();
+  if (!supplier) {
+    return alert("手配先が見つかりません。候補から選択してください。");
+  }
+  const lead_time = Number(supplier_modal.lead_time);
+  if (supplier_modal.lead_time === null || supplier_modal.lead_time === "" || !Number.isInteger(lead_time) || lead_time < 0) {
+    return alert("リードタイム（日数）を0以上の整数で入力してください。");
+  }
+
+  supplier_modal.saving = true;
+  try {
+    const res = await axios.post(route("stock.registerSupplier"), {
+      order_request_id: supplier_modal.order_request.order_request_id,
+      supplier_id: supplier.id,
+      lead_time: lead_time,
+    });
+    if (!res.data.status) {
+      return alert(res.data.msg || "手配先の登録に失敗しました。");
+    }
+    supplier_modal.show = false;
+    // 同じ在庫の他の発注依頼にも反映されるよう一覧を取り直す
+    await getOrderRequests(order_config.user_id);
+    alert(`手配先「${supplier.name}」（リードタイム${lead_time}日）を登録しました。`);
+  } catch (error) {
+    console.log(error);
+    alert("手配先の登録に失敗しました。");
+  } finally {
+    supplier_modal.saving = false;
+  }
 };
 
 const sendRejectInitialOrder = (order_request_id) => {
@@ -1306,6 +1366,72 @@ onMounted(() => {
         </template>
       </ModalShell>
 
+      <!-- 手配先登録モーダル -->
+      <ModalShell
+        :show="supplier_modal.show"
+        title="手配先・リードタイムの登録"
+        max-width="lg"
+        @close="supplier_modal.show = false"
+      >
+        <div v-if="supplier_modal.order_request" class="space-y-4">
+          <div class="rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+            <div class="text-gray-500">対象の物品</div>
+            <div class="font-medium text-gray-900">
+              {{ displayProductName(supplier_modal.order_request) }}
+              <span class="text-gray-500">
+                {{ displayProductSName(supplier_modal.order_request) }}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label for="supplier_modal_supplier" class="mb-1 block text-sm font-semibold text-gray-700">
+              手配先 <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="supplier_modal_supplier"
+              v-model="supplier_modal.search_text"
+              type="text"
+              list="supplier_modal_suppliers"
+              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              placeholder="手配先名で検索"
+              autocomplete="off"
+            />
+            <datalist id="supplier_modal_suppliers">
+              <option v-for="supplier in props.suppliers" :key="supplier.id" :value="supplier.name">
+                {{ supplier.supplier_no ? `${supplier.supplier_no} : ${supplier.name}` : "" }}
+              </option>
+            </datalist>
+          </div>
+
+          <div>
+            <label for="supplier_modal_lead_time" class="mb-1 block text-sm font-semibold text-gray-700">
+              リードタイム（日） <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="supplier_modal_lead_time"
+              v-model="supplier_modal.lead_time"
+              type="number"
+              min="0"
+              step="1"
+              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              placeholder="日数を入力"
+            />
+          </div>
+
+          <p class="text-xs text-gray-500">
+            登録すると、この物品の手配先マスタ（在庫詳細の「手配先設定」）にも追加されます。既に登録済みの手配先はリードタイムを更新します。
+          </p>
+        </div>
+
+        <template #footer>
+          <Button variant="secondary" @click="supplier_modal.show = false">キャンセル</Button>
+          <Button variant="primary" :disabled="supplier_modal.saving" @click="registerSupplier">
+            {{ supplier_modal.saving ? "登録中..." : "登録" }}
+          </Button>
+        </template>
+      </ModalShell>
+
       <!-- Login Section -->
       <div v-if="!order_config.user_id" class="login-section mb-8">
         <UserLogin
@@ -1978,15 +2104,14 @@ onMounted(() => {
                       >
 
                       <span v-else class="text-sm text-red-500 underline"
-                        ><a
+                        ><button
                           v-if="order_request.stock_id"
-                          :href="
-                            route('stock.show.stocks', {
-                              stock_id: order_request.stock_id,
-                            })
-                          "
-                          >取引先を設定してください。</a
-                        ></span
+                          type="button"
+                          class="underline"
+                          @click="openSupplierModal(order_request)"
+                        >
+                          取引先を設定してください。
+                        </button></span
                       >
                     </td>
 

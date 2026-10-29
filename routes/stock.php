@@ -63,6 +63,8 @@ Route::delete('/order-requests/delete/approval_document', [OrderRequestControlle
 Route::post('/order-requests/send-device-message', [OrderRequestController::class, 'sendDeviceMessage'])->name('stock.sendDeviceMessage');
 // 発注先再ロード
 Route::post('/order-requests/reload/supplier', [OrderRequestController::class, 'reloadSupplier'])->name('stock.reloadSupplier');
+// 発注依頼一覧から手配先・リードタイム登録（マスタにも反映）
+Route::post('/order-requests/register/supplier', [OrderRequestController::class, 'registerSupplier'])->name('stock.registerSupplier');
 
 
 

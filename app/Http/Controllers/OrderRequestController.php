@@ -40,7 +40,10 @@ class OrderRequestController extends Controller
         // 工程一覧
         $stock_processes = StockProcess::all();
 
-        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices, 'stock_processes' => $stock_processes, 'file_base_url' => config('services.akioka_cloud.url')]);
+        // 手配先一覧（手配先登録モーダル用）
+        $suppliers = Supplier::select('id', 'name', 'supplier_no')->orderBy('name')->get();
+
+        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices, 'stock_processes' => $stock_processes, 'suppliers' => $suppliers, 'file_base_url' => config('services.akioka_cloud.url')]);
     }
 
     public function getOrderRequests(Request $request)
@@ -159,6 +162,7 @@ class OrderRequestController extends Controller
                         $order_request->supplier_id = $stock_supplier->id;
                         $order_request->save();
                         $order_request->supplier_name = $stock_supplier->name;
+                        $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
                     }
                 }
 
@@ -703,6 +707,58 @@ class OrderRequestController extends Controller
                 $order_request->supplier_id = $stock_supplier->supplier_id;
                 $order_request->save();
             }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
+    /**
+     * 発注依頼一覧から手配先・リードタイムを登録（在庫の手配先マスタにも反映）
+     */
+    public function registerSupplier(Request $request)
+    {
+        $request->validate([
+            'order_request_id' => 'required|integer',
+            'supplier_id' => 'required|integer|exists:suppliers,id',
+            'lead_time' => 'required|integer|min:0',
+        ]);
+
+        $status = true;
+        $msg = "";
+
+        try {
+            $order_request = OrderRequest::findOrFail($request->order_request_id);
+            if (!$order_request->stock_id) {
+                return response()->json(['status' => false, 'msg' => '在庫が未登録の発注依頼には手配先を登録できません。']);
+            }
+            $supplier = Supplier::find($request->supplier_id);
+
+            DB::transaction(function () use ($order_request, $supplier, $request) {
+                // 在庫の手配先マスタ（既にあればリードタイムを更新）
+                $stock_supplier = StockSupplier::firstOrNew([
+                    'stock_id' => $order_request->stock_id,
+                    'supplier_id' => $supplier->id,
+                ]);
+                $stock_supplier->lead_time = $request->lead_time;
+                // メインの手配先が無ければメインにする
+                $has_main = StockSupplier::where('stock_id', $order_request->stock_id)
+                    ->where('main_flg', 1)
+                    ->when($stock_supplier->exists, fn ($q) => $q->where('id', '!=', $stock_supplier->id))
+                    ->exists();
+                if (!$has_main) {
+                    $stock_supplier->main_flg = 1;
+                }
+                $stock_supplier->save();
+
+                $order_request->supplier_id = $supplier->id;
+                $order_request->supplier_name = $supplier->name;
+                $order_request->stock_supplier_lead_time = $request->lead_time;
+                $order_request->lead_time = $request->lead_time;
+                $order_request->save();
+            });
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();
