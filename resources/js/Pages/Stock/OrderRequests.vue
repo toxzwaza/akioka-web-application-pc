@@ -262,6 +262,24 @@ const displayProductSName = (or) => {
   return or.s_name ? or.s_name : (or.order_request_s_name ?? "");
 };
 
+/** 稟議書の表示用データ（稟議書本体に発注依頼の項目を合わせる。物品システムの承認画面と同じ項目） */
+const approvalDocumentOf = (or) => {
+  if (!or?.document_data) return null;
+  return {
+    ...or.document_data,
+    process_name: or.request_user_process_name,
+    user_name: or.request_user_name,
+    desire_delivery_date: or.desire_delivery_date,
+    supplier_name: or.supplier_name ?? or.document_data.supplier_name,
+    price: or.price,
+    quantity: or.quantity,
+    calc_price: or.calc_price,
+    name: displayProductName(or),
+    s_name: displayProductSName(or),
+    approvals: normalizeApprovals(or.order_request_approvals),
+  };
+};
+
 /** 一覧の承認状態ボタン文言と揃える */
 const acceptFlgLabel = (flg) => {
   const n = Number(flg);
@@ -1244,7 +1262,7 @@ onMounted(() => {
         <div v-show="ringi_modal.tab === 'ringi'" class="ringi-panel">
           <div v-if="ringi_modal.order_request?.document_data">
             <ApprovalDocument
-              :approval_document="ringi_modal.order_request.document_data"
+              :approval_document="approvalDocumentOf(ringi_modal.order_request)"
             />
           </div>
           <p v-else class="ringi-empty">稟議書データがありません</p>
@@ -2651,9 +2669,7 @@ onMounted(() => {
               <div id="pdfviewer">
                 <div v-if="modal_status.order_request?.document_data">
                   <ApprovalDocument
-                    :approval_document="
-                      modal_status.order_request.document_data
-                    "
+                    :approval_document="approvalDocumentOf(modal_status.order_request)"
                   />
                 </div>
                 

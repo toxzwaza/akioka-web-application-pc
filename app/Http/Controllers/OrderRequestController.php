@@ -82,6 +82,7 @@ class OrderRequestController extends Controller
                 'order_requests.document_id',  //稟議書
                 'users.name as request_user_name',
                 'users.id as request_user_id',
+                'request_user_processes.name as request_user_process_name', //稟議書の起案部門
                 'order_users.name as order_user_name',
                 'order_users.id as order_user_id',
                 'order_requests.postage',
@@ -101,6 +102,7 @@ class OrderRequestController extends Controller
             )
                 ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
+                ->leftJoin('processes as request_user_processes', 'request_user_processes.id', '=', 'users.process_id')
                 ->leftJoin('users as order_users', 'order_users.id', '=', 'order_requests.user_id')
                 ->leftJoin('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')
                 ->leftJoin('stock_suppliers', function ($join) {
