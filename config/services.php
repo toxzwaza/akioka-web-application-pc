@@ -35,4 +35,9 @@ return [
         'token' => env('FAX_API_TOKEN'),
     ],
 
+    // 稟議書ファイルの保存・削除・表示に使う物品システム（akioka-cloud-iot-legacy）
+    'akioka_cloud' => [
+        'url' => rtrim(env('AKIOKA_CLOUD_URL', 'https://akioka.cloud'), '/'),
+    ],
+
 ];

@@ -10,6 +10,10 @@ class OrderRequest extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'file_path_sub' => 'array',
+    ];
+
     public function stock(): BelongsTo
     {
         return $this->belongsTo(Stock::class, 'stock_id');

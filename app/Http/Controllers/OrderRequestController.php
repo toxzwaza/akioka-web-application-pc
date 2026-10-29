@@ -40,7 +40,10 @@ class OrderRequestController extends Controller
         // 工程一覧
         $stock_processes = StockProcess::all();
 
-        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices, 'stock_processes' => $stock_processes]);
+        // 手配先一覧（手配先登録モーダル用）
+        $suppliers = Supplier::select('id', 'name', 'supplier_no')->orderBy('name')->get();
+
+        return Inertia::render('Stock/OrderRequests', ['order_users' => $order_users, 'user_id' => $user_id, 'devices' => $devices, 'stock_processes' => $stock_processes, 'suppliers' => $suppliers, 'file_base_url' => config('services.akioka_cloud.url')]);
     }
 
     public function getOrderRequests(Request $request)
@@ -82,6 +85,7 @@ class OrderRequestController extends Controller
                 'order_requests.document_id',  //稟議書
                 'users.name as request_user_name',
                 'users.id as request_user_id',
+                'request_user_processes.name as request_user_process_name', //稟議書の起案部門
                 'order_users.name as order_user_name',
                 'order_users.id as order_user_id',
                 'order_requests.postage',
@@ -101,6 +105,7 @@ class OrderRequestController extends Controller
             )
                 ->leftJoin('stocks', 'stocks.id', '=', 'order_requests.stock_id')
                 ->leftJoin('users', 'users.id', '=', 'order_requests.request_user_id')
+                ->leftJoin('processes as request_user_processes', 'request_user_processes.id', '=', 'users.process_id')
                 ->leftJoin('users as order_users', 'order_users.id', '=', 'order_requests.user_id')
                 ->leftJoin('suppliers', 'suppliers.id', '=', 'order_requests.supplier_id')
                 ->leftJoin('stock_suppliers', function ($join) {
@@ -157,6 +162,7 @@ class OrderRequestController extends Controller
                         $order_request->supplier_id = $stock_supplier->id;
                         $order_request->save();
                         $order_request->supplier_name = $stock_supplier->name;
+                        $order_request->stock_supplier_lead_time = $stock_supplier->lead_time;
                     }
                 }
 
@@ -470,81 +476,95 @@ class OrderRequestController extends Controller
     }
 
     // 発注依頼一覧から
+    // mode=append：既存の稟議書の後ろに追加／mode=replace：アップロード済みの稟議書をすべて新しいものに入れ替える
+    // （document_id のシステム内稟議書は対象外）
     public function storeApprovalDocument(Request $request)
     {
         $status = true;
         $message = '';
-        $file_url = null;
+        $file_urls = [];
 
-        $upload_file = $request->file('upload_file');
+        $upload_files = $request->file('upload_files') ?? [];
+        if ($request->file('upload_file')) {
+            $upload_files[] = $request->file('upload_file');
+        }
         $order_request_id = $request->order_request_id;
+        $mode = $request->mode === 'replace' ? 'replace' : 'append';
+        $before_paths = null;
+        $saved = false;
 
         try {
-            // 稟議書がある場合
-            if ($upload_file) {
-                // VPSのLaravel APIのエンドポイントURL（例）
-                $vpsApiUrl = 'https://akioka.cloud/api/order_request/upload_file';
+            if (count($upload_files) === 0) {
+                throw new Exception('ファイルがアップロードされていません。');
+            }
 
-                // POSTリクエストをマルチパート形式で送信
-                // SSL証明書の検証を無効化（開発環境用）
+            $order_request = OrderRequest::find($order_request_id);
+            if (!$order_request) {
+                throw new Exception('発注依頼が見つかりません。');
+            }
+
+            // 物品システムのAPIは保存のたびに file_path を上書きするため、呼ぶ前の添付を控えておく
+            $before_paths = $this->approvalFilePaths($order_request);
+
+            // ファイル名が秒単位で決まるため、1件ずつ順番に保存する
+            foreach ($upload_files as $upload_file) {
                 $response = Http::withoutVerifying()
                     ->asMultipart()
                     ->attach(
-                        'upload_file', // 相手側のAPIが期待するinput名
+                        'upload_file',
                         file_get_contents($upload_file->getRealPath()),
                         $upload_file->getClientOriginalName()
                     )
-                    ->post($vpsApiUrl, [
-                        // 他に送信したいデータがあればここに追加
+                    ->post($this->akiokaCloudUrl('/api/order_request/upload_file'), [
                         'order_request_id' => $order_request_id,
                     ]);
 
-                // レスポンスを確認
-                if ($response->successful()) {
-                    $responseData = $response->json();
-                    if (isset($responseData['file_url'])) {
-                        $file_url = $responseData['file_url'];
-                        
-                        // OrderRequestを取得
-                        $order_request = OrderRequest::find($order_request_id);
-                        if ($order_request) {
-                            // 既存のfile_path_subを取得（配列）
-                            $file_path_sub = $order_request->file_path_sub ?? [];
-                            
-                            // 新しいファイルパスを配列に追加
-                            if (!in_array($file_url, $file_path_sub)) {
-                                $file_path_sub[] = $file_url;
-                                $order_request->file_path_sub = $file_path_sub;
-                                $order_request->save();
-                            }
-                            
-                            $message = 'ファイルアップロード成功';
-                        } else {
-                            throw new Exception('発注依頼が見つかりません。');
-                        }
-                    } else {
-                        throw new Exception('VPS APIからのレスポンスにfile_urlが含まれていません。');
-                    }
-                } else {
-                    throw new Exception('VPS APIへのリクエストが失敗しました。');
+                if (!$response->successful() || !$response->json('status') || !$response->json('file_url')) {
+                    throw new Exception('物品システムへのファイル保存に失敗しました。' . ($response->json('message') ?? ''));
                 }
-            } else {
-                throw new Exception('ファイルがアップロードされていません。');
+                $file_urls[] = $response->json('file_url');
             }
+
+            DB::transaction(function () use ($order_request_id, $mode, $before_paths, $file_urls) {
+                $order_request = OrderRequest::lockForUpdate()->find($order_request_id);
+                $paths = $mode === 'replace' ? $file_urls : array_merge($before_paths, $file_urls);
+                $this->saveApprovalFilePaths($order_request, $paths);
+            });
+            $saved = true;
+
+            // 入れ替えで外れたファイルは、他の発注依頼が使っていなければ削除する
+            if ($mode === 'replace') {
+                foreach (array_diff($before_paths, $file_urls) as $removed_path) {
+                    $this->deleteApprovalFileIfUnused($removed_path);
+                }
+            }
+
+            $message = ($mode === 'replace' ? '稟議書を入れ替えました。' : '稟議書を追加しました。');
         } catch (Exception $e) {
             $status = false;
             $message = $e->getMessage();
             Log::error('storeApprovalDocument error: ' . $e->getMessage());
+
+            // 途中で失敗したときは、物品システムが上書きした file_path を元に戻し、保存済みのファイルを片付ける
+            if ($before_paths !== null && !$saved && count($file_urls) > 0) {
+                $order_request = OrderRequest::find($order_request_id);
+                $this->saveApprovalFilePaths($order_request, $before_paths);
+                foreach ($file_urls as $file_url) {
+                    $this->deleteApprovalFileIfUnused($file_url);
+                }
+                $file_urls = [];
+            }
         }
 
         return response()->json([
             'status' => $status,
             'message' => $message,
-            'file_url' => $file_url,
+            'file_url' => $file_urls[0] ?? null,
+            'file_urls' => $file_urls,
         ]);
     }
 
-    // ファイル削除
+    // ファイル削除（file_path の稟議書も削除できる。残りの先頭を file_path にする）
     public function deleteApprovalDocument(Request $request)
     {
         $status = true;
@@ -558,40 +578,23 @@ class OrderRequestController extends Controller
                 throw new Exception('ファイルパスが指定されていません。');
             }
 
-            // OrderRequestを取得
-            $order_request = OrderRequest::find($order_request_id);
-            if (!$order_request) {
-                throw new Exception('発注依頼が見つかりません。');
-            }
-
-            // file_path_subから該当ファイルを削除
-            $file_path_sub = $order_request->file_path_sub ?? [];
-            $key = array_search($file_path, $file_path_sub);
-            
-            if ($key !== false) {
-                // 配列から削除
-                unset($file_path_sub[$key]);
-                $file_path_sub = array_values($file_path_sub); // インデックスを再振り当て
-                $order_request->file_path_sub = $file_path_sub;
-                $order_request->save();
-
-                // VPS APIの削除エンドポイントを呼び出し
-                // SSL証明書の検証を無効化（開発環境用）
-                $vpsApiUrl = 'https://akioka.cloud/api/order_request/delete_file';
-                $response = Http::withoutVerifying()->delete($vpsApiUrl, [
-                    'file_path' => $file_path,
-                ]);
-
-                if ($response->successful()) {
-                    $message = 'ファイル削除成功';
-                } else {
-                    // VPS APIの削除が失敗しても、データベースからは削除済み
-                    $message = 'ファイルをデータベースから削除しましたが、VPS APIでの削除に失敗しました。';
-                    Log::warning('VPS API delete_file failed: ' . $response->body());
+            DB::transaction(function () use ($order_request_id, $file_path) {
+                $order_request = OrderRequest::lockForUpdate()->find($order_request_id);
+                if (!$order_request) {
+                    throw new Exception('発注依頼が見つかりません。');
                 }
-            } else {
-                throw new Exception('指定されたファイルが見つかりません。');
-            }
+
+                $paths = $this->approvalFilePaths($order_request);
+                if (!in_array($file_path, $paths, true)) {
+                    throw new Exception('指定されたファイルが見つかりません。');
+                }
+
+                $this->saveApprovalFilePaths($order_request, array_diff($paths, [$file_path]));
+            });
+
+            $message = $this->deleteApprovalFileIfUnused($file_path)
+                ? 'ファイル削除成功'
+                : '発注依頼から外しました（ファイル本体は他の発注依頼で使用中、または削除に失敗したため残しています）。';
         } catch (Exception $e) {
             $status = false;
             $message = $e->getMessage();
@@ -602,6 +605,58 @@ class OrderRequestController extends Controller
             'status' => $status,
             'message' => $message,
         ]);
+    }
+
+    // 発注依頼に添付された稟議書ファイルの一覧（file_path を先頭に、重複を除く）
+    private function approvalFilePaths(OrderRequest $order_request): array
+    {
+        $sub = $order_request->file_path_sub;
+        $paths = array_merge(
+            $order_request->file_path ? [$order_request->file_path] : [],
+            is_array($sub) ? array_filter($sub, 'is_string') : []
+        );
+
+        return array_values(array_unique(array_filter($paths)));
+    }
+
+    // 先頭を file_path、残りを file_path_sub に保存する（物品システム側の画面は file_path だけを見るため）
+    private function saveApprovalFilePaths(OrderRequest $order_request, array $paths): void
+    {
+        $paths = array_values(array_unique(array_filter($paths)));
+        $order_request->file_path = $paths[0] ?? null;
+        $order_request->file_path_sub = array_slice($paths, 1) ?: null;
+        $order_request->save();
+    }
+
+    // 他の発注依頼が参照していないときだけ、物品システム上のファイル本体を削除する
+    private function deleteApprovalFileIfUnused(string $file_path): bool
+    {
+        $in_use = OrderRequest::where('file_path', $file_path)
+            ->orWhere('file_path_sub', 'like', '%' . str_replace('/', '\\\\/', $file_path) . '%')
+            ->orWhere('file_path_sub', 'like', '%' . $file_path . '%')
+            ->exists();
+        if ($in_use) {
+            return false;
+        }
+
+        try {
+            $response = Http::withoutVerifying()->delete($this->akiokaCloudUrl('/api/order_request/delete_file'), [
+                'file_path' => $file_path,
+            ]);
+            if ($response->successful() && $response->json('status')) {
+                return true;
+            }
+            Log::warning('VPS API delete_file failed: ' . $response->body());
+        } catch (Exception $e) {
+            Log::warning('VPS API delete_file error: ' . $e->getMessage());
+        }
+
+        return false;
+    }
+
+    private function akiokaCloudUrl(string $path): string
+    {
+        return config('services.akioka_cloud.url') . $path;
     }
 
     // デバイスメッセージを取得
@@ -652,6 +707,58 @@ class OrderRequestController extends Controller
                 $order_request->supplier_id = $stock_supplier->supplier_id;
                 $order_request->save();
             }
+        } catch (Exception $e) {
+            $status = false;
+            $msg = $e->getMessage();
+        }
+
+        return response()->json(['status' => $status, 'msg' => $msg]);
+    }
+
+    /**
+     * 発注依頼一覧から手配先・リードタイムを登録（在庫の手配先マスタにも反映）
+     */
+    public function registerSupplier(Request $request)
+    {
+        $request->validate([
+            'order_request_id' => 'required|integer',
+            'supplier_id' => 'required|integer|exists:suppliers,id',
+            'lead_time' => 'required|integer|min:0',
+        ]);
+
+        $status = true;
+        $msg = "";
+
+        try {
+            $order_request = OrderRequest::findOrFail($request->order_request_id);
+            if (!$order_request->stock_id) {
+                return response()->json(['status' => false, 'msg' => '在庫が未登録の発注依頼には手配先を登録できません。']);
+            }
+            $supplier = Supplier::find($request->supplier_id);
+
+            DB::transaction(function () use ($order_request, $supplier, $request) {
+                // 在庫の手配先マスタ（既にあればリードタイムを更新）
+                $stock_supplier = StockSupplier::firstOrNew([
+                    'stock_id' => $order_request->stock_id,
+                    'supplier_id' => $supplier->id,
+                ]);
+                $stock_supplier->lead_time = $request->lead_time;
+                // メインの手配先が無ければメインにする
+                $has_main = StockSupplier::where('stock_id', $order_request->stock_id)
+                    ->where('main_flg', 1)
+                    ->when($stock_supplier->exists, fn ($q) => $q->where('id', '!=', $stock_supplier->id))
+                    ->exists();
+                if (!$has_main) {
+                    $stock_supplier->main_flg = 1;
+                }
+                $stock_supplier->save();
+
+                $order_request->supplier_id = $supplier->id;
+                $order_request->supplier_name = $supplier->name;
+                $order_request->stock_supplier_lead_time = $request->lead_time;
+                $order_request->lead_time = $request->lead_time;
+                $order_request->save();
+            });
         } catch (Exception $e) {
             $status = false;
             $msg = $e->getMessage();

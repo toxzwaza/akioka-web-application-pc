@@ -17,7 +17,11 @@ const props = defineProps({
   user_id: Number,
   devices: Array,
   stock_processes: Array,
+  suppliers: { type: Array, default: () => [] },
+  file_base_url: { type: String, default: "https://akioka.cloud" },
 });
+// 稟議書ファイル（storage/order_request/...）の表示用URL
+const fileUrl = (path) => `${props.file_base_url}/${String(path).replace(/^\/+/, "")}`;
 const form = reactive({
   upload_file: null,
 });
@@ -69,6 +73,65 @@ const editSupplier = (order_request) => {
   console.log(order_request);
 };
 
+// 手配先登録モーダル（在庫の手配先マスタにも反映）
+const supplier_modal = reactive({
+  show: false,
+  order_request: null,
+  search_text: "",
+  lead_time: null,
+  saving: false,
+});
+
+const openSupplierModal = (order_request) => {
+  supplier_modal.order_request = order_request;
+  supplier_modal.search_text = "";
+  supplier_modal.lead_time = null;
+  supplier_modal.show = true;
+};
+
+// 入力した手配先名から手配先を特定（完全一致を優先し、なければ部分一致）
+const resolveModalSupplier = () => {
+  const text = supplier_modal.search_text.trim();
+  if (!text) return null;
+  return (
+    props.suppliers.find((s) => s.name === text) ??
+    props.suppliers.find((s) => s.name && s.name.includes(text)) ??
+    null
+  );
+};
+
+const registerSupplier = async () => {
+  const supplier = resolveModalSupplier();
+  if (!supplier) {
+    return alert("手配先が見つかりません。候補から選択してください。");
+  }
+  const lead_time = Number(supplier_modal.lead_time);
+  if (supplier_modal.lead_time === null || supplier_modal.lead_time === "" || !Number.isInteger(lead_time) || lead_time < 0) {
+    return alert("リードタイム（日数）を0以上の整数で入力してください。");
+  }
+
+  supplier_modal.saving = true;
+  try {
+    const res = await axios.post(route("stock.registerSupplier"), {
+      order_request_id: supplier_modal.order_request.order_request_id,
+      supplier_id: supplier.id,
+      lead_time: lead_time,
+    });
+    if (!res.data.status) {
+      return alert(res.data.msg || "手配先の登録に失敗しました。");
+    }
+    supplier_modal.show = false;
+    // 同じ在庫の他の発注依頼にも反映されるよう一覧を取り直す
+    await getOrderRequests(order_config.user_id);
+    alert(`手配先「${supplier.name}」（リードタイム${lead_time}日）を登録しました。`);
+  } catch (error) {
+    console.log(error);
+    alert("手配先の登録に失敗しました。");
+  } finally {
+    supplier_modal.saving = false;
+  }
+};
+
 const sendRejectInitialOrder = (order_request_id) => {
   axios
     .post(route("stock.accept.order_request.reject"), {
@@ -88,72 +151,76 @@ const sendRejectInitialOrder = (order_request_id) => {
     });
 };
 
-const uploadFile = (event) => {
-  const files = event.target.files;
-  if (!files || files.length === 0) {
+// 既存の稟議書がある場合のアップロード方法（append：追加／replace：入れ替え）
+const upload_mode = ref("append");
+const is_uploading = ref(false);
+
+// 一覧を取り直してから、開いているモーダルを最新の内容で開き直す
+const reloadModal = async (order_request_id) => {
+  if (order_config.user_id) {
+    await getOrderRequests(order_config.user_id);
+  }
+  const order_request = order_requests.value.find(
+    (req) => req.id === order_request_id
+  );
+  if (order_request) {
+    openModal(order_request);
+  }
+};
+
+const uploadFile = async (event) => {
+  const files = Array.from(event.target.files || []);
+  // ファイル入力欄をリセット（同じファイルを続けて選べるように）
+  event.target.value = "";
+  if (files.length === 0 || is_uploading.value) {
     return;
   }
 
-  // 複数ファイルを順次アップロード
-  const uploadPromises = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const formData = new FormData();
-    formData.append("upload_file", file);
-    
-    if (modal_status.order_request && modal_status.order_request.id) {
-      formData.append("order_request_id", modal_status.order_request.id);
-    }
-
-    uploadPromises.push(
-      axios.post(route("stock.store.approval_document"), formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-    );
+  const order_request_id = modal_status.order_request?.id;
+  const existing_count = modal_status.file_paths.length;
+  const mode = existing_count > 0 ? upload_mode.value : "append";
+  if (
+    mode === "replace" &&
+    !confirm(
+      `登録済みの稟議書${existing_count}件を削除し、選んだ${files.length}件に入れ替えます。よろしいですか？`
+    )
+  ) {
+    return;
   }
 
-  // すべてのアップロードが完了するまで待機
-  Promise.all(uploadPromises)
-    .then((responses) => {
-      console.log("Upload responses:", responses); // デバッグ用
-      const successCount = responses.filter((res) => res.data.status).length;
-      const failedResponses = responses.filter((res) => !res.data.status);
-      
-      if (failedResponses.length > 0) {
-        // 失敗したレスポンスの詳細を表示
-        console.error("Failed uploads:", failedResponses);
-        const errorMessages = failedResponses.map((res) => res.data.message || "不明なエラー").join("\n");
-        alert(`ファイルのアップロードに失敗しました。\n\nエラー詳細:\n${errorMessages}`);
-      }
-      
-      if (successCount > 0) {
-        alert(`${successCount}件のファイルを登録しました。`);
-        // データを再読み込み
-        if (order_config.user_id) {
-          getOrderRequests(order_config.user_id);
-        }
-        // モーダルを再オープンして最新データを表示
-        const order_request = order_requests.value.find(
-          (req) => req.id === modal_status.order_request.id
-        );
-        if (order_request) {
-          openModal(order_request);
-        }
-      } else if (failedResponses.length === 0) {
-        alert("ファイルのアップロードに失敗しました。");
-      }
-    })
-    .catch((error) => {
-      console.error("Upload error:", error);
-      console.error("Error response:", error.response);
-      const errorMessage = error.response?.data?.message || error.message || "不明なエラー";
-      alert(`ファイルのアップロード中にエラーが発生しました。\n\nエラー: ${errorMessage}`);
-    });
+  const formData = new FormData();
+  formData.append("order_request_id", order_request_id);
+  formData.append("mode", mode);
+  files.forEach((file) => formData.append("upload_files[]", file));
 
-  // ファイル入力欄をリセット
-  event.target.value = "";
+  is_uploading.value = true;
+  try {
+    const res = await axios.post(
+      route("stock.store.approval_document"),
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    if (res.data.status) {
+      alert(
+        mode === "replace"
+          ? `${files.length}件の稟議書に入れ替えました。`
+          : `${files.length}件の稟議書を登録しました。`
+      );
+      upload_mode.value = "append";
+      await reloadModal(order_request_id);
+    } else {
+      alert(
+        `ファイルのアップロードに失敗しました。\n\nエラー詳細:\n${res.data.message || "不明なエラー"}`
+      );
+    }
+  } catch (error) {
+    console.error("Upload error:", error);
+    const errorMessage =
+      error.response?.data?.message || error.message || "不明なエラー";
+    alert(`ファイルのアップロード中にエラーが発生しました。\n\nエラー: ${errorMessage}`);
+  } finally {
+    is_uploading.value = false;
+  }
 };
 
 const openModal = (order_request) => {
@@ -183,10 +250,9 @@ const openModal = (order_request) => {
   if (order_request.file_path) {
     modal_status.file_paths.push({
       path: order_request.file_path,
-      url: `https://akioka.cloud/${order_request.file_path}`,
-      is_legacy: true, // file_pathからのものは削除不可
+      url: fileUrl(order_request.file_path),
     });
-    modal_status.approval_path = `https://akioka.cloud/${order_request.file_path}`;
+    modal_status.approval_path = fileUrl(order_request.file_path);
   }
   
   // file_path_subがある場合は追加
@@ -196,8 +262,7 @@ const openModal = (order_request) => {
       if (!order_request.file_path || filePath !== order_request.file_path) {
         modal_status.file_paths.push({
           path: filePath,
-          url: `https://akioka.cloud/${filePath}`,
-          is_legacy: false, // file_path_subからのものは削除可能
+          url: fileUrl(filePath),
         });
       }
     });
@@ -219,41 +284,29 @@ const selectFile = (index) => {
     modal_status.approval_path = modal_status.file_paths[index].url;
   }
 };
-const deleteFile = (filePath) => {
+const deleteFile = async (filePath) => {
   if (!confirm("このファイルを削除してもよろしいですか？")) {
     return;
   }
 
-  axios
-    .delete(route("stock.delete.approval_document"), {
+  const order_request_id = modal_status.order_request.id;
+  try {
+    const res = await axios.delete(route("stock.delete.approval_document"), {
       params: {
-        order_request_id: modal_status.order_request.id,
+        order_request_id: order_request_id,
         file_path: filePath,
       },
-    })
-    .then((res) => {
-      console.log(res.data);
-      if (res.data.status) {
-        alert("ファイルを削除しました。");
-        // データを再読み込み
-        if (order_config.user_id) {
-          getOrderRequests(order_config.user_id);
-        }
-        // モーダルを再オープンして最新データを表示
-        const order_request = order_requests.value.find(
-          (req) => req.id === modal_status.order_request.id
-        );
-        if (order_request) {
-          openModal(order_request);
-        }
-      } else {
-        alert("ファイルの削除に失敗しました: " + (res.data.message || ""));
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-      alert("ファイルの削除中にエラーが発生しました。");
     });
+    if (res.data.status) {
+      alert(res.data.message || "ファイルを削除しました。");
+      await reloadModal(order_request_id);
+    } else {
+      alert("ファイルの削除に失敗しました: " + (res.data.message || ""));
+    }
+  } catch (error) {
+    console.log(error);
+    alert("ファイルの削除中にエラーが発生しました。");
+  }
 };
 
 /** 一覧テーブルと同じ品名表示 */
@@ -267,6 +320,24 @@ const displayProductName = (or) => {
 const displayProductSName = (or) => {
   if (!or) return "";
   return or.s_name ? or.s_name : (or.order_request_s_name ?? "");
+};
+
+/** 稟議書の表示用データ（稟議書本体に発注依頼の項目を合わせる。物品システムの承認画面と同じ項目） */
+const approvalDocumentOf = (or) => {
+  if (!or?.document_data) return null;
+  return {
+    ...or.document_data,
+    process_name: or.request_user_process_name,
+    user_name: or.request_user_name,
+    desire_delivery_date: or.desire_delivery_date,
+    supplier_name: or.supplier_name ?? or.document_data.supplier_name,
+    price: or.price,
+    quantity: or.quantity,
+    calc_price: or.calc_price,
+    name: displayProductName(or),
+    s_name: displayProductSName(or),
+    approvals: normalizeApprovals(or.order_request_approvals),
+  };
 };
 
 /** 一覧の承認状態ボタン文言と揃える */
@@ -579,7 +650,7 @@ const getOrderRequests = (user_id) => {
   // ローディング開始
   isDataLoading.value = true;
 
-  axios
+  return axios
     .get(route("stock.getOrderRequests"), {
       params: {
         user_id: user_id,
@@ -1167,12 +1238,12 @@ const buildFilePaths = (order_request) => {
   if (order_request.file_path) {
     paths.push({
       path: order_request.file_path,
-      url: `https://akioka.cloud/${order_request.file_path}`,
+      url: fileUrl(order_request.file_path),
     });
   }
   (sub || []).forEach((fp) => {
     if (!order_request.file_path || fp !== order_request.file_path) {
-      paths.push({ path: fp, url: `https://akioka.cloud/${fp}` });
+      paths.push({ path: fp, url: fileUrl(fp) });
     }
   });
   return paths;
@@ -1251,7 +1322,7 @@ onMounted(() => {
         <div v-show="ringi_modal.tab === 'ringi'" class="ringi-panel">
           <div v-if="ringi_modal.order_request?.document_data">
             <ApprovalDocument
-              :approval_document="ringi_modal.order_request.document_data"
+              :approval_document="approvalDocumentOf(ringi_modal.order_request)"
             />
           </div>
           <p v-else class="ringi-empty">稟議書データがありません</p>
@@ -1291,6 +1362,72 @@ onMounted(() => {
         <template #footer>
           <Button variant="primary" @click="ringi_modal.show = false">
             閉じる
+          </Button>
+        </template>
+      </ModalShell>
+
+      <!-- 手配先登録モーダル -->
+      <ModalShell
+        :show="supplier_modal.show"
+        title="手配先・リードタイムの登録"
+        max-width="lg"
+        @close="supplier_modal.show = false"
+      >
+        <div v-if="supplier_modal.order_request" class="space-y-4">
+          <div class="rounded border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+            <div class="text-gray-500">対象の物品</div>
+            <div class="font-medium text-gray-900">
+              {{ displayProductName(supplier_modal.order_request) }}
+              <span class="text-gray-500">
+                {{ displayProductSName(supplier_modal.order_request) }}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label for="supplier_modal_supplier" class="mb-1 block text-sm font-semibold text-gray-700">
+              手配先 <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="supplier_modal_supplier"
+              v-model="supplier_modal.search_text"
+              type="text"
+              list="supplier_modal_suppliers"
+              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              placeholder="手配先名で検索"
+              autocomplete="off"
+            />
+            <datalist id="supplier_modal_suppliers">
+              <option v-for="supplier in props.suppliers" :key="supplier.id" :value="supplier.name">
+                {{ supplier.supplier_no ? `${supplier.supplier_no} : ${supplier.name}` : "" }}
+              </option>
+            </datalist>
+          </div>
+
+          <div>
+            <label for="supplier_modal_lead_time" class="mb-1 block text-sm font-semibold text-gray-700">
+              リードタイム（日） <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="supplier_modal_lead_time"
+              v-model="supplier_modal.lead_time"
+              type="number"
+              min="0"
+              step="1"
+              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              placeholder="日数を入力"
+            />
+          </div>
+
+          <p class="text-xs text-gray-500">
+            登録すると、この物品の手配先マスタ（在庫詳細の「手配先設定」）にも追加されます。既に登録済みの手配先はリードタイムを更新します。
+          </p>
+        </div>
+
+        <template #footer>
+          <Button variant="secondary" @click="supplier_modal.show = false">キャンセル</Button>
+          <Button variant="primary" :disabled="supplier_modal.saving" @click="registerSupplier">
+            {{ supplier_modal.saving ? "登録中..." : "登録" }}
           </Button>
         </template>
       </ModalShell>
@@ -1967,15 +2104,14 @@ onMounted(() => {
                       >
 
                       <span v-else class="text-sm text-red-500 underline"
-                        ><a
+                        ><button
                           v-if="order_request.stock_id"
-                          :href="
-                            route('stock.show.stocks', {
-                              stock_id: order_request.stock_id,
-                            })
-                          "
-                          >取引先を設定してください。</a
-                        ></span
+                          type="button"
+                          class="underline"
+                          @click="openSupplierModal(order_request)"
+                        >
+                          取引先を設定してください。
+                        </button></span
                       >
                     </td>
 
@@ -2658,9 +2794,7 @@ onMounted(() => {
               <div id="pdfviewer">
                 <div v-if="modal_status.order_request?.document_data">
                   <ApprovalDocument
-                    :approval_document="
-                      modal_status.order_request.document_data
-                    "
+                    :approval_document="approvalDocumentOf(modal_status.order_request)"
                   />
                 </div>
                 
@@ -2697,12 +2831,6 @@ onMounted(() => {
                           <span class="truncate max-w-[200px]">
                             {{ fileItem.path.split('/').pop() }}
                           </span>
-                          <span
-                            v-if="fileItem.is_legacy"
-                            class="px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600"
-                          >
-                            既存
-                          </span>
                         </div>
                       </button>
                     </nav>
@@ -2728,7 +2856,6 @@ onMounted(() => {
                         新しいタブで開く
                       </a>
                       <button
-                        v-if="!modal_status.file_paths[modal_status.selected_file_index]?.is_legacy"
                         @click="deleteFile(modal_status.file_paths[modal_status.selected_file_index]?.path)"
                         class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors"
                         title="ファイルを削除"
@@ -2755,6 +2882,23 @@ onMounted(() => {
               
               <!-- アップロードセクション（常に表示） -->
               <div class="w-full mb-8">
+                <!-- 既存の稟議書があるときだけ、追加か入れ替えかを選ぶ -->
+                <div
+                  v-if="modal_status.file_paths.length > 0"
+                  class="flex flex-wrap items-center gap-4 mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <span class="text-sm font-medium text-gray-700">
+                    アップロード方法
+                  </span>
+                  <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" value="append" v-model="upload_mode" />
+                    追加（登録済みの{{ modal_status.file_paths.length }}件は残す）
+                  </label>
+                  <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" value="replace" v-model="upload_mode" />
+                    入れ替え（登録済みの{{ modal_status.file_paths.length }}件を削除）
+                  </label>
+                </div>
                 <label
                   for="dropzone-file"
                   :class="{
@@ -2780,8 +2924,11 @@ onMounted(() => {
                       />
                     </svg>
                     <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span class="font-semibold text-lg">稟議書</span
-                      >をアップロードしてください。
+                      <template v-if="is_uploading">アップロード中...</template>
+                      <template v-else>
+                        <span class="font-semibold text-lg">稟議書</span
+                        >をアップロードしてください。
+                      </template>
                     </p>
                     <p class="text-xs text-gray-400 text-center">
                       複数ファイルを選択できます（PDF形式）
@@ -2792,6 +2939,7 @@ onMounted(() => {
                     type="file"
                     class="hidden"
                     @change="uploadFile"
+                    :disabled="is_uploading"
                     accept="application/pdf"
                     multiple
                   />

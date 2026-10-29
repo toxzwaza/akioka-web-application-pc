@@ -364,6 +364,7 @@ const buildApprovalModalData = (order) => {
   const approvalDocument = order.document_id
     ? {
         document_id: order.document_id,
+        process_name: order.order_user_process_name,
         user_name: order.order_user,
         evalution_date: order.document_evalution_date,
         desire_delivery_date: order.desire_delivery_date,
